@@ -1,35 +1,33 @@
 #pragma once
 
-#include <string>
+#include <ctime>
 #include <vector>
 
+#include <pex/PexDebugFunctionInfo.h>
+#include <pex/PexDebugPropertyGroup.h>
+#include <pex/PexDebugStructOrder.h>
 #include <pex/PexWriter.h>
 
 namespace caprica { namespace pex {
 
 struct PexDebugInfo final
 {
+  time_t modificationTime{ };
+  std::vector<PexDebugFunctionInfo*> functions{ };
+  std::vector<PexDebugPropertyGroup*> propertyGroups{ };
+  std::vector<PexDebugStructOrder*> structOrders{ };
 
-
-  PexFile() = default;
-  ~PexFile() {
-    if (debugInfo)
-      delete debugInfo;
+  PexDebugInfo() = default;
+  ~PexDebugInfo() {
+    for (auto f : functions)
+      delete f;
+    for (auto p : propertyGroups)
+      delete p;
+    for(auto s : structOrders)
+      delete s;
   }
 
-  StringIdx getString(std::string str) {
-    auto a = stringTableLookup.find(str);
-    if (a != stringTableLookup.end())
-      return StringIdx{ a->second };
-    stringTable.push_back(str);
-    stringTableLookup[str] = stringTable.size() - 1;
-  }
-
-  void writeToFile(PexWriter& wtr);
-
-private:
-  std::vector<std::string> stringTable;
-  std::map<std::string, size_t> stringTableLookup;
+  void write(PexWriter& wtr) const;
 };
 
 }}

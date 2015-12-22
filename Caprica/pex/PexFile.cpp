@@ -5,7 +5,7 @@
 
 namespace caprica { namespace pex {
 
-void PexFile::writeToFile(PexWriter& wtr) {
+void PexFile::write(PexWriter& wtr) const {
   wtr.write<uint32_t>(0xFA57C0DE); // Magic Number
   wtr.write<uint8_t>(majorVersion);
   wtr.write<uint8_t>(minorVersion);
@@ -15,10 +15,26 @@ void PexFile::writeToFile(PexWriter& wtr) {
   wtr.write<std::string>(userName);
   wtr.write<std::string>(computerName);
 
-  assert(stringTable.size() <= std::numeric_limits<uint16_t>::max());
-  wtr.write<uint16_t>((uint16_t)stringTable.size());
+  wtr.boundWrite<uint16_t>(stringTable.size());
   for (auto& str : stringTable)
     wtr.write<std::string>(str);
+
+  if (debugInfo) {
+    wtr.write<uint8_t>(0x01);
+    debugInfo->write(wtr);
+  } else {
+    wtr.write<uint8_t>(0x00);
+  }
+
+  wtr.boundWrite<uint16_t>(userFlagTable.size());
+  for (auto uf : userFlagTable) {
+    wtr.write<PexString>(uf.first);
+    wtr.write<uint8_t>(uf.second);
+  }
+
+  wtr.boundWrite<uint16_t>(objects.size());
+  for (auto o : objects)
+    o->write(wtr);
 }
 
 }}
