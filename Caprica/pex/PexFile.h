@@ -27,6 +27,7 @@ struct PexFile final
   std::vector<PexObject*> objects{ };
 
   PexFile() = default;
+  PexFile(const PexFile&) = delete;
   ~PexFile() {
     if (debugInfo)
       delete debugInfo;
@@ -44,6 +45,9 @@ struct PexFile final
     }
     stringTable.push_back(str);
     stringTableLookup[str] = stringTable.size() - 1;
+    auto ret = PexString();
+    ret.index = stringTable.size() - 1;
+    return ret;
   }
 
   PexUserFlag getUserFlag(PexString name, uint8_t bitNum) {
@@ -55,6 +59,9 @@ struct PexFile final
     }
     userFlagTable.push_back(std::make_pair(name, bitNum));
     userFlagTableLookup[name] = bitNum;
+    auto flag = PexUserFlag();
+    flag.data = 1ULL << bitNum;
+    return flag;
   }
 
   void write(PexWriter& wtr) const;

@@ -59,7 +59,28 @@ struct PexWriter final
   }
   template<>
   void write(PexValue val) {
+    write<uint8_t>((uint8_t)val.type);
+    switch (val.type) {
+      case PexValueType::None:
+        break;
+      case PexValueType::Identifier:
+      case PexValueType::String:
+        write<PexString>(val.s);
+        break;
+      case PexValueType::Integer:
+        write<uint32_t>((uint32_t)val.i);
+        break;
+      case PexValueType::Float:
+        strm.write((char*)&val.f, sizeof(float));
+        break;
+      case PexValueType::Bool:
+        write<uint8_t>(val.b ? 0x01 : 0x00);
+        break;
 
+      default:
+        assert(0);
+        break;
+    }
   }
   template<>
   void write(std::string val) {

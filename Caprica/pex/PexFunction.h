@@ -2,6 +2,9 @@
 
 #include <vector>
 
+#include <pex/PexFunctionParameter.h>
+#include <pex/PexInstruction.h>
+#include <pex/PexLocalVariable.h>
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexWriter.h>
@@ -19,6 +22,19 @@ struct PexFunction final
   PexUserFlags userFlags{ };
   bool isNative{ false };
   bool isGlobal{ false };
+  std::vector<PexFunctionParameter*> parameters{ };
+  std::vector<PexLocalVariable*> locals{ };
+  std::vector<PexInstruction*> instructions{ };
+
+  PexFunction() = default;
+  ~PexFunction() {
+    for (auto p : parameters)
+      delete p;
+    for (auto l : locals)
+      delete l;
+    for (auto i : instructions)
+      delete i;
+  }
 
   void write(PexWriter& wtr) const;
 };
