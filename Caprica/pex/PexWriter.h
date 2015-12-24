@@ -24,7 +24,7 @@ struct PexWriter final
   template<typename T>
   void boundWrite(size_t val) {
     assert(val <= std::numeric_limits<T>::max());
-    write((T)val);
+    write<T>((T)val);
   }
 
   template<typename T>
@@ -85,7 +85,8 @@ struct PexWriter final
   template<>
   void write(std::string val) {
     boundWrite<uint16_t>(val.size());
-    strm.write(val.c_str(), val.size());
+    if (val.size())
+      strm.write(val.c_str(), val.size());
   }
 
   // This is intended specifically for use when

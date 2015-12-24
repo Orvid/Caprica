@@ -11,6 +11,9 @@
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusVariable.h>
 
+#include <pex/PexFile.h>
+#include <pex/PexObject.h>
+
 namespace caprica { namespace papyrus {
 
 struct PapyrusObject final
@@ -40,6 +43,32 @@ struct PapyrusObject final
       delete g;
     for (auto s : states)
       delete s;
+  }
+
+  void buildPex(pex::PexFile* file) const {
+    auto obj = new pex::PexObject();
+    obj->name = file->getString(name);
+    obj->parentClassName = parentClass.buildPex(file);
+    obj->documentationString = file->getString(documentationString);
+    obj->isConst = isConst;
+    if (autoState)
+      obj->autoStateName = file->getString(autoState->name);
+    else
+      obj->autoStateName = file->getString("");
+    obj->userFlags = userFlags;
+
+    for (auto s : structs)
+      s->buildPex(file, obj);
+    for (auto v : variables)
+      v->buildPex(file, obj);
+    for (auto p : properties)
+      p->buildPex(file, obj);
+    for (auto g : propertyGroups)
+      g->buildPex(file, obj);
+    for (auto s : states)
+      s->buildPex(file, obj);
+
+    file->objects.push_back(obj);
   }
 };
 
