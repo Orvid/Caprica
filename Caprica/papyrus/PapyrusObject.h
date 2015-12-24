@@ -25,6 +25,7 @@ struct PapyrusObject final
   PapyrusType parentClass{ };
   PapyrusState* autoState{ nullptr };
 
+  std::vector<std::string> imports{ };
   std::vector<PapyrusStruct*> structs{ };
   std::vector<PapyrusVariable*> variables{ };
   std::vector<PapyrusProperty*> properties{ };
@@ -43,6 +44,14 @@ struct PapyrusObject final
       delete g;
     for (auto s : states)
       delete s;
+  }
+
+  PapyrusState* getRootState() {
+    if (!rootState) {
+      rootState = new PapyrusState();
+      states.push_back(rootState);
+    }
+    return rootState;
   }
 
   void buildPex(pex::PexFile* file) const {
@@ -70,6 +79,9 @@ struct PapyrusObject final
 
     file->objects.push_back(obj);
   }
+
+private:
+  PapyrusState* rootState{ nullptr };
 };
 
 }}

@@ -22,6 +22,7 @@ struct PapyrusProperty final
   std::string documentationComment{ "" };
   PapyrusType type{ };
   bool isConst{ false };
+  bool isAutoReadOnly{ false };
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
   PapyrusFunction* readFunction{ nullptr };
   PapyrusFunction* writeFunction{ nullptr };
@@ -60,9 +61,13 @@ struct PapyrusProperty final
       // and both initial values are none.
       var->isConst = true;
       prop->autoVar = var->name;
+      prop->isAutoReadOnly = isAutoReadOnly;
       obj->variables.push_back(var);
-    } else if (readFunction || writeFunction) {
-      int i = 0; i++;
+    } else {
+      if (readFunction)
+        prop->readFunction = readFunction->buildPex(file, obj, prop);
+      if (writeFunction)
+        prop->writeFunction = writeFunction->buildPex(file, obj, prop);
     }
     obj->properties.push_back(prop);
   }

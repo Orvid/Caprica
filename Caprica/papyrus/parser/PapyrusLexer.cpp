@@ -17,14 +17,7 @@ void PapyrusLexer::setTok(Token& tok) {
   cur.line = lineNum;
 }
 
-struct caselessComparer : public std::binary_function<std::string, std::string, bool>
-{
-  bool operator()(const std::string &lhs, const std::string &rhs) const {
-    return _stricmp(lhs.c_str(), rhs.c_str()) < 0;
-  }
-};
-
-static std::map<std::string, TokenType, caselessComparer> keywordMap {
+static std::map<std::string, TokenType, CaselessStringComparer> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
@@ -302,6 +295,13 @@ StartOver:
         strm.get();
 
         while (strm.peek() != -1) {
+          if (strm.peek() == '\r' || strm.peek() == '\n') {
+            auto c2 = strm.get();
+            if (c2 == '\r' && strm.peek() == '\n')
+              strm.get();
+            lineNum++;
+          }
+
           if (strm.get() == '/' && strm.peek() == ';') {
             strm.get();
             goto StartOver;
@@ -319,7 +319,7 @@ StartOver:
 
     case '{':
     {
-      std::stringstream str;
+      std::ostringstream str;
 
       while (strm.peek() != '}' && strm.peek() != -1)
         str.put(strm.get());

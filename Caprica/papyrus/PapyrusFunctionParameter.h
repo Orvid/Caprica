@@ -22,7 +22,7 @@ struct PapyrusFunctionParameter final
   PapyrusFunctionParameter() = default;
   ~PapyrusFunctionParameter() = default;
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexState* state, pex::PexFunction* func) const {
+  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexFunction* func) const {
     auto param = new pex::PexFunctionParameter();
     param->name = file->getString(name);
     param->type = type.buildPex(file);

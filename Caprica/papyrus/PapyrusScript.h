@@ -11,7 +11,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusScript final
 {
-  std::string name{ "" };
+  std::string sourceFileName{ "" };
   std::vector<PapyrusObject*> objects{ };
 
   PapyrusScript() = default;
@@ -22,8 +22,8 @@ struct PapyrusScript final
 
   pex::PexFile* buildPex() const {
     auto pex = new pex::PexFile();
-    //pex->debugInfo = new pex::PexDebugInfo();
-    pex->sourceFileName = name;
+    pex->debugInfo = new pex::PexDebugInfo();
+    pex->sourceFileName = sourceFileName;
     for (auto o : objects)
       o->buildPex(pex);
     return pex;

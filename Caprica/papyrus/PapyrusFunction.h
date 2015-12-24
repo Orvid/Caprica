@@ -39,6 +39,19 @@ struct PapyrusFunction final
       delete s;
   }
 
+  pex::PexFunction* buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexProperty* prop) const {
+    auto func = new pex::PexFunction();
+    func->documenationString = file->getString(documentationComment);
+    func->returnTypeName = returnType.buildPex(file);
+    func->userFlags = userFlags;
+    func->isGlobal = isGlobal;
+    func->isNative = isNative;
+    for (auto p : parameters)
+      p->buildPex(file, obj, func);
+
+    return func;
+  }
+
   void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexState* state) const {
     auto func = new pex::PexFunction();
     func->name = file->getString(name);
@@ -48,9 +61,9 @@ struct PapyrusFunction final
     func->isGlobal = isGlobal;
     func->isNative = isNative;
     for (auto p : parameters)
-      p->buildPex(file, obj, state, func);
+      p->buildPex(file, obj, func);
 
-    auto local = new pex::PexLocalVariable();
+    /*auto local = new pex::PexLocalVariable();
     local->name = file->getString("test");
     local->type = file->getString("Int");
     func->locals.push_back(local);
@@ -58,7 +71,7 @@ struct PapyrusFunction final
     pex::PexFunctionBuilder funcBuilder;
     funcBuilder << pex::op::nop{ };
     funcBuilder << pex::op::iadd(local, local, pex::PexValue::Integer(1));
-    funcBuilder.populateFunction(func);
+    funcBuilder.populateFunction(func);*/
 
     state->functions.push_back(func);
   }

@@ -8,7 +8,9 @@ void PexProperty::write(PexWriter& wtr) const {
   wtr.write<PexString>(documentationString);
   wtr.write<PexUserFlags>(userFlags);
   uint8_t flags = 0;
-  if (autoVar.valid())
+  if (isAutoReadOnly)
+    flags |= 0x05;
+  else if (autoVar.valid())
     flags |= 0x07;
   else {
     if (readFunction)
