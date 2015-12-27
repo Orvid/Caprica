@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusStructMember.h>
 
 #include <pex/PexDebugStructOrder.h>
@@ -41,6 +42,13 @@ struct PapyrusStruct final
       file->debugInfo->structOrders.push_back(debInf);
     else
       delete debInf;
+  }
+
+  void semantic(PapyrusResolutionContext* ctx) {
+    ctx->struc = this;
+    for (auto m : members)
+      m->semantic(ctx);
+    ctx->struc = nullptr;
   }
 };
 

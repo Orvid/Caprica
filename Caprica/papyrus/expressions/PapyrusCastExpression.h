@@ -12,13 +12,13 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusCastExpression final : public PapyrusExpression
 {
-  PapyrusExpression* innerExpresion{ nullptr };
+  PapyrusExpression* innerExpression{ nullptr };
   PapyrusType targetType{ };
 
   PapyrusCastExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
   ~PapyrusCastExpression() {
-    if (innerExpresion)
-      delete innerExpresion;
+    if (innerExpression)
+      delete innerExpression;
   }
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override;

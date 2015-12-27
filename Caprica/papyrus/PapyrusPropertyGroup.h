@@ -40,6 +40,13 @@ struct PapyrusPropertyGroup final
     for (auto p : properties)
       p->buildPex(file, obj);
   }
+
+  void semantic(PapyrusResolutionContext* ctx) {
+    ctx->propGroup = this;
+    for (auto p : properties)
+      p->semantic(ctx);
+    ctx->propGroup = nullptr;
+  }
 };
 
 }}

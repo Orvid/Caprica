@@ -15,7 +15,7 @@ PapyrusExpression* PapyrusExpression::coerceExpression(PapyrusExpression* expr, 
       return expr;
     }
     auto ce = new PapyrusCastExpression(expr->location);
-    ce->innerExpresion = expr;
+    ce->innerExpression = expr;
     ce->targetType = target;
     return ce;
   }

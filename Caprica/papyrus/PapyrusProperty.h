@@ -3,6 +3,7 @@
 #include <string>
 
 #include <papyrus/PapyrusFunction.h>
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusValue.h>
@@ -84,6 +85,16 @@ struct PapyrusProperty final
         prop->writeFunction = writeFunction->buildPex(file, obj, nullptr, pex::PexDebugFunctionType::Setter, prop->name);
     }
     obj->properties.push_back(prop);
+  }
+
+  void semantic(PapyrusResolutionContext* ctx) {
+    type = ctx->resolveType(type);
+    ctx->prop = this;
+    if (readFunction)
+      readFunction->semantic(ctx);
+    if (writeFunction)
+      writeFunction->semantic(ctx);
+    ctx->prop = nullptr;
   }
 };
 

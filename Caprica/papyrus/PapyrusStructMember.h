@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusValue.h>
@@ -34,6 +35,10 @@ struct PapyrusStructMember final
     member->defaultValue = defaultValue.buildPex(file);
     member->isConst = isConst;
     struc->members.push_back(member);
+  }
+
+  void semantic(PapyrusResolutionContext* ctx) {
+    type = ctx->resolveType(type);
   }
 };
 

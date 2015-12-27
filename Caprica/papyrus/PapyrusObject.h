@@ -5,6 +5,7 @@
 
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusPropertyGroup.h>
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusState.h>
 #include <papyrus/PapyrusStruct.h>
 #include <papyrus/PapyrusType.h>
@@ -81,6 +82,22 @@ struct PapyrusObject final
       s->buildPex(file, obj);
 
     file->objects.push_back(obj);
+  }
+
+  void semantic(PapyrusResolutionContext* ctx) {
+    parentClass = ctx->resolveType(parentClass);
+    ctx->object = this;
+    for (auto i : imports)
+      ctx->addImport(i);
+    for (auto s : structs)
+      s->semantic(ctx);
+    for (auto v : variables)
+      v->semantic(ctx);
+    for (auto g : propertyGroups)
+      g->semantic(ctx);
+    for (auto s : states)
+      s->semantic(ctx);
+    ctx->object = nullptr;
   }
 
 private:

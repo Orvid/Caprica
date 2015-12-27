@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <papyrus/PapyrusObject.h>
+#include <papyrus/PapyrusResolutionContext.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -33,6 +34,14 @@ struct PapyrusScript final
     for (auto o : objects)
       o->buildPex(pex);
     return pex;
+  }
+
+  void semantic() {
+    auto ctx = new PapyrusResolutionContext();
+    ctx->script = this;
+    for (auto o : objects)
+      o->semantic(ctx);
+    delete ctx;
   }
 };
 

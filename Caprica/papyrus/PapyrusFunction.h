@@ -5,6 +5,7 @@
 
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusLocalVariable.h>
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/statements/PapyrusStatement.h>
@@ -42,6 +43,16 @@ struct PapyrusFunction final
                              pex::PexState* state,
                              pex::PexDebugFunctionType funcType,
                              pex::PexString propName) const;
+
+  void semantic(PapyrusResolutionContext* ctx) {
+    returnType = ctx->resolveType(returnType);
+    ctx->function = this;
+    for (auto p : parameters)
+      p->semantic(ctx);
+    for (auto s : statements)
+      s->semantic(ctx);
+    ctx->function = nullptr;
+  }
 };
 
 }}

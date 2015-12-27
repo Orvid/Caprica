@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusValue.h>
 
@@ -27,6 +28,10 @@ struct PapyrusFunctionParameter final
     param->name = file->getString(name);
     param->type = type.buildPex(file);
     func->parameters.push_back(param);
+  }
+  
+  void semantic(PapyrusResolutionContext* ctx) {
+    type = ctx->resolveType(type);
   }
 };
 

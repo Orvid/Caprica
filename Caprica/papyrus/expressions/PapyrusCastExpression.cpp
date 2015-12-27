@@ -5,7 +5,7 @@ namespace caprica { namespace papyrus { namespace expressions {
 pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const {
   namespace op = caprica::pex::op;
 
-  auto val = innerExpresion->generateLoad(file, bldr);
+  auto val = innerExpression->generateLoad(file, bldr);
   auto dest = bldr.allocTemp(file, targetType);
   bldr << location;
   bldr << op::cast{ dest, val };
@@ -14,8 +14,9 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
 }
 
 void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
-  innerExpresion->semantic(ctx);
+  innerExpression->semantic(ctx);
   targetType = ctx->resolveType(targetType);
+  ctx->ensureCastable(innerExpression->resultType(), targetType);
 }
 
 PapyrusType PapyrusCastExpression::resultType() const {

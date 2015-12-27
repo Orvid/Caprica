@@ -29,12 +29,6 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   for (auto p : parameters)
     p->buildPex(file, obj, func);
 
-  auto ctx = new PapyrusResolutionContext();
-  ctx->function = this;
-  for (auto s : statements)
-    s->semantic(ctx);
-  delete ctx;
-
   pex::PexFunctionBuilder bldr;
   for (auto s : statements)
     s->buildPex(file, bldr);
