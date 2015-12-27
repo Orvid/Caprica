@@ -321,8 +321,23 @@ StartOver:
     {
       std::ostringstream str;
 
-      while (strm.peek() != '}' && strm.peek() != -1)
-        str.put(strm.get());
+      // Trim all leading whitespace.
+      while (isspace(strm.peek()))
+        strm.get();
+
+      while (strm.peek() != '}' && strm.peek() != -1) {
+        // For sanity reasons, we only put out unix newlines in the
+        // doc comment string.
+        auto c2 = strm.get();
+        if (c2 == '\r' && strm.peek() == '\n') {
+          strm.get();
+          str.put('\n');
+        } else {
+          // Whether this is a Unix newline, or a normal character,
+          // we don't care, they both get written as-is.
+          str.put(c2);
+        }
+      }
 
       if (strm.peek() == -1)
         fatalError("Unexpected EOF before the end of a documentation comment!");
@@ -330,6 +345,9 @@ StartOver:
 
       auto tok = Token(TokenType::DocComment);
       tok.sValue = str.str();
+      // Trim trailing whitespace.
+      if (tok.sValue.length())
+        tok.sValue = tok.sValue.substr(0, tok.sValue.find_last_not_of(" \t\n\v\f\r") + 1);
       return setTok(tok);
     }
 
