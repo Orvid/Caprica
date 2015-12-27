@@ -45,11 +45,14 @@ struct PexValue final
     ~Integer() = default;
   };
 
+  struct None { };
+
   PexValue() { };
   PexValue(const PexValue&) = default;
-  PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { };
-  PexValue(Identifier id) : type(PexValueType::Identifier), s(id.name) { };
-  PexValue(Integer val) : type(PexValueType::Integer), i(val.i) { };
+  PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { }
+  PexValue(Identifier id) : type(PexValueType::Identifier), s(id.name) { }
+  PexValue(Integer val) : type(PexValueType::Integer), i(val.i) { }
+  PexValue(const None& val) : type(PexValueType::None) { }
   ~PexValue() = default;
 };
 

@@ -3,7 +3,9 @@
 #include <string>
 
 #include <papyrus/PapyrusScript.h>
+#include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/parser/PapyrusLexer.h>
+#include <papyrus/statements/PapyrusStatement.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -23,6 +25,9 @@ private:
   PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
   PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
   PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
+
+  statements::PapyrusStatement* parseStatement(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseExpression(PapyrusFunction* func);
 
   PapyrusType expectConsumePapyrusType();
   PapyrusValue expectConsumePapyrusValue();

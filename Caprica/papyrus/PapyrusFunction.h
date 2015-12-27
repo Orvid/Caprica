@@ -64,7 +64,10 @@ struct PapyrusFunction final
     for (auto p : parameters)
       p->buildPex(file, obj, func);
 
-    // TODO: Build the body.
+    pex::PexFunctionBuilder bldr;
+    for (auto s : statements)
+      s->buildPex(file, bldr);
+    bldr.populateFunction(func, fDebInfo);
 
     if (file->debugInfo)
       file->debugInfo->functions.push_back(fDebInfo);

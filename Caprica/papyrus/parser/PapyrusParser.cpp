@@ -2,6 +2,15 @@
 
 #include <papyrus/PapyrusObject.h>
 
+#include <papyrus/expressions/PapyrusLiteralExpression.h>
+
+//#include <papyrus/statements/PapyrusAssignStatement.h>
+//#include <papyrus/statements/PapyrusDeclareStatement.h>
+//#include <papyrus/statements/PapyrusExpressionStatement.h>
+//#include <papyrus/statements/PapyrusIfStatement.h>
+#include <papyrus/statements/PapyrusReturnStatement.h>
+//#include <papyrus/statements/PapyrusWhileStatement.h>
+
 #include <boost/filesystem.hpp>
 
 namespace caprica { namespace papyrus { namespace parser {
@@ -397,8 +406,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   func->documentationComment = maybeConsumeDocString();
   if (!func->isNative) {
     while (cur.type != endToken && cur.type != TokenType::END) {
-      consume();
-      // Here we parse the statements.
+      func->statements.push_back(parseStatement(func));
     }
 
     if (cur.type == TokenType::END)
@@ -410,6 +418,28 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   return func;
 }
 
+statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* func) {
+  switch (cur.type) {
+    case TokenType::kReturn:
+    {
+      auto ret = new statements::PapyrusReturnStatement(cur.getLocation());
+      consume();
+      if (cur.type != TokenType::EOL)
+        ret->returnValue = parseExpression(func);
+      expectConsumeEOLs();
+      return ret;
+    }
+
+    default:
+      fatalError("Unexpected token while parsing statement!");
+  }
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* func) {
+  auto lit = new expressions::PapyrusLiteralExpression(cur.getLocation());
+  lit->value = expectConsumePapyrusValue();
+  return lit;
+}
 
 PapyrusType PapyrusParser::expectConsumePapyrusType() {
   switch (cur.type) {

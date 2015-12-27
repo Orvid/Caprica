@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <vector>
 
+#include <papyrus/parser/PapyrusFileLocation.h>
+
 #include <pex/PexInstruction.h>
 #include <pex/PexLocalVariable.h>
 #include <pex/PexString.h>
 
-namespace caprica {
-namespace pex {
+namespace caprica { namespace pex {
 
 // We use this rather than repeating this information in multiple places.
 #define OPCODES(ARG1, ARG2, ARG3, ARG4, ARG5) \
@@ -119,18 +120,28 @@ struct PexFunctionBuilder final
 #undef OP_ARG4
 #undef OP_ARG5
 
-    void populateFunction(PexFunction* func) {
+  PexFunctionBuilder& operator <<(const papyrus::parser::PapyrusFileLocation& loc) {
+    currentLocation = loc;
+    return *this;
+  }
+
+  void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
     func->instructions = instructions;
+    debInfo->instructionLineMap.reserve(instructionLocations.size());
+    for (auto& l : instructionLocations)
+      debInfo->instructionLineMap.push_back(l.buildPex());
   }
 private:
+  papyrus::parser::PapyrusFileLocation currentLocation{ };
+  std::vector<papyrus::parser::PapyrusFileLocation> instructionLocations{ };
   std::vector<PexInstruction*> instructions{ };
 
   template<typename... Args>
   PexFunctionBuilder& push(PexOpCode op, Args&&... args) {
+    instructionLocations.push_back(currentLocation);
     instructions.push_back(new PexInstruction(op, std::vector<PexValue>{ args... }));
     return *this;
   }
 };
 
-}
-}
+}}
