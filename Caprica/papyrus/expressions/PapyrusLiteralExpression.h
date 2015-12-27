@@ -21,6 +21,12 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
     bldr << location;
     return value.buildPex(file);
   }
+
+  virtual void semantic(PapyrusResolutionContext* ctx) override { }
+
+  virtual PapyrusType resultType() const override {
+    return value.getPapyrusType();
+  }
 };
 
 }}}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
@@ -16,6 +17,7 @@ struct PapyrusStatement abstract
   ~PapyrusStatement() = default;
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
+  virtual void semantic(PapyrusResolutionContext* ctx) abstract;
 };
 
 }}}

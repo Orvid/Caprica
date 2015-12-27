@@ -91,6 +91,10 @@ struct PapyrusType final
     return file->getString(str);
   }
 
+  bool operator ==(const PapyrusType& other) const {
+    return !(*this != other);
+  }
+
   bool operator !=(const PapyrusType& other) const {
     if (type == other.type && isArray == other.isArray) {
       switch (type) {

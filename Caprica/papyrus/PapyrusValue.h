@@ -59,6 +59,23 @@ struct PapyrusValue final
     }
     return pe;
   }
+
+  PapyrusType getPapyrusType() const {
+    switch (type) {
+      case PapyrusValueType::None:
+        return PapyrusType::None();
+      case PapyrusValueType::String:
+        return PapyrusType::String();
+      case PapyrusValueType::Integer:
+        return PapyrusType::Int();
+      case PapyrusValueType::Float:
+        return PapyrusType::Float();
+      case PapyrusValueType::Bool:
+        return PapyrusType::Bool();
+      default:
+        throw std::runtime_error("Unknown PapyrusValueType!");
+    }
+  }
 };
 
 }}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <papyrus/PapyrusResolutionContext.h>
+#include <papyrus/PapyrusType.h>
 #include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
@@ -16,6 +18,10 @@ struct PapyrusExpression abstract
   ~PapyrusExpression() = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
+  virtual void semantic(PapyrusResolutionContext* ctx) abstract;
+  virtual PapyrusType resultType() const abstract;
+
+  static PapyrusExpression* coerceExpression(PapyrusExpression* expr, PapyrusType target);
 };
 
 }}}

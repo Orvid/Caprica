@@ -113,7 +113,7 @@ struct PexFunctionBuilder final
   PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
 #define OP_ARG5(name, opcode, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
   PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
-  OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
@@ -127,14 +127,32 @@ struct PexFunctionBuilder final
 
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
     func->instructions = instructions;
+    func->locals = locals;
     debInfo->instructionLineMap.reserve(instructionLocations.size());
     for (auto& l : instructionLocations)
       debInfo->instructionLineMap.push_back(l.buildPex());
   }
+
+  PexLocalVariable* allocTemp(PexFile* file, papyrus::PapyrusType tp) {
+    auto loc = new PexLocalVariable();
+    std::stringstream ss;
+    ss << "::temp" << currentTempI++;
+    loc->name = file->getString(ss.str());
+    loc->type = tp.buildPex(file);
+    locals.push_back(loc);
+    return loc;
+  }
+
+  void freeIfTemp(PexValue val) {
+    // TODO: alloc & free temps.
+  }
+
 private:
   papyrus::parser::PapyrusFileLocation currentLocation{ };
   std::vector<papyrus::parser::PapyrusFileLocation> instructionLocations{ };
   std::vector<PexInstruction*> instructions{ };
+  std::vector<PexLocalVariable*> locals{ };
+  size_t currentTempI = 0;
 
   template<typename... Args>
   PexFunctionBuilder& push(PexOpCode op, Args&&... args) {
