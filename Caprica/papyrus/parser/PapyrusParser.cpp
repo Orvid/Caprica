@@ -47,6 +47,11 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->states.push_back(parseState(script, obj, false));
         break;
 
+      case TokenType::kStruct:
+        consume();
+        obj->structs.push_back(parseStruct(script, obj));
+        break;
+
       case TokenType::kEvent:
         consume();
         obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(), TokenType::kEndEvent));
@@ -142,6 +147,64 @@ Return:
   return state;
 }
 
+PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* object) {
+  auto struc = new PapyrusStruct();
+  struc->name = expectConsumeIdent();
+  expectConsumeEOLs();
+
+  while (true) {
+    bool isConst = false;
+    switch (cur.type) {
+      case TokenType::kEndStruct:
+        consume();
+        expectConsumeEOLs();
+        goto Return;
+
+      case TokenType::kConst:
+        consume();
+        isConst = true;
+        goto TypeValue;
+
+      TypeValue:
+      case TokenType::kBool:
+      case TokenType::kFloat:
+      case TokenType::kInt:
+      case TokenType::kString:
+      case TokenType::kVar:
+      case TokenType::Identifier:
+      {
+        auto tp = expectConsumePapyrusType();
+        struc->members.push_back(parseStructMember(script, object, struc, isConst, tp));
+        break;
+      }
+
+      default:
+        fatalError("Unexpected token while parsing struct!");
+    }
+  }
+
+Return:
+  return struc;
+}
+
+PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, bool isConst, PapyrusType tp) {
+  auto mem = new PapyrusStructMember();
+  mem->isConst = isConst;
+  mem->type = tp;
+  mem->name = expectConsumeIdent();
+
+  if (maybeConsume(TokenType::Equal)) {
+    mem->defaultValue = expectConsumePapyrusValue();
+  } else if (isConst) {
+    fatalError("A constant variable must have a value!");
+  }
+
+  mem->userFlags = parseUserFlags(PapyrusUserFlags::Conditional);
+  expectConsumeEOLs();
+  mem->documentationString = maybeConsumeDocString();
+  return mem;
+}
+
 PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {
   auto func = new PapyrusFunction();
   func->name = expectConsumeIdent();
@@ -221,11 +284,12 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
       fatalError("A const property cannot be marked AutoReadOnly!");
   }
   prop->userFlags = parseUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden | PapyrusUserFlags::Mandatory);
+  expectConsumeEOLs();
+  prop->documentationComment = maybeConsumeDocString();
 
   if (isFullProp) {
     if (isConst)
       fatalError("A full property can't be declared const!");
-    expectConsumeEOLs();
 
     for (int i = 0; i < 2; i++) {
       switch (cur.type) {
@@ -272,15 +336,27 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     }
 
     expectConsume(TokenType::kEndProperty);
+    expectConsumeEOLs();
   }
-
-  expectConsumeEOLs();
 
   return prop;
 }
 
 PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type) {
-  return new PapyrusVariable();
+  auto var = new PapyrusVariable();
+  var->isConst = isConst;
+  var->type = type;
+  var->name = expectConsumeIdent();
+
+  if (maybeConsume(TokenType::Equal)) {
+    var->defaultValue = expectConsumePapyrusValue();
+  } else if (isConst) {
+    fatalError("A constant variable must have a value!");
+  }
+
+  var->userFlags = parseUserFlags(PapyrusUserFlags::Conditional);
+  expectConsumeEOLs();
+  return var;
 }
 
 

@@ -17,6 +17,8 @@ struct PapyrusParser : private PapyrusLexer
 private:
   PapyrusObject* parseObject(PapyrusScript* script);
   PapyrusState* parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto);
+  PapyrusStruct* parseStruct(PapyrusScript* script, PapyrusObject* object);
+  PapyrusStructMember* parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, bool isConst, PapyrusType tp);
   PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
   PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
   PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
@@ -60,7 +62,7 @@ private:
     if (cur.type == TokenType::DocComment) {
       auto str = cur.sValue;
       consume();
-      maybeConsumeEOLs();
+      expectConsumeEOLs();
       return str;
     }
     maybeConsumeEOLs();
