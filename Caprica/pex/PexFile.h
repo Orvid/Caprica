@@ -35,7 +35,7 @@ struct PexFile final
       delete o;
   }
 
-  PexString getString(std::string str) {
+  PexString getString(const std::string& str) {
     auto a = stringTableLookup.find(str);
     if (a != stringTableLookup.end())
     {
@@ -50,16 +50,16 @@ struct PexFile final
     return ret;
   }
 
-  PexUserFlag getUserFlag(PexString name, uint8_t bitNum) {
+  PexUserFlags getUserFlag(PexString name, uint8_t bitNum) {
     auto a = userFlagTableLookup.find(name);
     if (a != userFlagTableLookup.end()) {
-      auto flag = PexUserFlag();
+      auto flag = PexUserFlags();
       flag.data = 1ULL << a->second;
       return flag;
     }
     userFlagTable.push_back(std::make_pair(name, bitNum));
     userFlagTableLookup[name] = bitNum;
-    auto flag = PexUserFlag();
+    auto flag = PexUserFlags();
     flag.data = 1ULL << bitNum;
     return flag;
   }

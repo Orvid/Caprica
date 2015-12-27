@@ -5,6 +5,7 @@
 
 #include <papyrus/PapyrusFunction.h>
 
+#include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFile.h>
 #include <pex/PexObject.h>
 #include <pex/PexState.h>
@@ -26,7 +27,7 @@ struct PapyrusState final
     auto state = new pex::PexState();
     state->name = file->getString(name);
     for (auto f : functions)
-      f->buildPex(file, obj, state);
+      state->functions.push_back(f->buildPex(file, obj, state, pex::PexDebugFunctionType::Normal, pex::PexString()));
     obj->states.push_back(state);
   }
 };

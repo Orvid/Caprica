@@ -2,12 +2,13 @@
 
 #include <papyrus/PapyrusObject.h>
 
-namespace caprica {
-namespace papyrus {
-namespace parser {
+#include <boost/filesystem.hpp>
+
+namespace caprica { namespace papyrus { namespace parser {
 
 PapyrusScript* PapyrusParser::parseScript() {
   auto script = new PapyrusScript();
+  script->sourceFileName = boost::filesystem::absolute(filename).string();
   script->objects.push_back(parseObject(script));
   return script;
 }
@@ -20,11 +21,12 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   if (maybeConsume(TokenType::kConst))
     obj->isConst = true;
   expectConsume(TokenType::kScriptName);
-  // TODO: This is supposidly supposed to match the name of the file, should check.
   obj->name = expectConsumeIdent();
+  if (_stricmp(boost::filesystem::basename(script->sourceFileName).c_str(), obj->name.c_str()))
+    fatalError("The script name must match the name of the file!");
   if (maybeConsume(TokenType::kExtends))
     obj->parentClass = PapyrusType::Unresolved(expectConsumeIdent());
-  obj->userFlags = parseUserFlags(PapyrusUserFlags::Hidden | PapyrusUserFlags::Conditional);
+  obj->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Hidden | PapyrusUserFlags::Conditional);
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocString();
 
@@ -204,7 +206,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
     fatalError("A constant variable must have a value!");
   }
 
-  mem->userFlags = parseUserFlags(PapyrusUserFlags::Conditional);
+  mem->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional);
   expectConsumeEOLs();
   mem->documentationString = maybeConsumeDocString();
   return mem;
@@ -213,7 +215,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
 PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
   auto group = new PapyrusPropertyGroup();
   group->name = expectConsumeIdent();
-  group->userFlags = parseUserFlags(PapyrusUserFlags::Hidden);
+  group->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Hidden);
   expectConsumeEOLs();
   group->documentationComment = maybeConsumeDocString();
 
@@ -253,58 +255,11 @@ Return:
   return group;
 }
 
-PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {
-  auto func = new PapyrusFunction();
-  func->name = expectConsumeIdent();
-  func->returnType = returnType;
-  expectConsume(TokenType::LParen);
-
-  if (cur.type != TokenType::RParen) {
-    do {
-      maybeConsume(TokenType::Comma);
-
-      auto param = new PapyrusFunctionParameter();
-      param->type = expectConsumePapyrusType();
-      param->name = expectConsumeIdent();
-      if (maybeConsume(TokenType::Equal))
-        param->defaultValue = expectConsumePapyrusValue();
-      func->parameters.push_back(param);
-    } while (cur.type == TokenType::Comma);
-  }
-  expectConsume(TokenType::RParen);
-
-  if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal))
-    func->isGlobal = true;
-  if (maybeConsume(TokenType::kNative))
-    func->isNative = true;
-  if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal)) {
-    if (func->isGlobal)
-      fatalError("This function was already declared global!");
-    func->isGlobal = true;
-  }
-
-  func->userFlags = parseUserFlags(PapyrusUserFlags::None);
-  expectConsumeEOLs();
-  func->documentationComment = maybeConsumeDocString();
-  if (!func->isNative) {
-    while (cur.type != endToken && cur.type != TokenType::END) {
-      consume();
-      // Here we parse the statements.
-    }
-
-    if (cur.type == TokenType::END)
-      fatalError("Unexpected EOF in state body!");
-    consume();
-    expectConsumeEOLs();
-  }
-
-  return func;
-}
-
 PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type) {
   auto prop = new PapyrusProperty();
   prop->isConst = isConst;
   prop->type = type;
+  prop->location = cur.getLocation();
   prop->name = expectConsumeIdent();
 
   bool isFullProp = true;
@@ -331,7 +286,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     if (isConst)
       fatalError("A const property cannot be marked AutoReadOnly!");
   }
-  prop->userFlags = parseUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden | PapyrusUserFlags::Mandatory);
+  prop->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden | PapyrusUserFlags::Mandatory);
   expectConsumeEOLs();
   prop->documentationComment = maybeConsumeDocString();
 
@@ -402,9 +357,57 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
     fatalError("A constant variable must have a value!");
   }
 
-  var->userFlags = parseUserFlags(PapyrusUserFlags::Conditional);
+  var->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional);
   expectConsumeEOLs();
   return var;
+}
+
+PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {
+  auto func = new PapyrusFunction();
+  func->name = expectConsumeIdent();
+  func->returnType = returnType;
+  expectConsume(TokenType::LParen);
+
+  if (cur.type != TokenType::RParen) {
+    do {
+      maybeConsume(TokenType::Comma);
+
+      auto param = new PapyrusFunctionParameter();
+      param->type = expectConsumePapyrusType();
+      param->name = expectConsumeIdent();
+      if (maybeConsume(TokenType::Equal))
+        param->defaultValue = expectConsumePapyrusValue();
+      func->parameters.push_back(param);
+    } while (cur.type == TokenType::Comma);
+  }
+  expectConsume(TokenType::RParen);
+
+  if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal))
+    func->isGlobal = true;
+  if (maybeConsume(TokenType::kNative))
+    func->isNative = true;
+  if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal)) {
+    if (func->isGlobal)
+      fatalError("This function was already declared global!");
+    func->isGlobal = true;
+  }
+
+  func->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::None);
+  expectConsumeEOLs();
+  func->documentationComment = maybeConsumeDocString();
+  if (!func->isNative) {
+    while (cur.type != endToken && cur.type != TokenType::END) {
+      consume();
+      // Here we parse the statements.
+    }
+
+    if (cur.type == TokenType::END)
+      fatalError("Unexpected EOF in state body!");
+    consume();
+    expectConsumeEOLs();
+  }
+
+  return func;
 }
 
 
@@ -488,7 +491,7 @@ static std::map<std::string, PapyrusUserFlags, CaselessStringComparer> userFlagM
   { "mandatory", PapyrusUserFlags::Mandatory },
 };
 
-PapyrusUserFlags PapyrusParser::parseUserFlags(PapyrusUserFlags validFlags) {
+PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(PapyrusUserFlags validFlags) {
   auto flags = PapyrusUserFlags::None;
   while (cur.type == TokenType::Identifier) {
     auto a = userFlagMap.find(cur.sValue);

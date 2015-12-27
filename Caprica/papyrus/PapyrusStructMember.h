@@ -30,7 +30,7 @@ struct PapyrusStructMember final
     member->name = file->getString(name);
     member->documentationString = file->getString(documentationString);
     member->typeName = type.buildPex(file);
-    member->userFlags = userFlags;
+    member->userFlags = buildPexUserFlags(file, userFlags);
     member->defaultValue = defaultValue.buildPex(file);
     member->isConst = isConst;
     struc->members.push_back(member);

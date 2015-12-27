@@ -1,9 +1,5 @@
-file(GLOB HEADER_FILES "*.h")
-file(GLOB SOURCE_FILES "*.cpp")
-file(GLOB HEADER_FILES2 "papyrus/*.h")
-file(GLOB SOURCE_FILES2 "papyrus/*.cpp")
-file(GLOB HEADER_FILES3 "pex/*.h")
-file(GLOB SOURCE_FILES3 "pex/*.cpp")
+file(GLOB_RECURSE HEADER_FILES "*.h")
+file(GLOB_RECURSE SOURCE_FILES "*.cpp")
 
-add_executable(Caprica ${HEADER_FILES} ${SOURCE_FILES} ${HEADER_FILES2} ${SOURCE_FILES2} ${HEADER_FILES3} ${SOURCE_FILES3})
-auto_source_group("Caprica" ${CMAKE_CURRENT_SOURCE_DIR} ${HEADER_FILES} ${SOURCE_FILES} ${HEADER_FILES2} ${SOURCE_FILES2} ${HEADER_FILES3} ${SOURCE_FILES3})
+add_executable(Caprica ${HEADER_FILES} ${SOURCE_FILES})
+auto_source_group("Caprica" ${CMAKE_CURRENT_SOURCE_DIR} ${HEADER_FILES} ${SOURCE_FILES})

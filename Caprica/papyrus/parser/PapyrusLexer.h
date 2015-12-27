@@ -1,10 +1,12 @@
 #pragma once
 
 #include <cstring>
-#include <istream>
+#include <fstream>
 #include <functional>
 #include <sstream>
 #include <string>
+
+#include <papyrus/parser/PapyrusFileLocation.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -118,6 +120,12 @@ struct PapyrusLexer
 
     Token(TokenType tp) : type(tp) { }
 
+    PapyrusFileLocation getLocation() const {
+      PapyrusFileLocation loc;
+      loc.line = line;
+      return loc;
+    }
+
     std::string asString() const {
       std::ostringstream str;
       str << (int)type << ": " << line << " s(" << sValue << ") i(" << iValue << ") f(" << fValue << ")";
@@ -130,12 +138,13 @@ struct PapyrusLexer
     }
   };
 
-  PapyrusLexer(std::istream& input) : strm(input) {
+  PapyrusLexer(std::string file) : filename(file), strm(file, std::ifstream::binary) {
     consume(); // set the first token.
   }
   ~PapyrusLexer() = default;
 
 protected:
+  std::string filename;
   Token cur{ TokenType::Unknown };
 
   void consume();
@@ -144,11 +153,11 @@ protected:
   void fatalError(const std::string& msg) {
     // TODO: Expand on this, making sure to write things like the
     // line number to stderr before dying.
-    throw new std::runtime_error(msg);
+    throw std::runtime_error(msg);
   }
 
 private:
-  std::istream& strm;
+  std::ifstream strm;
   size_t lineNum{ 1 };
 
   void setTok(TokenType tp, int consumeChars = 0);

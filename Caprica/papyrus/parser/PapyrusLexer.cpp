@@ -332,7 +332,10 @@ StartOver:
         if (c2 == '\r' && strm.peek() == '\n') {
           strm.get();
           str.put('\n');
+          lineNum++;
         } else {
+          if (c2 == '\n')
+            lineNum++;
           // Whether this is a Unix newline, or a normal character,
           // we don't care, they both get written as-is.
           str.put(c2);

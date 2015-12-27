@@ -1,6 +1,6 @@
 #pragma once
 
-#include <istream>
+#include <string>
 
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/parser/PapyrusLexer.h>
@@ -9,7 +9,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 struct PapyrusParser : private PapyrusLexer
 {
-  PapyrusParser(std::istream& strm) : PapyrusLexer(strm) { }
+  PapyrusParser(std::string file) : PapyrusLexer(file) { }
   ~PapyrusParser() = default;
 
   PapyrusScript* parseScript();
@@ -20,13 +20,13 @@ private:
   PapyrusStruct* parseStruct(PapyrusScript* script, PapyrusObject* object);
   PapyrusStructMember* parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, bool isConst, PapyrusType tp);
   PapyrusPropertyGroup* parsePropertyGroup(PapyrusScript* script, PapyrusObject* object);
-  PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
   PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
   PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
-  PapyrusUserFlags parseUserFlags(PapyrusUserFlags validFlags);
+  PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
 
   PapyrusType expectConsumePapyrusType();
   PapyrusValue expectConsumePapyrusValue();
+  PapyrusUserFlags maybeConsumeUserFlags(PapyrusUserFlags validFlags);
 
   void expect(TokenType tp) {
     if (cur.type != tp) {
@@ -35,10 +35,12 @@ private:
       fatalError("Unexpected token " + cur.prettyString() + "!");
     }
   }
+
   void expectConsume(TokenType tp) {
     expect(tp);
     consume();
   }
+
   bool maybeConsume(TokenType tp) {
     if (cur.type == tp) {
       consume();
@@ -46,19 +48,23 @@ private:
     }
     return false;
   }
+
   void maybeConsumeEOLs() {
     while (maybeConsume(TokenType::EOL)) { }
   }
+
   void expectConsumeEOLs() {
     expectConsume(TokenType::EOL);
     maybeConsumeEOLs();
   }
+
   std::string expectConsumeIdent() {
     expect(TokenType::Identifier);
     auto str = cur.sValue;
     consume();
     return str;
   }
+
   std::string maybeConsumeDocString() {
     if (cur.type == TokenType::DocComment) {
       auto str = cur.sValue;

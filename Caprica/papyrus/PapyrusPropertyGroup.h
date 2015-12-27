@@ -31,7 +31,7 @@ struct PapyrusPropertyGroup final
       pg->objectName = obj->name;
       pg->groupName = file->getString(name);
       pg->documentationString = file->getString(documentationComment);
-      pg->userFlags = userFlags;
+      pg->userFlags = buildPexUserFlags(file, userFlags);
       for (auto p : properties)
         pg->properties.push_back(file->getString(p->name));
       file->debugInfo->propertyGroups.push_back(pg);

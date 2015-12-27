@@ -34,8 +34,7 @@ int main(int argc, char* argv[])
   prop2->defaultValue.i = 4;
   obj->properties.push_back(prop2);*/
 
-  std::ifstream srcStrm("test.psc", std::ifstream::binary);
-  auto parser = new caprica::papyrus::parser::PapyrusParser(srcStrm);
+  auto parser = new caprica::papyrus::parser::PapyrusParser("test.psc");
   auto a = parser->parseScript();
   auto pex = a->buildPex();
   std::ofstream strm("test.pex", std::ofstream::binary);

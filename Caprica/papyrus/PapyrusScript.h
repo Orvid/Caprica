@@ -1,9 +1,12 @@
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <vector>
 
 #include <papyrus/PapyrusObject.h>
+
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
 
@@ -23,7 +26,10 @@ struct PapyrusScript final
   pex::PexFile* buildPex() const {
     auto pex = new pex::PexFile();
     pex->debugInfo = new pex::PexDebugInfo();
+    pex->debugInfo->modificationTime = boost::filesystem::last_write_time(sourceFileName);
+    pex->compilationTime = time(nullptr);
     pex->sourceFileName = sourceFileName;
+    // TODO: Set the computerName and userName as well.
     for (auto o : objects)
       o->buildPex(pex);
     return pex;

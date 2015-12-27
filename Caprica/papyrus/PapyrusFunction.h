@@ -9,6 +9,7 @@
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
+#include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFile.h>
 #include <pex/PexFunction.h>
 #include <pex/PexFunctionBuilder.h>
@@ -26,54 +27,51 @@ struct PapyrusFunction final
   bool isGlobal{ false };
   bool isNative{ false };
   std::vector<PapyrusFunctionParameter*> parameters{ };
-  std::vector<PapyrusLocalVariable*> locals{ };
   std::vector<statements::PapyrusStatement*> statements{ };
 
   PapyrusFunction() = default;
   ~PapyrusFunction() {
     for (auto p : parameters)
       delete p;
-    for (auto l : locals)
-      delete l;
     for (auto s : statements)
       delete s;
   }
 
-  pex::PexFunction* buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexProperty* prop) const {
+  pex::PexFunction* buildPex(pex::PexFile* file,
+                             pex::PexObject* obj,
+                             pex::PexState* state,
+                             pex::PexDebugFunctionType funcType,
+                             pex::PexString propName) const {
     auto func = new pex::PexFunction();
+    auto fDebInfo = new pex::PexDebugFunctionInfo();
+    fDebInfo->objectName = obj->name;
+    fDebInfo->functionType = funcType;
+    if (state) {
+      assert(funcType == pex::PexDebugFunctionType::Normal);
+      fDebInfo->stateName = state->name;
+      fDebInfo->functionName = file->getString(name);
+      func->name = file->getString(name);
+    } else {
+      fDebInfo->stateName = file->getString("");
+      fDebInfo->functionName = propName;
+    }
+
     func->documenationString = file->getString(documentationComment);
     func->returnTypeName = returnType.buildPex(file);
-    func->userFlags = userFlags;
+    func->userFlags = buildPexUserFlags(file, userFlags);
     func->isGlobal = isGlobal;
     func->isNative = isNative;
     for (auto p : parameters)
       p->buildPex(file, obj, func);
+
+    // TODO: Build the body.
+
+    if (file->debugInfo)
+      file->debugInfo->functions.push_back(fDebInfo);
+    else
+      delete fDebInfo;
 
     return func;
-  }
-
-  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexState* state) const {
-    auto func = new pex::PexFunction();
-    func->name = file->getString(name);
-    func->documenationString = file->getString(documentationComment);
-    func->returnTypeName = returnType.buildPex(file);
-    func->userFlags = userFlags;
-    func->isGlobal = isGlobal;
-    func->isNative = isNative;
-    for (auto p : parameters)
-      p->buildPex(file, obj, func);
-
-    /*auto local = new pex::PexLocalVariable();
-    local->name = file->getString("test");
-    local->type = file->getString("Int");
-    func->locals.push_back(local);
-
-    pex::PexFunctionBuilder funcBuilder;
-    funcBuilder << pex::op::nop{ };
-    funcBuilder << pex::op::iadd(local, local, pex::PexValue::Integer(1));
-    funcBuilder.populateFunction(func);*/
-
-    state->functions.push_back(func);
   }
 };
 

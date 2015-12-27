@@ -9,6 +9,18 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusType final
 {
+  enum class Kind
+  {
+    None,
+    Bool,
+    Float,
+    Int,
+    String,
+    Var,
+
+    Unresolved,
+  };
+
   struct Unresolved
   {
     std::string name;
@@ -30,29 +42,72 @@ struct PapyrusType final
   struct String { };
   struct Var { };
 
+  Kind type{ Kind::None };
   std::string name{ "" };
+  bool isArray{ false };
 
   PapyrusType() = default;
 
-  PapyrusType(const Unresolved& other) : name(other.name) { }
-  PapyrusType(const Array& other) : name(other.name + "[]") { }
+  PapyrusType(const Unresolved& other) : type(Kind::Unresolved), name(other.name) { }
+  PapyrusType(const Array& other) : type(Kind::Unresolved), name(other.name), isArray(true) { }
 
-  PapyrusType(const None& other) : name("None") { }
-  PapyrusType(const Bool& other) : name("Bool") { }
-  PapyrusType(const Float& other) : name("Float") { }
-  PapyrusType(const Int& other) : name("Int") { }
-  PapyrusType(const String& other) : name("String") { }
-  PapyrusType(const Var& other) : name("Var") { }
+  PapyrusType(const None& other) : type(Kind::None) { }
+  PapyrusType(const Bool& other) : type(Kind::Bool) { }
+  PapyrusType(const Float& other) : type(Kind::Float) { }
+  PapyrusType(const Int& other) : type(Kind::Int) { }
+  PapyrusType(const String& other) : type(Kind::String) { }
+  PapyrusType(const Var& other) : type(Kind::Var) { }
   PapyrusType(const PapyrusType& other) = default;
-  // TODO: Remove this overload; this is only for testing.
-  PapyrusType(std::string nm) : name(nm) {  }
 
   pex::PexString buildPex(pex::PexFile* file) const {
-    return file->getString(name);
+    std::string str;
+    switch (type) {
+      case Kind::None:
+        str = "None";
+        break;
+      case Kind::Bool:
+        str = "Bool";
+        break;
+      case Kind::Float:
+        str = "Float";
+        break;
+      case Kind::Int:
+        str = "Int";
+        break;
+      case Kind::String:
+        str = "String";
+        break;
+      case Kind::Var:
+        str = "Var";
+        break;
+      case Kind::Unresolved:
+        str = name;
+        break;
+      default:
+        throw std::runtime_error("Unknown PapyrusTypeKind!");
+    }
+    if (isArray)
+      str += "[]";
+    return file->getString(str);
   }
 
   bool operator !=(const PapyrusType& other) const {
-    return _stricmp(name.c_str(), other.name.c_str()) != 0;
+    if (type == other.type && isArray == other.isArray) {
+      switch (type) {
+        case Kind::None:
+        case Kind::Bool:
+        case Kind::Float:
+        case Kind::Int:
+        case Kind::String:
+        case Kind::Var:
+          return false;
+        case Kind::Unresolved:
+          return _stricmp(name.c_str(), other.name.c_str()) != 0;
+        default:
+          throw std::runtime_error("Unknown PapyrusTypeKind while comparing!");
+      }
+    }
+    return true;
   }
 };
 

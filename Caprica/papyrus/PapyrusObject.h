@@ -69,7 +69,7 @@ struct PapyrusObject final
       obj->autoStateName = file->getString(autoState->name);
     else
       obj->autoStateName = file->getString("");
-    obj->userFlags = userFlags;
+    obj->userFlags = buildPexUserFlags(file, userFlags);
 
     for (auto s : structs)
       s->buildPex(file, obj);
