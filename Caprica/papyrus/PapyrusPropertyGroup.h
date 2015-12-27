@@ -20,7 +20,10 @@ struct PapyrusPropertyGroup final
   std::vector<PapyrusProperty*> properties{ };
 
   PapyrusPropertyGroup() = default;
-  ~PapyrusPropertyGroup() = default;
+  ~PapyrusPropertyGroup() {
+    for (auto p : properties)
+      delete p;
+  }
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
     if (file->debugInfo) {
@@ -33,6 +36,9 @@ struct PapyrusPropertyGroup final
         pg->properties.push_back(file->getString(p->name));
       file->debugInfo->propertyGroups.push_back(pg);
     }
+
+    for (auto p : properties)
+      p->buildPex(file, obj);
   }
 };
 

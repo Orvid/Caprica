@@ -52,6 +52,11 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->structs.push_back(parseStruct(script, obj));
         break;
 
+      case TokenType::kPropertyGroup:
+        consume();
+        obj->propertyGroups.push_back(parsePropertyGroup(script, obj));
+        break;
+
       case TokenType::kEvent:
         consume();
         obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(), TokenType::kEndEvent));
@@ -82,7 +87,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
           obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), tp, TokenType::kEndFunction));
         } else if (cur.type == TokenType::kProperty) {
           consume();
-          obj->properties.push_back(parseProperty(script, obj, isConst, tp));
+          obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, isConst, tp));
         } else {
           obj->variables.push_back(parseVariable(script, obj, isConst, tp));
         }
@@ -203,6 +208,49 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
   expectConsumeEOLs();
   mem->documentationString = maybeConsumeDocString();
   return mem;
+}
+
+PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
+  auto group = new PapyrusPropertyGroup();
+  group->name = expectConsumeIdent();
+  group->userFlags = parseUserFlags(PapyrusUserFlags::Hidden);
+  expectConsumeEOLs();
+  group->documentationComment = maybeConsumeDocString();
+
+  while (true) {
+    bool isConst = false;
+    switch (cur.type) {
+      case TokenType::kEndPropertyGroup:
+        consume();
+        expectConsumeEOLs();
+        goto Return;
+
+      case TokenType::kConst:
+        consume();
+        isConst = true;
+        goto TypeValue;
+
+      TypeValue:
+      case TokenType::kBool:
+      case TokenType::kFloat:
+      case TokenType::kInt:
+      case TokenType::kString:
+      case TokenType::kVar:
+      case TokenType::Identifier:
+      {
+        auto tp = expectConsumePapyrusType();
+        expectConsume(TokenType::kProperty);
+        group->properties.push_back(parseProperty(script, object, isConst, tp));
+        break;
+      }
+
+      default:
+        fatalError("Unexpected token while parsing property group!");
+    }
+  }
+
+Return:
+  return group;
 }
 
 PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {

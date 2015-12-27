@@ -19,6 +19,7 @@ private:
   PapyrusState* parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto);
   PapyrusStruct* parseStruct(PapyrusScript* script, PapyrusObject* object);
   PapyrusStructMember* parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, bool isConst, PapyrusType tp);
+  PapyrusPropertyGroup* parsePropertyGroup(PapyrusScript* script, PapyrusObject* object);
   PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
   PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);
   PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type);

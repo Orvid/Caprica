@@ -28,7 +28,6 @@ struct PapyrusObject final
   std::vector<std::string> imports{ };
   std::vector<PapyrusStruct*> structs{ };
   std::vector<PapyrusVariable*> variables{ };
-  std::vector<PapyrusProperty*> properties{ };
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
   std::vector<PapyrusState*> states{ };
 
@@ -38,12 +37,18 @@ struct PapyrusObject final
       delete s;
     for (auto v : variables)
       delete v;
-    for (auto p : properties)
-      delete p;
     for (auto g : propertyGroups)
       delete g;
     for (auto s : states)
       delete s;
+  }
+
+  PapyrusPropertyGroup* getRootPropertyGroup() {
+    if (!rootPropertyGroup) {
+      rootPropertyGroup = new PapyrusPropertyGroup();
+      propertyGroups.push_back(rootPropertyGroup);
+    }
+    return rootPropertyGroup;
   }
 
   PapyrusState* getRootState() {
@@ -70,8 +75,6 @@ struct PapyrusObject final
       s->buildPex(file, obj);
     for (auto v : variables)
       v->buildPex(file, obj);
-    for (auto p : properties)
-      p->buildPex(file, obj);
     for (auto g : propertyGroups)
       g->buildPex(file, obj);
     for (auto s : states)
@@ -82,6 +85,7 @@ struct PapyrusObject final
 
 private:
   PapyrusState* rootState{ nullptr };
+  PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
 };
 
 }}
