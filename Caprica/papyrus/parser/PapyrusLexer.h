@@ -59,8 +59,8 @@ enum class TokenType
   CmpGt,
   CmpGte,
 
-  LogicalOr,
-  LogicalAnd,
+  BooleanOr,
+  BooleanAnd,
 
   // Unfortunately, as there are also literal floats and strings,
   // we need to prefix the keyword tokens.

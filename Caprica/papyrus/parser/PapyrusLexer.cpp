@@ -124,11 +124,11 @@ StartOver:
     case '|':
       if (strm.peek() != '|')
         fatalError("Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
-      return setTok(TokenType::LogicalOr);
+      return setTok(TokenType::BooleanOr);
     case '&':
       if (strm.peek() != '|')
         fatalError("Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
-      return setTok(TokenType::LogicalAnd);
+      return setTok(TokenType::BooleanAnd);
 
     Number:
     case '0':
@@ -276,6 +276,8 @@ StartOver:
             default:
               fatalError((std::string)"Unrecognized escape sequence: '\\" + (char)escapeChar + "'");
           }
+        } else {
+          str.put(strm.get());
         }
       }
 
