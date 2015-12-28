@@ -1,5 +1,9 @@
 #include <papyrus/parser/PapyrusParser.h>
 
+#include <vector>
+
+#include <boost/filesystem.hpp>
+
 #include <papyrus/PapyrusObject.h>
 
 #include <papyrus/expressions/PapyrusBinaryOpExpression.h>
@@ -11,11 +15,9 @@
 //#include <papyrus/statements/PapyrusAssignStatement.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusExpressionStatement.h>
-//#include <papyrus/statements/PapyrusIfStatement.h>
+#include <papyrus/statements/PapyrusIfStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
-//#include <papyrus/statements/PapyrusWhileStatement.h>
-
-#include <boost/filesystem.hpp>
+#include <papyrus/statements/PapyrusWhileStatement.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -430,6 +432,50 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       consume();
       if (cur.type != TokenType::EOL)
         ret->returnValue = parseExpression(func);
+      expectConsumeEOLs();
+      return ret;
+    }
+
+    case TokenType::kIf:
+    {
+      auto ret = new statements::PapyrusIfStatement(cur.getLocation());
+      consume();
+      while (true) {
+        auto cond = parseExpression(func);
+        expectConsumeEOLs();
+        std::vector<statements::PapyrusStatement*> curStatements{ };
+        while (cur.type != TokenType::kElseIf && cur.type != TokenType::kElse && cur.type != TokenType::kEndIf) {
+          curStatements.push_back(parseStatement(func));
+        }
+        ret->ifBodies.push_back(std::make_pair(cond, curStatements));
+        if (cur.type == TokenType::kElseIf) {
+          consume();
+          continue;
+        }
+        if (cur.type == TokenType::kElse) {
+          consume();
+          expectConsumeEOLs();
+          while (cur.type != TokenType::kEndIf) {
+            ret->elseStatements.push_back(parseStatement(func));
+          }
+        }
+        expectConsume(TokenType::kEndIf);
+        expectConsumeEOLs();
+        goto Return;
+      }
+    Return:
+      return ret;
+    }
+
+    case TokenType::kWhile:
+    {
+      auto ret = new statements::PapyrusWhileStatement(cur.getLocation());
+      consume();
+      ret->condition = parseExpression(func);
+      expectConsumeEOLs();
+      while (cur.type != TokenType::kEndWhile)
+        ret->body.push_back(parseStatement(func));
+      expectConsume(TokenType::kEndWhile);
       expectConsumeEOLs();
       return ret;
     }
