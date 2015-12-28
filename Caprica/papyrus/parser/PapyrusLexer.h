@@ -34,7 +34,7 @@ enum class TokenType
   LParen,
   RParen,
   LSquare,
-  RSqaure,
+  RSquare,
   Dot,
   Comma,
 
@@ -148,6 +148,9 @@ protected:
   Token cur{ TokenType::Unknown };
 
   void consume();
+  // Use this sparingly, as it means
+  // tokens get lexed multiple times.
+  Token peekToken(int distance = 0);
 
   [[noreturn]]
   void fatalError(const std::string& msg) {

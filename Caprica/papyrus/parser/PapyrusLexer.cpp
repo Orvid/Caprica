@@ -17,6 +17,21 @@ void PapyrusLexer::setTok(Token& tok) {
   cur.line = lineNum;
 }
 
+PapyrusLexer::Token PapyrusLexer::peekToken(int distance) {
+  auto oldCur = cur;
+  auto oldLine = lineNum;
+  auto oldPos = strm.tellg();
+
+  for (int i = 0; i <= distance; i++)
+    consume();
+
+  auto newTok = cur;
+  cur = oldCur;
+  lineNum = oldLine;
+  strm.seekg(oldPos);
+  return newTok;
+}
+
 static std::map<std::string, TokenType, CaselessStringComparer> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
@@ -76,7 +91,7 @@ StartOver:
     case '[':
       return setTok(TokenType::LSquare);
     case ']':
-      return setTok(TokenType::RSqaure);
+      return setTok(TokenType::RSquare);
     case '.':
       return setTok(TokenType::Dot);
     case ',':

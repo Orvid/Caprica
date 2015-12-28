@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include <pex/PexFile.h>
@@ -18,6 +19,7 @@ struct PapyrusType final
     String,
     Var,
 
+    Array,
     Unresolved,
   };
 
@@ -30,9 +32,9 @@ struct PapyrusType final
   };
   struct Array
   {
-    std::string name;
+    PapyrusType* type;
 
-    Array(std::string nm) : name(nm) { }
+    Array(PapyrusType* tp) : type(tp) { }
     ~Array() = default;
   };
   struct None { };
@@ -44,12 +46,12 @@ struct PapyrusType final
 
   Kind type{ Kind::None };
   std::string name{ "" };
-  bool isArray{ false };
+  std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 
   PapyrusType() = default;
 
   PapyrusType(const Unresolved& other) : type(Kind::Unresolved), name(other.name) { }
-  PapyrusType(const Array& other) : type(Kind::Unresolved), name(other.name), isArray(true) { }
+  PapyrusType(const Array& other) : type(Kind::Array), arrayElementType(other.type) { }
 
   PapyrusType(const None& other) : type(Kind::None) { }
   PapyrusType(const Bool& other) : type(Kind::Bool) { }
@@ -60,35 +62,12 @@ struct PapyrusType final
   PapyrusType(const PapyrusType& other) = default;
 
   pex::PexString buildPex(pex::PexFile* file) const {
-    std::string str;
-    switch (type) {
-      case Kind::None:
-        str = "None";
-        break;
-      case Kind::Bool:
-        str = "Bool";
-        break;
-      case Kind::Float:
-        str = "Float";
-        break;
-      case Kind::Int:
-        str = "Int";
-        break;
-      case Kind::String:
-        str = "String";
-        break;
-      case Kind::Var:
-        str = "Var";
-        break;
-      case Kind::Unresolved:
-        str = name;
-        break;
-      default:
-        throw std::runtime_error("Unknown PapyrusTypeKind!");
-    }
-    if (isArray)
-      str += "[]";
-    return file->getString(str);
+    return file->getString(getTypeString());
+  }
+
+  PapyrusType getElementType() const {
+    assert(type == Kind::Array);
+    return *arrayElementType;
   }
 
   bool operator ==(const PapyrusType& other) const {
@@ -96,7 +75,7 @@ struct PapyrusType final
   }
 
   bool operator !=(const PapyrusType& other) const {
-    if (type == other.type && isArray == other.isArray) {
+    if (type == other.type) {
       switch (type) {
         case Kind::None:
         case Kind::Bool:
@@ -105,6 +84,8 @@ struct PapyrusType final
         case Kind::String:
         case Kind::Var:
           return false;
+        case Kind::Array:
+          return *arrayElementType != *other.arrayElementType;
         case Kind::Unresolved:
           return _stricmp(name.c_str(), other.name.c_str()) != 0;
         default:
@@ -112,6 +93,30 @@ struct PapyrusType final
       }
     }
     return true;
+  }
+
+private:
+  std::string getTypeString() const {
+    switch (type) {
+      case Kind::None:
+        return "None";
+      case Kind::Bool:
+        return "Bool";
+      case Kind::Float:
+        return "Float";
+      case Kind::Int:
+        return "Int";
+      case Kind::String:
+        return "String";
+      case Kind::Var:
+        return "Var";
+      case Kind::Array:
+        return arrayElementType->getTypeString() + "[]";
+      case Kind::Unresolved:
+        return name;
+      default:
+        throw std::runtime_error("Unknown PapyrusTypeKind!");
+    }
   }
 };
 
