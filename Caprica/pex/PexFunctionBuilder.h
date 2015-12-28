@@ -133,6 +133,14 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
       debInfo->instructionLineMap.push_back(l.buildPex());
   }
 
+  PexLocalVariable* allocateLocal(PexFile* file, std::string name, papyrus::PapyrusType tp) {
+    auto loc = new PexLocalVariable();
+    loc->name = file->getString(name);
+    loc->type = tp.buildPex(file);
+    locals.push_back(loc);
+    return loc;
+  }
+
   PexLocalVariable* allocTemp(PexFile* file, papyrus::PapyrusType tp) {
     auto loc = new PexLocalVariable();
     std::stringstream ss;

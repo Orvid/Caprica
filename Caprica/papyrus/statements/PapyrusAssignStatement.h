@@ -1,6 +1,6 @@
 #pragma once
 
-#include <papyrus/expressions/PapyrusBinaryOperatorExpression.h>
+#include <papyrus/expressions/PapyrusBinaryOpExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/statements/PapyrusStatement.h>
 

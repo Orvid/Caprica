@@ -2,11 +2,15 @@
 
 #include <papyrus/PapyrusObject.h>
 
+#include <papyrus/expressions/PapyrusBinaryOpExpression.h>
+#include <papyrus/expressions/PapyrusCastExpression.h>
+#include <papyrus/expressions/PapyrusIdentifierExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
+#include <papyrus/expressions/PapyrusUnaryOpExpression.h>
 
 //#include <papyrus/statements/PapyrusAssignStatement.h>
-//#include <papyrus/statements/PapyrusDeclareStatement.h>
-//#include <papyrus/statements/PapyrusExpressionStatement.h>
+#include <papyrus/statements/PapyrusDeclareStatement.h>
+#include <papyrus/statements/PapyrusExpressionStatement.h>
 //#include <papyrus/statements/PapyrusIfStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
 //#include <papyrus/statements/PapyrusWhileStatement.h>
@@ -430,15 +434,262 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
+    case TokenType::kBool:
+    case TokenType::kFloat:
+    case TokenType::kInt:
+    case TokenType::kString:
+    case TokenType::kVar:
+    {
+      auto ret = new statements::PapyrusDeclareStatement(cur.getLocation());
+      ret->type = expectConsumePapyrusType();
+      ret->name = expectConsumeIdent();
+      if (maybeConsume(TokenType::Equal))
+        ret->initialValue = parseExpression(func);
+      expectConsumeEOLs();
+      return ret;
+    }
+
+    case TokenType::Identifier:
+    {
+      auto expr = parseExpression(func);
+      if (cur.type == TokenType::Identifier) {
+        auto idExpr = reinterpret_cast<expressions::PapyrusIdentifierExpression*>(expr);
+        if (!idExpr)
+          fatalError("Unexpected identifier!");
+
+        auto ret = new statements::PapyrusDeclareStatement(idExpr->location);
+        ret->type = PapyrusType::Unresolved(idExpr->identifier);
+        delete idExpr;
+        ret->name = expectConsumeIdent();
+        if (maybeConsume(TokenType::Equal))
+          ret->initialValue = parseExpression(func);
+        expectConsumeEOLs();
+        return ret;
+      }
+
+      auto idStat = new statements::PapyrusExpressionStatement(expr->location);
+      idStat->expression = expr;
+      expectConsumeEOLs();
+      return idStat;
+    }
+
     default:
       fatalError("Unexpected token while parsing statement!");
   }
 }
 
 expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* func) {
-  auto lit = new expressions::PapyrusLiteralExpression(cur.getLocation());
-  lit->value = expectConsumePapyrusValue();
-  return lit;
+  auto expr = parseAndExpression(func);
+  while (cur.type == TokenType::BooleanOr) {
+    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+    binExpr->left = expr;
+    binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanOr;
+    consume();
+    binExpr->right = parseAndExpression(func);
+    expr = binExpr;
+  }
+  return expr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseAndExpression(PapyrusFunction* func) {
+  auto expr = parseCmpExpression(func);
+  while (cur.type == TokenType::BooleanAnd) {
+    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+    binExpr->left = expr;
+    binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanAnd;
+    consume();
+    binExpr->right = parseCmpExpression(func);
+    expr = binExpr;
+  }
+  return expr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseCmpExpression(PapyrusFunction* func) {
+  auto expr = parseAddExpression(func);
+  while (true) {
+    expressions::PapyrusBinaryOperatorType op = expressions::PapyrusBinaryOperatorType::None;
+    switch (cur.type) {
+      case TokenType::CmpEq:
+        op = expressions::PapyrusBinaryOperatorType::CmpEq;
+        goto OperatorCommon;
+      case TokenType::CmpNeq:
+        op = expressions::PapyrusBinaryOperatorType::CmpNeq;
+        goto OperatorCommon;
+      case TokenType::CmpLt:
+        op = expressions::PapyrusBinaryOperatorType::CmpLt;
+        goto OperatorCommon;
+      case TokenType::CmpLte:
+        op = expressions::PapyrusBinaryOperatorType::CmpLte;
+        goto OperatorCommon;
+      case TokenType::CmpGt:
+        op = expressions::PapyrusBinaryOperatorType::CmpGt;
+        goto OperatorCommon;
+      case TokenType::CmpGte:
+        op = expressions::PapyrusBinaryOperatorType::CmpGte;
+        goto OperatorCommon;
+
+      OperatorCommon:
+      {
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+        binExpr->left = expr;
+        binExpr->operation = op;
+        consume();
+        binExpr->right = parseAddExpression(func);
+        expr = binExpr;
+        break;
+      }
+
+      default:
+        goto Return;
+    }
+  }
+Return:
+  return expr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunction* func) {
+  auto expr = parseMultExpression(func);
+  while (true) {
+    auto op = expressions::PapyrusBinaryOperatorType::None;
+    switch (cur.type) {
+      case TokenType::Plus:
+        op = expressions::PapyrusBinaryOperatorType::Add;
+        goto OperatorCommon;
+      case TokenType::Minus:
+        op = expressions::PapyrusBinaryOperatorType::Subtract;
+        goto OperatorCommon;
+
+      OperatorCommon:
+      {
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+        binExpr->left = expr;
+        binExpr->operation = op;
+        consume();
+        binExpr->right = parseMultExpression(func);
+        expr = binExpr;
+        break;
+      }
+
+      default:
+        goto Return;
+    }
+  }
+Return:
+  return expr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseMultExpression(PapyrusFunction* func) {
+  auto expr = parseUnaryExpression(func);
+  while (true) {
+    auto op = expressions::PapyrusBinaryOperatorType::None;
+    switch (cur.type) {
+      case TokenType::Mul:
+        op = expressions::PapyrusBinaryOperatorType::Multiply;
+        goto OperatorCommon;
+      case TokenType::Div:
+        op = expressions::PapyrusBinaryOperatorType::Divide;
+        goto OperatorCommon;
+      case TokenType::Mod:
+        op = expressions::PapyrusBinaryOperatorType::Modulus;
+        goto OperatorCommon;
+
+      OperatorCommon:
+      {
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+        binExpr->left = expr;
+        binExpr->operation = op;
+        consume();
+        binExpr->right = parseUnaryExpression(func);
+        expr = binExpr;
+        break;
+      }
+
+      default:
+        goto Return;
+    }
+  }
+Return:
+  return expr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseUnaryExpression(PapyrusFunction* func) {
+  auto op = expressions::PapyrusUnaryOperatorType::None;
+  switch (cur.type) {
+    case TokenType::Exclaim:
+      op = expressions::PapyrusUnaryOperatorType::Not;
+      goto OperatorCommon;
+    case TokenType::Minus:
+      op = expressions::PapyrusUnaryOperatorType::Negate;
+      goto OperatorCommon;
+
+    OperatorCommon:
+    {
+      auto unExpr = new expressions::PapyrusUnaryOpExpression(cur.getLocation());
+      unExpr->operation = op;
+      consume();
+      unExpr->innerExpression = parseCastExpression(func);
+      return unExpr;
+    }
+    default:
+      return parseCastExpression(func);
+  }
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseCastExpression(PapyrusFunction* func) {
+  auto expr = parseDotExpression(func);
+  // Extension note: The Wiki claims that the official parser doesn't allow
+  // immediate chaining of casts, but we allow it here because we can.
+  while (cur.type == TokenType::kAs) {
+    auto castExpr = new expressions::PapyrusCastExpression(cur.getLocation());
+    consume();
+    castExpr->innerExpression = expr;
+    castExpr->targetType = expectConsumePapyrusType();
+    expr = castExpr;
+  }
+  return expr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunction* func) {
+  switch (cur.type) {
+    case TokenType::Float:
+    case TokenType::Integer:
+    case TokenType::String:
+    case TokenType::kNone:
+    case TokenType::kTrue:
+    case TokenType::kFalse:
+    {
+      auto lit = new expressions::PapyrusLiteralExpression(cur.getLocation());
+      lit->value = expectConsumePapyrusValue();
+      return lit;
+    }
+
+    case TokenType::Identifier:
+    {
+      auto id = new expressions::PapyrusIdentifierExpression(cur.getLocation());
+      id->identifier = cur.sValue;
+      consume();
+      return id;
+    }
+
+    default:
+      fatalError("Unexpected token while parsing an expression!");
+  }
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseArrayExpression(PapyrusFunction* func) {
+  return nullptr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFunction* func) {
+  return nullptr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseArrayFuncOrIdExpression(PapyrusFunction* func) {
+  return nullptr;
+}
+
+expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {
+  return nullptr;
 }
 
 PapyrusType PapyrusParser::expectConsumePapyrusType() {

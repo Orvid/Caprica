@@ -37,6 +37,13 @@ struct PapyrusResolutionContext final
   void ensureCastable(PapyrusType src, PapyrusType dest) {
 
   }
+
+  [[noreturn]]
+  void fatalError(const std::string& msg) {
+    // TODO: Expand on this, making sure to write things like the
+    // line number to stderr before dying.
+    throw std::runtime_error(msg);
+  }
 };
 
 }}

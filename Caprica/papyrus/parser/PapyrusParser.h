@@ -27,7 +27,19 @@ private:
   PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
 
   statements::PapyrusStatement* parseStatement(PapyrusFunction* func);
+
   expressions::PapyrusExpression* parseExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseAndExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseCmpExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseAddExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseMultExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseUnaryExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseCastExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseDotExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseArrayExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseAtomExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseArrayFuncOrIdExpression(PapyrusFunction* func);
+  expressions::PapyrusExpression* parseFuncOrIdExpression(PapyrusFunction* func);
 
   PapyrusType expectConsumePapyrusType();
   PapyrusValue expectConsumePapyrusValue();
