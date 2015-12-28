@@ -29,9 +29,27 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   }
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
-    // TODO: Implement properly.
+    namespace op = caprica::pex::op;
+    auto iVal = innerExpression->generateLoad(file, bldr);
+    auto dest = bldr.allocTemp(file, this->resultType());
     bldr << location;
-    return innerExpression->generateLoad(file, bldr);
+    switch (operation) {
+      case PapyrusUnaryOperatorType::Negate:
+        if (innerExpression->resultType() == PapyrusType::Float())
+          bldr << op::fneg{ dest, iVal };
+        else if (innerExpression->resultType() == PapyrusType::Int())
+          bldr << op::ineg{ dest, iVal };
+        else
+          throw std::runtime_error("You can only negate integers and floats!");
+        break;
+      case PapyrusUnaryOperatorType::Not:
+        bldr << op::not{ dest, iVal };
+        break;
+      default:
+        throw std::runtime_error("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
+    }
+    bldr.freeIfTemp(iVal);
+    return dest;
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

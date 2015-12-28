@@ -124,11 +124,11 @@ StartOver:
     case '|':
       if (strm.peek() != '|')
         fatalError("Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
-      return setTok(TokenType::BooleanOr);
+      return setTok(TokenType::BooleanOr, 1);
     case '&':
-      if (strm.peek() != '|')
+      if (strm.peek() != '&')
         fatalError("Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
-      return setTok(TokenType::BooleanAnd);
+      return setTok(TokenType::BooleanAnd, 1);
 
     Number:
     case '0':

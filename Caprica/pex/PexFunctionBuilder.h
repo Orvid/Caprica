@@ -6,6 +6,7 @@
 #include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexInstruction.h>
+#include <pex/PexLabel.h>
 #include <pex/PexLocalVariable.h>
 #include <pex/PexString.h>
 
@@ -32,6 +33,9 @@ namespace caprica { namespace pex {
   ARG3(cmplte, CmpLte, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(cmpgt, CmpGt, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(cmpgte, CmpGte, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
+  ARG1(jmp, Jmp, PexLabel*, target) \
+  ARG2(jmpt, JmpT, PexValue, cond, PexLabel*, target) \
+  ARG2(jmpf, JmpF, PexValue, cond, PexLabel*, target) \
   ARG1(ret, Return, PexValue, val) \
   ARG3(strcat, StrCat, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(propget, PropGet, PexString, propName, PexValue::Identifier, baseObj, PexValue::Identifier, dest) \
@@ -54,13 +58,9 @@ namespace caprica { namespace pex {
   ARG3(arrayremove, ArrayRemove, PexValue::Identifier, baseObj, PexValue, index, PexValue, count) \
   ARG1(arrayclear, ArrayClear, PexValue::Identifier, dest) \
 
-/*Jmp,
-//JmpT,
-//JmpF,
 //CallMethod,
 //CallParent,
 //CallStatic,*/
-
 
 namespace op {
 
@@ -126,6 +126,25 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
   }
 
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
+    for (size_t i = 0; i < instructions.size(); i++) {
+      for (auto& arg : instructions[i]->args) {
+        if (arg.type == PexValueType::Label) {
+          if (arg.l->targetIdx == (size_t)-1)
+            throw std::runtime_error("Unresolved label!");
+          auto newVal = arg.l->targetIdx - i;
+          arg.type = PexValueType::Integer;
+          arg.i = (int32_t)newVal;
+        }
+      }
+    }
+
+    for (auto l : labels) {
+      if (l->targetIdx == (size_t)-1)
+        throw std::runtime_error("Unused unresolved label!");
+      delete l;
+    }
+    labels.clear();
+
     func->instructions = instructions;
     func->locals = locals;
     debInfo->instructionLineMap.reserve(instructionLocations.size());
@@ -155,11 +174,22 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     // TODO: alloc & free temps.
   }
 
+  PexFunctionBuilder& operator <<(PexLabel* loc) {
+    loc->targetIdx = instructions.size();
+    return *this;
+  }
+  PexFunctionBuilder& operator >>(PexLabel*& loc) {
+    loc = new PexLabel();
+    labels.push_back(loc);
+    return *this;
+  }
+
 private:
   papyrus::parser::PapyrusFileLocation currentLocation{ };
   std::vector<papyrus::parser::PapyrusFileLocation> instructionLocations{ };
   std::vector<PexInstruction*> instructions{ };
   std::vector<PexLocalVariable*> locals{ };
+  std::vector<PexLabel*> labels{ };
   size_t currentTempI = 0;
 
   template<typename... Args>

@@ -48,80 +48,103 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     auto lVal = left->generateLoad(file, bldr);
-    auto rVal = right->generateLoad(file, bldr);
     auto dest = bldr.allocTemp(file, this->resultType());
-    bldr << location;
-    switch (operation) {
-      case PapyrusBinaryOperatorType::BooleanOr:
-      case PapyrusBinaryOperatorType::BooleanAnd:
-        //left = coerceExpression(left, PapyrusType::Bool());
-        //right = coerceExpression(right, PapyrusType::Bool());
-        break;
+    if (operation == PapyrusBinaryOperatorType::BooleanOr) {
+      bldr << location;
+      bldr << op::assign{ dest, lVal };
+      pex::PexLabel* after;
+      bldr >> after;
+      bldr << op::jmpt{ dest, after };
+      auto rVal = right->generateLoad(file, bldr);
+      bldr << location;
+      bldr << op::assign{ dest, rVal };
+      bldr << after;
+      bldr.freeIfTemp(rVal);
+    } else if (operation == PapyrusBinaryOperatorType::BooleanAnd) {
+      bldr << location;
+      bldr << op::assign{ dest, lVal };
+      pex::PexLabel* afterAll;
+      bldr >> afterAll;
+      bldr << op::jmpf{ dest, afterAll };
+      auto rVal = right->generateLoad(file, bldr);
+      bldr << location;
+      bldr << op::assign{ dest, rVal };
+      bldr << afterAll;
+      bldr.freeIfTemp(rVal);
+    } else {
+      auto rVal = right->generateLoad(file, bldr);
+      bldr << location;
+      switch (operation) {
+        case PapyrusBinaryOperatorType::CmpEq:
+          bldr << op::cmpeq{ dest, lVal, rVal };
+          break;
+        case PapyrusBinaryOperatorType::CmpNeq:
+          bldr << op::cmpeq{ dest, lVal, rVal };
+          bldr << op::not{ dest, dest };
+          break;
+        case PapyrusBinaryOperatorType::CmpLt:
+          bldr << op::cmplt{ dest, lVal, rVal };
+          break;
+        case PapyrusBinaryOperatorType::CmpLte:
+          bldr << op::cmplte{ dest, lVal, rVal };
+          break;
+        case PapyrusBinaryOperatorType::CmpGt:
+          bldr << op::cmpgt{ dest, lVal, rVal };
+          break;
+        case PapyrusBinaryOperatorType::CmpGte:
+          bldr << op::cmpgte{ dest, lVal, rVal };
+          break;
 
-      case PapyrusBinaryOperatorType::CmpEq:
-        bldr << op::cmpeq{ dest, lVal, rVal };
-        break;
-      case PapyrusBinaryOperatorType::CmpNeq:
-        bldr << op::cmpeq{ dest, lVal, rVal };
-        bldr << op::not{ dest, dest };
-        break;
-      case PapyrusBinaryOperatorType::CmpLt:
-        bldr << op::cmplt{ dest, lVal, rVal };
-        break;
-      case PapyrusBinaryOperatorType::CmpLte:
-        bldr << op::cmplte{ dest, lVal, rVal };
-        break;
-      case PapyrusBinaryOperatorType::CmpGt:
-        bldr << op::cmpgt{ dest, lVal, rVal };
-        break;
-      case PapyrusBinaryOperatorType::CmpGte:
-        bldr << op::cmpgte{ dest, lVal, rVal };
-        break;
-      case PapyrusBinaryOperatorType::Add:
-        if (left->resultType() == PapyrusType::Int())
-          bldr << op::iadd{ dest, lVal, rVal };
-        else if (left->resultType() == PapyrusType::Float())
-          bldr << op::fadd{ dest, lVal, rVal };
-        else if (left->resultType() == PapyrusType::String())
-          bldr << op::strcat{ dest, lVal, rVal };
-        else
-          throw std::runtime_error("Unknown argument type to an add operation!");
-        break;
-      case PapyrusBinaryOperatorType::Subtract:
-        if (left->resultType() == PapyrusType::Int())
-          bldr << op::isub{ dest, lVal, rVal };
-        else if (left->resultType() == PapyrusType::Float())
-          bldr << op::fsub{ dest, lVal, rVal };
-        else
-          throw std::runtime_error("Unknown argument type to an add operation!");
-        break;
-      case PapyrusBinaryOperatorType::Multiply:
-        if (left->resultType() == PapyrusType::Int())
-          bldr << op::imul{ dest, lVal, rVal };
-        else if (left->resultType() == PapyrusType::Float())
-          bldr << op::fmul{ dest, lVal, rVal };
-        else
-          throw std::runtime_error("Unknown argument type to an add operation!");
-        break;
-      case PapyrusBinaryOperatorType::Divide:
-        if (left->resultType() == PapyrusType::Int())
-          bldr << op::idiv{ dest, lVal, rVal };
-        else if (left->resultType() == PapyrusType::Float())
-          bldr << op::fdiv{ dest, lVal, rVal };
-        else
-          throw std::runtime_error("Unknown argument type to an add operation!");
-        break;
-      case PapyrusBinaryOperatorType::Modulus:
-        if (left->resultType() != PapyrusType::Int())
-          throw std::runtime_error("Unknown argument type to an add operation!");
-        bldr << op::imod{ dest, lVal, rVal };
-        break;
+        case PapyrusBinaryOperatorType::Add:
+          if (left->resultType() == PapyrusType::Int())
+            bldr << op::iadd{ dest, lVal, rVal };
+          else if (left->resultType() == PapyrusType::Float())
+            bldr << op::fadd{ dest, lVal, rVal };
+          else if (left->resultType() == PapyrusType::String())
+            bldr << op::strcat{ dest, lVal, rVal };
+          else
+            throw std::runtime_error("Unknown argument type to an add operation!");
+          break;
 
-      default:
-        throw std::runtime_error("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
+        case PapyrusBinaryOperatorType::Subtract:
+          if (left->resultType() == PapyrusType::Int())
+            bldr << op::isub{ dest, lVal, rVal };
+          else if (left->resultType() == PapyrusType::Float())
+            bldr << op::fsub{ dest, lVal, rVal };
+          else
+            throw std::runtime_error("Unknown argument type to a subtraction operation!");
+          break;
+
+        case PapyrusBinaryOperatorType::Multiply:
+          if (left->resultType() == PapyrusType::Int())
+            bldr << op::imul{ dest, lVal, rVal };
+          else if (left->resultType() == PapyrusType::Float())
+            bldr << op::fmul{ dest, lVal, rVal };
+          else
+            throw std::runtime_error("Unknown argument type to a multiplication operation!");
+          break;
+
+        case PapyrusBinaryOperatorType::Divide:
+          if (left->resultType() == PapyrusType::Int())
+            bldr << op::idiv{ dest, lVal, rVal };
+          else if (left->resultType() == PapyrusType::Float())
+            bldr << op::fdiv{ dest, lVal, rVal };
+          else
+            throw std::runtime_error("Unknown argument type to a division operation!");
+          break;
+
+        case PapyrusBinaryOperatorType::Modulus:
+          if (left->resultType() != PapyrusType::Int())
+            throw std::runtime_error("Unknown argument type to a modulus operation!");
+          bldr << op::imod{ dest, lVal, rVal };
+          break;
+
+        default:
+          throw std::runtime_error("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
+      }
+      bldr.freeIfTemp(rVal);
     }
     bldr.freeIfTemp(lVal);
-    bldr.freeIfTemp(rVal);
     return dest;
   }
 

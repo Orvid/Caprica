@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <pex/PexLabel.h>
 #include <pex/PexLocalVariable.h>
 #include <pex/PexString.h>
 
@@ -15,6 +16,8 @@ enum class PexValueType : uint8_t
   Integer = 3,
   Float = 4,
   Bool = 5,
+
+  Label = 20,
 };
 
 struct PexValue final
@@ -26,6 +29,7 @@ struct PexValue final
     int32_t i;
     float f;
     bool b;
+    PexLabel* l;
   };
 
   struct Identifier
@@ -45,13 +49,23 @@ struct PexValue final
     ~Integer() = default;
   };
 
+  struct Bool
+  {
+    bool b;
+
+    Bool(bool val) : b(val) { }
+    ~Bool() = default;
+  };
+
   struct None { };
 
   PexValue() { };
   PexValue(const PexValue&) = default;
+  PexValue(PexLabel* lab) : type(PexValueType::Label), l(lab) { }
   PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { }
-  PexValue(Identifier id) : type(PexValueType::Identifier), s(id.name) { }
-  PexValue(Integer val) : type(PexValueType::Integer), i(val.i) { }
+  PexValue(const Identifier& id) : type(PexValueType::Identifier), s(id.name) { }
+  PexValue(const Integer& val) : type(PexValueType::Integer), i(val.i) { }
+  PexValue(const Bool& val) : type(PexValueType::Bool), b(val.b) { }
   PexValue(const None& val) : type(PexValueType::None) { }
   ~PexValue() = default;
 };
