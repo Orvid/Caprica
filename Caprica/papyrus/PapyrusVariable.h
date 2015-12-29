@@ -36,6 +36,12 @@ struct PapyrusVariable final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
+
+    PapyrusIdentifier id;
+    id.type = PapyrusIdentifierType::Variable;
+    id.name = name;
+    id.var = this;
+    ctx->addIdentifier(id);
   }
 };
 

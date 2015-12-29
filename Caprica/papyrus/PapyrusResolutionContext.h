@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/range/adaptor/reversed.hpp>
+
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
 #include <papyrus/PapyrusIdentifier.h>
@@ -58,6 +60,7 @@ struct PapyrusResolutionContext final
   }
 
   void addIdentifier(const PapyrusIdentifier& ident) {
+    // TODO: Ensure no parent scopes have the name.
     identifierStack.back().insert({ ident.name, ident });
   }
 
@@ -66,15 +69,14 @@ struct PapyrusResolutionContext final
       return ident;
     }
 
-    for (size_t i = identifierStack.size() - 1; i >= 0; i--) {
-      auto f = identifierStack[i].find(ident.name);
-      if (f != identifierStack[i].end()) {
+    for (auto& stack : boost::adaptors::reverse(identifierStack)) {
+      auto f = stack.find(ident.name);
+      if (f != stack.end()) {
         return f->second;
       }
     }
 
-    // TODO: Failed to resolve it. Should error but won't for now.
-    return ident;
+    throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
   }
 
 private:

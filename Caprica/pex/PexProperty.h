@@ -16,7 +16,9 @@ struct PexProperty final
   PexString autoVar{ };
   PexFunction* readFunction{ nullptr };
   PexFunction* writeFunction{ nullptr };
-  bool isAutoReadOnly{ false };
+  bool isAuto{ false };
+  bool isReadable{ false };
+  bool isWritable{ false };
 
   PexProperty() = default;
   ~PexProperty() {

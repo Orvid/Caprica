@@ -107,8 +107,10 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
           consume();
           obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), tp, TokenType::kEndFunction));
         } else if (cur.type == TokenType::kProperty) {
+          if (isConst)
+            fatalError("A property cannot be marked const!");
           consume();
-          obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, isConst, tp));
+          obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, tp));
         } else {
           obj->variables.push_back(parseVariable(script, obj, isConst, tp));
         }
@@ -246,12 +248,6 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
         expectConsumeEOLs();
         goto Return;
 
-      case TokenType::kConst:
-        consume();
-        isConst = true;
-        goto TypeValue;
-
-      TypeValue:
       case TokenType::kBool:
       case TokenType::kFloat:
       case TokenType::kInt:
@@ -261,7 +257,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kProperty);
-        group->properties.push_back(parseProperty(script, object, isConst, tp));
+        group->properties.push_back(parseProperty(script, object, tp));
         break;
       }
 
@@ -274,9 +270,8 @@ Return:
   return group;
 }
 
-PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type) {
+PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType type) {
   auto prop = new PapyrusProperty();
-  prop->isConst = isConst;
   prop->type = type;
   prop->location = cur.getLocation();
   prop->name = expectConsumeIdent();
@@ -287,32 +282,25 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     isFullProp = false;
     hadDefaultValue = true;
     prop->defaultValue = expectConsumePapyrusValue();
-  } else if (isConst) {
-    fatalError("A const property must have a value!");
   }
 
   if (cur.type == TokenType::kAuto) {
     isFullProp = false;
+    prop->isAuto = true;
     consume();
-    if (isConst)
-      fatalError("A const property cannot be marked Auto!");
   } else if (cur.type == TokenType::kAutoReadOnly) {
     isFullProp = false;
-    prop->isAutoReadOnly = true;
+    prop->isAuto = true;
+    prop->isReadOnly = true;
     consume();
     if (!hadDefaultValue)
       fatalError("An AutoReadOnly property must have a value!");
-    if (isConst)
-      fatalError("A const property cannot be marked AutoReadOnly!");
   }
   prop->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden | PapyrusUserFlags::Mandatory);
   expectConsumeEOLs();
   prop->documentationComment = maybeConsumeDocString();
 
   if (isFullProp) {
-    if (isConst)
-      fatalError("A full property can't be declared const!");
-
     for (int i = 0; i < 2; i++) {
       switch (cur.type) {
         case TokenType::kFunction:

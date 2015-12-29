@@ -87,6 +87,7 @@ struct PapyrusObject final
   void semantic(PapyrusResolutionContext* ctx) {
     parentClass = ctx->resolveType(parentClass);
     ctx->object = this;
+    ctx->pushIdentifierScope();
     for (auto i : imports)
       ctx->addImport(i);
     for (auto s : structs)
@@ -97,6 +98,7 @@ struct PapyrusObject final
       g->semantic(ctx);
     for (auto s : states)
       s->semantic(ctx);
+    ctx->popIdentifierScope();
     ctx->object = nullptr;
   }
 

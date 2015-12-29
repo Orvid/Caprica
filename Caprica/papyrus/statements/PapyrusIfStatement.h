@@ -56,11 +56,15 @@ struct PapyrusIfStatement final : public PapyrusStatement
     for (auto& i : ifBodies) {
       i.first->semantic(ctx);
       i.first = expressions::PapyrusExpression::coerceExpression(i.first, PapyrusType::Bool());
+      ctx->pushIdentifierScope();
       for (auto s : i.second)
         s->semantic(ctx);
+      ctx->popIdentifierScope();
     }
+    ctx->pushIdentifierScope();
     for (auto s : elseStatements)
       s->semantic(ctx);
+    ctx->popIdentifierScope();
   }
 };
 

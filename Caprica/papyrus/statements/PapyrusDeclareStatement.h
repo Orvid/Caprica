@@ -40,6 +40,12 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
       initialValue->semantic(ctx);
       initialValue = expressions::PapyrusExpression::coerceExpression(initialValue, type);
     }
+
+    PapyrusIdentifier id;
+    id.type = PapyrusIdentifierType::DeclareStatement;
+    id.name = name;
+    id.declStatement = this;
+    ctx->addIdentifier(id);
   }
 };
 

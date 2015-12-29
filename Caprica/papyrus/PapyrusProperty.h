@@ -24,8 +24,8 @@ struct PapyrusProperty final
   std::string name{ "" };
   std::string documentationComment{ "" };
   PapyrusType type{ };
-  bool isConst{ false };
-  bool isAutoReadOnly{ false };
+  bool isAuto{ false };
+  bool isReadOnly{ false };
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
   PapyrusFunction* readFunction{ nullptr };
   PapyrusFunction* writeFunction{ nullptr };
@@ -47,7 +47,9 @@ struct PapyrusProperty final
     prop->documentationString = file->getString(documentationComment);
     prop->typeName = type.buildPex(file);
     prop->userFlags = buildPexUserFlags(file, userFlags);
-    if (isConst) {
+    prop->isAuto = isAuto;
+    if (isAuto && isReadOnly) {
+      prop->isReadable = true;
       auto func = new pex::PexFunction();
       func->returnTypeName = prop->typeName;
       func->documenationString = file->getString("");
@@ -63,7 +65,7 @@ struct PapyrusProperty final
         fDebInfo->instructionLineMap.push_back(location.buildPex());
         file->debugInfo->functions.push_back(fDebInfo);
       }
-    } else if (!readFunction && !writeFunction) {
+    } else if (isAuto) {
       auto var = new pex::PexVariable();
       var->name = file->getString("::" + name + "_var");
       var->typeName = prop->typeName;
@@ -76,13 +78,16 @@ struct PapyrusProperty final
       // and both initial values are none.
       var->isConst = true;
       prop->autoVar = var->name;
-      prop->isAutoReadOnly = isAutoReadOnly;
       obj->variables.push_back(var);
     } else {
-      if (readFunction)
+      if (readFunction) {
+        prop->isReadable = true;
         prop->readFunction = readFunction->buildPex(file, obj, nullptr, pex::PexDebugFunctionType::Getter, prop->name);
-      if (writeFunction)
+      }
+      if (writeFunction) {
+        prop->isWritable = true;
         prop->writeFunction = writeFunction->buildPex(file, obj, nullptr, pex::PexDebugFunctionType::Setter, prop->name);
+      }
     }
     obj->properties.push_back(prop);
   }
@@ -95,6 +100,12 @@ struct PapyrusProperty final
     if (writeFunction)
       writeFunction->semantic(ctx);
     ctx->prop = nullptr;
+
+    PapyrusIdentifier id;
+    id.type = PapyrusIdentifierType::Property;
+    id.name = name;
+    id.prop = this;
+    ctx->addIdentifier(id);
   }
 };
 
