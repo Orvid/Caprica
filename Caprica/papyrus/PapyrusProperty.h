@@ -41,6 +41,10 @@ struct PapyrusProperty final
       delete writeFunction;
   }
 
+  std::string getAutoVarName() const {
+    return "::" + name + "_var";
+  }
+
   void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
     auto prop = new pex::PexProperty();
     prop->name = file->getString(name);
@@ -69,7 +73,7 @@ struct PapyrusProperty final
       prop->isReadable = true;
       prop->isWritable = true;
       auto var = new pex::PexVariable();
-      var->name = file->getString("::" + name + "_var");
+      var->name = file->getString(getAutoVarName());
       var->typeName = prop->typeName;
       var->userFlags = buildPexUserFlags(file, userFlags);
       var->defaultValue = defaultValue.buildPex(file);

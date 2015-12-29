@@ -19,8 +19,7 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     bldr << location;
-    // TODO: Fix this. The identifier should be the one generating the load.
-    return pex::PexValue::Identifier(file->getString(identifier.name));
+    return identifier.generateLoad(file, bldr, pex::PexValue::None());
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

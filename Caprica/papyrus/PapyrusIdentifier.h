@@ -4,6 +4,10 @@
 
 #include <papyrus/PapyrusType.h>
 
+#include <pex/PexFile.h>
+#include <pex/PexFunctionBuilder.h>
+#include <pex/PexValue.h>
+
 namespace caprica { namespace papyrus {
 
 struct PapyrusFunctionParameter;
@@ -36,6 +40,8 @@ struct PapyrusIdentifier final
 
   PapyrusIdentifier() = default;
   ~PapyrusIdentifier() = default;
+
+  pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue base) const;
 
   PapyrusType resultType() const;
 };
