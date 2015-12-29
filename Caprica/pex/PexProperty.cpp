@@ -15,7 +15,7 @@ void PexProperty::write(PexWriter& wtr) const {
   if (isAuto)
     flags |= 0x04;
   wtr.write<uint8_t>(flags);
-  if (isAuto && !isReadable) {
+  if (isAuto) {
     assert(autoVar.valid());
     wtr.write<PexString>(autoVar);
   } else {

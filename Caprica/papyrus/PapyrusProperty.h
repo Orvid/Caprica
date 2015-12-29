@@ -47,7 +47,6 @@ struct PapyrusProperty final
     prop->documentationString = file->getString(documentationComment);
     prop->typeName = type.buildPex(file);
     prop->userFlags = buildPexUserFlags(file, userFlags);
-    prop->isAuto = isAuto;
     if (isAuto && isReadOnly) {
       prop->isReadable = true;
       auto func = new pex::PexFunction();
@@ -66,6 +65,9 @@ struct PapyrusProperty final
         file->debugInfo->functions.push_back(fDebInfo);
       }
     } else if (isAuto) {
+      prop->isAuto = true;
+      prop->isReadable = true;
+      prop->isWritable = true;
       auto var = new pex::PexVariable();
       var->name = file->getString("::" + name + "_var");
       var->typeName = prop->typeName;
