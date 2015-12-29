@@ -42,7 +42,7 @@ namespace caprica { namespace pex {
   ARG3(propset, PropSet, PexString, propName, PexValue::Identifier, baseObj, PexValue, val) \
   ARG2(arraycreate, ArrayCreate, PexValue::Identifier, dest, PexValue, length) \
   ARG2(arraylength, ArrayLength, PexValue::Identifier, dest, PexValue::Identifier, arr) \
-  ARG3(arraygetelement, ArrayGetElement, PexValue::Identifier, dest, PexValue, index, PexValue, arr) /* Note: The arr arg here was originally set as an identifier, but was changed for usability. Need to make sure this is valid. */ \
+  ARG3(arraygetelement, ArrayGetElement, PexValue::Identifier, dest, PexValue, arr, PexValue, index) /* Note: The arr arg here was originally set as an identifier, but was changed for usability. Need to make sure this is valid. */ \
   ARG3(arraysetelement, ArraySetElement, PexValue::Identifier, arr, PexValue, index, PexValue, val) \
   ARG4(arrayfindelement, ArrayFindElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, element, PexValue, startIndex) \
   ARG4(arrayrfindelement, ArrayRFindElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, element, PexValue, startIndex) \

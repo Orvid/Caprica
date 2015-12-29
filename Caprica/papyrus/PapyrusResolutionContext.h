@@ -1,10 +1,14 @@
 #pragma once
 
+#include <map>
 #include <string>
+#include <vector>
 
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
+#include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
+#include <papyrus/parser/PapyrusLexer.h>
 
 namespace caprica { namespace papyrus {
 
@@ -39,11 +43,43 @@ struct PapyrusResolutionContext final
   }
 
   [[noreturn]]
-  void fatalError(const std::string& msg) {
+  void fatalError(const std::string& msg) const {
     // TODO: Expand on this, making sure to write things like the
     // line number to stderr before dying.
     throw std::runtime_error(msg);
   }
+
+  void pushIdentifierScope() {
+    identifierStack.push_back({ });
+  }
+
+  void popIdentifierScope() {
+    identifierStack.pop_back();
+  }
+
+  void addIdentifier(const PapyrusIdentifier& ident) {
+    identifierStack.back().insert({ ident.name, ident });
+  }
+
+  PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const {
+    if (ident.type != PapyrusIdentifierType::Unresolved) {
+      return ident;
+    }
+
+    for (size_t i = identifierStack.size() - 1; i >= 0; i--) {
+      auto f = identifierStack[i].find(ident.name);
+      if (f != identifierStack[i].end()) {
+        return f->second;
+      }
+    }
+
+    // TODO: Failed to resolve it. Should error but won't for now.
+    return ident;
+  }
+
+private:
+  std::vector<std::map<std::string, PapyrusIdentifier, parser::CaselessStringComparer>> identifierStack{ };
+  std::vector<std::map<std::string, PapyrusType, parser::CaselessStringComparer>> typeStack{ };
 };
 
 }}

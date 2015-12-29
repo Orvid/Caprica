@@ -4,7 +4,6 @@
 #include <vector>
 
 #include <papyrus/PapyrusFunctionParameter.h>
-#include <papyrus/PapyrusLocalVariable.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
@@ -47,10 +46,12 @@ struct PapyrusFunction final
   void semantic(PapyrusResolutionContext* ctx) {
     returnType = ctx->resolveType(returnType);
     ctx->function = this;
+    ctx->pushIdentifierScope();
     for (auto p : parameters)
       p->semantic(ctx);
     for (auto s : statements)
       s->semantic(ctx);
+    ctx->popIdentifierScope();
     ctx->function = nullptr;
   }
 };

@@ -787,7 +787,10 @@ expressions::PapyrusExpression* PapyrusParser::parseArrayFuncOrIdExpression(Papy
 expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {
   expect(TokenType::Identifier);
   auto idExpr = new expressions::PapyrusIdentifierExpression(cur.getLocation());
-  idExpr->identifier = cur.sValue;
+  PapyrusIdentifier id;
+  id.type = PapyrusIdentifierType::Unresolved;
+  id.name = cur.sValue;
+  idExpr->identifier = id;
   consume();
   return idExpr;
 }

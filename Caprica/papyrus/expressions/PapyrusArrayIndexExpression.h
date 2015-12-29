@@ -29,7 +29,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     auto idx = indexExpression->generateLoad(file, bldr);
     bldr << location;
     auto dest = bldr.allocTemp(file, this->resultType());
-    bldr << op::arraygetelement{ dest, idx, base };
+    bldr << op::arraygetelement{ dest, base, idx };
     bldr.freeIfTemp(base);
     bldr.freeIfTemp(idx);
     return dest;

@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusValue.h>
@@ -32,6 +33,12 @@ struct PapyrusFunctionParameter final
   
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
+
+    PapyrusIdentifier id;
+    id.type = PapyrusIdentifierType::Parameter;
+    id.name = name;
+    id.param = this;
+    ctx->addIdentifier(id);
   }
 };
 
