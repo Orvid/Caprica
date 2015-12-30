@@ -41,7 +41,7 @@ struct PapyrusIdentifier final
   PapyrusIdentifier() = default;
   ~PapyrusIdentifier() = default;
 
-  pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue base) const;
+  pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
 
   PapyrusType resultType() const;
 };

@@ -19,7 +19,7 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     bldr << location;
-    return identifier.generateLoad(file, bldr, pex::PexValue::None());
+    return identifier.generateLoad(file, bldr, pex::PexValue::Identifier(file->getString("self")));
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

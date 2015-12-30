@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 
 #include <pex/PexLabel.h>
@@ -39,6 +40,11 @@ struct PexValue final
     Identifier(PexString str) : name(str) { }
     Identifier(PexLocalVariable* var) : name(var->name) { }
     ~Identifier() = default;
+
+    static Identifier fromVar(const PexValue& var) {
+      assert(var.type == PexValueType::Identifier);
+      return Identifier(var.s);
+    }
   };
 
   struct Integer

@@ -7,18 +7,17 @@
 
 namespace caprica { namespace papyrus {
 
-pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue base) const {
+pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const {
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      // TODO: Support properties on external objects.
-      if (base.type != pex::PexValueType::None)
-        throw std::runtime_error("Not yet implemented!");
+      if (base.type != pex::PexValueType::Identifier)
+        throw std::runtime_error("We should only be trying to load from an identifier!");
       if (prop->isAuto) {
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
         auto ret = bldr.allocTemp(file, resultType());
-        bldr << op::propget{ file->getString(prop->name), pex::PexValue::Identifier(file->getString("self")), ret };
+        bldr << op::propget{ file->getString(prop->name), pex::PexValue::Identifier::fromVar(base), ret };
         return ret;
       }
     case PapyrusIdentifierType::Variable:
