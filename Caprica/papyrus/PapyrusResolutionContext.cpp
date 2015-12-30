@@ -63,4 +63,38 @@ PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const Papyru
   throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
 }
 
+PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
+  if (ident.type != PapyrusIdentifierType::Unresolved) {
+    return ident;
+  }
+
+  if (baseType == PapyrusType::None()) {
+    for (auto& state : object->states) {
+      for (auto& func : state->functions) {
+        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
+          PapyrusIdentifier id = ident;
+          id.type = PapyrusIdentifierType::Function;
+          id.func = func;
+          return id;
+        }
+      }
+    }
+  }
+
+  if (baseType.type == PapyrusType::Kind::ResolvedObject) {
+    for (auto& state : baseType.resolvedObject->states) {
+      for (auto& func : state->functions) {
+        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
+          PapyrusIdentifier id = ident;
+          id.type = PapyrusIdentifierType::Function;
+          id.func = func;
+          return id;
+        }
+      }
+    }
+  }
+
+  throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+}
+
 }}

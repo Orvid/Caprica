@@ -80,9 +80,7 @@ struct PapyrusResolutionContext final
   }
 
   PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
-  PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
-    return ident;
-  }
+  PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
 
 private:
   std::vector<std::map<std::string, PapyrusIdentifier, parser::CaselessStringComparer>> identifierStack{ };

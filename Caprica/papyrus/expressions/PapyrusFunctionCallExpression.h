@@ -58,10 +58,12 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
       bldr << op::callstatic{ file->getString(function.func->parentObject->name), file->getString(function.func->name), dest, args };
     } else if (base && base->is<PapyrusParentExpression>()) {
       bldr << op::callparent{ file->getString(function.func->name), dest, args };
-    } else {
+    } else if (base) {
       auto bVal = base->generateLoad(file, bldr);
       bldr << op::callmethod{ file->getString(function.func->name), bVal, dest, args };
       bldr.freeIfTemp(bVal);
+    } else {
+      bldr << op::callmethod{ file->getString(function.func->name), pex::PexValue::Identifier(file->getString("self")), dest, args };
     }
     return dest;
   }
@@ -73,8 +75,10 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
       // We may have default args to fill in.
       std::vector<Parameter*> newArgs;
       newArgs.resize(function.func->parameters.size());
+      bool hadNamedArgs = false;
       for (size_t i = 0, baseI = 0; i < arguments.size(); i++, baseI++) {
         if (arguments[i]->name != "") {
+          hadNamedArgs = true;
           for (size_t i2 = 0; i2 < function.func->parameters.size(); i2++) {
             if (!_stricmp(function.func->parameters[i2]->name.c_str(), arguments[i]->name.c_str())) {
               baseI = i2;
@@ -83,6 +87,8 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
           }
           ctx->fatalError("Unable to find a parameter named '" + arguments[i]->name + "'!");
         }
+        if (hadNamedArgs)
+          ctx->fatalError("No normal arguments are allowed after the first named argument!");
       ContinueOuterLoop:
         newArgs[baseI] = arguments[i];
       }

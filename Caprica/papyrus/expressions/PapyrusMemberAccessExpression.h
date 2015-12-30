@@ -27,18 +27,23 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
-    auto base = baseExpression->generateLoad(file, bldr);
     pex::PexValue dest;
-    bldr << location;
     if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {
+      auto base = baseExpression->generateLoad(file, bldr);
+      bldr << location;
       dest = id->identifier.generateLoad(file, bldr, pex::PexValue::Identifier::fromVar(base));
+      bldr.freeIfTemp(base);
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
+      auto base = baseExpression->generateLoad(file, bldr);
+      bldr << location;
       dest = bldr.allocTemp(file, PapyrusType::Int());
       bldr << op::arraylength{ pex::PexValue::Identifier::fromVar(dest), pex::PexValue::Identifier::fromVar(base) };
+      bldr.freeIfTemp(base);
+    } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
+      dest = fc->generateLoad(file, bldr, baseExpression);
     } else {
       throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
     }
-    bldr.freeIfTemp(base);
     return dest;
   }
 
@@ -50,6 +55,8 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
       id->identifier.generateStore(file, bldr, pex::PexValue::Identifier::fromVar(base), val);
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
       throw std::runtime_error("You cannot assign to the .Length property of an array!");
+    } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
+      throw std::runtime_error("You cannot assign to result of a function call!");
     } else {
       throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
     }
@@ -64,6 +71,9 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
       if (baseExpression->resultType().type != PapyrusType::Kind::Array)
         ctx->fatalError("Attempted to access the .Length property of a non-array value!");
+    } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
+      fc->function = ctx->resolveFunctionIdentifier(baseExpression->resultType(), fc->function);
+      fc->semantic(ctx);
     } else {
       throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
     }
