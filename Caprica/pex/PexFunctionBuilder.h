@@ -58,36 +58,32 @@ namespace caprica { namespace pex {
   ARG3(arrayremove, ArrayRemove, PexValue::Identifier, baseObj, PexValue, index, PexValue, count) \
   ARG1(arrayclear, ArrayClear, PexValue::Identifier, dest) \
 
-//CallMethod,
-//CallParent,
-//CallStatic,*/
-
 namespace op {
 
-struct nop { };
+struct nop final { };
 
 #define OP_ARG1(name, opcode, argType1, argName1) \
-struct name { \
+struct name final { \
   PexValue a1; \
   name(argType1 argName1) : a1(argName1) { } \
 };
 #define OP_ARG2(name, opcode, argType1, argName1, argType2, argName2) \
-struct name { \
+struct name final { \
   PexValue a1, a2; \
   name(argType1 argName1, argType2 argName2) : a1(argName1), a2(argName2) { } \
 };
 #define OP_ARG3(name, opcode, argType1, argName1, argType2, argName2, argType3, argName3) \
-struct name { \
+struct name final { \
   PexValue a1, a2, a3; \
   name(argType1 argName1, argType2 argName2, argType3 argName3) : a1(argName1), a2(argName2), a3(argName3) { } \
 };
 #define OP_ARG4(name, opcode, argType1, argName1, argType2, argName2, argType3, argName3, argType4, argName4) \
-struct name { \
+struct name final { \
   PexValue a1, a2, a3, a4; \
   name(argType1 argName1, argType2 argName2, argType3 argName3, argType4 argName4) : a1(argName1), a2(argName2), a3(argName3), a4(argName4) { } \
 };
 #define OP_ARG5(name, opcode, argType1, argName1, argType2, argName2, argType3, argName3, argType4, argName4, argType5, argName5) \
-struct name { \
+struct name final { \
   PexValue a1, a2, a3, a4, a5; \
   name(argType1 argName1, argType2 argName2, argType3 argName3, argType4 argName4, argType5 argName5) : a1(argName1), a2(argName2), a3(argName3), a4(argName4), a5(argName5) { } \
 };
@@ -97,6 +93,28 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+
+struct callmethod final
+{
+  PexValue a1, a2, a3;
+  std::vector<PexValue> variadicArgs;
+  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, std::vector<PexValue> varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(varArgs) { }
+};
+
+struct callparent final
+{
+  PexValue a1, a2;
+  std::vector<PexValue> variadicArgs;
+  callparent(PexString function, PexValue::Identifier dest, std::vector<PexValue> varArgs) : a1(function), a2(dest), variadicArgs(varArgs) { }
+};
+
+struct callstatic final
+{
+  PexValue a1, a2, a3;
+  std::vector<PexValue> variadicArgs;
+  callstatic(PexString type, PexString function, PexValue::Identifier dest, std::vector<PexValue> varArgs) : a1(type), a2(function), a3(dest), variadicArgs(varArgs) { }
+};
+  
 }
 
 struct PexFunctionBuilder final
@@ -119,6 +137,16 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+
+  PexFunctionBuilder& operator <<(op::callmethod& instr) {
+    return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
+  }
+  PexFunctionBuilder& operator <<(op::callparent& instr) {
+    return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, instr.variadicArgs));
+  }
+  PexFunctionBuilder& operator <<(op::callstatic& instr) {
+    return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
+  }
 
   PexFunctionBuilder& operator <<(const papyrus::parser::PapyrusFileLocation& loc) {
     currentLocation = loc;
@@ -160,6 +188,14 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     return loc;
   }
 
+  PexLocalVariable* getNoneLocal(PexFile* file) {
+    for (auto& loc : locals) {
+      if (file->getStringValue(loc->name) == "::nonevar")
+        return loc;
+    }
+    return allocateLocal(file, "::nonevar", papyrus::PapyrusType::None());
+  }
+
   PexLocalVariable* allocTemp(PexFile* file, papyrus::PapyrusType tp) {
     auto loc = new PexLocalVariable();
     std::stringstream ss;
@@ -194,8 +230,12 @@ private:
 
   template<typename... Args>
   PexFunctionBuilder& push(PexOpCode op, Args&&... args) {
+    return push(new PexInstruction(op, std::vector<PexValue>{ args... }));
+  }
+  
+  PexFunctionBuilder& push(PexInstruction* instr) {
     instructionLocations.push_back(currentLocation);
-    instructions.push_back(new PexInstruction(op, std::vector<PexValue>{ args... }));
+    instructions.push_back(instr);
     return *this;
   }
 };
