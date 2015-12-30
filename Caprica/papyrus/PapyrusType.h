@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <memory>
 #include <string>
 
@@ -7,6 +8,9 @@
 #include <pex/PexString.h>
 
 namespace caprica { namespace papyrus {
+
+struct PapyrusObject;
+struct PapyrusStruct;
 
 struct PapyrusType final
 {
@@ -21,6 +25,8 @@ struct PapyrusType final
 
     Array,
     Unresolved,
+    ResolvedStruct,
+    ResolvedObject,
   };
 
   struct Unresolved
@@ -47,6 +53,11 @@ struct PapyrusType final
   Kind type{ Kind::None };
   std::string name{ "" };
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
+  union
+  {
+    const PapyrusStruct* resolvedStruct{ nullptr };
+    const PapyrusObject* resolvedObject;
+  };
 
   PapyrusType() = default;
 
@@ -88,6 +99,10 @@ struct PapyrusType final
           return *arrayElementType != *other.arrayElementType;
         case Kind::Unresolved:
           return _stricmp(name.c_str(), other.name.c_str()) != 0;
+        case Kind::ResolvedStruct:
+          return resolvedStruct != other.resolvedStruct;
+        case Kind::ResolvedObject:
+          return resolvedObject != other.resolvedObject;
         default:
           throw std::runtime_error("Unknown PapyrusTypeKind while comparing!");
       }
@@ -96,28 +111,7 @@ struct PapyrusType final
   }
 
 private:
-  std::string getTypeString() const {
-    switch (type) {
-      case Kind::None:
-        return "None";
-      case Kind::Bool:
-        return "Bool";
-      case Kind::Float:
-        return "Float";
-      case Kind::Int:
-        return "Int";
-      case Kind::String:
-        return "String";
-      case Kind::Var:
-        return "Var";
-      case Kind::Array:
-        return arrayElementType->getTypeString() + "[]";
-      case Kind::Unresolved:
-        return name;
-      default:
-        throw std::runtime_error("Unknown PapyrusTypeKind!");
-    }
-  }
+  std::string getTypeString() const;
 };
 
 }}

@@ -13,10 +13,13 @@
 
 namespace caprica { namespace papyrus {
 
+struct PapyrusObject;
+
 struct PapyrusStruct final
 {
-  std::string name;
-  std::vector<PapyrusStructMember*> members;
+  std::string name{ "" };
+  std::vector<PapyrusStructMember*> members{ };
+  PapyrusObject* parentObject{ nullptr };
 
   PapyrusStruct() = default;
   ~PapyrusStruct() {

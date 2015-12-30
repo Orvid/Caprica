@@ -1,8 +1,10 @@
 #pragma once
 
+#include <papyrus/expressions/PapyrusArrayIndexExpression.h>
 #include <papyrus/expressions/PapyrusBinaryOpExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/expressions/PapyrusIdentifierExpression.h>
+#include <papyrus/expressions/PapyrusMemberAccessExpression.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
 #include <pex/PexFile.h>
@@ -61,6 +63,9 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
       bldr << location;
       ai->generateStore(file, bldr, rVal);
+    } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
+      bldr << location;
+      ma->generateStore(file, bldr, rVal);
     } else {
       throw std::runtime_error("Invalid Lefthand Side for PapyrusAssignStatement!");
     }
@@ -103,6 +108,8 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       if (id->identifier.type == PapyrusIdentifierType::Property && id->identifier.prop->isReadOnly)
         ctx->fatalError("Attempted to assign to a read-only property!");
     } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
+      // It's valid.
+    } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
       // It's valid.
     } else {
       throw std::runtime_error("Invalid Lefthand Side for PapyrusAssignStatement!");

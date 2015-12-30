@@ -10,7 +10,7 @@ PapyrusExpression* PapyrusExpression::coerceExpression(PapyrusExpression* expr, 
     // Do the cast at compile time for int->float conversion of literals
     // TODO: Only enable this with the optimization switch enabled, to be
     // consistent with the CK compiler.
-    auto le = reinterpret_cast<PapyrusLiteralExpression*>(expr);
+    auto le = dynamic_cast<PapyrusLiteralExpression*>(expr);
     if (expr->resultType() == PapyrusType::Int() && target == PapyrusType::Float() && le) {
       le->value.f = (float)le->value.i;
       le->value.type = PapyrusValueType::Float;

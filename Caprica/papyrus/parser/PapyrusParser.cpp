@@ -7,11 +7,12 @@
 #include <papyrus/PapyrusObject.h>
 
 #include <papyrus/expressions/PapyrusArrayIndexExpression.h>
+#include <papyrus/expressions/PapyrusArrayLengthExpression.h>
 #include <papyrus/expressions/PapyrusBinaryOpExpression.h>
 #include <papyrus/expressions/PapyrusCastExpression.h>
 #include <papyrus/expressions/PapyrusIdentifierExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
-//#include <papyrus/expressions/PapyrusMemberAccessExpression.h>
+#include <papyrus/expressions/PapyrusMemberAccessExpression.h>
 #include <papyrus/expressions/PapyrusNewArrayExpression.h>
 #include <papyrus/expressions/PapyrusNewStructExpression.h>
 #include <papyrus/expressions/PapyrusUnaryOpExpression.h>
@@ -177,6 +178,7 @@ Return:
 
 PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* object) {
   auto struc = new PapyrusStruct();
+  struc->parentObject = object;
   struc->name = expectConsumeIdent();
   expectConsumeEOLs();
 
@@ -732,13 +734,13 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     default:
     {
       auto expr = parseArrayExpression(func);
-      /*while (cur.type == TokenType::Dot) {
+      while (cur.type == TokenType::Dot) {
         auto maExpr = new expressions::PapyrusMemberAccessExpression(cur.getLocation());
         consume();
         maExpr->baseExpression = expr;
-        maExpr->accessExpression = parseFuncOrIdExpression(func);
+        maExpr->accessExpression = parseArrayFuncOrIdExpression(func);
         expr = maExpr;
-      }*/
+      }
       return expr;
     }
   }
@@ -806,14 +808,20 @@ expressions::PapyrusExpression* PapyrusParser::parseArrayFuncOrIdExpression(Papy
 }
 
 expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {
-  expect(TokenType::Identifier);
-  auto idExpr = new expressions::PapyrusIdentifierExpression(cur.getLocation());
-  PapyrusIdentifier id;
-  id.type = PapyrusIdentifierType::Unresolved;
-  id.name = cur.sValue;
-  idExpr->identifier = id;
-  consume();
-  return idExpr;
+  if (cur.type == TokenType::kLength) {
+    auto lenExpr = new expressions::PapyrusArrayLengthExpression(cur.getLocation());
+    consume();
+    return lenExpr;
+  } else {
+    expect(TokenType::Identifier);
+    auto idExpr = new expressions::PapyrusIdentifierExpression(cur.getLocation());
+    PapyrusIdentifier id;
+    id.type = PapyrusIdentifierType::Unresolved;
+    id.name = cur.sValue;
+    idExpr->identifier = id;
+    consume();
+    return idExpr;
+  }
 }
 
 PapyrusType PapyrusParser::expectConsumePapyrusType() {

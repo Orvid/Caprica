@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
 
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
@@ -36,9 +38,7 @@ struct PapyrusResolutionContext final
 
   }
 
-  PapyrusType resolveType(PapyrusType tp) {
-    return tp;
-  }
+  PapyrusType resolveType(PapyrusType tp);
 
   void ensureCastable(PapyrusType src, PapyrusType dest) {
 
@@ -79,9 +79,10 @@ struct PapyrusResolutionContext final
     throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
   }
 
+  PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
+
 private:
   std::vector<std::map<std::string, PapyrusIdentifier, parser::CaselessStringComparer>> identifierStack{ };
-  std::vector<std::map<std::string, PapyrusType, parser::CaselessStringComparer>> typeStack{ };
 };
 
 }}
