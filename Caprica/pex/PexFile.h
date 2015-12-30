@@ -50,6 +50,10 @@ struct PexFile final
     return ret;
   }
 
+  std::string getStringValue(const PexString& str) {
+    return stringTable[str.index];
+  }
+
   PexUserFlags getUserFlag(PexString name, uint8_t bitNum) {
     auto a = userFlagTableLookup.find(name);
     if (a != userFlagTableLookup.end()) {
