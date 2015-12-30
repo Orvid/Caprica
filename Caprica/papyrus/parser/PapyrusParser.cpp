@@ -16,7 +16,7 @@
 #include <papyrus/expressions/PapyrusNewStructExpression.h>
 #include <papyrus/expressions/PapyrusUnaryOpExpression.h>
 
-//#include <papyrus/statements/PapyrusAssignStatement.h>
+#include <papyrus/statements/PapyrusAssignStatement.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusExpressionStatement.h>
 #include <papyrus/statements/PapyrusIfStatement.h>
@@ -488,8 +488,9 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     }
 
     case TokenType::Identifier:
+    default:
     {
-      if (peekToken().type == TokenType::Identifier ||  (peekToken().type == TokenType::LSquare && peekToken(1).type == TokenType::RSquare && peekToken(2).type == TokenType::Identifier)) {
+      if (cur.type == TokenType::Identifier && (peekToken().type == TokenType::Identifier ||  (peekToken().type == TokenType::LSquare && peekToken(1).type == TokenType::RSquare && peekToken(2).type == TokenType::Identifier))) {
         auto ret = new statements::PapyrusDeclareStatement(cur.getLocation());
         ret->type = expectConsumePapyrusType();
         ret->name = expectConsumeIdent();
@@ -500,14 +501,46 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       }
 
       auto expr = parseExpression(func);
-      auto exprStat = new statements::PapyrusExpressionStatement(expr->location);
-      exprStat->expression = expr;
-      expectConsumeEOLs();
-      return exprStat;
-    }
+      auto op = statements::PapyrusAssignOperatorType::None;
+      switch (cur.type) {
+        case TokenType::Equal:
+          op = statements::PapyrusAssignOperatorType::Assign;
+          goto AssignStatementCommon;
+        case TokenType::PlusEqual:
+          op = statements::PapyrusAssignOperatorType::Add;
+          goto AssignStatementCommon;
+        case TokenType::MinusEqual:
+          op = statements::PapyrusAssignOperatorType::Subtract;
+          goto AssignStatementCommon;
+        case TokenType::MulEqual:
+          op = statements::PapyrusAssignOperatorType::Multiply;
+          goto AssignStatementCommon;
+        case TokenType::DivEqual:
+          op = statements::PapyrusAssignOperatorType::Divide;
+          goto AssignStatementCommon;
+        case TokenType::ModEqual:
+          op = statements::PapyrusAssignOperatorType::Modulus;
+          goto AssignStatementCommon;
+        AssignStatementCommon:
+        {
+          auto assStat = new statements::PapyrusAssignStatement(cur.getLocation());
+          assStat->lValue = expr;
+          consume();
+          assStat->operation = op;
+          assStat->rValue = parseExpression(func);
+          expectConsumeEOLs();
+          return assStat;
+        }
 
-    default:
-      fatalError("Unexpected token while parsing statement!");
+        default:
+        {
+          auto exprStat = new statements::PapyrusExpressionStatement(expr->location);
+          exprStat->expression = expr;
+          expectConsumeEOLs();
+          return exprStat;
+        }
+      }
+    }
   }
 }
 

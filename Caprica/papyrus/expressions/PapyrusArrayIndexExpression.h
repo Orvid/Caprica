@@ -35,6 +35,17 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     return dest;
   }
 
+  void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue val) const {
+    namespace op = caprica::pex::op;
+    auto base = baseExpression->generateLoad(file, bldr);
+    auto idx = indexExpression->generateLoad(file, bldr);
+    bldr << location;
+    bldr << op::arraysetelement{ pex::PexValue::Identifier::fromVar(base), idx, val };
+    bldr.freeIfTemp(base);
+    bldr.freeIfTemp(idx);
+    bldr.freeIfTemp(val);
+  }
+
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     baseExpression->semantic(ctx);
     indexExpression->semantic(ctx);

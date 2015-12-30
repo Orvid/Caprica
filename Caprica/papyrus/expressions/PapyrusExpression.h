@@ -22,6 +22,11 @@ struct PapyrusExpression abstract
   virtual PapyrusType resultType() const abstract;
 
   static PapyrusExpression* coerceExpression(PapyrusExpression* expr, PapyrusType target);
+
+  template<typename T>
+  T* as() {
+    return dynamic_cast<T*>(this);
+  }
 };
 
 }}}
