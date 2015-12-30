@@ -10,11 +10,14 @@
 #include <papyrus/expressions/PapyrusArrayLengthExpression.h>
 #include <papyrus/expressions/PapyrusBinaryOpExpression.h>
 #include <papyrus/expressions/PapyrusCastExpression.h>
+#include <papyrus/expressions/PapyrusFunctionCallExpression.h>
 #include <papyrus/expressions/PapyrusIdentifierExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
 #include <papyrus/expressions/PapyrusMemberAccessExpression.h>
 #include <papyrus/expressions/PapyrusNewArrayExpression.h>
 #include <papyrus/expressions/PapyrusNewStructExpression.h>
+#include <papyrus/expressions/PapyrusParentExpression.h>
+#include <papyrus/expressions/PapyrusSelfExpression.h>
 #include <papyrus/expressions/PapyrusUnaryOpExpression.h>
 
 #include <papyrus/statements/PapyrusAssignStatement.h>
@@ -373,6 +376,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
 
 PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {
   auto func = new PapyrusFunction();
+  func->parentObject = object;
   func->name = expectConsumeIdent();
   func->returnType = returnType;
   expectConsume(TokenType::LParen);
@@ -384,8 +388,10 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
       auto param = new PapyrusFunctionParameter();
       param->type = expectConsumePapyrusType();
       param->name = expectConsumeIdent();
-      if (maybeConsume(TokenType::Equal))
+      if (maybeConsume(TokenType::Equal)) {
+        param->hasDefaultValue = true;
         param->defaultValue = expectConsumePapyrusValue();
+      }
       func->parameters.push_back(param);
     } while (cur.type == TokenType::Comma);
   }
@@ -808,19 +814,69 @@ expressions::PapyrusExpression* PapyrusParser::parseArrayFuncOrIdExpression(Papy
 }
 
 expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {
-  if (cur.type == TokenType::kLength) {
-    auto lenExpr = new expressions::PapyrusArrayLengthExpression(cur.getLocation());
-    consume();
-    return lenExpr;
-  } else {
-    expect(TokenType::Identifier);
-    auto idExpr = new expressions::PapyrusIdentifierExpression(cur.getLocation());
-    PapyrusIdentifier id;
-    id.type = PapyrusIdentifierType::Unresolved;
-    id.name = cur.sValue;
-    idExpr->identifier = id;
-    consume();
-    return idExpr;
+  switch (cur.type) {
+    case TokenType::kLength:
+    {
+      auto lenExpr = new expressions::PapyrusArrayLengthExpression(cur.getLocation());
+      consume();
+      return lenExpr;
+    }
+    case TokenType::kParent:
+    {
+      auto parExpr = new expressions::PapyrusParentExpression(cur.getLocation());
+      parExpr->type = func->parentObject->parentClass;
+      consume();
+      return parExpr;
+    }
+    case TokenType::kSelf:
+    {
+      auto selfExpr = new expressions::PapyrusSelfExpression(cur.getLocation());
+      PapyrusType tp;
+      tp.type = PapyrusType::Kind::ResolvedObject;
+      tp.resolvedObject = func->parentObject;
+      selfExpr->type = tp;
+      consume();
+      return selfExpr;
+    }
+    case TokenType::Identifier:
+    {
+      if (peekToken().type == TokenType::LParen) {
+        auto fCallExpr = new expressions::PapyrusFunctionCallExpression(cur.getLocation());
+        PapyrusIdentifier id;
+        id.type = PapyrusIdentifierType::Unresolved;
+        id.name = cur.sValue;
+        consume();
+        fCallExpr->function = id;
+        expectConsume(TokenType::LParen);
+
+        if (cur.type != TokenType::RParen) {
+          do {
+            maybeConsume(TokenType::Comma);
+
+            auto param = new expressions::PapyrusFunctionCallExpression::Parameter();
+            if (cur.type == TokenType::Identifier && peekToken().type == TokenType::Equal) {
+              param->name = expectConsumeIdent();
+              expectConsume(TokenType::Equal);
+            }
+            param->value = parseExpression(func);
+            fCallExpr->arguments.push_back(param);
+          } while (cur.type == TokenType::Comma);
+        }
+        expectConsume(TokenType::RParen);
+
+        return fCallExpr;
+      } else {
+        auto idExpr = new expressions::PapyrusIdentifierExpression(cur.getLocation());
+        PapyrusIdentifier id;
+        id.type = PapyrusIdentifierType::Unresolved;
+        id.name = cur.sValue;
+        idExpr->identifier = id;
+        consume();
+        return idExpr;
+      }
+    }
+    default:
+      fatalError("Unexpected token!");
   }
 }
 

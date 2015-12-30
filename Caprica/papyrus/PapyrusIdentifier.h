@@ -10,6 +10,7 @@
 
 namespace caprica { namespace papyrus {
 
+struct PapyrusFunction;
 struct PapyrusFunctionParameter;
 struct PapyrusProperty;
 struct PapyrusStructMember;
@@ -26,6 +27,7 @@ enum class PapyrusIdentifierType
   Parameter,
   DeclareStatement,
   StructMember,
+  Function,
 };
 
 struct PapyrusIdentifier final
@@ -39,6 +41,7 @@ struct PapyrusIdentifier final
     PapyrusFunctionParameter* param;
     statements::PapyrusDeclareStatement* declStatement;
     PapyrusStructMember* structMember;
+    PapyrusFunction* func;
   };
 
   PapyrusIdentifier() = default;

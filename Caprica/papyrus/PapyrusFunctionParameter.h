@@ -19,6 +19,9 @@ struct PapyrusFunctionParameter final
 {
   std::string name{ "" };
   PapyrusType type{ };
+  // We need this because PapyrusValue doesn't
+  // have an "Undefined" state.
+  bool hasDefaultValue{ false };
   PapyrusValue defaultValue{ };
 
   PapyrusFunctionParameter() = default;

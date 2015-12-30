@@ -27,6 +27,11 @@ struct PapyrusExpression abstract
   T* as() {
     return dynamic_cast<T*>(this);
   }
+
+  template<typename T>
+  bool is() {
+    return this->as<T>() != nullptr;
+  }
 };
 
 }}}

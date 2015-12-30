@@ -28,6 +28,7 @@ struct PapyrusFunction final
   bool isNative{ false };
   std::vector<PapyrusFunctionParameter*> parameters{ };
   std::vector<statements::PapyrusStatement*> statements{ };
+  PapyrusObject* parentObject{ nullptr };
 
   PapyrusFunction() = default;
   ~PapyrusFunction() {
