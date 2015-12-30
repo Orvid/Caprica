@@ -47,6 +47,13 @@ struct PapyrusPropertyGroup final
       p->semantic(ctx);
     ctx->propGroup = nullptr;
   }
+
+  void semantic2(PapyrusResolutionContext* ctx) {
+    ctx->propGroup = this;
+    for (auto p : properties)
+      p->semantic2(ctx);
+    ctx->propGroup = nullptr;
+  }
 };
 
 }}

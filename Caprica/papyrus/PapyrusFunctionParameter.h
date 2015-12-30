@@ -33,7 +33,9 @@ struct PapyrusFunctionParameter final
   
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
+  }
 
+  void semantic2(PapyrusResolutionContext* ctx) {
     PapyrusIdentifier id;
     id.type = PapyrusIdentifierType::Parameter;
     id.name = name;

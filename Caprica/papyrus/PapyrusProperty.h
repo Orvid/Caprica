@@ -113,6 +113,15 @@ struct PapyrusProperty final
     id.prop = this;
     ctx->addIdentifier(id);
   }
+
+  void semantic2(PapyrusResolutionContext* ctx) {
+    ctx->prop = this;
+    if (readFunction)
+      readFunction->semantic2(ctx);
+    if (writeFunction)
+      writeFunction->semantic2(ctx);
+    ctx->prop = nullptr;
+  }
 };
 
 }}

@@ -49,6 +49,16 @@ struct PapyrusFunction final
     ctx->pushIdentifierScope();
     for (auto p : parameters)
       p->semantic(ctx);
+    ctx->popIdentifierScope();
+    ctx->function = nullptr;
+  }
+
+  void semantic2(PapyrusResolutionContext* ctx) {
+    returnType = ctx->resolveType(returnType);
+    ctx->function = this;
+    ctx->pushIdentifierScope();
+    for (auto p : parameters)
+      p->semantic2(ctx);
     for (auto s : statements)
       s->semantic(ctx);
     ctx->popIdentifierScope();
