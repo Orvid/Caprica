@@ -11,8 +11,6 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (base.type != pex::PexValueType::Identifier)
-        throw std::runtime_error("We should only be trying to load from an identifier!");
       if (prop->isAuto) {
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
