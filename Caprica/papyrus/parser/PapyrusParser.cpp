@@ -12,6 +12,7 @@
 #include <papyrus/expressions/PapyrusCastExpression.h>
 #include <papyrus/expressions/PapyrusFunctionCallExpression.h>
 #include <papyrus/expressions/PapyrusIdentifierExpression.h>
+#include <papyrus/expressions/PapyrusIsExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
 #include <papyrus/expressions/PapyrusMemberAccessExpression.h>
 #include <papyrus/expressions/PapyrusNewArrayExpression.h>
@@ -711,15 +712,23 @@ expressions::PapyrusExpression* PapyrusParser::parseUnaryExpression(PapyrusFunct
 
 expressions::PapyrusExpression* PapyrusParser::parseCastExpression(PapyrusFunction* func) {
   auto expr = parseDotExpression(func);
-  // Extension note: The Wiki claims that the official parser doesn't allow
-  // immediate chaining of casts, but we allow it here because we can.
-  while (cur.type == TokenType::kAs) {
+
+  if (cur.type == TokenType::kIs) {
+    auto isExpr = new expressions::PapyrusIsExpression(cur.getLocation());
+    consume();
+    isExpr->innerExpression = expr;
+    isExpr->targetType = expectConsumePapyrusType();
+    expr = isExpr;
+  }
+  
+  if (cur.type == TokenType::kAs) {
     auto castExpr = new expressions::PapyrusCastExpression(cur.getLocation());
     consume();
     castExpr->innerExpression = expr;
     castExpr->targetType = expectConsumePapyrusType();
     expr = castExpr;
   }
+
   return expr;
 }
 

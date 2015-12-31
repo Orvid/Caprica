@@ -103,6 +103,7 @@ enum class TokenType
   kConst,
   kEndPropertyGroup,
   kEndStruct,
+  kIs,
   kPropertyGroup,
   kStruct,
   kVar,

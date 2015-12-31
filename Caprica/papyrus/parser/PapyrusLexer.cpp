@@ -3,6 +3,8 @@
 #include <cctype>
 #include <map>
 
+#include <Config.h>
+
 namespace caprica { namespace papyrus { namespace parser {
 
 void PapyrusLexer::setTok(TokenType tp, int consumeChars) {
@@ -67,11 +69,14 @@ static std::map<std::string, TokenType, CaselessStringComparer> keywordMap {
   { "string", TokenType::kString },
   { "true", TokenType::kTrue },
   { "while", TokenType::kWhile },
+};
 
-  // Additional speculative keywords for FO4
+// Additional speculative keywords for FO4
+static std::map<std::string, TokenType, CaselessStringComparer> speculativeKeywordMap {
   { "const", TokenType::kConst },
   { "endpropertygroup", TokenType::kEndPropertyGroup },
   { "endstruct", TokenType::kEndStruct },
+  { "is", TokenType::kIs },
   { "propertygroup", TokenType::kPropertyGroup },
   { "struct", TokenType::kStruct },
   { "var", TokenType::kVar },
@@ -259,6 +264,12 @@ StartOver:
       auto f = keywordMap.find(ident);
       if (f != keywordMap.end())
         return setTok(f->second);
+
+      if (Config::enableSpeculativeSyntax) {
+        auto f2 = speculativeKeywordMap.find(ident);
+        if (f2 != speculativeKeywordMap.end())
+          return setTok(f2->second);
+      }
 
       auto tok = Token(TokenType::Identifier);
       tok.sValue = ident;

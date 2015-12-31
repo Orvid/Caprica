@@ -46,7 +46,7 @@ namespace caprica { namespace pex {
   ARG3(arraysetelement, ArraySetElement, PexValue::Identifier, arr, PexValue, index, PexValue, val) \
   ARG4(arrayfindelement, ArrayFindElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, element, PexValue, startIndex) \
   ARG4(arrayrfindelement, ArrayRFindElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, element, PexValue, startIndex) \
-  ARG3(is, Is, PexValue::Identifier, dest, PexValue::Identifier, src, PexValue::Identifier, type) \
+  ARG3(is, Is, PexValue::Identifier, dest, PexValue, src, PexValue::Identifier, type) \
   ARG1(structcreate, StructCreate, PexValue::Identifier, dest) \
   ARG3(structget, StructGet, PexValue::Identifier, dest, PexValue::Identifier, baseObj, PexString, memberName) \
   ARG3(structset, StructSet, PexValue::Identifier, baseObj, PexString, memberName, PexValue, val) \
