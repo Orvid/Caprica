@@ -187,6 +187,17 @@ StartOver:
         while (isdigit(strm.peek()))
           str.put(strm.get());
 
+        // Allow e+ notation.
+        if (CapricaConfig::enableLanguageExtensions && strm.peek() == 'e') {
+          str.put(strm.get());
+          if (strm.get() != '+')
+            fatalError((std::string)"Unexpected character 'e'!");
+          str.put('+');
+
+          while (isdigit(strm.peek()))
+            str.put(strm.get());
+        }
+
         auto f = std::stof(str.str());
         auto tok = Token(TokenType::Float);
         tok.fValue = f;
