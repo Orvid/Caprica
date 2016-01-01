@@ -48,8 +48,26 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   obj->name = expectConsumeIdent();
   if (_stricmp(boost::filesystem::basename(script->sourceFileName).c_str(), obj->name.c_str()))
     fatalError("The script name must match the name of the file!");
-  if (maybeConsume(TokenType::kExtends))
+  if (maybeConsume(TokenType::kExtends)) {
     obj->parentClass = PapyrusType::Unresolved(expectConsumeIdent());
+  } else {
+    // Otherwise we get to have some fun and generate GotoState and GetState.
+    auto getState = new PapyrusFunction();
+    getState->parentObject = obj;
+    getState->name = "GetState";
+    getState->returnType = PapyrusType::String();
+    obj->getRootState()->functions.push_back(getState);
+
+    auto gotoState = new PapyrusFunction();
+    gotoState->parentObject = obj;
+    gotoState->name = "GotoState";
+    gotoState->returnType = PapyrusType::None();
+    auto param = new PapyrusFunctionParameter();
+    param->name = "asNewState";
+    param->type = PapyrusType::String();
+    gotoState->parameters.push_back(param);
+    obj->getRootState()->functions.push_back(gotoState);
+  }
   obj->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Default | PapyrusUserFlags::Hidden);
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocString();

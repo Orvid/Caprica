@@ -30,9 +30,38 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
     p->buildPex(file, obj, func);
 
   pex::PexFunctionBuilder bldr;
-  for (auto s : statements)
-    s->buildPex(file, bldr);
+  // A couple of compiler-generated functions.
+  if (name == "GetState") {
+    bldr << pex::op::ret{ pex::PexValue::Identifier(file->getString("::State")) };
+  } else if (name == "GotoState") {
+    auto noneVar = bldr.getNoneLocal(file);
+    auto soldState = bldr.allocateLocal(file, "soldState", PapyrusType::String());
+    bldr << pex::op::assign{ soldState, pex::PexValue::Identifier(file->getString("::State")) };
+    bldr << pex::op::callmethod{
+      file->getString("OnEndState"),
+      pex::PexValue::Identifier(file->getString("self")),
+      noneVar,
+      {
+        pex::PexValue::Integer(1),
+        pex::PexValue::Identifier(file->getString("asNewState"))
+      }
+    };
+    bldr << pex::op::assign{ pex::PexValue::Identifier(file->getString("::State")), pex::PexValue::Identifier(file->getString("asNewState")) };
+    bldr << pex::op::callmethod{
+      file->getString("OnBeginState"),
+      pex::PexValue::Identifier(file->getString("self")),
+      noneVar,
+      {
+        pex::PexValue::Integer(1),
+        soldState
+      }
+    };
+  } else {
+    for (auto s : statements)
+      s->buildPex(file, bldr);
+  }
   bldr.populateFunction(func, fDebInfo);
+
 
   if (file->debugInfo)
     file->debugInfo->functions.push_back(fDebInfo);
