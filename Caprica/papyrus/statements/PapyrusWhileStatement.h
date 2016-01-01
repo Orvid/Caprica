@@ -16,7 +16,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
   std::vector<PapyrusStatement*> body{ };
 
   PapyrusWhileStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
-  ~PapyrusWhileStatement() {
+  virtual ~PapyrusWhileStatement() override {
     if (condition)
       delete condition;
     for (auto s : body)

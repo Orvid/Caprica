@@ -15,7 +15,7 @@ struct PapyrusNewStructExpression final : public PapyrusExpression
   PapyrusType type{ };
 
   PapyrusNewStructExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusNewStructExpression() = default;
+  virtual ~PapyrusNewStructExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;

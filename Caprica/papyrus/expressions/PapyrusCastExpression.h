@@ -16,7 +16,7 @@ struct PapyrusCastExpression final : public PapyrusExpression
   PapyrusType targetType{ };
 
   PapyrusCastExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusCastExpression() {
+  virtual ~PapyrusCastExpression() override {
     if (innerExpression)
       delete innerExpression;
   }

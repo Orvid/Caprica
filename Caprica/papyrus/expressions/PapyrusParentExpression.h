@@ -18,7 +18,7 @@ struct PapyrusParentExpression final : public PapyrusExpression
   PapyrusType type{ };
 
   PapyrusParentExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusParentExpression() = default;
+  virtual ~PapyrusParentExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     return pex::PexValue::Identifier(file->getString("parent"));

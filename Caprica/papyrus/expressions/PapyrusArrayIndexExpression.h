@@ -16,7 +16,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   PapyrusExpression* indexExpression{ nullptr };
 
   PapyrusArrayIndexExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusArrayIndexExpression() {
+  virtual ~PapyrusArrayIndexExpression() override {
     if (baseExpression)
       delete baseExpression;
     if (indexExpression)

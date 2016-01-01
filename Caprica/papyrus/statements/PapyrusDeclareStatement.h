@@ -18,7 +18,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   expressions::PapyrusExpression* initialValue{ nullptr };
 
   PapyrusDeclareStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
-  ~PapyrusDeclareStatement() {
+  virtual ~PapyrusDeclareStatement() override {
     if (initialValue)
       delete initialValue;
   }

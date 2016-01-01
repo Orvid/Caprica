@@ -13,7 +13,7 @@ namespace caprica { namespace papyrus { namespace expressions {
 struct PapyrusArrayLengthExpression final : public PapyrusExpression
 {
   PapyrusArrayLengthExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusArrayLengthExpression() = default;
+  virtual ~PapyrusArrayLengthExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     throw std::runtime_error("This shouldn't be called!");

@@ -34,7 +34,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   expressions::PapyrusBinaryOpExpression* binOpExpression{ nullptr };
 
   PapyrusAssignStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
-  ~PapyrusAssignStatement() {
+  virtual ~PapyrusAssignStatement() override {
     // This is a bit of a special case, because we still need the lValue, but
     // we've given ownership of the lValue to the binOpExpression, to avoid
     // having to adjust the binOpExpression for this single use-case.

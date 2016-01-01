@@ -17,7 +17,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
   std::vector<PapyrusStatement*> elseStatements{ };
 
   PapyrusIfStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
-  ~PapyrusIfStatement() {
+  virtual ~PapyrusIfStatement() override {
     for (auto& i : ifBodies) {
       delete i.first;
       for (auto s : i.second)

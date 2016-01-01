@@ -18,7 +18,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   PapyrusType type{ };
 
   PapyrusSelfExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusSelfExpression() = default;
+  virtual ~PapyrusSelfExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     return pex::PexValue::Identifier(file->getString("self"));

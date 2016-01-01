@@ -18,7 +18,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   PapyrusExpression* accessExpression{ nullptr };
 
   PapyrusMemberAccessExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusMemberAccessExpression() {
+  virtual ~PapyrusMemberAccessExpression() override {
     if (baseExpression)
       delete baseExpression;
     if (accessExpression)

@@ -14,7 +14,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
   expressions::PapyrusExpression* returnValue{ nullptr };
 
   PapyrusReturnStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
-  ~PapyrusReturnStatement() {
+  virtual ~PapyrusReturnStatement() override {
     if (returnValue)
       delete returnValue;
   }

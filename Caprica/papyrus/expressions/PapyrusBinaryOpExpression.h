@@ -38,7 +38,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   PapyrusExpression* right{ nullptr };
 
   PapyrusBinaryOpExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusBinaryOpExpression() {
+  virtual ~PapyrusBinaryOpExpression() override {
     if (left)
       delete left;
     if (right)

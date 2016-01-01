@@ -15,7 +15,7 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
   PapyrusIdentifier identifier{ };
 
   PapyrusIdentifierExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusIdentifierExpression() = default;
+  virtual ~PapyrusIdentifierExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     bldr << location;

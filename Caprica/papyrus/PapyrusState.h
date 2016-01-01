@@ -15,8 +15,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusState final
 {
-  std::string name;
-  std::vector<PapyrusFunction*> functions;
+  std::string name{ "" };
+  std::vector<PapyrusFunction*> functions{ };
 
   PapyrusState() = default;
   ~PapyrusState() {

@@ -16,7 +16,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
   PapyrusExpression* lengthExpression{ nullptr };
 
   PapyrusNewArrayExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusNewArrayExpression() {
+  virtual ~PapyrusNewArrayExpression() override {
     if (lengthExpression)
       delete lengthExpression;
   }

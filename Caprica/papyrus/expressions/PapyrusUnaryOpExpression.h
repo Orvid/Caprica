@@ -23,7 +23,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   PapyrusExpression* innerExpression{ nullptr };
 
   PapyrusUnaryOpExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusUnaryOpExpression() {
+  virtual ~PapyrusUnaryOpExpression() override {
     if (innerExpression)
       delete innerExpression;
   }

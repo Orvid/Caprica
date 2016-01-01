@@ -14,7 +14,7 @@ struct PapyrusStatement abstract
   parser::PapyrusFileLocation location{ };
 
   PapyrusStatement(parser::PapyrusFileLocation loc) : location(loc) { }
-  ~PapyrusStatement() = default;
+  virtual ~PapyrusStatement() = default;
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;

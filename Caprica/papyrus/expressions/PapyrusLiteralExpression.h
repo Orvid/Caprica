@@ -15,7 +15,7 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
   PapyrusValue value{ };
 
   PapyrusLiteralExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusLiteralExpression() = default;
+  virtual ~PapyrusLiteralExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     bldr << location;
