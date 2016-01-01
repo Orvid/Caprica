@@ -154,6 +154,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
   function = ctx->resolveFunctionIdentifier(PapyrusType::None(), function);
 
   if (function.type == PapyrusIdentifierType::BuiltinArrayFunction) {
+    for (size_t i = 0; i < arguments.size(); i++)
+      arguments[i]->value->semantic(ctx);
+
     switch (function.arrayFuncKind) {
       case PapyrusBuiltinArrayFunctionKind::Find:
       {

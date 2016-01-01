@@ -99,14 +99,16 @@ struct PapyrusObject final
     for (auto s : states)
       s->semantic(ctx);
 
-    // The first pass resolves the types on the public API,
-    // property types, return types, and parameter types.
-    // This second pass resolves the actual identifiers and
-    // types in the bodies of functions.
-    for (auto g : propertyGroups)
-      g->semantic2(ctx);
-    for (auto s : states)
-      s->semantic2(ctx);
+    if (!ctx->isExternalResolution) {
+      // The first pass resolves the types on the public API,
+      // property types, return types, and parameter types.
+      // This second pass resolves the actual identifiers and
+      // types in the bodies of functions.
+      for (auto g : propertyGroups)
+        g->semantic2(ctx);
+      for (auto s : states)
+        s->semantic2(ctx);
+    }
     ctx->popIdentifierScope();
     ctx->object = nullptr;
   }

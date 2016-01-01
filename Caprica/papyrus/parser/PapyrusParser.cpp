@@ -231,7 +231,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
     fatalError("A constant variable must have a value!");
   }
 
-  mem->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional);
+  mem->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden);
   expectConsumeEOLs();
   mem->documentationString = maybeConsumeDocString();
   return mem;
@@ -240,7 +240,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
 PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
   auto group = new PapyrusPropertyGroup();
   group->name = expectConsumeIdent();
-  group->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Hidden);
+  group->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::CollapsedOnBase | PapyrusUserFlags::CollapsedOnRef | PapyrusUserFlags::Hidden);
   expectConsumeEOLs();
   group->documentationComment = maybeConsumeDocString();
 

@@ -260,6 +260,13 @@ StartOver:
       while (isalnum(strm.peek()) || strm.peek() == '_')
         str.put(strm.get());
 
+      if (CapricaConfig::enableDecompiledStructNameRefs && strm.peek() == '#') {
+        str.put(strm.get());
+
+        while (isalnum(strm.peek()) || strm.peek() == '_')
+          str.put(strm.get());
+      }
+
       auto ident = str.str();
       auto f = keywordMap.find(ident);
       if (f != keywordMap.end())

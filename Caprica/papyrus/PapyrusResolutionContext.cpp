@@ -19,28 +19,30 @@ PapyrusResolutionContext::~PapyrusResolutionContext() {
 }
 
 void PapyrusResolutionContext::addImport(std::string import) {
-  auto f = loadedScripts.find(import);
-  if (f != loadedScripts.end()) {
-    importedScripts.push_back(f->second);
-  } else {
-    auto sc = loadScript(import);
-    if (!sc)
-      fatalError("Failed to find imported script '" + import + ".psc'!");
-   importedScripts.push_back(sc);
-  }
+  auto sc = loadScript(import);
+  if (!sc)
+    fatalError("Failed to find imported script '" + import + ".psc'!");
+  importedScripts.push_back(sc);
 }
 
 PapyrusScript* PapyrusResolutionContext::loadScript(std::string name) {
+  auto f = loadedScripts.find(name);
+  if (f != loadedScripts.end())
+    return f->second;
+
   for (auto& dir : CapricaConfig::importDirectories) {
     if (boost::filesystem::exists(dir + name + ".psc")) {
       auto parser = new parser::PapyrusParser(dir + name + ".psc");
       auto a = parser->parseScript();
       delete parser;
-      auto ctx = new PapyrusResolutionContext();
-      a->semantic(ctx);
-      // TODO: Pre-populate parent loaded scripts and handle destruction correctly.
-      delete ctx;
       loadedScripts.insert({ a->objects[0]->name, a });
+      auto ctx = new PapyrusResolutionContext();
+      ctx->loadedScripts = loadedScripts;
+      ctx->isExternalResolution = true;
+      a->semantic(ctx);
+      loadedScripts = ctx->loadedScripts;
+      ctx->loadedScripts.clear();
+      delete ctx;
       return a;
     }
   }
@@ -56,6 +58,29 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     return tp;
   }
 
+  if (CapricaConfig::enableDecompiledStructNameRefs) {
+    auto pos = tp.name.find_first_of('#');
+    if (pos != std::string::npos) {
+      auto scName = tp.name.substr(0, pos);
+      auto strucName = tp.name.substr(pos + 1);
+      auto sc = loadScript(scName);
+      if (!sc)
+        fatalError("Unable to find script '" + scName + "' referenced by '" + tp.name + "'!");
+
+      for (auto obj : sc->objects) {
+        for (auto struc : obj->structs) {
+          if (!_stricmp(struc->name.c_str(), strucName.c_str())) {
+            tp.type = PapyrusType::Kind::ResolvedStruct;
+            tp.resolvedStruct = struc;
+            return tp;
+          }
+        }
+      }
+
+      fatalError("Unable to resolve a struct named '" + strucName + "' in script '" + scName + "'!");
+    }
+  }
+
   if (object) {
     for (auto& s : object->structs) {
       if (!_stricmp(s->name.c_str(), tp.name.c_str())) {
@@ -69,6 +94,18 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
       tp.type = PapyrusType::Kind::ResolvedObject;
       tp.resolvedObject = object;
       return tp;
+    }
+  }
+
+  for (auto sc : importedScripts) {
+    for (auto obj : sc->objects) {
+      for (auto struc : obj->structs) {
+        if (!_stricmp(struc->name.c_str(), tp.name.c_str())) {
+          tp.type = PapyrusType::Kind::ResolvedStruct;
+          tp.resolvedStruct = struc;
+          return tp;
+        }
+      }
     }
   }
 
@@ -185,6 +222,13 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
           return id;
         }
       }
+    }
+
+    if (baseType.resolvedObject->parentClass != PapyrusType::None()) {
+      if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::ResolvedObject)
+        fatalError("Something is wrong here, this should already have been resolved!");
+      
+      return resolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident);
     }
   }
 

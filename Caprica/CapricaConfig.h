@@ -11,6 +11,10 @@ extern bool enableLanguageExtensions;
 // Enable the speculated form of the new functionality available
 // to Papyrus in FO4.
 extern bool enableSpeculativeSyntax;
+// Enable the parsing of references to structs as presented by
+// Champollion, where the script name is prepended to the struct
+// name and separated by a '#'.
+extern bool enableDecompiledStructNameRefs;
 // Enable optimizations normally enabled by the -optimize switch to the
 // CK compiler.
 extern bool enableOptimizations;

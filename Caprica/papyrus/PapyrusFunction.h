@@ -50,6 +50,11 @@ struct PapyrusFunction final
     ctx->pushIdentifierScope();
     for (auto p : parameters)
       p->semantic(ctx);
+    if (ctx->isExternalResolution) {
+      for (auto s : statements)
+        delete s;
+      statements.clear();
+    }
     ctx->popIdentifierScope();
     ctx->function = nullptr;
   }

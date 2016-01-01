@@ -33,6 +33,11 @@ struct PapyrusResolutionContext final
   const PapyrusPropertyGroup* propGroup{ nullptr };
   const PapyrusState* state{ nullptr };
   const PapyrusFunction* function{ nullptr };
+  // This is only true if the resolution being done
+  // isn't being done to be able to emit the pex.
+  // This means that function bodies shouldn't be
+  // resolved.
+  bool isExternalResolution{ false };
 
   void addImport(std::string import);
   PapyrusType resolveType(PapyrusType tp);
