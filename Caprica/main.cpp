@@ -1,11 +1,27 @@
 
 #include <ostream>
+#include <string>
 
 #include <boost/filesystem.hpp>
 
 #include <papyrus/parser/PapyrusParser.h>
 #include <papyrus/PapyrusScript.h>
 #include <pex/PexWriter.h>
+
+void compileScript(std::string filename) {
+  auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
+  auto a = parser->parseScript();
+  delete parser;
+  auto ctx = new caprica::papyrus::PapyrusResolutionContext();
+  a->semantic(ctx);
+  auto pex = a->buildPex();
+  delete ctx;
+  delete a;
+  std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
+  caprica::pex::PexWriter wtr(strm);
+  pex->write(wtr);
+  delete pex;
+}
 
 int main(int argc, char* argv[])
 {
@@ -17,22 +33,18 @@ int main(int argc, char* argv[])
   try {
 #endif
     std::string file = argv[1];
-    auto parser = new caprica::papyrus::parser::PapyrusParser(file);
-    auto a = parser->parseScript();
-    delete parser;
-    auto ctx = new caprica::papyrus::PapyrusResolutionContext();
-    a->semantic(ctx);
-    auto pex = a->buildPex();
-    delete ctx;
-    delete a;
-    std::ofstream strm(boost::filesystem::basename(file) + ".pex", std::ofstream::binary);
-    caprica::pex::PexWriter wtr(strm);
-    pex->write(wtr);
-    delete pex;
+    if (boost::filesystem::is_directory(file)) {
+      boost::system::error_code ec;
+      for (auto e : boost::filesystem::directory_iterator(file, ec)) {
+        compileScript(e.path().string());
+      }
+    } else {
+      compileScript(file);
+    }
 #ifdef NDEBUG
   } catch (std::runtime_error err) {
     printf("%s", err.what());
-    //getchar();
+    getchar();
   }
 #endif
 
