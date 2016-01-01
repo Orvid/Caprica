@@ -36,7 +36,9 @@ int main(int argc, char* argv[])
     if (boost::filesystem::is_directory(file)) {
       boost::system::error_code ec;
       for (auto e : boost::filesystem::directory_iterator(file, ec)) {
-        compileScript(e.path().string());
+        if (boost::filesystem::extension(e.path()) == ".psc") {
+          compileScript(e.path().string());
+        }
       }
     } else {
       compileScript(file);

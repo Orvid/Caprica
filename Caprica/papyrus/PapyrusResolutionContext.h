@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
@@ -73,22 +72,9 @@ struct PapyrusResolutionContext final
     return id;
   }
 
-  PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const {
-    if (ident.type != PapyrusIdentifierType::Unresolved) {
-      return ident;
-    }
-
-    for (auto& stack : boost::adaptors::reverse(identifierStack)) {
-      auto f = stack.find(ident.name);
-      if (f != stack.end()) {
-        return f->second;
-      }
-    }
-
-    return ident;
-  }
-
+  PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
+  PapyrusIdentifier tryResolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
 
   ~PapyrusResolutionContext();

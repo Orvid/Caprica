@@ -1,6 +1,7 @@
 #include <papyrus/PapyrusResolutionContext.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <CapricaConfig.h>
 
@@ -123,7 +124,35 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   fatalError("Unable to resolve type '" + tp.name + "'!");
 }
 
+PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusIdentifier& ident) const {
+  if (ident.type != PapyrusIdentifierType::Unresolved) {
+    return ident;
+  }
+
+  for (auto& stack : boost::adaptors::reverse(identifierStack)) {
+    auto f = stack.find(ident.name);
+    if (f != stack.end()) {
+      return f->second;
+    }
+  }
+
+  if (object->parentClass != PapyrusType::None()) {
+    if (object->parentClass.type != PapyrusType::Kind::ResolvedObject)
+      fatalError("Something is wrong here, this should already have been resolved!");
+    return tryResolveMemberIdentifier(object->parentClass, ident);
+  }
+
+  return ident;
+}
+
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
+  auto id = tryResolveMemberIdentifier(baseType, ident);
+  if (id.type == PapyrusIdentifierType::Unresolved)
+    throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+  return id;
+}
+
+PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
   if (ident.type != PapyrusIdentifierType::Unresolved) {
     return ident;
   }
@@ -148,9 +177,16 @@ PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const Papyru
         }
       }
     }
+
+    if (baseType.resolvedObject->parentClass != PapyrusType::None()) {
+      if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::ResolvedObject)
+        fatalError("Something is wrong here, this should already have been resolved!");
+
+      return tryResolveMemberIdentifier(baseType.resolvedObject->parentClass, ident);
+    }
   }
 
-  throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+  return ident;
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {

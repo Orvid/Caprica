@@ -749,8 +749,19 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
         auto maExpr = new expressions::PapyrusMemberAccessExpression(cur.getLocation());
         consume();
         maExpr->baseExpression = expr;
-        maExpr->accessExpression = parseArrayFuncOrIdExpression(func);
-        expr = maExpr;
+        maExpr->accessExpression = parseFuncOrIdExpression(func);
+
+        if (cur.type == TokenType::LSquare) {
+          auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.getLocation());
+          consume();
+          aiExpr->baseExpression = maExpr;
+          aiExpr->indexExpression = parseExpression(func);
+          expectConsume(TokenType::RSquare);
+          expr = aiExpr;
+        }
+        else {
+          expr = maExpr;
+        }
       }
       return expr;
     }
@@ -803,19 +814,6 @@ expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFuncti
     default:
       return parseFuncOrIdExpression(func);
   }
-}
-
-expressions::PapyrusExpression* PapyrusParser::parseArrayFuncOrIdExpression(PapyrusFunction* func) {
-  auto expr = parseFuncOrIdExpression(func);
-  if (cur.type == TokenType::LSquare) {
-    auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.getLocation());
-    consume();
-    aiExpr->baseExpression = expr;
-    aiExpr->indexExpression = parseExpression(func);
-    expectConsume(TokenType::RSquare);
-    return aiExpr;
-  }
-  return expr;
 }
 
 expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {

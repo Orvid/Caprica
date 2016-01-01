@@ -38,7 +38,6 @@ private:
   expressions::PapyrusExpression* parseDotExpression(PapyrusFunction* func);
   expressions::PapyrusExpression* parseArrayExpression(PapyrusFunction* func);
   expressions::PapyrusExpression* parseAtomExpression(PapyrusFunction* func);
-  expressions::PapyrusExpression* parseArrayFuncOrIdExpression(PapyrusFunction* func);
   expressions::PapyrusExpression* parseFuncOrIdExpression(PapyrusFunction* func);
 
   PapyrusType expectConsumePapyrusType();
