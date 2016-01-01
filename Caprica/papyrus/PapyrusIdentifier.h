@@ -28,12 +28,30 @@ enum class PapyrusIdentifierType
   DeclareStatement,
   StructMember,
   Function,
+  BuiltinArrayFunction,
+};
+
+enum class PapyrusBuiltinArrayFunctionKind
+{
+  Unknown = 0,
+
+  Find,
+  FindStruct,
+  RFind,
+  RFindStruct,
+
+  Add,
+  Clear,
+  Insert,
+  Remove,
+  RemoveLast,
 };
 
 struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
   std::string name{ "" };
+  PapyrusType arrayFuncElementType{ };
   union
   {
     PapyrusProperty* prop{ nullptr };
@@ -42,6 +60,7 @@ struct PapyrusIdentifier final
     statements::PapyrusDeclareStatement* declStatement;
     PapyrusStructMember* structMember;
     PapyrusFunction* func;
+    PapyrusBuiltinArrayFunctionKind arrayFuncKind;
   };
 
   PapyrusIdentifier() = default;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <CapricaConfig.h>
+
 #include <papyrus/expressions/PapyrusArrayIndexExpression.h>
 #include <papyrus/expressions/PapyrusBinaryOpExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
@@ -102,6 +104,8 @@ struct PapyrusAssignStatement final : public PapyrusStatement
           throw std::runtime_error("Unknown PapyrusAssignOperatorType!");
       }
       binOpExpression->semantic(ctx);
+      if (lValue->resultType().type == PapyrusType::Kind::Array && !CapricaConfig::enableLanguageExtensions)
+        ctx->fatalError("You can't do anything except assign to an array element unless you have language extensions enabled!");
       rValue = expressions::PapyrusExpression::coerceExpression(binOpExpression, lValue->resultType());
     }
     if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {

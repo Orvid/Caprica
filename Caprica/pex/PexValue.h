@@ -19,6 +19,7 @@ enum class PexValueType : uint8_t
   Bool = 5,
 
   Label = 20,
+  Invalid = 50,
 };
 
 struct PexValue final
@@ -64,6 +65,7 @@ struct PexValue final
   };
 
   struct None { };
+  struct Invalid { };
 
   PexValue() { };
   PexValue(const PexValue&) = default;
@@ -73,6 +75,7 @@ struct PexValue final
   PexValue(const Integer& val) : type(PexValueType::Integer), i(val.i) { }
   PexValue(const Bool& val) : type(PexValueType::Bool), b(val.b) { }
   PexValue(const None& val) : type(PexValueType::None) { }
+  PexValue(const Invalid& val) : type(PexValueType::Invalid) { }
   ~PexValue() = default;
 };
 

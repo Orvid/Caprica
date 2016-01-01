@@ -1,5 +1,7 @@
 #include <papyrus/PapyrusIdentifier.h>
 
+#include <CapricaConfig.h>
+
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusStructMember.h>
@@ -12,10 +14,8 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
-        // We can only do this for properties on ourselves.
-        // TODO: Perhaps allow disabling this without optimizations? (CK always does this opt,
-        // even for properties on parents)
+      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
+        // We can only do this for properties on ourselves. (CK does this even on parents)
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
         auto ret = bldr.allocTemp(file, resultType());
@@ -50,10 +50,8 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     case PapyrusIdentifierType::Property:
       if (prop->isReadOnly)
         throw std::runtime_error("Attempted to generate a store to a read-only property!");
-      if (prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
-        // We can only do this for properties on ourselves.
-        // TODO: Perhaps allow disabling this without optimizations? (CK always does this opt,
-        // even for properties on parents)
+      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
+        // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
       } else {
         bldr << op::propset{ file->getString(prop->name), base, val };

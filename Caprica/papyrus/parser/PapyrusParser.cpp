@@ -719,9 +719,7 @@ expressions::PapyrusExpression* PapyrusParser::parseCastExpression(PapyrusFuncti
     isExpr->innerExpression = expr;
     isExpr->targetType = expectConsumePapyrusType();
     expr = isExpr;
-  }
-  
-  if (cur.type == TokenType::kAs) {
+  } else if (cur.type == TokenType::kAs) {
     auto castExpr = new expressions::PapyrusCastExpression(cur.getLocation());
     consume();
     castExpr->innerExpression = expr;

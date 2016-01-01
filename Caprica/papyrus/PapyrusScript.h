@@ -1,7 +1,5 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
-
 #include <string>
 #include <vector>
 
@@ -24,17 +22,7 @@ struct PapyrusScript final
       delete obj;
   }
 
-  pex::PexFile* buildPex() const {
-    auto pex = new pex::PexFile();
-    pex->debugInfo = new pex::PexDebugInfo();
-    pex->debugInfo->modificationTime = boost::filesystem::last_write_time(sourceFileName);
-    pex->compilationTime = time(nullptr);
-    pex->sourceFileName = sourceFileName;
-    // TODO: Set the computerName and userName as well.
-    for (auto o : objects)
-      o->buildPex(pex);
-    return pex;
-  }
+  pex::PexFile* buildPex() const;
 
   void semantic() {
     auto ctx = new PapyrusResolutionContext();

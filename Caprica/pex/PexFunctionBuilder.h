@@ -44,14 +44,14 @@ namespace caprica { namespace pex {
   ARG2(arraylength, ArrayLength, PexValue::Identifier, dest, PexValue::Identifier, arr) \
   ARG3(arraygetelement, ArrayGetElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, index) \
   ARG3(arraysetelement, ArraySetElement, PexValue::Identifier, arr, PexValue, index, PexValue, val) \
-  ARG4(arrayfindelement, ArrayFindElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, element, PexValue, startIndex) \
-  ARG4(arrayrfindelement, ArrayRFindElement, PexValue::Identifier, dest, PexValue::Identifier, arr, PexValue, element, PexValue, startIndex) \
+  ARG4(arrayfindelement, ArrayFindElement, PexValue::Identifier, arr, PexValue::Identifier, dest, PexValue, element, PexValue, startIndex) \
+  ARG4(arrayrfindelement, ArrayRFindElement, PexValue::Identifier, arr, PexValue::Identifier, dest, PexValue, element, PexValue, startIndex) \
   ARG3(is, Is, PexValue::Identifier, dest, PexValue, src, PexValue::Identifier, type) \
   ARG1(structcreate, StructCreate, PexValue::Identifier, dest) \
   ARG3(structget, StructGet, PexValue::Identifier, dest, PexValue::Identifier, baseObj, PexString, memberName) \
   ARG3(structset, StructSet, PexValue::Identifier, baseObj, PexString, memberName, PexValue, val) \
-  ARG5(arrayfindstruct, ArrayFindStruct, PexValue::Identifier, baseObj, PexValue::Identifier, dest, PexString, memberName, PexValue, valueToSearchFor, PexValue, startIndex) \
-  ARG5(arrayrfindstruct, ArrayRFindStruct, PexValue::Identifier, baseObj, PexValue::Identifier, dest, PexString, memberName, PexValue, valueToSearchFor, PexValue, startIndex) \
+  ARG5(arrayfindstruct, ArrayFindStruct, PexValue::Identifier, baseObj, PexValue::Identifier, dest, PexValue, memberName, PexValue, valueToSearchFor, PexValue, startIndex) \
+  ARG5(arrayrfindstruct, ArrayRFindStruct, PexValue::Identifier, baseObj, PexValue::Identifier, dest, PexValue, memberName, PexValue, valueToSearchFor, PexValue, startIndex) \
   ARG3(arrayadd, ArrayAdd, PexValue::Identifier, baseObj, PexValue, element, PexValue, count) \
   ARG3(arrayinsert, ArrayInsert, PexValue::Identifier, baseObj, PexValue, element, PexValue, index) \
   ARG1(arrayremovelast, ArrayRemoveLast, PexValue::Identifier, dest) \
@@ -234,6 +234,14 @@ private:
   }
   
   PexFunctionBuilder& push(PexInstruction* instr) {
+    for (auto& v : instr->args) {
+      if (v.type == PexValueType::Invalid)
+        throw std::runtime_error("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+    }
+    for (auto& v : instr->variadicArgs) {
+      if (v.type == PexValueType::Invalid)
+        throw std::runtime_error("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+    }
     instructionLocations.push_back(currentLocation);
     instructions.push_back(instr);
     return *this;

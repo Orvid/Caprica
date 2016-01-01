@@ -3,7 +3,7 @@
 #include <cctype>
 #include <map>
 
-#include <Config.h>
+#include <CapricaConfig.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -265,7 +265,7 @@ StartOver:
       if (f != keywordMap.end())
         return setTok(f->second);
 
-      if (Config::enableSpeculativeSyntax) {
+      if (CapricaConfig::enableSpeculativeSyntax) {
         auto f2 = speculativeKeywordMap.find(ident);
         if (f2 != speculativeKeywordMap.end())
           return setTok(f2->second);

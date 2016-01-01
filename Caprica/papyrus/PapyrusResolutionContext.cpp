@@ -79,9 +79,35 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
         }
       }
     }
-  }
-
-  if (baseType.type == PapyrusType::Kind::ResolvedObject) {
+  } else if (baseType.type == PapyrusType::Kind::Array) {
+    PapyrusIdentifier id = ident;
+    id.type = PapyrusIdentifierType::BuiltinArrayFunction;
+    id.arrayFuncElementType = baseType.getElementType();
+    if (!_stricmp(ident.name.c_str(), "find")) {
+      if (baseType.arrayElementType->type == PapyrusType::Kind::ResolvedStruct)
+        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::FindStruct;
+      else
+        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Find;
+    } else if (!_stricmp(ident.name.c_str(), "rfind")) {
+      if (baseType.arrayElementType->type == PapyrusType::Kind::ResolvedStruct)
+        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFindStruct;
+      else
+        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFind;
+    } else if (!_stricmp(ident.name.c_str(), "add")) {
+      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Add;
+    } else if (!_stricmp(ident.name.c_str(), "clear")) {
+      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Clear;
+    } else if (!_stricmp(ident.name.c_str(), "insert")) {
+      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Insert;
+    } else if (!_stricmp(ident.name.c_str(), "remove")) {
+      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Remove;
+    } else if (!_stricmp(ident.name.c_str(), "removelast")) {
+      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RemoveLast;
+    } else {
+      fatalError("Unknown function '" + ident.name + "' called on an array expression!");
+    }
+    return id;
+  } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     for (auto& state : baseType.resolvedObject->states) {
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
@@ -94,7 +120,7 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
     }
   }
 
-  throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+  throw std::runtime_error("Unresolved function name '" + ident.name + "'!");
 }
 
 }}
