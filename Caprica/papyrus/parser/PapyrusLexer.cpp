@@ -193,17 +193,18 @@ StartOver:
         return setTok(tok);
       }
 
-      if (str.str().size() <= 8) {
+      auto s = str.str();
+      if (s.size() < 8 || (s.size() == 8 && s[0] <= '4')) {
         // It is probably an integer, but maybe not.
         try {
-          auto i = std::stoul(str.str());
+          auto i = std::stoul(s);
           auto tok = Token(TokenType::Integer);
           tok.iValue = (int32_t)i;
           return setTok(tok);
         } catch (std::out_of_range oor) { }
       }
       // It's very definitely a float, and a very large one at that.
-      auto f = std::stof(str.str());
+      auto f = std::stof(s);
       auto tok = Token(TokenType::Float);
       tok.fValue = f;
       return setTok(tok);
