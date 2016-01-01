@@ -158,6 +158,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       arguments[i]->value->semantic(ctx);
 
     switch (function.arrayFuncKind) {
+      NormalFind:
       case PapyrusBuiltinArrayFunctionKind::Find:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
@@ -179,10 +180,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       }
       case PapyrusBuiltinArrayFunctionKind::FindStruct:
       {
+        if (arguments.size() == 1 || !arguments[0]->value->is<PapyrusLiteralExpression>()) {
+          function.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Find;
+          goto NormalFind;
+        }
         if (arguments.size() < 2 || arguments.size() > 3)
           ctx->fatalError("Expected either 2 or 3 parameters to 'find'!");
-        if (!arguments[0]->value->is<PapyrusLiteralExpression>())
-          ctx->fatalError("Expected the literal name of the struct member to compare against!");
         if (arguments[0]->value->resultType() != PapyrusType::String())
           ctx->fatalError("Expected the literal name of the struct member as a string to compare against!");
         
@@ -212,6 +215,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         }
         break;
       }
+      NormalRFind:
       case PapyrusBuiltinArrayFunctionKind::RFind:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
@@ -233,10 +237,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       }
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:
       {
+        if (arguments.size() == 1 || !arguments[0]->value->is<PapyrusLiteralExpression>()) {
+          function.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFind;
+          goto NormalRFind;
+        }
         if (arguments.size() < 2 || arguments.size() > 3)
           ctx->fatalError("Expected either 2 or 3 parameters to 'rfind'!");
-        if (!arguments[0]->value->is<PapyrusLiteralExpression>())
-          ctx->fatalError("Expected the literal name of the struct member to compare against!");
         if (arguments[0]->value->resultType() != PapyrusType::String())
           ctx->fatalError("Expected the literal name of the struct member as a string to compare against!");
 
