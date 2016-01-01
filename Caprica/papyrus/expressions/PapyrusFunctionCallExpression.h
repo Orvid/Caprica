@@ -31,7 +31,11 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   std::vector<Parameter*> arguments{ };
 
   PapyrusFunctionCallExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
-  ~PapyrusFunctionCallExpression() = default;
+  ~PapyrusFunctionCallExpression() {
+    for (auto a : arguments) {
+      delete a;
+    }
+  }
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     return generateLoad(file, bldr, nullptr);

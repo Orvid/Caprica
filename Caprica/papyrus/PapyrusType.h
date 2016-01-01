@@ -38,9 +38,9 @@ struct PapyrusType final
   };
   struct Array
   {
-    PapyrusType* type;
+    std::shared_ptr<PapyrusType> type;
 
-    Array(PapyrusType* tp) : type(tp) { }
+    Array(std::shared_ptr<PapyrusType> tp) : type(tp) { }
     ~Array() = default;
   };
   struct None { };

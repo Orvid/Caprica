@@ -917,7 +917,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
   if (cur.type == TokenType::LSquare && peekToken().type == TokenType::RSquare) {
     consume();
     expectConsume(TokenType::RSquare);
-    return PapyrusType::Array(new PapyrusType(tp));
+    return PapyrusType::Array(std::make_shared<PapyrusType>(tp));
   }
   return tp;
 }
