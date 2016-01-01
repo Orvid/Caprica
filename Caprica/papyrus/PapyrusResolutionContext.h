@@ -34,10 +34,7 @@ struct PapyrusResolutionContext final
   const PapyrusState* state{ nullptr };
   const PapyrusFunction* function{ nullptr };
 
-  void addImport(std::string import) {
-
-  }
-
+  void addImport(std::string import);
   PapyrusType resolveType(PapyrusType tp);
 
   void ensureCastable(PapyrusType src, PapyrusType dest) {
@@ -65,6 +62,13 @@ struct PapyrusResolutionContext final
   }
 
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const {
+    auto id = tryResolveIdentifier(ident);
+    if (id.type == PapyrusIdentifierType::Unresolved)
+      throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+    return id;
+  }
+
+  PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const {
     if (ident.type != PapyrusIdentifierType::Unresolved) {
       return ident;
     }
@@ -76,14 +80,19 @@ struct PapyrusResolutionContext final
       }
     }
 
-    throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+    return ident;
   }
 
   PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
 
+  ~PapyrusResolutionContext();
 private:
   std::vector<std::map<std::string, PapyrusIdentifier, parser::CaselessStringComparer>> identifierStack{ };
+  std::vector<PapyrusScript*> importedScripts{ };
+  std::map<std::string, PapyrusScript*, parser::CaselessStringComparer> loadedScripts{ };
+
+  PapyrusScript* loadScript(std::string name);
 };
 
 }}

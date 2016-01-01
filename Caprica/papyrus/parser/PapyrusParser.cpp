@@ -60,7 +60,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       case TokenType::kImport:
         consume();
         obj->imports.push_back(expectConsumeIdent());
-        expectConsume(TokenType::EOL);
+        expectConsumeEOLs();
         break;
 
       case TokenType::kAuto:
@@ -123,9 +123,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       }
 
       default:
-        script->sourceFileName += cur.asString() + "\r\n";
-        consume();
-        break;
+        fatalError("Unexpected token!");
     }
   }
 

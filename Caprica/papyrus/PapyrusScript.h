@@ -24,12 +24,11 @@ struct PapyrusScript final
 
   pex::PexFile* buildPex() const;
 
-  void semantic() {
-    auto ctx = new PapyrusResolutionContext();
+  void semantic(PapyrusResolutionContext* ctx) {
     ctx->script = this;
     for (auto o : objects)
       o->semantic(ctx);
-    delete ctx;
+    ctx->script = nullptr;
   }
 };
 

@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
@@ -129,7 +131,9 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
       args.push_back(param->value->generateLoad(file, bldr));
     bldr << location;
     if (function.func->isGlobal) {
-      bldr << op::callstatic{ file->getString(function.func->parentObject->name), file->getString(function.func->name), dest, args };
+      std::string objName = function.func->parentObject->name;
+      boost::algorithm::to_lower(objName);
+      bldr << op::callstatic{ file->getString(objName), file->getString(function.func->name), dest, args };
     } else if (base && base->is<PapyrusParentExpression>()) {
       bldr << op::callparent{ file->getString(function.func->name), dest, args };
     } else if (base) {

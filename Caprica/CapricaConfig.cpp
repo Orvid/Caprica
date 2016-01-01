@@ -6,6 +6,8 @@ bool enableLanguageExtensions{ false };
 bool enableSpeculativeSyntax{ true };
 bool enableOptimizations{ true };
 bool enableCKOptimizations{ true };
-std::vector<std::string> importDirectories{ };
+std::vector<std::string> importDirectories{
+  "./",
+};
 
 }}

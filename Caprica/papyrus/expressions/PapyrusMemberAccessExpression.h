@@ -64,18 +64,32 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
-    baseExpression->semantic(ctx);
-    if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {
-      id->identifier = ctx->resolveMemberIdentifier(baseExpression->resultType(), id->identifier);
-      id->semantic(ctx);
-    } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
-      if (baseExpression->resultType().type != PapyrusType::Kind::Array)
-        ctx->fatalError("Attempted to access the .Length property of a non-array value!");
-    } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
+    if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
+      if (auto id = baseExpression->as<PapyrusIdentifierExpression>()) {
+        id->identifier = ctx->tryResolveIdentifier(id->identifier);
+        if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
+          auto tp = ctx->resolveType(PapyrusType::Unresolved(id->identifier.name));
+          if (tp.type != PapyrusType::Kind::ResolvedObject)
+            ctx->fatalError("Unresolved identifier '" + id->identifier.name + "'!");
+          fc->function = ctx->resolveFunctionIdentifier(tp, fc->function);
+          fc->semantic(ctx);
+          return;
+        }
+      }
+      baseExpression->semantic(ctx);
       fc->function = ctx->resolveFunctionIdentifier(baseExpression->resultType(), fc->function);
       fc->semantic(ctx);
     } else {
-      throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
+      baseExpression->semantic(ctx);
+      if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {
+        id->identifier = ctx->resolveMemberIdentifier(baseExpression->resultType(), id->identifier);
+        id->semantic(ctx);
+      } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
+        if (baseExpression->resultType().type != PapyrusType::Kind::Array)
+          ctx->fatalError("Attempted to access the .Length property of a non-array value!");
+      } else {
+        throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
+      }
     }
   }
 
