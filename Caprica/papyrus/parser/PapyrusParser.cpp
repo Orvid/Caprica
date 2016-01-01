@@ -50,7 +50,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
     fatalError("The script name must match the name of the file!");
   if (maybeConsume(TokenType::kExtends))
     obj->parentClass = PapyrusType::Unresolved(expectConsumeIdent());
-  obj->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Hidden | PapyrusUserFlags::Conditional);
+  obj->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Default | PapyrusUserFlags::Hidden);
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocString();
 
@@ -964,6 +964,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
 static std::map<std::string, PapyrusUserFlags, CaselessStringComparer> userFlagMap {
   { "hidden", PapyrusUserFlags::Hidden },
   { "conditional", PapyrusUserFlags::Conditional },
+  { "default", PapyrusUserFlags::Default },
   { "collapsedonref", PapyrusUserFlags::CollapsedOnRef },
   { "collapsedonbase", PapyrusUserFlags::CollapsedOnBase },
   { "mandatory", PapyrusUserFlags::Mandatory },
