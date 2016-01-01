@@ -52,7 +52,6 @@ struct PapyrusType final
 
   Kind type{ Kind::None };
   std::string name{ "" };
-  std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
   union
   {
     const PapyrusStruct* resolvedStruct{ nullptr };
@@ -112,6 +111,7 @@ struct PapyrusType final
 
 private:
   std::string getTypeString() const;
+  std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 };
 
 }}

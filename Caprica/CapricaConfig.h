@@ -15,6 +15,9 @@ extern bool enableSpeculativeSyntax;
 // Champollion, where the script name is prepended to the struct
 // name and separated by a '#'.
 extern bool enableDecompiledStructNameRefs;
+// If true, allow identifiers to be prefixed with '::', which are normally
+// reserved for compiler identifiers.
+extern bool allowCompilerIdentifiers;
 // Enable optimizations normally enabled by the -optimize switch to the
 // CK compiler.
 extern bool enableOptimizations;

@@ -210,6 +210,7 @@ StartOver:
       return setTok(tok);
     }
 
+    case ':':
     case '_':
     case 'a':
     case 'b':
@@ -265,7 +266,15 @@ StartOver:
     case 'Z':
     {
       std::ostringstream str;
-      str.put(c);
+      if (c == ':') {
+        if (!CapricaConfig::allowCompilerIdentifiers || strm.peek() != ':')
+          fatalError((std::string)"Unexpected character '" + (char)c + "'!");
+        strm.get();
+        str.put(':');
+        str.put(':');
+      } else {
+        str.put(c);
+      }
 
       while (isalnum(strm.peek()) || strm.peek() == '_')
         str.put(strm.get());

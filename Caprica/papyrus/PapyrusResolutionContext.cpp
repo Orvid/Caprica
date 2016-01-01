@@ -53,9 +53,8 @@ PapyrusScript* PapyrusResolutionContext::loadScript(std::string name) {
 
 PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
-    if (tp.type == PapyrusType::Kind::Array) {
-      *tp.arrayElementType = resolveType(*tp.arrayElementType);
-    }
+    if (tp.type == PapyrusType::Kind::Array)
+      return PapyrusType::Array(std::make_shared<PapyrusType>(resolveType(tp.getElementType())));
     return tp;
   }
 
@@ -225,12 +224,12 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
     id.type = PapyrusIdentifierType::BuiltinArrayFunction;
     id.arrayFuncElementType = baseType.getElementType();
     if (!_stricmp(ident.name.c_str(), "find")) {
-      if (baseType.arrayElementType->type == PapyrusType::Kind::ResolvedStruct)
+      if (baseType.getElementType().type == PapyrusType::Kind::ResolvedStruct)
         id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::FindStruct;
       else
         id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Find;
     } else if (!_stricmp(ident.name.c_str(), "rfind")) {
-      if (baseType.arrayElementType->type == PapyrusType::Kind::ResolvedStruct)
+      if (baseType.getElementType().type == PapyrusType::Kind::ResolvedStruct)
         id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFindStruct;
       else
         id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFind;
