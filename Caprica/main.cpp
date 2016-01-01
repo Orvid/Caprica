@@ -9,6 +9,7 @@
 #include <pex/PexWriter.h>
 
 void compileScript(std::string filename) {
+  printf("Compiling %s\n", filename.c_str());
   auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
   auto a = parser->parseScript();
   delete parser;
