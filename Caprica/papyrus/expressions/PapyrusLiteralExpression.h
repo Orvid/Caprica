@@ -12,9 +12,9 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusLiteralExpression final : public PapyrusExpression
 {
-  PapyrusValue value{ };
+  PapyrusValue value;
 
-  PapyrusLiteralExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusLiteralExpression(const parser::PapyrusFileLocation& loc, const PapyrusValue& val) : PapyrusExpression(loc), value(val) { }
   virtual ~PapyrusLiteralExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

@@ -38,7 +38,7 @@ struct PapyrusResolutionContext final
   // resolved.
   bool isExternalResolution{ false };
 
-  void addImport(std::string import);
+  void addImport(const parser::PapyrusFileLocation& location, const std::string& import);
   PapyrusType resolveType(PapyrusType tp);
 
   void ensureCastable(PapyrusType src, PapyrusType dest) {

@@ -27,10 +27,10 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
         delete value;
     }
   };
-  PapyrusIdentifier function{ };
+  PapyrusIdentifier function;
   std::vector<Parameter*> arguments{ };
 
-  PapyrusFunctionCallExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusFunctionCallExpression(const parser::PapyrusFileLocation& loc, const PapyrusIdentifier& f) : PapyrusExpression(loc), function(f) { }
   virtual ~PapyrusFunctionCallExpression() override {
     for (auto a : arguments)
       delete a;

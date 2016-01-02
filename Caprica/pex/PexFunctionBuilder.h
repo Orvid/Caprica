@@ -180,7 +180,7 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
       debInfo->instructionLineMap.push_back(l.buildPex());
   }
 
-  PexLocalVariable* allocateLocal(PexFile* file, std::string name, papyrus::PapyrusType tp) {
+  PexLocalVariable* allocateLocal(PexFile* file, const std::string& name, const papyrus::PapyrusType& tp) {
     auto loc = new PexLocalVariable();
     loc->name = file->getString(name);
     loc->type = tp.buildPex(file);
@@ -188,15 +188,15 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     return loc;
   }
 
-  PexLocalVariable* getNoneLocal(PexFile* file) {
+  PexLocalVariable* getNoneLocal(const papyrus::parser::PapyrusFileLocation& location, PexFile* file) {
     for (auto& loc : locals) {
       if (file->getStringValue(loc->name) == "::nonevar")
         return loc;
     }
-    return allocateLocal(file, "::nonevar", papyrus::PapyrusType::None());
+    return allocateLocal(file, "::nonevar", papyrus::PapyrusType::None(location));
   }
 
-  PexLocalVariable* allocTemp(PexFile* file, papyrus::PapyrusType tp) {
+  PexLocalVariable* allocTemp(PexFile* file, const papyrus::PapyrusType& tp) {
     auto loc = new PexLocalVariable();
     std::stringstream ss;
     ss << "::temp" << currentTempI++;

@@ -6,6 +6,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <CapricaConfig.h>
+#include <CapricaError.h>
 
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
@@ -15,10 +16,10 @@
 
 namespace caprica { namespace papyrus {
 
-void PapyrusResolutionContext::addImport(std::string import) {
+void PapyrusResolutionContext::addImport(const parser::PapyrusFileLocation& location, const std::string& import) {
   auto sc = loadScript(import);
   if (!sc)
-    fatalError("Failed to find imported script '" + import + ".psc'!");
+    CapricaError::fatal(location, "Failed to find imported script '%s.psc'!", import.c_str());
   importedScripts.push_back(sc);
 }
 
@@ -50,7 +51,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
 PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
     if (tp.type == PapyrusType::Kind::Array)
-      return PapyrusType::Array(std::make_shared<PapyrusType>(resolveType(tp.getElementType())));
+      return PapyrusType::Array(tp.location, std::make_shared<PapyrusType>(resolveType(tp.getElementType())));
     return tp;
   }
 
@@ -61,7 +62,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
       auto strucName = tp.name.substr(pos + 1);
       auto sc = loadScript(scName);
       if (!sc)
-        fatalError("Unable to find script '" + scName + "' referenced by '" + tp.name + "'!");
+        CapricaError::fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
 
       for (auto obj : sc->objects) {
         for (auto struc : obj->structs) {
@@ -73,7 +74,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
         }
       }
 
-      fatalError("Unable to resolve a struct named '" + strucName + "' in script '" + scName + "'!");
+      CapricaError::fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
     }
   }
 
@@ -116,7 +117,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     }
   }
   
-  fatalError("Unable to resolve type '" + tp.name + "'!");
+  CapricaError::fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 }
 
 PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusIdentifier& ident) const {
@@ -131,9 +132,9 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
     }
   }
 
-  if (object->parentClass != PapyrusType::None()) {
+  if (object->parentClass.type != PapyrusType::Kind::None) {
     if (object->parentClass.type != PapyrusType::Kind::ResolvedObject)
-      fatalError("Something is wrong here, this should already have been resolved!");
+      CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
     return tryResolveMemberIdentifier(object->parentClass, ident);
   }
 
@@ -143,7 +144,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
   auto id = tryResolveMemberIdentifier(baseType, ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+    CapricaError::fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
   return id;
 }
 
@@ -173,9 +174,9 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
       }
     }
 
-    if (baseType.resolvedObject->parentClass != PapyrusType::None()) {
+    if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::None) {
       if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::ResolvedObject)
-        fatalError("Something is wrong here, this should already have been resolved!");
+        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
 
       return tryResolveMemberIdentifier(baseType.resolvedObject->parentClass, ident);
     }
@@ -189,7 +190,7 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
     return ident;
   }
 
-  if (baseType == PapyrusType::None()) {
+  if (baseType.type == PapyrusType::Kind::None) {
     for (auto& state : object->states) {
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
@@ -216,33 +217,31 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
       }
     }
   } else if (baseType.type == PapyrusType::Kind::Array) {
-    PapyrusIdentifier id = ident;
-    id.type = PapyrusIdentifierType::BuiltinArrayFunction;
-    id.arrayFuncElementType = baseType.getElementType();
+    auto fk = PapyrusBuiltinArrayFunctionKind::Unknown;
     if (!_stricmp(ident.name.c_str(), "find")) {
       if (baseType.getElementType().type == PapyrusType::Kind::ResolvedStruct)
-        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::FindStruct;
+        fk = PapyrusBuiltinArrayFunctionKind::FindStruct;
       else
-        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Find;
+        fk = PapyrusBuiltinArrayFunctionKind::Find;
     } else if (!_stricmp(ident.name.c_str(), "rfind")) {
       if (baseType.getElementType().type == PapyrusType::Kind::ResolvedStruct)
-        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFindStruct;
+        fk = PapyrusBuiltinArrayFunctionKind::RFindStruct;
       else
-        id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFind;
+        fk = PapyrusBuiltinArrayFunctionKind::RFind;
     } else if (!_stricmp(ident.name.c_str(), "add")) {
-      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Add;
+      fk = PapyrusBuiltinArrayFunctionKind::Add;
     } else if (!_stricmp(ident.name.c_str(), "clear")) {
-      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Clear;
+      fk = PapyrusBuiltinArrayFunctionKind::Clear;
     } else if (!_stricmp(ident.name.c_str(), "insert")) {
-      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Insert;
+      fk = PapyrusBuiltinArrayFunctionKind::Insert;
     } else if (!_stricmp(ident.name.c_str(), "remove")) {
-      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Remove;
+      fk = PapyrusBuiltinArrayFunctionKind::Remove;
     } else if (!_stricmp(ident.name.c_str(), "removelast")) {
-      id.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RemoveLast;
+      fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
     } else {
-      fatalError("Unknown function '" + ident.name + "' called on an array expression!");
+      CapricaError::fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.c_str());
     }
-    return id;
+    return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     for (auto& state : baseType.resolvedObject->states) {
       for (auto& func : state->functions) {
@@ -255,15 +254,15 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
       }
     }
 
-    if (baseType.resolvedObject->parentClass != PapyrusType::None()) {
+    if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::None) {
       if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::ResolvedObject)
-        fatalError("Something is wrong here, this should already have been resolved!");
+        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
       
       return resolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident);
     }
   }
 
-  throw std::runtime_error("Unresolved function name '" + ident.name + "'!");
+  CapricaError::fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
 }
 
 }}

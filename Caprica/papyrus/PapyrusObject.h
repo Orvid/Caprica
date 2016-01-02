@@ -23,16 +23,18 @@ struct PapyrusObject final
   std::string documentationString{ "" };
   bool isConst{ false };
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
-  PapyrusType parentClass{ };
+  PapyrusType parentClass;
   PapyrusState* autoState{ nullptr };
+  
+  parser::PapyrusFileLocation location;
 
-  std::vector<std::string> imports{ };
+  std::vector<std::pair<parser::PapyrusFileLocation, std::string>> imports{ };
   std::vector<PapyrusStruct*> structs{ };
   std::vector<PapyrusVariable*> variables{ };
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
   std::vector<PapyrusState*> states{ };
 
-  PapyrusObject() = default;
+  PapyrusObject(const parser::PapyrusFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) { }
   ~PapyrusObject() {
     for (auto s : structs)
       delete s;
@@ -89,7 +91,7 @@ struct PapyrusObject final
     ctx->object = this;
     ctx->pushIdentifierScope();
     for (auto i : imports)
-      ctx->addImport(i);
+      ctx->addImport(i.first, i.second);
     for (auto s : structs)
       s->semantic(ctx);
     for (auto v : variables)

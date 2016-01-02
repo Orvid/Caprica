@@ -15,9 +15,9 @@ struct PapyrusParentExpression final : public PapyrusExpression
 {
   // We do this this way because we can't
   // get the type in resultType() otherwise.
-  PapyrusType type{ };
+  PapyrusType type;
 
-  PapyrusParentExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusParentExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   virtual ~PapyrusParentExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
@@ -28,7 +28,7 @@ struct PapyrusParentExpression final : public PapyrusExpression
     type = ctx->resolveType(type);
     if (ctx->object->parentClass != type)
       ctx->fatalError("An error occured while resolving the parent type!");
-    if (ctx->object->parentClass == PapyrusType::None())
+    if (ctx->object->parentClass.type == PapyrusType::Kind::None)
       ctx->fatalError("Parent is invalid in a script with no parent!");
   }
 

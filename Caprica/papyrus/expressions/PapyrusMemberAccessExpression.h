@@ -17,7 +17,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   PapyrusExpression* baseExpression{ nullptr };
   PapyrusExpression* accessExpression{ nullptr };
 
-  PapyrusMemberAccessExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusMemberAccessExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusMemberAccessExpression() override {
     if (baseExpression)
       delete baseExpression;
@@ -36,7 +36,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
       auto base = baseExpression->generateLoad(file, bldr);
       bldr << location;
-      dest = bldr.allocTemp(file, PapyrusType::Int());
+      dest = bldr.allocTemp(file, PapyrusType::Int(location));
       bldr << op::arraylength{ pex::PexValue::Identifier::fromVar(dest), pex::PexValue::Identifier::fromVar(base) };
       bldr.freeIfTemp(base);
     } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
@@ -68,7 +68,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
       if (auto id = baseExpression->as<PapyrusIdentifierExpression>()) {
         id->identifier = ctx->tryResolveIdentifier(id->identifier);
         if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
-          auto tp = ctx->resolveType(PapyrusType::Unresolved(id->identifier.name));
+          auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject)
             ctx->fatalError("Unresolved identifier '" + id->identifier.name + "'!");
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function);

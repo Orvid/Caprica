@@ -6,6 +6,7 @@
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusValue.h>
+#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexObject.h>
@@ -16,12 +17,14 @@ namespace caprica { namespace papyrus {
 struct PapyrusVariable final
 {
   std::string name{ "" };
-  PapyrusType type{ };
+  PapyrusType type;
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
-  PapyrusValue defaultValue{ };
+  PapyrusValue defaultValue{ PapyrusValue::Default() };
   bool isConst{ false };
 
-  PapyrusVariable() = default;
+  parser::PapyrusFileLocation location;
+
+  PapyrusVariable(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusVariable() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
@@ -36,12 +39,7 @@ struct PapyrusVariable final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
-
-    PapyrusIdentifier id;
-    id.type = PapyrusIdentifierType::Variable;
-    id.name = name;
-    id.var = this;
-    ctx->addIdentifier(id);
+    ctx->addIdentifier(PapyrusIdentifier::Variable(location, this));
   }
 };
 

@@ -15,7 +15,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
   expressions::PapyrusExpression* condition{ nullptr };
   std::vector<PapyrusStatement*> body{ };
 
-  PapyrusWhileStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
+  PapyrusWhileStatement(const parser::PapyrusFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusWhileStatement() override {
     if (condition)
       delete condition;
@@ -44,7 +44,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
-    condition = expressions::PapyrusExpression::coerceExpression(condition, PapyrusType::Bool());
+    condition = expressions::PapyrusExpression::coerceExpression(condition, PapyrusType::Bool(condition->location));
     ctx->pushIdentifierScope();
     for (auto s : body)
       s->semantic(ctx);

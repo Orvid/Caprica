@@ -7,7 +7,6 @@
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusValue.h>
-
 #include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexDebugFunctionInfo.h>
@@ -23,17 +22,17 @@ struct PapyrusProperty final
 {
   std::string name{ "" };
   std::string documentationComment{ "" };
-  PapyrusType type{ };
+  PapyrusType type;
   bool isAuto{ false };
   bool isReadOnly{ false };
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
   PapyrusFunction* readFunction{ nullptr };
   PapyrusFunction* writeFunction{ nullptr };
-  PapyrusValue defaultValue{ };
+  PapyrusValue defaultValue{ PapyrusValue::Default() };
 
   parser::PapyrusFileLocation location;
 
-  PapyrusProperty(parser::PapyrusFileLocation loc) : location(loc) { }
+  PapyrusProperty(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusProperty() {
     if (readFunction)
       delete readFunction;
@@ -106,12 +105,7 @@ struct PapyrusProperty final
     if (writeFunction)
       writeFunction->semantic(ctx);
     ctx->prop = nullptr;
-
-    PapyrusIdentifier id;
-    id.type = PapyrusIdentifierType::Property;
-    id.name = name;
-    id.prop = this;
-    ctx->addIdentifier(id);
+    ctx->addIdentifier(PapyrusIdentifier::Property(location, this));
   }
 
   void semantic2(PapyrusResolutionContext* ctx) {

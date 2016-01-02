@@ -23,7 +23,7 @@ struct PapyrusFunction final
 {
   std::string name{ "" };
   std::string documentationComment{ "" };
-  PapyrusType returnType{ };
+  PapyrusType returnType;
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
   bool isGlobal{ false };
   bool isNative{ false };
@@ -33,7 +33,7 @@ struct PapyrusFunction final
 
   parser::PapyrusFileLocation location;
 
-  PapyrusFunction(parser::PapyrusFileLocation loc) : location(loc) { }
+  PapyrusFunction(const parser::PapyrusFileLocation& loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
   ~PapyrusFunction() {
     for (auto p : parameters)
       delete p;

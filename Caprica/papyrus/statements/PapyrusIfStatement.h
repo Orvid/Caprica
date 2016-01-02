@@ -16,7 +16,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
   std::vector<std::pair<expressions::PapyrusExpression*, std::vector<PapyrusStatement*>>> ifBodies{ };
   std::vector<PapyrusStatement*> elseStatements{ };
 
-  PapyrusIfStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
+  PapyrusIfStatement(const parser::PapyrusFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusIfStatement() override {
     for (auto& i : ifBodies) {
       delete i.first;
@@ -55,7 +55,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     for (auto& i : ifBodies) {
       i.first->semantic(ctx);
-      i.first = expressions::PapyrusExpression::coerceExpression(i.first, PapyrusType::Bool());
+      i.first = expressions::PapyrusExpression::coerceExpression(i.first, PapyrusType::Bool(i.first->location));
       ctx->pushIdentifierScope();
       for (auto s : i.second)
         s->semantic(ctx);

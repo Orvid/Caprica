@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <papyrus/parser/PapyrusFileLocation.h>
+
 #include <pex/PexFile.h>
 #include <pex/PexValue.h>
 
@@ -19,6 +21,7 @@ enum class PapyrusValueType
 struct PapyrusValue final
 {
   PapyrusValueType type{ PapyrusValueType::None };
+  parser::PapyrusFileLocation location;
   std::string s;
   union
   {
@@ -27,7 +30,31 @@ struct PapyrusValue final
     bool b;
   };
 
-  PapyrusValue() = default;
+  // This is intended purely for initializing values that may not
+  // be filled to defaults, and doesn't track a location.
+  struct Default final { };
+
+  struct None final
+  {
+    parser::PapyrusFileLocation location;
+
+    None(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~None() = default;
+  };
+
+  struct Integer final
+  {
+    int32_t i;
+    parser::PapyrusFileLocation location;
+
+    Integer(const parser::PapyrusFileLocation& loc, int32_t val) : location(loc), i(val) { }
+    ~Integer() = default;
+  };
+
+  PapyrusValue(const parser::PapyrusFileLocation& loc) : location(loc) { }
+  PapyrusValue(const Default& other) : type(PapyrusValueType::None), location("", 0, 0) { }
+  PapyrusValue(const None& other) : type(PapyrusValueType::None), location(other.location) { }
+  PapyrusValue(const Integer& other) : type(PapyrusValueType::Integer), location(other.location), i(other.i) { }
   PapyrusValue(const PapyrusValue& other) = default;
   ~PapyrusValue() = default;
 
@@ -63,17 +90,17 @@ struct PapyrusValue final
   PapyrusType getPapyrusType() const {
     switch (type) {
       case PapyrusValueType::None:
-        return PapyrusType::None();
+        return PapyrusType::None(location);
       case PapyrusValueType::String:
-        return PapyrusType::String();
+        return PapyrusType::String(location);
       case PapyrusValueType::Integer:
-        return PapyrusType::Int();
+        return PapyrusType::Int(location);
       case PapyrusValueType::Float:
-        return PapyrusType::Float();
+        return PapyrusType::Float(location);
       case PapyrusValueType::Bool:
-        return PapyrusType::Bool();
+        return PapyrusType::Bool(location);
       default:
-        throw std::runtime_error("Unknown PapyrusValueType!");
+        CapricaError::logicalFatal("Unknown PapyrusValueType!");
     }
   }
 };

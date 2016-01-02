@@ -18,13 +18,15 @@ namespace caprica { namespace papyrus {
 struct PapyrusFunctionParameter final
 {
   std::string name{ "" };
-  PapyrusType type{ };
+  PapyrusType type;
   // We need this because PapyrusValue doesn't
   // have an "Undefined" state.
   bool hasDefaultValue{ false };
-  PapyrusValue defaultValue{ };
+  PapyrusValue defaultValue{ PapyrusValue::Default() };
 
-  PapyrusFunctionParameter() = default;
+  const parser::PapyrusFileLocation location;
+
+  PapyrusFunctionParameter(const parser::PapyrusFileLocation loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusFunctionParameter() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexFunction* func) const {
@@ -39,11 +41,7 @@ struct PapyrusFunctionParameter final
   }
 
   void semantic2(PapyrusResolutionContext* ctx) {
-    PapyrusIdentifier id;
-    id.type = PapyrusIdentifierType::Parameter;
-    id.name = name;
-    id.param = this;
-    ctx->addIdentifier(id);
+    ctx->addIdentifier(PapyrusIdentifier::FunctionParameter(location, this));
   }
 };
 

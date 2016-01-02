@@ -15,7 +15,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   PapyrusExpression* baseExpression{ nullptr };
   PapyrusExpression* indexExpression{ nullptr };
 
-  PapyrusArrayIndexExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusArrayIndexExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusArrayIndexExpression() override {
     if (baseExpression)
       delete baseExpression;
@@ -49,7 +49,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     baseExpression->semantic(ctx);
     indexExpression->semantic(ctx);
-    indexExpression = PapyrusExpression::coerceExpression(indexExpression, PapyrusType::Int());
+    indexExpression = PapyrusExpression::coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
   }
 
   virtual PapyrusType resultType() const override {

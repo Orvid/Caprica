@@ -13,11 +13,11 @@ namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusDeclareStatement final : public PapyrusStatement
 {
-  PapyrusType type{ };
+  PapyrusType type;
   std::string name{ "" };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
-  PapyrusDeclareStatement(parser::PapyrusFileLocation loc) : PapyrusStatement(loc) { }
+  PapyrusDeclareStatement(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
   virtual ~PapyrusDeclareStatement() override {
     if (initialValue)
       delete initialValue;
@@ -41,11 +41,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
       initialValue = expressions::PapyrusExpression::coerceExpression(initialValue, type);
     }
 
-    PapyrusIdentifier id;
-    id.type = PapyrusIdentifierType::DeclareStatement;
-    id.name = name;
-    id.declStatement = this;
-    ctx->addIdentifier(id);
+    ctx->addIdentifier(PapyrusIdentifier::DeclStatement(location, this));
   }
 };
 

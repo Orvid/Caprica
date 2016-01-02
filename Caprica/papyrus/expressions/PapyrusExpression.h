@@ -12,16 +12,16 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusExpression abstract
 {
-  parser::PapyrusFileLocation location;
+  const parser::PapyrusFileLocation location;
 
-  PapyrusExpression(parser::PapyrusFileLocation loc) : location(loc) { }
+  PapyrusExpression(const parser::PapyrusFileLocation& loc) : location(loc) { }
   virtual ~PapyrusExpression() = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;
   virtual PapyrusType resultType() const abstract;
 
-  static PapyrusExpression* coerceExpression(PapyrusExpression* expr, PapyrusType target);
+  static PapyrusExpression* coerceExpression(PapyrusExpression* expr, const PapyrusType& target);
 
   template<typename T>
   T* as() {

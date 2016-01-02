@@ -10,6 +10,42 @@
 
 namespace caprica { namespace papyrus {
 
+PapyrusIdentifier::PapyrusIdentifier(const Property& other)
+  : type(PapyrusIdentifierType::Property),
+    location(other.location),
+    prop(other.prop),
+    name(other.prop->name) { }
+PapyrusIdentifier::PapyrusIdentifier(const Variable& other)
+  : type(PapyrusIdentifierType::Variable),
+    location(other.location),
+    var(other.var),
+    name(other.var->name) { }
+PapyrusIdentifier::PapyrusIdentifier(const FunctionParameter& other)
+  : type(PapyrusIdentifierType::Parameter),
+    location(other.location),
+    param(other.param),
+    name(other.param->name) { }
+PapyrusIdentifier::PapyrusIdentifier(const DeclStatement& other)
+  : type(PapyrusIdentifierType::DeclareStatement),
+    location(other.location),
+    declStatement(other.declStatement),
+    name(other.declStatement->name) { }
+PapyrusIdentifier::PapyrusIdentifier(const StructMember& other)
+  : type(PapyrusIdentifierType::StructMember),
+    location(other.location),
+    structMember(other.member),
+    name(other.member->name) { }
+PapyrusIdentifier::PapyrusIdentifier(const Function& other)
+  : type(PapyrusIdentifierType::Function),
+    location(other.location),
+    func(other.function),
+    name(other.function->name) { }
+PapyrusIdentifier::PapyrusIdentifier(const ArrayFunction& other)
+  : type(PapyrusIdentifierType::BuiltinArrayFunction),
+    location(other.location),
+    arrayFuncKind(other.arrayFuncKind),
+    arrayFuncElementType(other.arrayFuncElementType) { }
+
 pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const {
   namespace op = caprica::pex::op;
   switch (type) {

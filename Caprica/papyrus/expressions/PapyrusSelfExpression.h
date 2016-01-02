@@ -15,9 +15,9 @@ struct PapyrusSelfExpression final : public PapyrusExpression
 {
   // We do this this way because we can't
   // get the type in resultType() otherwise.
-  PapyrusType type{ };
+  PapyrusType type;
 
-  PapyrusSelfExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusSelfExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   virtual ~PapyrusSelfExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

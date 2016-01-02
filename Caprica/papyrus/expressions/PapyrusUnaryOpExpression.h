@@ -22,7 +22,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   PapyrusUnaryOperatorType operation{ PapyrusUnaryOperatorType::None };
   PapyrusExpression* innerExpression{ nullptr };
 
-  PapyrusUnaryOpExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusUnaryOpExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusUnaryOpExpression() override {
     if (innerExpression)
       delete innerExpression;
@@ -35,9 +35,9 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
     bldr << location;
     switch (operation) {
       case PapyrusUnaryOperatorType::Negate:
-        if (innerExpression->resultType() == PapyrusType::Float())
+        if (innerExpression->resultType().type == PapyrusType::Kind::Float)
           bldr << op::fneg{ dest, iVal };
-        else if (innerExpression->resultType() == PapyrusType::Int())
+        else if (innerExpression->resultType().type == PapyrusType::Kind::Int)
           bldr << op::ineg{ dest, iVal };
         else
           throw std::runtime_error("You can only negate integers and floats!");

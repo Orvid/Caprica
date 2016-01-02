@@ -12,10 +12,10 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusNewArrayExpression final : public PapyrusExpression
 {
-  PapyrusType type{ };
+  PapyrusType type;
   PapyrusExpression* lengthExpression{ nullptr };
 
-  PapyrusNewArrayExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusNewArrayExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   virtual ~PapyrusNewArrayExpression() override {
     if (lengthExpression)
       delete lengthExpression;
@@ -33,7 +33,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     type = ctx->resolveType(type);
-    type = PapyrusType::Array(std::make_shared<PapyrusType>(type));
+    type = PapyrusType::Array(type.location, std::make_shared<PapyrusType>(type));
     lengthExpression->semantic(ctx);
   }
 

@@ -11,9 +11,9 @@ namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusStatement abstract
 {
-  parser::PapyrusFileLocation location;
+  const parser::PapyrusFileLocation location;
 
-  PapyrusStatement(parser::PapyrusFileLocation loc) : location(loc) { }
+  PapyrusStatement(const parser::PapyrusFileLocation& loc) : location(loc) { }
   virtual ~PapyrusStatement() = default;
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;

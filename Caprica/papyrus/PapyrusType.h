@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 
+#include <papyrus/parser/PapyrusFileLocation.h>
+
 #include <pex/PexFile.h>
 #include <pex/PexString.h>
 
@@ -29,46 +31,96 @@ struct PapyrusType final
     ResolvedObject,
   };
 
-  struct Unresolved
+  // This is intended purely for initializing types that will be
+  // assigned fully later in the control flow.
+  struct Default final { };
+
+  struct Unresolved final
   {
+    parser::PapyrusFileLocation location;
     std::string name;
 
-    Unresolved(std::string nm) : name(nm) { }
+    Unresolved(const parser::PapyrusFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
     ~Unresolved() = default;
   };
-  struct Array
+  struct Array final
   {
+    parser::PapyrusFileLocation location;
     std::shared_ptr<PapyrusType> type;
 
-    Array(std::shared_ptr<PapyrusType> tp) : type(tp) { }
+    Array(const parser::PapyrusFileLocation& loc, std::shared_ptr<PapyrusType> tp) : location(loc), type(tp) { }
     ~Array() = default;
   };
-  struct None { };
-  struct Bool { };
-  struct Float { };
-  struct Int { };
-  struct String { };
-  struct Var { };
+  struct None final
+  {
+    parser::PapyrusFileLocation location;
+
+    None(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~None() = default;
+  };
+  struct Bool final
+  {
+    parser::PapyrusFileLocation location;
+
+    Bool(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~Bool() = default;
+  };
+  struct Float final
+  {
+    parser::PapyrusFileLocation location;
+
+    Float(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~Float() = default;
+  };
+  struct Int final
+  {
+    parser::PapyrusFileLocation location;
+
+    Int(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~Int() = default;
+  };
+  struct String final
+  {
+    parser::PapyrusFileLocation location;
+
+    String(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~String() = default;
+  };
+  struct Var final
+  {
+    parser::PapyrusFileLocation location;
+
+    Var(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    ~Var() = default;
+  };
+  struct ResolvedObject final
+  {
+    parser::PapyrusFileLocation location;
+    PapyrusObject* obj;
+
+    ResolvedObject(const parser::PapyrusFileLocation& loc, PapyrusObject* o) : location(loc), obj(o) { }
+    ~ResolvedObject() = default;
+  };
 
   Kind type{ Kind::None };
   std::string name{ "" };
+  parser::PapyrusFileLocation location;
   union
   {
     const PapyrusStruct* resolvedStruct{ nullptr };
     const PapyrusObject* resolvedObject;
   };
 
-  PapyrusType() = default;
-
-  PapyrusType(const Unresolved& other) : type(Kind::Unresolved), name(other.name) { }
-  PapyrusType(const Array& other) : type(Kind::Array), arrayElementType(other.type) { }
-
-  PapyrusType(const None& other) : type(Kind::None) { }
-  PapyrusType(const Bool& other) : type(Kind::Bool) { }
-  PapyrusType(const Float& other) : type(Kind::Float) { }
-  PapyrusType(const Int& other) : type(Kind::Int) { }
-  PapyrusType(const String& other) : type(Kind::String) { }
-  PapyrusType(const Var& other) : type(Kind::Var) { }
+  PapyrusType(const Default& other) : type(Kind::Unresolved), location({ "", 0, 0 }) { }
+  PapyrusType(const Unresolved& other) : type(Kind::Unresolved), name(other.name), location(other.location) { }
+  PapyrusType(const Array& other) : type(Kind::Array), arrayElementType(other.type), location(other.location) { }
+  PapyrusType(const None& other) : type(Kind::None), location(other.location) { }
+  PapyrusType(const Bool& other) : type(Kind::Bool), location(other.location) { }
+  PapyrusType(const Float& other) : type(Kind::Float), location(other.location) { }
+  PapyrusType(const Int& other) : type(Kind::Int), location(other.location) { }
+  PapyrusType(const String& other) : type(Kind::String), location(other.location) { }
+  PapyrusType(const Var& other) : type(Kind::Var), location(other.location) { }
+  PapyrusType(const ResolvedObject& other) : type(Kind::ResolvedObject), location(other.location), resolvedObject(other.obj) { }
   PapyrusType(const PapyrusType& other) = default;
 
   pex::PexString buildPex(pex::PexFile* file) const {

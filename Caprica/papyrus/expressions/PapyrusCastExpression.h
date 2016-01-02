@@ -13,9 +13,9 @@ namespace caprica { namespace papyrus { namespace expressions {
 struct PapyrusCastExpression final : public PapyrusExpression
 {
   PapyrusExpression* innerExpression{ nullptr };
-  PapyrusType targetType{ };
+  PapyrusType targetType;
 
-  PapyrusCastExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusCastExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& targ) : PapyrusExpression(loc), targetType(targ) { }
   virtual ~PapyrusCastExpression() override {
     if (innerExpression)
       delete innerExpression;

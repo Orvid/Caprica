@@ -37,7 +37,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   PapyrusBinaryOperatorType operation{ PapyrusBinaryOperatorType::None };
   PapyrusExpression* right{ nullptr };
 
-  PapyrusBinaryOpExpression(parser::PapyrusFileLocation loc) : PapyrusExpression(loc) { }
+  PapyrusBinaryOpExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusBinaryOpExpression() override {
     if (left)
       delete left;
@@ -96,45 +96,45 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           break;
 
         case PapyrusBinaryOperatorType::Add:
-          if (left->resultType() == PapyrusType::Int())
+          if (left->resultType().type == PapyrusType::Kind::Int)
             bldr << op::iadd{ dest, lVal, rVal };
-          else if (left->resultType() == PapyrusType::Float())
+          else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fadd{ dest, lVal, rVal };
-          else if (left->resultType() == PapyrusType::String())
+          else if (left->resultType().type == PapyrusType::Kind::String)
             bldr << op::strcat{ dest, lVal, rVal };
           else
             throw std::runtime_error("Unknown argument type to an add operation!");
           break;
 
         case PapyrusBinaryOperatorType::Subtract:
-          if (left->resultType() == PapyrusType::Int())
+          if (left->resultType().type == PapyrusType::Kind::Int)
             bldr << op::isub{ dest, lVal, rVal };
-          else if (left->resultType() == PapyrusType::Float())
+          else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fsub{ dest, lVal, rVal };
           else
             throw std::runtime_error("Unknown argument type to a subtraction operation!");
           break;
 
         case PapyrusBinaryOperatorType::Multiply:
-          if (left->resultType() == PapyrusType::Int())
+          if (left->resultType().type == PapyrusType::Kind::Int)
             bldr << op::imul{ dest, lVal, rVal };
-          else if (left->resultType() == PapyrusType::Float())
+          else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fmul{ dest, lVal, rVal };
           else
             throw std::runtime_error("Unknown argument type to a multiplication operation!");
           break;
 
         case PapyrusBinaryOperatorType::Divide:
-          if (left->resultType() == PapyrusType::Int())
+          if (left->resultType().type == PapyrusType::Kind::Int)
             bldr << op::idiv{ dest, lVal, rVal };
-          else if (left->resultType() == PapyrusType::Float())
+          else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fdiv{ dest, lVal, rVal };
           else
             throw std::runtime_error("Unknown argument type to a division operation!");
           break;
 
         case PapyrusBinaryOperatorType::Modulus:
-          if (left->resultType() != PapyrusType::Int())
+          if (left->resultType().type != PapyrusType::Kind::Int)
             throw std::runtime_error("Unknown argument type to a modulus operation!");
           bldr << op::imod{ dest, lVal, rVal };
           break;
@@ -155,8 +155,8 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
     switch (operation) {
       case PapyrusBinaryOperatorType::BooleanOr:
       case PapyrusBinaryOperatorType::BooleanAnd:
-        left = coerceExpression(left, PapyrusType::Bool());
-        right = coerceExpression(right, PapyrusType::Bool());
+        left = coerceExpression(left, PapyrusType::Bool(left->location));
+        right = coerceExpression(right, PapyrusType::Bool(right->location));
         break;
 
       case PapyrusBinaryOperatorType::CmpEq:
@@ -173,13 +173,13 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       case PapyrusBinaryOperatorType::Multiply:
       case PapyrusBinaryOperatorType::Divide:
         coerceToSameType();
-        if (left->resultType() != PapyrusType::Int() && left->resultType() != PapyrusType::Float())
+        if (left->resultType().type != PapyrusType::Kind::Int && left->resultType().type != PapyrusType::Kind::Float)
           ctx->fatalError("The <, <=, >, >=, -, *, /, and % operators are only valid on integers and floats!");
         break;
 
       case PapyrusBinaryOperatorType::Modulus:
         coerceToSameType();
-        if (left->resultType() != PapyrusType::Int())
+        if (left->resultType().type != PapyrusType::Kind::Int)
           ctx->fatalError("The modulus operator can only be used on integers!");
         break;
 
@@ -199,7 +199,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       case PapyrusBinaryOperatorType::CmpLte:
       case PapyrusBinaryOperatorType::CmpGt:
       case PapyrusBinaryOperatorType::CmpGte:
-        return PapyrusType::Bool();
+        return PapyrusType::Bool(location);
 
       case PapyrusBinaryOperatorType::Add:
       case PapyrusBinaryOperatorType::Subtract:
@@ -215,15 +215,15 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
 
 private:
   void coerceToSameType() {
-    if (left->resultType() == PapyrusType::String() || right->resultType() == PapyrusType::String()) {
-      left = coerceExpression(left, PapyrusType::String());
-      right = coerceExpression(right, PapyrusType::String());
-    } else if (left->resultType() == PapyrusType::Bool() || right->resultType() == PapyrusType::Bool()) {
-      left = coerceExpression(left, PapyrusType::Bool());
-      right = coerceExpression(right, PapyrusType::Bool());
-    } else if (left->resultType() == PapyrusType::Float() || right->resultType() == PapyrusType::Float()) {
-      left = coerceExpression(left, PapyrusType::Float());
-      right = coerceExpression(right, PapyrusType::Float());
+    if (left->resultType().type == PapyrusType::Kind::String || right->resultType().type == PapyrusType::Kind::String) {
+      left = coerceExpression(left, PapyrusType::String(left->location));
+      right = coerceExpression(right, PapyrusType::String(right->location));
+    } else if (left->resultType().type == PapyrusType::Kind::Bool || right->resultType().type == PapyrusType::Kind::Bool) {
+      left = coerceExpression(left, PapyrusType::Bool(left->location));
+      right = coerceExpression(right, PapyrusType::Bool(right->location));
+    } else if (left->resultType().type == PapyrusType::Kind::Float || right->resultType().type == PapyrusType::Kind::Float) {
+      left = coerceExpression(left, PapyrusType::Float(left->location));
+      right = coerceExpression(right, PapyrusType::Float(right->location));
     } else {
       right = coerceExpression(right, left->resultType());
     }
