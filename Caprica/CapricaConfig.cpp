@@ -2,6 +2,7 @@
 
 namespace caprica { namespace CapricaConfig {
 
+bool compileInParallel{ false };
 bool enableLanguageExtensions{ true };
 bool enableSpeculativeSyntax{ true };
 bool enableDecompiledStructNameRefs{ true };

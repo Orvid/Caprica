@@ -6,6 +6,9 @@
 
 namespace caprica { namespace CapricaConfig {
 
+// If true, when compiling multiple files, do so
+// in multiple threads.
+extern bool compileInParallel;
 // Enable Caprica extensions to the Papyrus language.
 extern bool enableLanguageExtensions;
 // Enable the speculated form of the new functionality available

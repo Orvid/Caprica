@@ -1,8 +1,10 @@
-
 #include <ostream>
 #include <string>
 
+#include <ppl.h>
 #include <boost/filesystem.hpp>
+
+#include <CapricaConfig.h>
 
 #include <papyrus/parser/PapyrusParser.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -38,11 +40,20 @@ int main(int argc, char* argv[])
 #endif
     std::string file = argv[1];
     if (boost::filesystem::is_directory(file)) {
+      std::vector<std::string> files;
       boost::system::error_code ec;
       for (auto e : boost::filesystem::directory_iterator(file, ec)) {
-        if (boost::filesystem::extension(e.path()) == ".psc") {
-          compileScript(e.path().string());
-        }
+        if (boost::filesystem::extension(e.path()) == ".psc")
+          files.push_back(e.path().string());
+      }
+
+      if (caprica::CapricaConfig::compileInParallel) {
+        concurrency::parallel_for_each(files.begin(), files.end(), [](std::string fl) {
+          compileScript(fl);
+        });
+      } else {
+        for (auto& file : files)
+          compileScript(file);
       }
     } else {
       compileScript(file);
