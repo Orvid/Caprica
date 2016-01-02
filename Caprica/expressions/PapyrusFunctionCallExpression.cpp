@@ -117,7 +117,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         return pex::PexValue::Invalid();
       }
       default:
-        throw std::runtime_error("Unknown PapyrusBuiltinArrayFunctionKind!");
+        CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
     }
   } else {
     pex::PexLocalVariable* dest;
@@ -162,7 +162,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       case PapyrusBuiltinArrayFunctionKind::Find:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          ctx->fatalError("Expected either 1 or 2 parameters to 'find'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'find'!");
         arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -170,7 +170,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiStartIndex"))
-            ctx->fatalError("Unknown argument '" + arguments[1]->name + "'! Was expecting 'aiStartIndex'!");
+            CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
           arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
@@ -182,9 +182,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           goto NormalFind;
         }
         if (arguments.size() < 2 || arguments.size() > 3)
-          ctx->fatalError("Expected either 2 or 3 parameters to 'find'!");
+          CapricaError::fatal(location, "Expected either 2 or 3 parameters to 'find'!");
         if (arguments[0]->value->resultType().type != PapyrusType::Kind::String)
-          ctx->fatalError("Expected the literal name of the struct member as a string to compare against!");
+          CapricaError::fatal(location, "Expected the literal name of the struct member as a string to compare against!");
         
         std::string memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
         PapyrusType elemType = PapyrusType::Default();
@@ -195,7 +195,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          ctx->fatalError("Unknown member '" + memberName + "' of struct '" + function.arrayFuncElementType.resolvedStruct->name + "'!");
+          CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType.resolvedStruct->name.c_str());
         arguments[1]->value = coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -204,7 +204,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           arguments.push_back(p);
         } else {
           if (arguments[2]->name != "" && _stricmp(arguments[2]->name.c_str(), "aiStartIndex"))
-            ctx->fatalError("Unknown argument '" + arguments[2]->name + "'! Was expecting 'aiStartIndex'!");
+            CapricaError::error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
           arguments[2]->value = coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
         break;
@@ -213,7 +213,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       case PapyrusBuiltinArrayFunctionKind::RFind:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          ctx->fatalError("Expected either 1 or 2 parameters to 'rfind'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'rfind'!");
         arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -221,7 +221,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiStartIndex"))
-            ctx->fatalError("Unknown argument '" + arguments[1]->name + "'! Was expecting 'aiStartIndex'!");
+            CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
           arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
@@ -233,9 +233,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           goto NormalRFind;
         }
         if (arguments.size() < 2 || arguments.size() > 3)
-          ctx->fatalError("Expected either 2 or 3 parameters to 'rfind'!");
+          CapricaError::fatal(location, "Expected either 2 or 3 parameters to 'rfind'!");
         if (arguments[0]->value->resultType().type != PapyrusType::Kind::String)
-          ctx->fatalError("Expected the literal name of the struct member as a string to compare against!");
+          CapricaError::fatal(location, "Expected the literal name of the struct member as a string to compare against!");
 
         std::string memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
         PapyrusType elemType = PapyrusType::Default();
@@ -246,7 +246,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          ctx->fatalError("Unknown member '" + memberName + "' of struct '" + function.arrayFuncElementType.resolvedStruct->name + "'!");
+          CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType.resolvedStruct->name.c_str());
         arguments[1]->value = coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -255,7 +255,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           arguments.push_back(p);
         } else {
           if (arguments[2]->name != "" && _stricmp(arguments[2]->name.c_str(), "aiStartIndex"))
-            ctx->fatalError("Unknown argument '" + arguments[2]->name + "'! Was expecting 'aiStartIndex'!");
+            CapricaError::error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
           arguments[2]->value = coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
         break;
@@ -263,7 +263,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       case PapyrusBuiltinArrayFunctionKind::Add:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          ctx->fatalError("Expected either 1 or 2 parameters to 'add'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'add'!");
         arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -271,25 +271,25 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiCount"))
-            ctx->fatalError("Unknown argument '" + arguments[1]->name + "'! Was expecting 'aiCount'!");
+            CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
           arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
       }
       case PapyrusBuiltinArrayFunctionKind::Clear:
         if (arguments.size() != 0)
-          ctx->fatalError("Expected 0 parameters to 'clear'!");
+          CapricaError::fatal(location, "Expected 0 parameters to 'clear'!");
         break;
       case PapyrusBuiltinArrayFunctionKind::Insert:
         if (arguments.size() != 2)
-          ctx->fatalError("Expected 2 parameters to 'insert'!");
+          CapricaError::fatal(location, "Expected 2 parameters to 'insert'!");
         arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         break;
       case PapyrusBuiltinArrayFunctionKind::Remove:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          ctx->fatalError("Expected either 1 or 2 parameters to 'remove'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'remove'!");
         arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -297,17 +297,17 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiCount"))
-            ctx->fatalError("Unknown argument '" + arguments[1]->name + "'! Was expecting 'aiCount'!");
+            CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
           arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
       }
       case PapyrusBuiltinArrayFunctionKind::RemoveLast:
         if (arguments.size() != 0)
-          ctx->fatalError("Expected 0 parameters to 'removelast'!");
+          CapricaError::fatal(location, "Expected 0 parameters to 'removelast'!");
         break;
       default:
-        throw std::runtime_error("Unknown PapyrusBuiltinArrayFunctionKind!");
+        CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
     }
   } else {
     if (arguments.size() != function.func->parameters.size()) {
@@ -324,10 +324,10 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
               goto ContinueOuterLoop;
             }
           }
-          ctx->fatalError("Unable to find a parameter named '" + arguments[i]->name + "'!");
+          CapricaError::fatal(arguments[i]->value->location, "Unable to find a parameter named '%s'!", arguments[i]->name.c_str());
         }
         if (hadNamedArgs)
-          ctx->fatalError("No normal arguments are allowed after the first named argument!");
+          CapricaError::fatal(arguments[i]->value->location, "No normal arguments are allowed after the first named argument!");
       ContinueOuterLoop:
         newArgs[baseI] = arguments[i];
       }
@@ -335,7 +335,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       for (size_t i = 0; i < newArgs.size(); i++) {
         if (newArgs[i] == nullptr) {
           if (!function.func->parameters[i]->hasDefaultValue)
-            ctx->fatalError("Not enough arguments provided.");
+            CapricaError::fatal(location, "Not enough arguments provided.");
           newArgs[i] = new Parameter();
           newArgs[i]->value = new PapyrusLiteralExpression(location, function.func->parameters[i]->defaultValue);
         }

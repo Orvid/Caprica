@@ -45,13 +45,6 @@ struct PapyrusResolutionContext final
 
   }
 
-  [[noreturn]]
-  void fatalError(const std::string& msg) const {
-    // TODO: Expand on this, making sure to write things like the
-    // line number to stderr before dying.
-    throw std::runtime_error(msg);
-  }
-
   void pushIdentifierScope() {
     identifierStack.push_back({ });
   }
@@ -68,7 +61,7 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const {
     auto id = tryResolveIdentifier(ident);
     if (id.type == PapyrusIdentifierType::Unresolved)
-      throw std::runtime_error("Unresolved identifier '" + ident.name + "'!");
+      CapricaError::fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
     return id;
   }
 

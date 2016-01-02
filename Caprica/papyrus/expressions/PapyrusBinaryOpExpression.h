@@ -103,7 +103,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::String)
             bldr << op::strcat{ dest, lVal, rVal };
           else
-            throw std::runtime_error("Unknown argument type to an add operation!");
+            CapricaError::fatal(location, "Unknown argument type to an add operation!");
           break;
 
         case PapyrusBinaryOperatorType::Subtract:
@@ -112,7 +112,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fsub{ dest, lVal, rVal };
           else
-            throw std::runtime_error("Unknown argument type to a subtraction operation!");
+            CapricaError::fatal(location, "Unknown argument type to a subtraction operation!");
           break;
 
         case PapyrusBinaryOperatorType::Multiply:
@@ -121,7 +121,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fmul{ dest, lVal, rVal };
           else
-            throw std::runtime_error("Unknown argument type to a multiplication operation!");
+            CapricaError::fatal(location, "Unknown argument type to a multiplication operation!");
           break;
 
         case PapyrusBinaryOperatorType::Divide:
@@ -130,17 +130,17 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fdiv{ dest, lVal, rVal };
           else
-            throw std::runtime_error("Unknown argument type to a division operation!");
+            CapricaError::fatal(location, "Unknown argument type to a division operation!");
           break;
 
         case PapyrusBinaryOperatorType::Modulus:
           if (left->resultType().type != PapyrusType::Kind::Int)
-            throw std::runtime_error("Unknown argument type to a modulus operation!");
+            CapricaError::fatal(location, "Unknown argument type to a modulus operation!");
           bldr << op::imod{ dest, lVal, rVal };
           break;
 
         default:
-          throw std::runtime_error("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
+          CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
       }
       bldr.freeIfTemp(rVal);
     }
@@ -174,17 +174,17 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       case PapyrusBinaryOperatorType::Divide:
         coerceToSameType();
         if (left->resultType().type != PapyrusType::Kind::Int && left->resultType().type != PapyrusType::Kind::Float)
-          ctx->fatalError("The <, <=, >, >=, -, *, /, and % operators are only valid on integers and floats!");
+          CapricaError::fatal(location, "The <, <=, >, >=, -, *, /, and % operators are only valid on integers and floats!");
         break;
 
       case PapyrusBinaryOperatorType::Modulus:
         coerceToSameType();
         if (left->resultType().type != PapyrusType::Kind::Int)
-          ctx->fatalError("The modulus operator can only be used on integers!");
+          CapricaError::fatal(location, "The modulus operator can only be used on integers!");
         break;
 
       default:
-        throw std::runtime_error("Unknown PapyrusBinaryOperatorType in semantic pass!");
+        CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType in semantic pass!");
     }
   }
 
@@ -209,7 +209,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
         return left->resultType();
 
       default:
-        throw std::runtime_error("Unknown PapyrusBinaryOperatorType!");
+        CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType!");
     }
   }
 

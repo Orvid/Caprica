@@ -42,7 +42,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
       dest = fc->generateLoad(file, bldr, baseExpression);
     } else {
-      throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
+      CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
     }
     return dest;
   }
@@ -54,11 +54,11 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {
       id->identifier.generateStore(file, bldr, pex::PexValue::Identifier::fromVar(base), val);
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
-      throw std::runtime_error("You cannot assign to the .Length property of an array!");
+      CapricaError::fatal(al->location, "You cannot assign to the .Length property of an array!");
     } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
-      throw std::runtime_error("You cannot assign to result of a function call!");
+      CapricaError::fatal(fc->location, "You cannot assign to result of a function call!");
     } else {
-      throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
+      CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
     }
     bldr.freeIfTemp(base);
   }
@@ -70,7 +70,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
         if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
           auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject)
-            ctx->fatalError("Unresolved identifier '" + id->identifier.name + "'!");
+            CapricaError::fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.c_str());
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function);
           fc->semantic(ctx);
           return;
@@ -86,9 +86,9 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
         id->semantic(ctx);
       } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
         if (baseExpression->resultType().type != PapyrusType::Kind::Array)
-          ctx->fatalError("Attempted to access the .Length property of a non-array value!");
+          CapricaError::fatal(al->location, "Attempted to access the .Length property of a non-array value!");
       } else {
-        throw std::runtime_error("Invalid access expression for PapyrusMemberAccessExpression!");
+        CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
       }
     }
   }

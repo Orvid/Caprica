@@ -158,7 +158,7 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
       for (auto& arg : instructions[i]->args) {
         if (arg.type == PexValueType::Label) {
           if (arg.l->targetIdx == (size_t)-1)
-            throw std::runtime_error("Unresolved label!");
+            CapricaError::logicalFatal("Unresolved label!");
           auto newVal = arg.l->targetIdx - i;
           arg.type = PexValueType::Integer;
           arg.i = (int32_t)newVal;
@@ -168,7 +168,7 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 
     for (auto l : labels) {
       if (l->targetIdx == (size_t)-1)
-        throw std::runtime_error("Unused unresolved label!");
+        CapricaError::logicalFatal("Unused unresolved label!");
       delete l;
     }
     labels.clear();
@@ -238,11 +238,11 @@ private:
   PexFunctionBuilder& push(PexInstruction* instr) {
     for (auto& v : instr->args) {
       if (v.type == PexValueType::Invalid)
-        throw std::runtime_error("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+        CapricaError::logicalFatal("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     }
     for (auto& v : instr->variadicArgs) {
       if (v.type == PexValueType::Invalid)
-        throw std::runtime_error("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+        CapricaError::logicalFatal("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     }
     instructionLocations.push_back(currentLocation);
     instructions.push_back(instr);

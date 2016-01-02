@@ -74,9 +74,9 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
     }
 
     case PapyrusIdentifierType::Unresolved:
-      throw std::runtime_error("Attempted to generate a load of an unresolved identifier '" + name + "'!");
+      CapricaError::fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.c_str());
     default:
-      throw std::runtime_error("Unknown PapyrusIdentifierType!");
+      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
 }
 
@@ -85,7 +85,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
   switch (type) {
     case PapyrusIdentifierType::Property:
       if (prop->isReadOnly)
-        throw std::runtime_error("Attempted to generate a store to a read-only property!");
+        CapricaError::fatal(location, "Attempted to generate a store to a read-only property!");
       if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
@@ -109,9 +109,9 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
       break;
 
     case PapyrusIdentifierType::Unresolved:
-      throw std::runtime_error("Attempted to generate a store to an unresolved identifier '" + name + "'!");
+      CapricaError::fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
     default:
-      throw std::runtime_error("Unknown PapyrusIdentifierType!");
+      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
   bldr.freeIfTemp(val);
 }
@@ -130,9 +130,9 @@ PapyrusType PapyrusIdentifier::resultType() const {
       return structMember->type;
 
     case PapyrusIdentifierType::Unresolved:
-      throw std::runtime_error("Attempted to get the result type of an unresolved identifier '" + name + "'!");
+      CapricaError::fatal(location, "Attempted to get the result type of an unresolved identifier '%s'!", name.c_str());
     default:
-      throw std::runtime_error("Unknown PapyrusIdentifierType!");
+      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
 }
 

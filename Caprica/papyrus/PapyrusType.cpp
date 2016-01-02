@@ -38,7 +38,7 @@ std::string PapyrusType::getTypeString() const {
       return name;
     }
     default:
-      throw std::runtime_error("Unknown PapyrusTypeKind!");
+      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
   }
 }
 

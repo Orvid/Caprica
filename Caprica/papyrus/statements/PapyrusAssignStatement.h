@@ -69,7 +69,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       bldr << location;
       ma->generateStore(file, bldr, rVal);
     } else {
-      throw std::runtime_error("Invalid Lefthand Side for PapyrusAssignStatement!");
+      CapricaError::logicalFatal("Invalid Lefthand Side for PapyrusAssignStatement!");
     }
 
     bldr.freeIfTemp(rVal);
@@ -101,22 +101,22 @@ struct PapyrusAssignStatement final : public PapyrusStatement
           binOpExpression->operation = expressions::PapyrusBinaryOperatorType::Modulus;
           break;
         default:
-          throw std::runtime_error("Unknown PapyrusAssignOperatorType!");
+          CapricaError::logicalFatal("Unknown PapyrusAssignOperatorType!");
       }
       binOpExpression->semantic(ctx);
       if (lValue->resultType().type == PapyrusType::Kind::Array && !CapricaConfig::enableLanguageExtensions)
-        ctx->fatalError("You can't do anything except assign to an array element unless you have language extensions enabled!");
+        CapricaError::fatal(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
       rValue = expressions::PapyrusExpression::coerceExpression(binOpExpression, lValue->resultType());
     }
     if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
       if (id->identifier.type == PapyrusIdentifierType::Property && id->identifier.prop->isReadOnly)
-        ctx->fatalError("Attempted to assign to a read-only property!");
+        CapricaError::fatal(location, "Attempted to assign to a read-only property!");
     } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
       // It's valid.
     } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
       // It's valid.
     } else {
-      throw std::runtime_error("Invalid Lefthand Side for PapyrusAssignStatement!");
+      CapricaError::fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
     }
   }
 };

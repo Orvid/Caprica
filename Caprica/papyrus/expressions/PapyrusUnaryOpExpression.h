@@ -40,13 +40,13 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
         else if (innerExpression->resultType().type == PapyrusType::Kind::Int)
           bldr << op::ineg{ dest, iVal };
         else
-          throw std::runtime_error("You can only negate integers and floats!");
+          CapricaError::fatal(location, "You can only negate integers and floats!");
         break;
       case PapyrusUnaryOperatorType::Not:
         bldr << op::not{ dest, iVal };
         break;
       default:
-        throw std::runtime_error("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
+        CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
     }
     bldr.freeIfTemp(iVal);
     return dest;

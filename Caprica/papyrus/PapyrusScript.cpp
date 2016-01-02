@@ -16,12 +16,12 @@ pex::PexFile* PapyrusScript::buildPex() const {
   char compNameBuf[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD compNameBufLength = sizeof(compNameBuf);
   if (!GetComputerNameA(compNameBuf, &compNameBufLength))
-    throw std::runtime_error("Failed to get the computer name!");
+    CapricaError::logicalFatal("Failed to get the computer name!");
   pex->computerName = std::string(compNameBuf, compNameBufLength);
   char userNameBuf[UNLEN + 1];
   DWORD userNameBufLength = sizeof(userNameBuf);
   if (!GetUserNameA(userNameBuf, &userNameBufLength))
-    throw std::runtime_error("Failed to get the user name!");
+    CapricaError::logicalFatal("Failed to get the user name!");
   if (userNameBufLength > 0)
     userNameBufLength--;
   pex->userName = std::string(userNameBuf, userNameBufLength);

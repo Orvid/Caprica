@@ -27,7 +27,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     type = ctx->resolveType(type);
     if (ctx->object != type.resolvedObject)
-      ctx->fatalError("An error occured while resolving the self type!");
+      CapricaError::fatal(location, "An error occured while resolving the self type!");
   }
 
   virtual PapyrusType resultType() const override {

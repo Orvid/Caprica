@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 
+#include <CapricaError.h>
+
 #include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
@@ -155,7 +157,7 @@ struct PapyrusType final
         case Kind::ResolvedObject:
           return resolvedObject != other.resolvedObject;
         default:
-          throw std::runtime_error("Unknown PapyrusTypeKind while comparing!");
+          CapricaError::logicalFatal("Unknown PapyrusTypeKind while comparing!");
       }
     }
     return true;
