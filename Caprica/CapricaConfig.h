@@ -27,6 +27,8 @@ extern bool enableOptimizations;
 // Enable optimizations that are done regardless of if the -optimize
 // switch is passed to the CK compiler.
 extern bool enableCKOptimizations;
+// If true, emit debug info for the papyrus script.
+extern bool emitDebugInfo;
 // The directories to search in for imported types and
 // unknown types.
 extern std::vector<std::string> importDirectories;

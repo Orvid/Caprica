@@ -14,6 +14,7 @@ struct CapricaError abstract
 {
   template<typename... Args>
   static void error(const papyrus::parser::PapyrusFileLocation& location, const std::string& msg, Args&&... args) {
+    // TODO: Make sure the next stage doesn't occur if this is called.
     std::cerr << formatString(location, "Error", msg, args...) << std::endl;
   }
 

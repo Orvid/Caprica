@@ -9,6 +9,7 @@ bool enableDecompiledStructNameRefs{ true };
 bool allowCompilerIdentifiers{ true };
 bool enableOptimizations{ true };
 bool enableCKOptimizations{ true };
+bool emitDebugInfo{ true };
 std::vector<std::string> importDirectories{
   "./",
 };
