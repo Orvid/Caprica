@@ -77,13 +77,13 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier tryResolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
 
-  ~PapyrusResolutionContext();
+  PapyrusResolutionContext() = default;
+  ~PapyrusResolutionContext() = default;
 private:
   std::vector<std::map<std::string, PapyrusIdentifier, parser::CaselessStringComparer>> identifierStack{ };
   std::vector<PapyrusScript*> importedScripts{ };
-  std::map<std::string, PapyrusScript*, parser::CaselessStringComparer> loadedScripts{ };
 
-  PapyrusScript* loadScript(std::string name);
+  PapyrusScript* loadScript(const std::string& name);
 };
 
 }}

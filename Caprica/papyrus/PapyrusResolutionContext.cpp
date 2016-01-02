@@ -1,5 +1,7 @@
 #include <papyrus/PapyrusResolutionContext.h>
 
+#include <memory>
+
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -13,12 +15,6 @@
 
 namespace caprica { namespace papyrus {
 
-PapyrusResolutionContext::~PapyrusResolutionContext() {
-  for (auto& s : loadedScripts) {
-    delete s.second;
-  }
-}
-
 void PapyrusResolutionContext::addImport(std::string import) {
   auto sc = loadScript(import);
   if (!sc)
@@ -26,23 +22,23 @@ void PapyrusResolutionContext::addImport(std::string import) {
   importedScripts.push_back(sc);
 }
 
-PapyrusScript* PapyrusResolutionContext::loadScript(std::string name) {
+// This is safe because it will only ever contain scripts referencing items in this map, and this map
+// will never contain a fully-resolved script.
+static thread_local std::map<const std::string, std::unique_ptr<PapyrusScript>, parser::CaselessStringComparer> loadedScripts{ };
+PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
   auto f = loadedScripts.find(name);
   if (f != loadedScripts.end())
-    return f->second;
+    return f->second.get();
 
   for (auto& dir : CapricaConfig::importDirectories) {
     if (boost::filesystem::exists(dir + name + ".psc")) {
       auto parser = new parser::PapyrusParser(dir + name + ".psc");
       auto a = parser->parseScript();
       delete parser;
-      loadedScripts.insert({ a->objects[0]->name, a });
+      loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
       auto ctx = new PapyrusResolutionContext();
-      ctx->loadedScripts = loadedScripts;
       ctx->isExternalResolution = true;
       a->semantic(ctx);
-      loadedScripts = ctx->loadedScripts;
-      ctx->loadedScripts.clear();
       delete ctx;
       return a;
     }

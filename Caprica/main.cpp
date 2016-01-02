@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 
 #include <papyrus/parser/PapyrusParser.h>
+#include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
 #include <pex/PexWriter.h>
 
