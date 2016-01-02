@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 
+#include <CapricaError.h>
+
 #include <papyrus/parser/PapyrusFileLocation.h>
 
 namespace caprica { namespace papyrus { namespace parser {
@@ -17,7 +19,7 @@ struct CaselessStringComparer : public std::binary_function<std::string, std::st
   }
 };
 
-enum class TokenType
+enum class TokenType : int32_t
 {
   Unknown,
 
@@ -114,55 +116,64 @@ struct PapyrusLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
-    size_t line{ };
+    PapyrusFileLocation location;
     std::string sValue{ "" };
     int32_t iValue{ };
     float fValue{ };
 
-    Token(TokenType tp) : type(tp) { }
-
-    PapyrusFileLocation getLocation() const {
-      PapyrusFileLocation loc;
-      loc.line = line;
-      return loc;
-    }
-
-    std::string asString() const {
-      std::ostringstream str;
-      str << (int)type << ": " << line << " s(" << sValue << ") i(" << iValue << ") f(" << fValue << ")";
-      return str.str();
-    }
+    Token(TokenType tp, PapyrusFileLocation loc) : type(tp), location(loc) { }
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
-      return asString();
+      switch (type) {
+        case TokenType::Identifier:
+          return "Identifier(" + sValue + ")";
+        case TokenType::String:
+          return "String(\"" + sValue + "\")";
+        case TokenType::Integer:
+        {
+          std::ostringstream str;
+          str << "Integer(" << iValue << ")";
+          return str.str();
+        }
+        case TokenType::Float:
+        {
+          std::ostringstream str;
+          str << "Float(" << fValue << ")";
+          return str.str();
+        }
+        default:
+          return prettyTokenType(type);
+      }
     }
+
+    static const std::string prettyTokenType(TokenType tp);
   };
 
-  PapyrusLexer(std::string file) : filename(file), strm(file, std::ifstream::binary) {
+  PapyrusLexer(std::string file) 
+    : filename(file),
+      strm(file, std::ifstream::binary),
+      location(file, 1, 0),
+      cur(TokenType::Unknown, PapyrusFileLocation{ "", 0, 0 })
+  {
     consume(); // set the first token.
+    strm.sync_with_stdio(false);
   }
+
   ~PapyrusLexer() = default;
 
 protected:
   std::string filename;
-  Token cur{ TokenType::Unknown };
+  Token cur;
 
   void consume();
   // Use this sparingly, as it means
   // tokens get lexed multiple times.
   Token peekToken(int distance = 0);
 
-  [[noreturn]]
-  void fatalError(const std::string& msg) {
-    // TODO: Expand on this, making sure to write things like the
-    // line number to stderr before dying.
-    throw std::runtime_error(msg);
-  }
-
 private:
   std::ifstream strm;
-  size_t lineNum{ 1 };
+  PapyrusFileLocation location;
 
   void setTok(TokenType tp, int consumeChars = 0);
   void setTok(Token& tok);

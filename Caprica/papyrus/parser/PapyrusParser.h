@@ -48,7 +48,7 @@ private:
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      fatalError("Unexpected token " + cur.prettyString() + "!");
+      CapricaError::fatal(cur.location, "Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
     }
   }
 

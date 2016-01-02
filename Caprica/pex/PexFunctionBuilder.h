@@ -220,8 +220,10 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     return *this;
   }
 
+  PexFunctionBuilder(const papyrus::parser::PapyrusFileLocation& loc) : currentLocation(loc) { }
+
 private:
-  papyrus::parser::PapyrusFileLocation currentLocation{ };
+  papyrus::parser::PapyrusFileLocation currentLocation;
   std::vector<papyrus::parser::PapyrusFileLocation> instructionLocations{ };
   std::vector<PexInstruction*> instructions{ };
   std::vector<PexLocalVariable*> locals{ };

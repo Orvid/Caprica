@@ -29,7 +29,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   for (auto p : parameters)
     p->buildPex(file, obj, func);
 
-  pex::PexFunctionBuilder bldr;
+  pex::PexFunctionBuilder bldr{ location };
   // A couple of compiler-generated functions.
   if (name == "GetState") {
     bldr << pex::op::ret{ pex::PexValue::Identifier(file->getString("::State")) };

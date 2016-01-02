@@ -12,7 +12,7 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusExpression abstract
 {
-  parser::PapyrusFileLocation location{ };
+  parser::PapyrusFileLocation location;
 
   PapyrusExpression(parser::PapyrusFileLocation loc) : location(loc) { }
   virtual ~PapyrusExpression() = default;

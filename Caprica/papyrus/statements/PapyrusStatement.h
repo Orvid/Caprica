@@ -11,7 +11,7 @@ namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusStatement abstract
 {
-  parser::PapyrusFileLocation location{ };
+  parser::PapyrusFileLocation location;
 
   PapyrusStatement(parser::PapyrusFileLocation loc) : location(loc) { }
   virtual ~PapyrusStatement() = default;

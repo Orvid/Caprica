@@ -41,24 +41,24 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   auto obj = new PapyrusObject();
 
   maybeConsumeEOLs();
-  // FO4Extra: Const.
   if (maybeConsume(TokenType::kConst))
     obj->isConst = true;
   expectConsume(TokenType::kScriptName);
   obj->name = expectConsumeIdent();
   if (_stricmp(boost::filesystem::basename(script->sourceFileName).c_str(), obj->name.c_str()))
-    fatalError("The script name must match the name of the file!");
+    CapricaError::fatal(cur.location, "The script name '%s' must match the name of the file '%s'!", obj->name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
+
   if (maybeConsume(TokenType::kExtends)) {
     obj->parentClass = PapyrusType::Unresolved(expectConsumeIdent());
   } else {
     // Otherwise we get to have some fun and generate GotoState and GetState.
-    auto getState = new PapyrusFunction();
+    auto getState = new PapyrusFunction(cur.location);
     getState->parentObject = obj;
     getState->name = "GetState";
     getState->returnType = PapyrusType::String();
     obj->getRootState()->functions.push_back(getState);
 
-    auto gotoState = new PapyrusFunction();
+    auto gotoState = new PapyrusFunction(cur.location);
     gotoState->parentObject = obj;
     gotoState->name = "GotoState";
     gotoState->returnType = PapyrusType::None();
@@ -126,12 +126,12 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         auto tp = expectConsumePapyrusType();
         if (cur.type == TokenType::kFunction) {
           if (isConst)
-            fatalError("The return type of a function cannot be marked const!");
+            CapricaError::fatal(cur.location, "The return type of a function cannot be marked const!");
           consume();
           obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), tp, TokenType::kEndFunction));
         } else if (cur.type == TokenType::kProperty) {
           if (isConst)
-            fatalError("A property cannot be marked const!");
+            CapricaError::fatal(cur.location, "A property cannot be marked const!");
           consume();
           obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, tp));
         } else {
@@ -141,7 +141,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       }
 
       default:
-        fatalError("Unexpected token!");
+        CapricaError::fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
     }
   }
 
@@ -153,7 +153,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
   state->name = expectConsumeIdent();
   if (isAuto) {
     if (object->autoState != nullptr)
-      fatalError("Only one state can be declared auto. '" + object->autoState->name + "' was already declared as the auto state.");
+      CapricaError::fatal(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.c_str());
     object->autoState = state;
   }
   expectConsumeEOLs();
@@ -188,7 +188,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       }
 
       default:
-        fatalError("Expected an event or function!");
+        CapricaError::fatal(cur.location, "Expected an event or function, got '%s'!", cur.prettyString().c_str());
     }
   }
 
@@ -229,7 +229,7 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       }
 
       default:
-        fatalError("Unexpected token while parsing struct!");
+        CapricaError::fatal(cur.location, "Unexpected token '%s' while parsing struct!", cur.prettyString().c_str());
     }
   }
 
@@ -246,7 +246,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
   if (maybeConsume(TokenType::Equal)) {
     mem->defaultValue = expectConsumePapyrusValue();
   } else if (isConst) {
-    fatalError("A constant variable must have a value!");
+    CapricaError::fatal(cur.location, "A constant member must have a value!");
   }
 
   mem->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden);
@@ -284,7 +284,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       }
 
       default:
-        fatalError("Unexpected token while parsing property group!");
+        CapricaError::fatal(cur.location, "Unexpected token '%s' while parsing property group!", cur.prettyString().c_str());
     }
   }
 
@@ -293,9 +293,8 @@ Return:
 }
 
 PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType type) {
-  auto prop = new PapyrusProperty();
+  auto prop = new PapyrusProperty(cur.location);
   prop->type = type;
-  prop->location = cur.getLocation();
   prop->name = expectConsumeIdent();
 
   bool isFullProp = true;
@@ -316,7 +315,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     prop->isReadOnly = true;
     consume();
     if (!hadDefaultValue)
-      fatalError("An AutoReadOnly property must have a value!");
+      CapricaError::fatal(cur.location, "An AutoReadOnly property must have a value!");
   }
   prop->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden | PapyrusUserFlags::Mandatory);
   expectConsumeEOLs();
@@ -327,15 +326,15 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
       switch (cur.type) {
         case TokenType::kFunction:
           if (prop->writeFunction)
-            fatalError("The set function for this property has already been defined!");
+            CapricaError::fatal(cur.location, "The set function for this property has already been defined!");
           consume();
           prop->writeFunction = parseFunction(script, object, nullptr, PapyrusType::None(), TokenType::kEndFunction);
           if (_stricmp(prop->writeFunction->name.c_str(), "set"))
-            fatalError("The set function must be named \"Set\"!");
+            CapricaError::fatal(cur.location, "The set function must be named \"Set\"!");
           if (prop->writeFunction->parameters.size() != 1)
-            fatalError("The set function must have a single parameter!");
+            CapricaError::fatal(cur.location, "The set function must have a single parameter!");
           if (prop->writeFunction->parameters[0]->type != prop->type)
-            fatalError("The set function's parameter must be the same type as the property!");
+            CapricaError::fatal(cur.location, "The set function's parameter must be the same type as the property!");
           break;
 
         case TokenType::kBool:
@@ -346,16 +345,16 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
         case TokenType::Identifier:
         {
           if (prop->readFunction)
-            fatalError("The get function for this property has already been defined!");
+            CapricaError::fatal(cur.location, "The get function for this property has already been defined!");
           auto tp = expectConsumePapyrusType();
           if (tp != prop->type)
-            fatalError("The return type of the get function must be the same as the property!");
+            CapricaError::fatal(cur.location, "The return type of the get function must be the same as the property!");
           expectConsume(TokenType::kFunction);
           prop->readFunction = parseFunction(script, object, nullptr, tp, TokenType::kEndFunction);
           if (_stricmp(prop->readFunction->name.c_str(), "get"))
-            fatalError("The get function must be named \"Get\"!");
+            CapricaError::fatal(cur.location, "The get function must be named \"Get\"!");
           if (prop->readFunction->parameters.size() != 0)
-            fatalError("The get function cannot have parameters!");
+            CapricaError::fatal(cur.location, "The get function cannot have parameters!");
           break;
         }
 
@@ -363,7 +362,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
           break;
 
         default:
-          fatalError("Expected the get/set functions of a full property!");
+          CapricaError::fatal(cur.location, "Expected the get/set functions of a full property, got '%s'!", cur.prettyString().c_str());
       }
     }
 
@@ -383,7 +382,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
   if (maybeConsume(TokenType::Equal)) {
     var->defaultValue = expectConsumePapyrusValue();
   } else if (isConst) {
-    fatalError("A constant variable must have a value!");
+    CapricaError::fatal(cur.location, "A constant variable must have a value!");
   }
 
   var->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional);
@@ -392,7 +391,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
 }
 
 PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {
-  auto func = new PapyrusFunction();
+  auto func = new PapyrusFunction(cur.location);
   func->parentObject = object;
   func->name = expectConsumeIdent();
   func->returnType = returnType;
@@ -420,7 +419,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     func->isNative = true;
   if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal)) {
     if (func->isGlobal)
-      fatalError("This function was already declared global!");
+      CapricaError::fatal(cur.location, "This function was already declared global!");
     func->isGlobal = true;
   }
 
@@ -433,7 +432,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     }
 
     if (cur.type == TokenType::END)
-      fatalError("Unexpected EOF in state body!");
+      CapricaError::fatal(cur.location, "Unexpected EOF in state body!");
     consume();
     expectConsumeEOLs();
   }
@@ -445,7 +444,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
   switch (cur.type) {
     case TokenType::kReturn:
     {
-      auto ret = new statements::PapyrusReturnStatement(cur.getLocation());
+      auto ret = new statements::PapyrusReturnStatement(cur.location);
       consume();
       if (cur.type != TokenType::EOL)
         ret->returnValue = parseExpression(func);
@@ -455,7 +454,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kIf:
     {
-      auto ret = new statements::PapyrusIfStatement(cur.getLocation());
+      auto ret = new statements::PapyrusIfStatement(cur.location);
       consume();
       while (true) {
         auto cond = parseExpression(func);
@@ -486,7 +485,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kWhile:
     {
-      auto ret = new statements::PapyrusWhileStatement(cur.getLocation());
+      auto ret = new statements::PapyrusWhileStatement(cur.location);
       consume();
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
@@ -503,7 +502,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     case TokenType::kString:
     case TokenType::kVar:
     {
-      auto ret = new statements::PapyrusDeclareStatement(cur.getLocation());
+      auto ret = new statements::PapyrusDeclareStatement(cur.location);
       ret->type = expectConsumePapyrusType();
       ret->name = expectConsumeIdent();
       if (maybeConsume(TokenType::Equal))
@@ -516,7 +515,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     default:
     {
       if (cur.type == TokenType::Identifier && (peekToken().type == TokenType::Identifier ||  (peekToken().type == TokenType::LSquare && peekToken(1).type == TokenType::RSquare && peekToken(2).type == TokenType::Identifier))) {
-        auto ret = new statements::PapyrusDeclareStatement(cur.getLocation());
+        auto ret = new statements::PapyrusDeclareStatement(cur.location);
         ret->type = expectConsumePapyrusType();
         ret->name = expectConsumeIdent();
         if (maybeConsume(TokenType::Equal))
@@ -548,7 +547,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           goto AssignStatementCommon;
         AssignStatementCommon:
         {
-          auto assStat = new statements::PapyrusAssignStatement(cur.getLocation());
+          auto assStat = new statements::PapyrusAssignStatement(cur.location);
           assStat->lValue = expr;
           consume();
           assStat->operation = op;
@@ -572,7 +571,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* func) {
   auto expr = parseAndExpression(func);
   while (cur.type == TokenType::BooleanOr) {
-    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
     binExpr->left = expr;
     binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanOr;
     consume();
@@ -585,7 +584,7 @@ expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* 
 expressions::PapyrusExpression* PapyrusParser::parseAndExpression(PapyrusFunction* func) {
   auto expr = parseCmpExpression(func);
   while (cur.type == TokenType::BooleanAnd) {
-    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
     binExpr->left = expr;
     binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanAnd;
     consume();
@@ -621,7 +620,7 @@ expressions::PapyrusExpression* PapyrusParser::parseCmpExpression(PapyrusFunctio
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
         binExpr->left = expr;
         binExpr->operation = op;
         consume();
@@ -652,7 +651,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
         binExpr->left = expr;
         binExpr->operation = op;
         consume();
@@ -686,7 +685,7 @@ expressions::PapyrusExpression* PapyrusParser::parseMultExpression(PapyrusFuncti
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.getLocation());
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
         binExpr->left = expr;
         binExpr->operation = op;
         consume();
@@ -715,7 +714,7 @@ expressions::PapyrusExpression* PapyrusParser::parseUnaryExpression(PapyrusFunct
 
     OperatorCommon:
     {
-      auto unExpr = new expressions::PapyrusUnaryOpExpression(cur.getLocation());
+      auto unExpr = new expressions::PapyrusUnaryOpExpression(cur.location);
       unExpr->operation = op;
       consume();
       unExpr->innerExpression = parseCastExpression(func);
@@ -730,13 +729,13 @@ expressions::PapyrusExpression* PapyrusParser::parseCastExpression(PapyrusFuncti
   auto expr = parseDotExpression(func);
 
   if (cur.type == TokenType::kIs) {
-    auto isExpr = new expressions::PapyrusIsExpression(cur.getLocation());
+    auto isExpr = new expressions::PapyrusIsExpression(cur.location);
     consume();
     isExpr->innerExpression = expr;
     isExpr->targetType = expectConsumePapyrusType();
     expr = isExpr;
   } else if (cur.type == TokenType::kAs) {
-    auto castExpr = new expressions::PapyrusCastExpression(cur.getLocation());
+    auto castExpr = new expressions::PapyrusCastExpression(cur.location);
     consume();
     castExpr->innerExpression = expr;
     castExpr->targetType = expectConsumePapyrusType();
@@ -755,7 +754,7 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     case TokenType::kTrue:
     case TokenType::kFalse:
     {
-      auto lit = new expressions::PapyrusLiteralExpression(cur.getLocation());
+      auto lit = new expressions::PapyrusLiteralExpression(cur.location);
       lit->value = expectConsumePapyrusValue();
       return lit;
     }
@@ -764,13 +763,13 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     {
       auto expr = parseArrayExpression(func);
       while (cur.type == TokenType::Dot) {
-        auto maExpr = new expressions::PapyrusMemberAccessExpression(cur.getLocation());
+        auto maExpr = new expressions::PapyrusMemberAccessExpression(cur.location);
         consume();
         maExpr->baseExpression = expr;
         maExpr->accessExpression = parseFuncOrIdExpression(func);
 
         if (cur.type == TokenType::LSquare) {
-          auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.getLocation());
+          auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.location);
           consume();
           aiExpr->baseExpression = maExpr;
           aiExpr->indexExpression = parseExpression(func);
@@ -789,7 +788,7 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
 expressions::PapyrusExpression* PapyrusParser::parseArrayExpression(PapyrusFunction* func) {
   auto expr = parseAtomExpression(func);
   if (cur.type == TokenType::LSquare) {
-    auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.getLocation());
+    auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.location);
     consume();
     aiExpr->baseExpression = expr;
     aiExpr->indexExpression = parseExpression(func);
@@ -811,7 +810,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFuncti
     
     case TokenType::kNew:
     {
-      auto loc = cur.getLocation();
+      auto loc = cur.location;
       consume();
       auto tp = expectConsumePapyrusType();
       if (maybeConsume(TokenType::LSquare)) {
@@ -838,20 +837,20 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
   switch (cur.type) {
     case TokenType::kLength:
     {
-      auto lenExpr = new expressions::PapyrusArrayLengthExpression(cur.getLocation());
+      auto lenExpr = new expressions::PapyrusArrayLengthExpression(cur.location);
       consume();
       return lenExpr;
     }
     case TokenType::kParent:
     {
-      auto parExpr = new expressions::PapyrusParentExpression(cur.getLocation());
+      auto parExpr = new expressions::PapyrusParentExpression(cur.location);
       parExpr->type = func->parentObject->parentClass;
       consume();
       return parExpr;
     }
     case TokenType::kSelf:
     {
-      auto selfExpr = new expressions::PapyrusSelfExpression(cur.getLocation());
+      auto selfExpr = new expressions::PapyrusSelfExpression(cur.location);
       PapyrusType tp;
       tp.type = PapyrusType::Kind::ResolvedObject;
       tp.resolvedObject = func->parentObject;
@@ -862,7 +861,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
     case TokenType::Identifier:
     {
       if (peekToken().type == TokenType::LParen) {
-        auto fCallExpr = new expressions::PapyrusFunctionCallExpression(cur.getLocation());
+        auto fCallExpr = new expressions::PapyrusFunctionCallExpression(cur.location);
         PapyrusIdentifier id;
         id.type = PapyrusIdentifierType::Unresolved;
         id.name = cur.sValue;
@@ -887,7 +886,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
 
         return fCallExpr;
       } else {
-        auto idExpr = new expressions::PapyrusIdentifierExpression(cur.getLocation());
+        auto idExpr = new expressions::PapyrusIdentifierExpression(cur.location);
         PapyrusIdentifier id;
         id.type = PapyrusIdentifierType::Unresolved;
         id.name = cur.sValue;
@@ -897,7 +896,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
       }
     }
     default:
-      fatalError("Unexpected token!");
+      CapricaError::fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
   }
 }
 
@@ -929,7 +928,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
       break;
 
     default:
-      fatalError("Expected a type!");
+      CapricaError::fatal(cur.location, "Expected a type, got '%s'!", cur.prettyString().c_str());
   }
 
   if (cur.type == TokenType::LSquare && peekToken().type == TokenType::RSquare) {
@@ -975,7 +974,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
       return val;
 
     default:
-      fatalError("Expected a default value!");
+      CapricaError::fatal(cur.location, "Expected a default value, got '%s'!", cur.prettyString().c_str());
   }
 }
 
@@ -993,10 +992,10 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(PapyrusUserFlags validFlag
   while (cur.type == TokenType::Identifier) {
     auto a = userFlagMap.find(cur.sValue);
     if (a == userFlagMap.end())
-      fatalError("Unknown flag '" + cur.sValue + "'!");
+      CapricaError::fatal(cur.location, "Unknown flag '%s'!", cur.sValue.c_str());
 
     if ((validFlags & a->second) != a->second)
-      fatalError("The flag '" + cur.sValue + "' is not valid in this location.");
+      CapricaError::fatal(cur.location, "The flag '%s' is not valid in this location.", cur.sValue.c_str());
     flags |= a->second;
     consume();
   }

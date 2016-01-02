@@ -31,9 +31,9 @@ struct PapyrusProperty final
   PapyrusFunction* writeFunction{ nullptr };
   PapyrusValue defaultValue{ };
 
-  parser::PapyrusFileLocation location{ };
+  parser::PapyrusFileLocation location;
 
-  PapyrusProperty() = default;
+  PapyrusProperty(parser::PapyrusFileLocation loc) : location(loc) { }
   ~PapyrusProperty() {
     if (readFunction)
       delete readFunction;

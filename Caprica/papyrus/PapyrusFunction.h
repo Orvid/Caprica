@@ -7,6 +7,7 @@
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
+#include <papyrus/parser/PapyrusFileLocation.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
 #include <pex/PexDebugFunctionInfo.h>
@@ -30,7 +31,9 @@ struct PapyrusFunction final
   std::vector<statements::PapyrusStatement*> statements{ };
   PapyrusObject* parentObject{ nullptr };
 
-  PapyrusFunction() = default;
+  parser::PapyrusFileLocation location;
+
+  PapyrusFunction(parser::PapyrusFileLocation loc) : location(loc) { }
   ~PapyrusFunction() {
     for (auto p : parameters)
       delete p;
