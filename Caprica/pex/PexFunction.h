@@ -18,7 +18,7 @@ struct PexFunction final
   // written to file.
   PexString name{ };
   PexString returnTypeName{ };
-  PexString documenationString{ };
+  PexString documentationString{ };
   PexUserFlags userFlags{ };
   bool isNative{ false };
   bool isGlobal{ false };

@@ -21,7 +21,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
     fDebInfo->functionName = propName;
   }
 
-  func->documenationString = file->getString(documentationComment);
+  func->documentationString = file->getString(documentationComment);
   func->returnTypeName = returnType.buildPex(file);
   func->userFlags = buildPexUserFlags(file, userFlags);
   func->isGlobal = isGlobal;

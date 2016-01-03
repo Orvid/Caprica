@@ -54,7 +54,7 @@ struct PapyrusProperty final
       prop->isReadable = true;
       auto func = new pex::PexFunction();
       func->returnTypeName = prop->typeName;
-      func->documenationString = file->getString("");
+      func->documentationString = file->getString("");
       func->instructions.push_back(new pex::PexInstruction(pex::PexOpCode::Return, { defaultValue.buildPex(file) }));
       prop->readFunction = func;
 

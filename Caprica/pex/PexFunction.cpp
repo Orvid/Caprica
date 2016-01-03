@@ -6,7 +6,7 @@ void PexFunction::write(PexWriter& wtr) const {
   if (name.valid())
     wtr.write<PexString>(name);
   wtr.write<PexString>(returnTypeName);
-  wtr.write<PexString>(documenationString);
+  wtr.write<PexString>(documentationString);
   wtr.write<PexUserFlags>(userFlags);
   uint8_t flags = 0;
   if (isGlobal)
