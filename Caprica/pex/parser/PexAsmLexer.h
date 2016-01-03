@@ -27,8 +27,50 @@ enum class TokenType : int32_t
   Integer,
   Float,
 
-  Dot,
   LineNumer,
+
+  kAutoState,
+  kAutoVar,
+  kCode,
+  kCompileTime,
+  kComputer,
+  kDocString,
+  kEndCode,
+  kEndFunction,
+  kEndInfo,
+  kEndLocalTable,
+  kEndObject,
+  kEndObjectTable,
+  kEndParamTable,
+  kEndProperty,
+  kEndPropertyTable,
+  kEndState,
+  kEndStateTable,
+  kEndUserFlagsRef,
+  kEndVariable,
+  kEndVariableTable,
+  kFlag,
+  kFunction,
+  kInfo,
+  kInitialValue,
+  kLocal,
+  kLocalTable,
+  kModifyTime,
+  kObject,
+  kObjectTable,
+  kParam,
+  kParamTable,
+  kProperty,
+  kPropertyTable,
+  kReturn,
+  kSource,
+  kState,
+  kStateTable,
+  kUser,
+  kUserFlags,
+  kUserFlagsRef,
+  kVariable,
+  kVariableTable,
 };
 
 struct PexAsmLexer
@@ -41,7 +83,7 @@ struct PexAsmLexer
     int64_t iValue{ };
     float fValue{ };
 
-    Token(TokenType tp, PapyrusFileLocation loc) : type(tp), location(loc) { }
+    Token(TokenType tp, const PapyrusFileLocation& loc) : type(tp), location(loc) { }
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -98,7 +140,7 @@ private:
   int peekChar() {
     return strm.peek();
   }
-  void setTok(TokenType tp, int consumeChars = 0);
+  void setTok(TokenType tp, const PapyrusFileLocation& loc);
   void setTok(Token& tok);
 };
 

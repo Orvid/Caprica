@@ -33,7 +33,7 @@ void PexInstruction::write(PexWriter& wtr) const {
 }
 
 static const std::map<std::string, PexOpCode, papyrus::parser::CaselessStringComparer> opCodeNameMap{
-  { "nop", PexOpCode::Nop },
+  { "noop", PexOpCode::Nop },
   { "iadd", PexOpCode::IAdd },
   { "fadd", PexOpCode::FAdd },
   { "isub", PexOpCode::ISub },

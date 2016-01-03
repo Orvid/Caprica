@@ -42,22 +42,16 @@ private:
     return false;
   }
 
+  bool maybeConsumeTokEOL(TokenType tp) {
+    if (maybeConsume(tp)) {
+      expectConsumeEOL();
+      return true;
+    }
+    return false;
+  }
+
   void expectConsumeEOL() {
     expectConsume(TokenType::EOL);
-  }
-
-  std::string expectConsumeDotIdent() {
-    expectConsume(TokenType::Dot);
-    expect(TokenType::Identifier);
-    auto val = cur.sValue;
-    consume();
-    return val;
-  }
-
-  std::string expectConsumeDotIdentEOL() {
-    auto val = expectConsumeDotIdent();
-    expectConsumeEOL();
-    return val;
   }
 
   std::string expectConsumeIdent() {

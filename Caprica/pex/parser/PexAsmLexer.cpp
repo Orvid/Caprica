@@ -4,6 +4,7 @@
 #include <map>
 
 #include <CapricaConfig.h>
+#include <papyrus/parser/PapyrusLexer.h>
 
 namespace caprica { namespace pex { namespace parser {
 
@@ -15,8 +16,50 @@ static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::String, "String" },
   { TokenType::Integer, "Integer" },
   { TokenType::Float, "Float" },
-  { TokenType::Dot, "." },
   { TokenType::LineNumer, ";@line" },
+
+  { TokenType::kAutoState, ".autoState" },
+  { TokenType::kAutoVar, ".autoVar" },
+  { TokenType::kCode, ".code" },
+  { TokenType::kCompileTime, ".compileTime" },
+  { TokenType::kComputer, ".computer" },
+  { TokenType::kDocString, ".docString" },
+  { TokenType::kEndCode, ".endCode" },
+  { TokenType::kEndFunction, ".endFunction" },
+  { TokenType::kEndInfo, ".endInfo" },
+  { TokenType::kEndLocalTable, ".endLocalTable" },
+  { TokenType::kEndObject, ".endObject" },
+  { TokenType::kEndObjectTable, ".endObjectTable" },
+  { TokenType::kEndParamTable, ".endParamTable" },
+  { TokenType::kEndProperty, ".endProperty" },
+  { TokenType::kEndPropertyTable, ".endPropertyTable" },
+  { TokenType::kEndState, ".endState" },
+  { TokenType::kEndStateTable, ".endStateTable" },
+  { TokenType::kEndUserFlagsRef, ".endUserFlagsRef" },
+  { TokenType::kEndVariable, ".endVariable" },
+  { TokenType::kEndVariableTable, ".endVariableTable" },
+  { TokenType::kFlag, ".flag" },
+  { TokenType::kFunction, ".function" },
+  { TokenType::kInfo, ".info" },
+  { TokenType::kInitialValue, ".initialValue" },
+  { TokenType::kLocal, ".local" },
+  { TokenType::kLocalTable, ".localTable" },
+  { TokenType::kModifyTime, ".modifyTime" },
+  { TokenType::kObject, ".object" },
+  { TokenType::kObjectTable, ".objectTable" },
+  { TokenType::kParam, ".param" },
+  { TokenType::kParamTable, ".paramTable" },
+  { TokenType::kProperty, ".property" },
+  { TokenType::kPropertyTable, ".propertyTable" },
+  { TokenType::kReturn, ".return" },
+  { TokenType::kSource, ".source" },
+  { TokenType::kState, ".state" },
+  { TokenType::kStateTable, ".stateTable" },
+  { TokenType::kUser, ".user" },
+  { TokenType::kUserFlags, ".userFlags" },
+  { TokenType::kUserFlagsRef, ".userFlagsRef" },
+  { TokenType::kVariable, ".variable" },
+  { TokenType::kVariableTable, ".variableTable" },
 };
 
 const std::string PexAsmLexer::Token::prettyTokenType(TokenType tp) {
@@ -26,26 +69,79 @@ const std::string PexAsmLexer::Token::prettyTokenType(TokenType tp) {
   return f->second;
 }
 
-void PexAsmLexer::setTok(TokenType tp, int consumeChars) {
-  cur = Token(tp, location);
-  for (int i = 0; i < consumeChars; i++)
-    getChar();
+void PexAsmLexer::setTok(TokenType tp, const PapyrusFileLocation& loc) {
+  cur = Token(tp, loc);
 }
 
 void PexAsmLexer::setTok(Token& tok) {
   cur = tok;
-  cur.location = location;
 }
+
+static const std::map<const std::string, TokenType, papyrus::parser::CaselessStringComparer> dotIdentifierMap{
+  { "autostate", TokenType::kAutoState },
+  { "autovar", TokenType::kAutoVar },
+  { "code", TokenType::kCode },
+  { "compiletime", TokenType::kCompileTime },
+  { "computer", TokenType::kComputer },
+  { "docstring", TokenType::kDocString },
+  { "endcode", TokenType::kEndCode },
+  { "endfunction", TokenType::kEndFunction },
+  { "endinfo", TokenType::kEndInfo },
+  { "endlocaltable", TokenType::kEndLocalTable },
+  { "endobject", TokenType::kEndObject },
+  { "endobjecttable", TokenType::kEndObjectTable },
+  { "endparamtable", TokenType::kEndParamTable },
+  { "endproperty", TokenType::kEndProperty },
+  { "endpropertytable", TokenType::kEndPropertyTable },
+  { "endstate", TokenType::kEndState },
+  { "endstatetable", TokenType::kEndStateTable },
+  { "enduserflagsref", TokenType::kEndUserFlagsRef },
+  { "endvariable", TokenType::kEndVariable },
+  { "endvariabletable", TokenType::kEndVariableTable },
+  { "flag", TokenType::kFlag },
+  { "function", TokenType::kFunction },
+  { "info", TokenType::kInfo },
+  { "initialvalue", TokenType::kInitialValue },
+  { "local", TokenType::kLocal },
+  { "localtable", TokenType::kLocalTable },
+  { "modifytime", TokenType::kModifyTime },
+  { "object", TokenType::kObject },
+  { "objecttable", TokenType::kObjectTable },
+  { "param", TokenType::kParam },
+  { "paramtable", TokenType::kParamTable },
+  { "property", TokenType::kProperty },
+  { "propertytable", TokenType::kPropertyTable },
+  { "return", TokenType::kReturn },
+  { "source", TokenType::kSource },
+  { "state", TokenType::kState },
+  { "statetable", TokenType::kStateTable },
+  { "user", TokenType::kUser },
+  { "userflags", TokenType::kUserFlags },
+  { "userflagsref", TokenType::kUserFlagsRef },
+  { "variable", TokenType::kVariable },
+  { "variabletable", TokenType::kVariableTable },
+};
 
 void PexAsmLexer::consume() {
 StartOver:
+  auto baseLoc = location;
   auto c = getChar();
   
   switch (c) {
     case -1:
-      return setTok(TokenType::END);
+      return setTok(TokenType::END, baseLoc);
+
     case '.':
-      return setTok(TokenType::Dot);
+    {
+      std::ostringstream str;
+      while (isalpha(peekChar()))
+        str.put(getChar());
+      auto ident = str.str();
+      auto f = dotIdentifierMap.find(ident);
+      if (f == dotIdentifierMap.end())
+        CapricaError::fatal(baseLoc, "Unknown directive '.%s'!", ident.c_str());
+      return setTok(f->second, baseLoc);
+    }
 
     case '-':
     case '0':
@@ -69,7 +165,7 @@ StartOver:
           str.put(getChar());
         
         auto i = std::stoul(str.str(), nullptr, 16);
-        auto tok = Token(TokenType::Integer, location);
+        auto tok = Token(TokenType::Integer, baseLoc);
         tok.iValue = (int32_t)i;
         return setTok(tok);
       }
@@ -96,13 +192,13 @@ StartOver:
         }
 
         auto f = std::stof(str.str());
-        auto tok = Token(TokenType::Float, location);
+        auto tok = Token(TokenType::Float, baseLoc);
         tok.fValue = f;
         return setTok(tok);
       }
 
       auto i = std::stoull(str.str());
-      auto tok = Token(TokenType::Integer, location);
+      auto tok = Token(TokenType::Integer, baseLoc);
       tok.iValue = (int64_t)i;
       return setTok(tok);
     }
@@ -170,7 +266,7 @@ StartOver:
         str.put(getChar());
 
       auto ident = str.str();
-      auto tok = Token(TokenType::Identifier, location);
+      auto tok = Token(TokenType::Identifier, baseLoc);
       tok.sValue = ident;
       return setTok(tok);
     }
@@ -210,16 +306,21 @@ StartOver:
         CapricaError::fatal(location, "Unclosed string!");
       getChar();
 
-      auto tok = Token(TokenType::String, location);
+      auto tok = Token(TokenType::String, baseLoc);
       tok.sValue = str.str();
       return setTok(tok);
     }
 
     case ';':
     {
-      if (getChar() != '@' || getChar() != 'l' || getChar() != 'i' || getChar() != 'n' || getChar() != 'e')
+      if (getChar() != '@') {
+        while (peekChar() != '\r' && peekChar() != '\n' && peekChar() != -1)
+          getChar();
+        goto StartOver;
+      }
+      if (getChar() != 'l' || getChar() != 'i' || getChar() != 'n' || getChar() != 'e')
         CapricaError::fatal(location, "Unexpected character sequence that looked line a ;@line directive!");
-      return setTok(TokenType::LineNumer);
+      return setTok(TokenType::LineNumer, baseLoc);
     }
 
     case '\r':
@@ -229,7 +330,7 @@ StartOver:
         getChar();
       location.line++;
       location.column = 0;
-      return setTok(TokenType::EOL);
+      return setTok(TokenType::EOL, baseLoc);
     }
 
     case ' ':
