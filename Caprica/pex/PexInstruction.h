@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include <pex/PexValue.h>
@@ -10,6 +11,8 @@ namespace caprica { namespace pex {
 
 enum class PexOpCode : uint8_t
 {
+  Invalid = 0xFF,
+
   Nop = 0,
   IAdd,
   FAdd,
@@ -72,6 +75,8 @@ struct PexInstruction final
   ~PexInstruction() = default;
 
   void write(PexWriter& wtr) const;
+
+  static PexOpCode tryParseOpCode(const std::string& str);
 };
 
 }}

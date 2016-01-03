@@ -35,6 +35,11 @@ struct PexFile final
       delete o;
   }
 
+  void ensureDebugInfo() {
+    if (!debugInfo)
+      debugInfo = new PexDebugInfo();
+  }
+
   PexString getString(const std::string& str) {
     auto a = stringTableLookup.find(str);
     if (a != stringTableLookup.end())

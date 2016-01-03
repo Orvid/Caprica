@@ -9,22 +9,36 @@
 #include <papyrus/parser/PapyrusParser.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
+
+#include <pex/parser/PexAsmParser.h>
 #include <pex/PexWriter.h>
 
 void compileScript(std::string filename) {
   printf("Compiling %s\n", filename.c_str());
-  auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
-  auto a = parser->parseScript();
-  delete parser;
-  auto ctx = new caprica::papyrus::PapyrusResolutionContext();
-  a->semantic(ctx);
-  auto pex = a->buildPex();
-  delete ctx;
-  delete a;
-  std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
-  caprica::pex::PexWriter wtr(strm);
-  pex->write(wtr);
-  delete pex;
+  if (boost::filesystem::extension(filename) == ".psc") {
+    auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
+    auto a = parser->parseScript();
+    delete parser;
+    auto ctx = new caprica::papyrus::PapyrusResolutionContext();
+    a->semantic(ctx);
+    auto pex = a->buildPex();
+    delete ctx;
+    delete a;
+    std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
+    caprica::pex::PexWriter wtr(strm);
+    pex->write(wtr);
+    delete pex;
+  } else if (boost::filesystem::extension(filename) == ".pas") {
+    auto parser = new caprica::pex::parser::PexAsmParser(filename);
+    auto pex = parser->parseFile();
+    delete parser;
+    std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
+    caprica::pex::PexWriter wtr(strm);
+    pex->write(wtr);
+    delete pex;
+  } else {
+    printf("Don't know how to compile %s!\n", filename.c_str());
+  }
 }
 
 int main(int argc, char* argv[])
@@ -43,7 +57,7 @@ int main(int argc, char* argv[])
       std::vector<std::string> files;
       boost::system::error_code ec;
       for (auto e : boost::filesystem::directory_iterator(file, ec)) {
-        if (boost::filesystem::extension(e.path()) == ".psc")
+        if (boost::filesystem::extension(e.path()) == ".psc" || boost::filesystem::extension(e.path()) == ".pas")
           files.push_back(e.path().string());
       }
 
