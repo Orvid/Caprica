@@ -109,7 +109,7 @@ PexFile* PexAsmParser::parseFile() {
                     CapricaError::fatal(cur.location, "Expected '.struct' got '%s'!", cur.prettyString().c_str());
                   consume();
 
-                  auto struc = new PexStructInfo();
+                  auto struc = new PexStruct();
                   struc->name = expectConsumePexIdentEOL(file);
 
                   while (!maybeConsumeTokEOL(TokenType::kEndStruct)) {

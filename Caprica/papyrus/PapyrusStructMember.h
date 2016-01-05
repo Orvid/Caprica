@@ -10,7 +10,7 @@
 
 #include <pex/PexFile.h>
 #include <pex/PexObject.h>
-#include <pex/PexStructInfo.h>
+#include <pex/PexStruct.h>
 #include <pex/PexStructMember.h>
 
 namespace caprica { namespace papyrus {
@@ -29,7 +29,7 @@ struct PapyrusStructMember final
   PapyrusStructMember(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusStructMember() = default;
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexStructInfo* struc) const {
+  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {
     auto member = new pex::PexStructMember();
     member->name = file->getString(name);
     member->documentationString = file->getString(documentationString);

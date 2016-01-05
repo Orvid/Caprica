@@ -11,13 +11,13 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-struct PexStructInfo final
+struct PexStruct final
 {
   PexString name{ };
   std::vector<PexStructMember*> members{ };
 
-  PexStructInfo() = default;
-  ~PexStructInfo() {
+  PexStruct() = default;
+  ~PexStruct() {
     for (auto m : members)
       delete m;
   }

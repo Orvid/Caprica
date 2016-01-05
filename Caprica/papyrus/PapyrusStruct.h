@@ -9,7 +9,7 @@
 #include <pex/PexDebugStructOrder.h>
 #include <pex/PexFile.h>
 #include <pex/PexObject.h>
-#include <pex/PexStructInfo.h>
+#include <pex/PexStruct.h>
 
 namespace caprica { namespace papyrus {
 
@@ -28,7 +28,7 @@ struct PapyrusStruct final
   }
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
-    auto struc = new pex::PexStructInfo();
+    auto struc = new pex::PexStruct();
     struc->name = file->getString(name);
 
     auto debInf = new pex::PexDebugStructOrder();

@@ -7,7 +7,7 @@
 #include <pex/PexProperty.h>
 #include <pex/PexState.h>
 #include <pex/PexString.h>
-#include <pex/PexStructInfo.h>
+#include <pex/PexStruct.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexVariable.h>
 #include <pex/PexWriter.h>
@@ -24,7 +24,7 @@ struct PexObject final
   bool isConst{ false };
   PexUserFlags userFlags{ };
   PexString autoStateName{ };
-  std::vector<PexStructInfo*> structs{ };
+  std::vector<PexStruct*> structs{ };
   std::vector<PexVariable*> variables{ };
   std::vector<PexProperty*> properties{ };
   std::vector<PexState*> states{ };
