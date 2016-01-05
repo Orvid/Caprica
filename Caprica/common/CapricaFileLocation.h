@@ -18,6 +18,11 @@ struct CapricaFileLocation
   CapricaFileLocation(const CapricaFileLocation& other) = default;
   ~CapricaFileLocation() = default;
 
+  void nextLine() {
+    line++;
+    column = 0;
+  }
+
   std::string buildString() const {
     std::ostringstream str;
     str << filename << "(" << line << "," << column << ")";

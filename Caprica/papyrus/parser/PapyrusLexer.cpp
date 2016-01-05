@@ -95,15 +95,14 @@ const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
   return f->second;
 }
 
-void PapyrusLexer::setTok(TokenType tp, int consumeChars) {
-  cur = Token(tp, location);
+void PapyrusLexer::setTok(TokenType tp, const CapricaFileLocation& loc, int consumeChars) {
+  cur = Token(tp, loc);
   for (int i = 0; i < consumeChars; i++)
-    strm.get();
+    getChar();
 }
 
 void PapyrusLexer::setTok(Token& tok) {
   cur = tok;
-  cur.location = location;
 }
 
 PapyrusLexer::Token PapyrusLexer::peekToken(int distance) {
@@ -171,71 +170,72 @@ static const std::map<std::string, TokenType, CaselessStringComparer> speculativ
 
 void PapyrusLexer::consume() {
 StartOver:
-  auto c = strm.get();
+  auto baseLoc = location;
+  auto c = getChar();
   
   switch (c) {
     case -1:
-      return setTok(TokenType::END);
+      return setTok(TokenType::END, baseLoc);
     case '(':
-      return setTok(TokenType::LParen);
+      return setTok(TokenType::LParen, baseLoc);
     case ')':
-      return setTok(TokenType::RParen);
+      return setTok(TokenType::RParen, baseLoc);
     case '[':
-      return setTok(TokenType::LSquare);
+      return setTok(TokenType::LSquare, baseLoc);
     case ']':
-      return setTok(TokenType::RSquare);
+      return setTok(TokenType::RSquare, baseLoc);
     case '.':
-      return setTok(TokenType::Dot);
+      return setTok(TokenType::Dot, baseLoc);
     case ',':
-      return setTok(TokenType::Comma);
+      return setTok(TokenType::Comma, baseLoc);
 
     case '=':
-      if (strm.peek() == '=')
-        return setTok(TokenType::CmpEq, 1);
-      return setTok(TokenType::Equal);
+      if (peekChar() == '=')
+        return setTok(TokenType::CmpEq, baseLoc, 1);
+      return setTok(TokenType::Equal, baseLoc);
     case '!':
-      if (strm.peek() == '=')
-        return setTok(TokenType::CmpNeq, 1);
-      return setTok(TokenType::Exclaim);
+      if (peekChar() == '=')
+        return setTok(TokenType::CmpNeq, baseLoc, 1);
+      return setTok(TokenType::Exclaim, baseLoc);
     case '+':
-      if (strm.peek() == '=')
-        return setTok(TokenType::PlusEqual, 1);
-      return setTok(TokenType::Plus);
+      if (peekChar() == '=')
+        return setTok(TokenType::PlusEqual, baseLoc, 1);
+      return setTok(TokenType::Plus, baseLoc);
     case '-':
-      if (strm.peek() == '=')
-        return setTok(TokenType::MinusEqual, 1);
-      if (isdigit(strm.peek()))
+      if (peekChar() == '=')
+        return setTok(TokenType::MinusEqual, baseLoc, 1);
+      if (isdigit(peekChar()))
         goto Number;
-      return setTok(TokenType::Minus);
+      return setTok(TokenType::Minus, baseLoc);
     case '*':
-      if (strm.peek() == '=')
-        return setTok(TokenType::MulEqual, 1);
-      return setTok(TokenType::Mul);
+      if (peekChar() == '=')
+        return setTok(TokenType::MulEqual, baseLoc, 1);
+      return setTok(TokenType::Mul, baseLoc);
     case '/':
-      if (strm.peek() == '=')
-        return setTok(TokenType::DivEqual, 1);
-      return setTok(TokenType::Div);
+      if (peekChar() == '=')
+        return setTok(TokenType::DivEqual, baseLoc, 1);
+      return setTok(TokenType::Div, baseLoc);
     case '%':
-      if (strm.peek() == '=')
-        return setTok(TokenType::ModEqual, 1);
-      return setTok(TokenType::Mod);
+      if (peekChar() == '=')
+        return setTok(TokenType::ModEqual, baseLoc, 1);
+      return setTok(TokenType::Mod, baseLoc);
     case '<':
-      if (strm.peek() == '=')
-        return setTok(TokenType::CmpLte, 1);
-      return setTok(TokenType::CmpLt);
+      if (peekChar() == '=')
+        return setTok(TokenType::CmpLte, baseLoc, 1);
+      return setTok(TokenType::CmpLt, baseLoc);
     case '>':
-      if (strm.peek() == '=')
-        return setTok(TokenType::CmpGte, 1);
-      return setTok(TokenType::CmpGt);
+      if (peekChar() == '=')
+        return setTok(TokenType::CmpGte, baseLoc, 1);
+      return setTok(TokenType::CmpGt, baseLoc);
 
     case '|':
-      if (strm.peek() != '|')
-        CapricaError::fatal(location, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
-      return setTok(TokenType::BooleanOr, 1);
+      if (peekChar() != '|')
+        CapricaError::fatal(baseLoc, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
+      return setTok(TokenType::BooleanOr, baseLoc, 1);
     case '&':
-      if (strm.peek() != '&')
-        CapricaError::fatal(location, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
-      return setTok(TokenType::BooleanAnd, 1);
+      if (peekChar() != '&')
+        CapricaError::fatal(baseLoc, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
+      return setTok(TokenType::BooleanAnd, baseLoc, 1);
 
     Number:
     case '0':
@@ -253,40 +253,40 @@ StartOver:
       str.put(c);
 
       // It's hex.
-      if (c == '0' && strm.peek() == 'x') {
-        str.put(strm.get());
-        while (isxdigit(strm.peek()))
-          str.put(strm.get());
+      if (c == '0' && peekChar() == 'x') {
+        str.put(getChar());
+        while (isxdigit(peekChar()))
+          str.put(getChar());
         
         auto i = std::stoul(str.str(), nullptr, 16);
-        auto tok = Token(TokenType::Integer, location);
+        auto tok = Token(TokenType::Integer, baseLoc);
         tok.iValue = (int32_t)i;
         return setTok(tok);
       }
 
       // Either normal int or float.
-      while (isdigit(strm.peek()))
-        str.put(strm.get());
+      while (isdigit(peekChar()))
+        str.put(getChar());
 
       // It's a float.
-      if (strm.peek() == '.') {
-        str.put(strm.get());
-        while (isdigit(strm.peek()))
-          str.put(strm.get());
+      if (peekChar() == '.') {
+        str.put(getChar());
+        while (isdigit(peekChar()))
+          str.put(getChar());
 
         // Allow e+ notation.
-        if (CapricaConfig::enableLanguageExtensions && strm.peek() == 'e') {
-          str.put(strm.get());
-          if (strm.get() != '+')
+        if (CapricaConfig::enableLanguageExtensions && peekChar() == 'e') {
+          str.put(getChar());
+          if (getChar() != '+')
             CapricaError::fatal(location, "Unexpected character 'e'!");
           str.put('+');
 
-          while (isdigit(strm.peek()))
-            str.put(strm.get());
+          while (isdigit(peekChar()))
+            str.put(getChar());
         }
 
         auto f = std::stof(str.str());
-        auto tok = Token(TokenType::Float, location);
+        auto tok = Token(TokenType::Float, baseLoc);
         tok.fValue = f;
         return setTok(tok);
       }
@@ -296,14 +296,14 @@ StartOver:
         // It is probably an integer, but maybe not.
         try {
           auto i = std::stoul(s);
-          auto tok = Token(TokenType::Integer, location);
+          auto tok = Token(TokenType::Integer, baseLoc);
           tok.iValue = (int32_t)i;
           return setTok(tok);
         } catch (std::out_of_range oor) { }
       }
       // It's very definitely a float, and a very large one at that.
       auto f = std::stof(s);
-      auto tok = Token(TokenType::Float, location);
+      auto tok = Token(TokenType::Float, baseLoc);
       tok.fValue = f;
       return setTok(tok);
     }
@@ -365,37 +365,37 @@ StartOver:
     {
       std::ostringstream str;
       if (c == ':') {
-        if (!CapricaConfig::allowCompilerIdentifiers || strm.peek() != ':')
-          CapricaError::fatal(location, "Unexpected character '%c'!", (char)c);
-        strm.get();
+        if (!CapricaConfig::allowCompilerIdentifiers || peekChar() != ':')
+          CapricaError::fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+        getChar();
         str.put(':');
         str.put(':');
       } else {
         str.put(c);
       }
 
-      while (isalnum(strm.peek()) || strm.peek() == '_')
-        str.put(strm.get());
+      while (isalnum(peekChar()) || peekChar() == '_')
+        str.put(getChar());
 
-      if (CapricaConfig::enableDecompiledStructNameRefs && strm.peek() == '#') {
-        str.put(strm.get());
+      if (CapricaConfig::enableDecompiledStructNameRefs && peekChar() == '#') {
+        str.put(getChar());
 
-        while (isalnum(strm.peek()) || strm.peek() == '_')
-          str.put(strm.get());
+        while (isalnum(peekChar()) || peekChar() == '_')
+          str.put(getChar());
       }
 
       auto ident = str.str();
       auto f = keywordMap.find(ident);
       if (f != keywordMap.end())
-        return setTok(f->second);
+        return setTok(f->second, baseLoc);
 
       if (CapricaConfig::enableSpeculativeSyntax) {
         auto f2 = speculativeKeywordMap.find(ident);
         if (f2 != speculativeKeywordMap.end())
-          return setTok(f2->second);
+          return setTok(f2->second, baseLoc);
       }
 
-      auto tok = Token(TokenType::Identifier, location);
+      auto tok = Token(TokenType::Identifier, baseLoc);
       tok.sValue = ident;
       return setTok(tok);
     }
@@ -404,10 +404,10 @@ StartOver:
     {
       std::ostringstream str;
 
-      while (strm.peek() != '"' && strm.peek() != '\r' && strm.peek() != '\n' && strm.peek() != -1) {
-        if (strm.peek() == '\\') {
-          strm.get();
-          auto escapeChar = strm.get();
+      while (peekChar() != '"' && peekChar() != '\r' && peekChar() != '\n' && peekChar() != -1) {
+        if (peekChar() == '\\') {
+          getChar();
+          auto escapeChar = getChar();
           switch (escapeChar) {
             case 'n':
               str.put('\n');
@@ -427,35 +427,35 @@ StartOver:
               CapricaError::fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
-          str.put(strm.get());
+          str.put(getChar());
         }
       }
 
-      if (strm.peek() != '"')
+      if (peekChar() != '"')
         CapricaError::fatal(location, "Unclosed string!");
-      strm.get();
+      getChar();
 
-      auto tok = Token(TokenType::String, location);
+      auto tok = Token(TokenType::String, baseLoc);
       tok.sValue = str.str();
       return setTok(tok);
     }
 
     case ';':
     {
-      if (strm.peek() == '/') {
+      if (peekChar() == '/') {
         // Multiline comment.
-        strm.get();
+        getChar();
 
-        while (strm.peek() != -1) {
-          if (strm.peek() == '\r' || strm.peek() == '\n') {
-            auto c2 = strm.get();
-            if (c2 == '\r' && strm.peek() == '\n')
-              strm.get();
-            location.line++;
+        while (peekChar() != -1) {
+          if (peekChar() == '\r' || peekChar() == '\n') {
+            auto c2 = getChar();
+            if (c2 == '\r' && peekChar() == '\n')
+              getChar();
+            location.nextLine();
           }
 
-          if (strm.get() == '/' && strm.peek() == ';') {
-            strm.get();
+          if (getChar() == '/' && peekChar() == ';') {
+            getChar();
             goto StartOver;
           }
         }
@@ -464,8 +464,8 @@ StartOver:
       }
 
       // Single line comment.
-      while (strm.peek() != '\r' && strm.peek() != '\n' && strm.peek() != -1)
-        strm.get();
+      while (peekChar() != '\r' && peekChar() != '\n' && peekChar() != -1)
+        getChar();
       goto StartOver;
     }
 
@@ -474,31 +474,31 @@ StartOver:
       std::ostringstream str;
 
       // Trim all leading whitespace.
-      while (isspace(strm.peek()))
-        strm.get();
+      while (isspace(peekChar()))
+        getChar();
 
-      while (strm.peek() != '}' && strm.peek() != -1) {
+      while (peekChar() != '}' && peekChar() != -1) {
         // For sanity reasons, we only put out unix newlines in the
         // doc comment string.
-        auto c2 = strm.get();
-        if (c2 == '\r' && strm.peek() == '\n') {
-          strm.get();
+        auto c2 = getChar();
+        if (c2 == '\r' && peekChar() == '\n') {
+          getChar();
           str.put('\n');
-          location.line++;
+          location.nextLine();
         } else {
           if (c2 == '\n')
-            location.line++;
+            location.nextLine();
           // Whether this is a Unix newline, or a normal character,
           // we don't care, they both get written as-is.
           str.put(c2);
         }
       }
 
-      if (strm.peek() == -1)
+      if (peekChar() == -1)
         CapricaError::fatal(location, "Unexpected EOF before the end of a documentation comment!");
-      strm.get();
+      getChar();
 
-      auto tok = Token(TokenType::DocComment, location);
+      auto tok = Token(TokenType::DocComment, baseLoc);
       tok.sValue = str.str();
       // Trim trailing whitespace.
       if (tok.sValue.length())
@@ -508,32 +508,31 @@ StartOver:
 
     case '\\':
     {
-      auto prevLoc = location;
       consume();
       if (cur.type != TokenType::EOL)
-        CapricaError::fatal(prevLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
+        CapricaError::fatal(baseLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
       goto StartOver;
     }
 
     case '\r':
     case '\n':
     {
-      if (c == '\r' && strm.peek() == '\n')
-        strm.get();
-      location.line++;
-      return setTok(TokenType::EOL);
+      if (c == '\r' && peekChar() == '\n')
+        getChar();
+      location.nextLine();
+      return setTok(TokenType::EOL, baseLoc);
     }
 
     case ' ':
     case '\t':
     {
-      while (strm.peek() == ' ' || strm.peek() == '\t')
-        strm.get();
+      while (peekChar() == ' ' || peekChar() == '\t')
+        getChar();
       goto StartOver;
     }
 
     default:
-      CapricaError::fatal(location, "Unexpected character '%c'!", (char)c);
+      CapricaError::fatal(baseLoc, "Unexpected character '%c'!", (char)c);
   }
 }
 

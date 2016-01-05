@@ -167,7 +167,14 @@ private:
   std::ifstream strm;
   CapricaFileLocation location;
 
-  void setTok(TokenType tp, int consumeChars = 0);
+  int getChar() {
+    location.column++;
+    return strm.get();
+  }
+  int peekChar() {
+    return strm.peek();
+  }
+  void setTok(TokenType tp, const CapricaFileLocation& loc, int consumeChars = 0);
   void setTok(Token& tok);
 };
 

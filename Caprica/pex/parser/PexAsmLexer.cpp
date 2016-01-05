@@ -344,8 +344,7 @@ StartOver:
     {
       if (c == '\r' && peekChar() == '\n')
         getChar();
-      location.line++;
-      location.column = 0;
+      location.nextLine();
       return setTok(TokenType::EOL, baseLoc);
     }
 

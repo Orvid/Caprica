@@ -53,7 +53,8 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {
-    obj = new PapyrusObject(loc, PapyrusType::Unresolved(cur.location, expectConsumeIdent()));
+    auto eLoc = cur.location;
+    obj = new PapyrusObject(loc, PapyrusType::Unresolved(eLoc, expectConsumeIdent()));
   } else {
     obj = new PapyrusObject(loc, PapyrusType::None(cur.location));
 
@@ -81,10 +82,13 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
     bool isConst = false;
     switch (cur.type) {
       case TokenType::kImport:
+      {
         consume();
-        obj->imports.push_back(std::make_pair(cur.location, expectConsumeIdent()));
+        auto eLoc = cur.location;
+        obj->imports.push_back(std::make_pair(eLoc, expectConsumeIdent()));
         expectConsumeEOLs();
         break;
+      }
 
       case TokenType::kAuto:
         consume();
@@ -502,7 +506,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     case TokenType::kString:
     case TokenType::kVar:
     {
-      auto ret = new statements::PapyrusDeclareStatement(cur.location, expectConsumePapyrusType());
+      auto eLoc = cur.location;
+      auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
       ret->name = expectConsumeIdent();
       if (maybeConsume(TokenType::Equal))
         ret->initialValue = parseExpression(func);
@@ -514,7 +519,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     default:
     {
       if (cur.type == TokenType::Identifier && (peekToken().type == TokenType::Identifier ||  (peekToken().type == TokenType::LSquare && peekToken(1).type == TokenType::RSquare && peekToken(2).type == TokenType::Identifier))) {
-        auto ret = new statements::PapyrusDeclareStatement(cur.location, expectConsumePapyrusType());
+        auto eLoc = cur.location;
+        auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
         ret->name = expectConsumeIdent();
         if (maybeConsume(TokenType::Equal))
           ret->initialValue = parseExpression(func);
@@ -751,7 +757,10 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     case TokenType::kNone:
     case TokenType::kTrue:
     case TokenType::kFalse:
-      return new expressions::PapyrusLiteralExpression(cur.location, expectConsumePapyrusValue());
+    {
+      auto eLoc = cur.location;
+      return new expressions::PapyrusLiteralExpression(eLoc, expectConsumePapyrusValue());
+    }
 
     default:
     {
@@ -847,7 +856,8 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
     case TokenType::Identifier:
     {
       if (peekToken().type == TokenType::LParen) {
-        auto fCallExpr = new expressions::PapyrusFunctionCallExpression(cur.location, PapyrusIdentifier::Unresolved(cur.location, expectConsumeIdent()));
+        auto eLoc = cur.location;
+        auto fCallExpr = new expressions::PapyrusFunctionCallExpression(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
         expectConsume(TokenType::LParen);
 
         if (cur.type != TokenType::RParen) {
@@ -867,7 +877,8 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
 
         return fCallExpr;
       } else {
-        return new expressions::PapyrusIdentifierExpression(cur.location, PapyrusIdentifier::Unresolved(cur.location, expectConsumeIdent()));
+        auto eLoc = cur.location;
+        return new expressions::PapyrusIdentifierExpression(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
       }
     }
     default:
@@ -899,8 +910,11 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
       consume();
       break;
     case TokenType::Identifier:
-      tp = PapyrusType::Unresolved(cur.location, expectConsumeIdent());
+    {
+      auto eLoc = cur.location;
+      tp = PapyrusType::Unresolved(eLoc, expectConsumeIdent());
       break;
+    }
 
     default:
       CapricaError::fatal(cur.location, "Expected a type, got '%s'!", cur.prettyString().c_str());
