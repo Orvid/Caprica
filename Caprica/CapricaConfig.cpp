@@ -2,13 +2,14 @@
 
 namespace caprica { namespace CapricaConfig {
 
-bool compileInParallel{ false };
-bool enableLanguageExtensions{ true };
-bool enableSpeculativeSyntax{ true };
-bool enableDecompiledStructNameRefs{ true };
 bool allowCompilerIdentifiers{ true };
-bool enableOptimizations{ true };
+bool compileInParallel{ false };
+bool dumpPexAsm{ true };
 bool enableCKOptimizations{ true };
+bool enableDecompiledStructNameRefs{ true };
+bool enableLanguageExtensions{ true };
+bool enableOptimizations{ true };
+bool enableSpeculativeSyntax{ true };
 bool emitDebugInfo{ true };
 std::vector<std::string> importDirectories{
   "./",
