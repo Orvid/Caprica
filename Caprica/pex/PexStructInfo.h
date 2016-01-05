@@ -2,11 +2,14 @@
 
 #include <vector>
 
+#include <pex/PexAsmWriter.h>
 #include <pex/PexString.h>
 #include <pex/PexStructMember.h>
 #include <pex/PexWriter.h>
 
 namespace caprica { namespace pex {
+
+struct PexFile;
 
 struct PexStructInfo final
 {
@@ -20,6 +23,7 @@ struct PexStructInfo final
   }
 
   void write(PexWriter& wtr) const;
+  void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };
 
 }}

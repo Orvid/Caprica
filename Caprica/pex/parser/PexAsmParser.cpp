@@ -83,6 +83,10 @@ PexFile* PexAsmParser::parseFile() {
 
           while (!maybeConsumeTokEOL(TokenType::kEndObject)) {
             switch (cur.type) {
+              case TokenType::kConstFlag:
+                consume();
+                obj->isConst = expectConsumeIntegerEOL() != 0;
+                break;
               case TokenType::kUserFlags:
                 consume();
                 obj->userFlags = expectConsumeUserFlags();
@@ -95,6 +99,56 @@ PexFile* PexAsmParser::parseFile() {
                 consume();
                 obj->autoStateName = maybeConsumePexIdentEOL(file);
                 break;
+              case TokenType::kStructTable:
+              {
+                consume();
+                expectConsumeEOL();
+
+                while (!maybeConsumeTokEOL(TokenType::kEndStructTable)) {
+                  if (cur.type != TokenType::kStruct)
+                    CapricaError::fatal(cur.location, "Expected '.struct' got '%s'!", cur.prettyString().c_str());
+                  consume();
+
+                  auto struc = new PexStructInfo();
+                  struc->name = expectConsumePexIdentEOL(file);
+
+                  while (!maybeConsumeTokEOL(TokenType::kEndStruct)) {
+                    if (cur.type != TokenType::kMember)
+                      CapricaError::fatal(cur.location, "Expected '.member' got '%s'!", cur.prettyString().c_str());
+                    consume();
+
+                    auto mem = new PexStructMember();
+                    mem->name = expectConsumePexIdent(file);
+                    mem->typeName = expectConsumePexIdentEOL(file);
+
+                    while (!maybeConsumeTokEOL(TokenType::kEndMember)) {
+                      switch (cur.type) {
+                        case TokenType::kConstFlag:
+                          consume();
+                          mem->isConst = expectConsumeIntegerEOL() != 0;
+                          break;
+                        case TokenType::kUserFlags:
+                          consume();
+                          mem->userFlags = expectConsumeUserFlags();
+                          break;
+                        case TokenType::kDocString:
+                          consume();
+                          mem->documentationString = expectConsumePexStringEOL(file);
+                          break;
+                        case TokenType::kInitialValue:
+                          consume();
+                          mem->defaultValue = expectConsumeValueEOL(file);
+                          break;
+                        default:
+                          CapricaError::fatal(cur.location, "Unknown child of .member '%s'!", cur.prettyString().c_str());
+                      }
+                    }
+                    struc->members.push_back(mem);
+                  }
+                  obj->structs.push_back(struc);
+                }
+                break;
+              }
               case TokenType::kVariableTable:
               {
                 consume();
@@ -110,6 +164,10 @@ PexFile* PexAsmParser::parseFile() {
                   var->typeName = expectConsumePexIdentEOL(file);
                   while (!maybeConsumeTokEOL(TokenType::kEndVariable)) {
                     switch (cur.type) {
+                      case TokenType::kConstFlag:
+                        consume();
+                        var->isConst = expectConsumeIntegerEOL() != 0;
+                        break;
                       case TokenType::kUserFlags:
                         consume();
                         var->userFlags = expectConsumeUserFlags();

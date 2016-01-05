@@ -38,10 +38,18 @@ void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
   wtr.writeln(".object %s %s", file->getStringValue(name).c_str(), file->getStringValue(parentClassName).c_str());
   wtr.ident++;
 
+  wtr.writeln(".constFlag %i", isConst ? 1 : 0);
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
   wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
   wtr.writeln(".autoState %s", file->getStringValue(autoStateName).c_str());
   
+  wtr.writeln(".structTable");
+  wtr.ident++;
+  for (auto s : structs)
+    s->writeAsm(file, wtr);
+  wtr.ident--;
+  wtr.writeln(".endStructTable");
+
   wtr.writeln(".variableTable");
   wtr.ident++;
   for (auto v : variables)

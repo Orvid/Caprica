@@ -76,11 +76,11 @@ static const std::map<std::string, PexOpCode, papyrus::parser::CaselessStringCom
   { "structset", PexOpCode::StructSet },
   { "arrayfindstruct", PexOpCode::ArrayFindStruct },
   { "arrayrfindstruct", PexOpCode::ArrayRFindStruct },
-  { "arrayadd", PexOpCode::ArrayAdd },
-  { "arrayinsert", PexOpCode::ArrayInsert },
-  { "arrayremovelast", PexOpCode::ArrayRemoveLast },
-  { "arrayremove", PexOpCode::ArrayRemove },
-  { "arrayclear", PexOpCode::ArrayClear },
+  { "arrayaddelements", PexOpCode::ArrayAdd },
+  { "arrayinsertelement", PexOpCode::ArrayInsert },
+  { "arrayremovelastelement", PexOpCode::ArrayRemoveLast },
+  { "arrayremoveelements", PexOpCode::ArrayRemove },
+  { "arrayclearelements", PexOpCode::ArrayClear },
 };
 
 PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
@@ -135,11 +135,11 @@ static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap{
   { PexOpCode::StructSet, "STRUCTSET" },
   { PexOpCode::ArrayFindStruct, "ARRAYFINDSTRUCT" },
   { PexOpCode::ArrayRFindStruct, "ARRAYRFINDSTRUCT" },
-  { PexOpCode::ArrayAdd, "ARRAYADD" },
-  { PexOpCode::ArrayInsert, "ARRAYINSERT" },
-  { PexOpCode::ArrayRemoveLast, "ARRAYREMOVELAST" },
-  { PexOpCode::ArrayRemove, "ARRAYREMOVE" },
-  { PexOpCode::ArrayClear, "ARRAYCLEAR" },
+  { PexOpCode::ArrayAdd, "ARRAYADDELEMENTS" },
+  { PexOpCode::ArrayInsert, "ARRAYINSERTELEMENT" },
+  { PexOpCode::ArrayRemoveLast, "ARRAYREMOVELASTELEMENT" },
+  { PexOpCode::ArrayRemove, "ARRAYREMOVEELEMENTS" },
+  { PexOpCode::ArrayClear, "ARRAYCLEARELEMENTS" },
 };
 
 std::string PexInstruction::opCodeToPexAsm(PexOpCode op) {

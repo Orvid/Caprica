@@ -16,7 +16,7 @@ void PexState::write(PexWriter& wtr) const {
 void PexState::writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const {
   wtr.write(".state");
   if (file->getStringValue(name) != "")
-    wtr.write(file->getStringValue(name).c_str());
+    wtr.write(" %s", file->getStringValue(name).c_str());
   wtr.writeln();
   wtr.ident++;
 

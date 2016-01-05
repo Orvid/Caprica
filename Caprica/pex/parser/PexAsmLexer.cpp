@@ -2,13 +2,14 @@
 
 #include <cctype>
 #include <map>
+#include <unordered_map>
 
 #include <CapricaConfig.h>
 #include <papyrus/parser/PapyrusLexer.h>
 
 namespace caprica { namespace pex { namespace parser {
 
-static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
+static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::Unknown, "Unknown" },
   { TokenType::EOL, "EOL" },
   { TokenType::END, "EOF" },
@@ -23,11 +24,13 @@ static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::kCode, ".code" },
   { TokenType::kCompileTime, ".compileTime" },
   { TokenType::kComputer, ".computer" },
+  { TokenType::kConstFlag, ".constFlag" },
   { TokenType::kDocString, ".docString" },
   { TokenType::kEndCode, ".endCode" },
   { TokenType::kEndFunction, ".endFunction" },
   { TokenType::kEndInfo, ".endInfo" },
   { TokenType::kEndLocalTable, ".endLocalTable" },
+  { TokenType::kEndMember, ".endMember" },
   { TokenType::kEndObject, ".endObject" },
   { TokenType::kEndObjectTable, ".endObjectTable" },
   { TokenType::kEndParamTable, ".endParamTable" },
@@ -35,6 +38,8 @@ static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::kEndPropertyTable, ".endPropertyTable" },
   { TokenType::kEndState, ".endState" },
   { TokenType::kEndStateTable, ".endStateTable" },
+  { TokenType::kEndStruct, ".endStruct" },
+  { TokenType::kEndStructTable, ".endStructTable" },
   { TokenType::kEndUserFlagsRef, ".endUserFlagsRef" },
   { TokenType::kEndVariable, ".endVariable" },
   { TokenType::kEndVariableTable, ".endVariableTable" },
@@ -44,6 +49,7 @@ static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::kInitialValue, ".initialValue" },
   { TokenType::kLocal, ".local" },
   { TokenType::kLocalTable, ".localTable" },
+  { TokenType::kMember, ".member" },
   { TokenType::kModifyTime, ".modifyTime" },
   { TokenType::kObject, ".object" },
   { TokenType::kObjectTable, ".objectTable" },
@@ -55,6 +61,8 @@ static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::kSource, ".source" },
   { TokenType::kState, ".state" },
   { TokenType::kStateTable, ".stateTable" },
+  { TokenType::kStruct, ".struct" },
+  { TokenType::kStructTable, ".structTable" },
   { TokenType::kUser, ".user" },
   { TokenType::kUserFlags, ".userFlags" },
   { TokenType::kUserFlagsRef, ".userFlagsRef" },
@@ -83,11 +91,13 @@ static const std::map<const std::string, TokenType, papyrus::parser::CaselessStr
   { "code", TokenType::kCode },
   { "compiletime", TokenType::kCompileTime },
   { "computer", TokenType::kComputer },
+  { "constflag", TokenType::kConstFlag },
   { "docstring", TokenType::kDocString },
   { "endcode", TokenType::kEndCode },
   { "endfunction", TokenType::kEndFunction },
   { "endinfo", TokenType::kEndInfo },
   { "endlocaltable", TokenType::kEndLocalTable },
+  { "endmember", TokenType::kEndMember },
   { "endobject", TokenType::kEndObject },
   { "endobjecttable", TokenType::kEndObjectTable },
   { "endparamtable", TokenType::kEndParamTable },
@@ -95,6 +105,8 @@ static const std::map<const std::string, TokenType, papyrus::parser::CaselessStr
   { "endpropertytable", TokenType::kEndPropertyTable },
   { "endstate", TokenType::kEndState },
   { "endstatetable", TokenType::kEndStateTable },
+  { "endstruct", TokenType::kEndStruct },
+  { "endstructtable", TokenType::kEndStructTable },
   { "enduserflagsref", TokenType::kEndUserFlagsRef },
   { "endvariable", TokenType::kEndVariable },
   { "endvariabletable", TokenType::kEndVariableTable },
@@ -104,6 +116,7 @@ static const std::map<const std::string, TokenType, papyrus::parser::CaselessStr
   { "initialvalue", TokenType::kInitialValue },
   { "local", TokenType::kLocal },
   { "localtable", TokenType::kLocalTable },
+  { "member", TokenType::kMember },
   { "modifytime", TokenType::kModifyTime },
   { "object", TokenType::kObject },
   { "objecttable", TokenType::kObjectTable },
@@ -115,6 +128,8 @@ static const std::map<const std::string, TokenType, papyrus::parser::CaselessStr
   { "source", TokenType::kSource },
   { "state", TokenType::kState },
   { "statetable", TokenType::kStateTable },
+  { "struct", TokenType::kStruct },
+  { "structtable", TokenType::kStructTable },
   { "user", TokenType::kUser },
   { "userflags", TokenType::kUserFlags },
   { "userflagsref", TokenType::kUserFlagsRef },
