@@ -75,6 +75,16 @@ private:
     return file->getString(expectConsumeIdentEOL());
   }
 
+  PexString maybeConsumePexIdentEOL(PexFile* file) {
+    PexString val;
+    if (cur.type == TokenType::Identifier)
+      val = file->getString(expectConsumeIdent());
+    else
+      val = file->getString("");
+    expectConsumeEOL();
+    return val;
+  }
+
   std::string expectConsumeString() {
     expect(TokenType::String);
     auto val = cur.sValue;
@@ -84,16 +94,6 @@ private:
 
   std::string expectConsumeStringEOL() {
     auto val = expectConsumeString();
-    expectConsumeEOL();
-    return val;
-  }
-
-  PexString maybeConsumePexStringEOL(PexFile* file) {
-    PexString val;
-    if (cur.type == TokenType::String)
-      val = file->getString(expectConsumeString());
-    else
-      val = file->getString("");
     expectConsumeEOL();
     return val;
   }

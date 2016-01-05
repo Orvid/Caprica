@@ -93,7 +93,7 @@ PexFile* PexAsmParser::parseFile() {
                 break;
               case TokenType::kAutoState:
                 consume();
-                obj->autoStateName = maybeConsumePexStringEOL(file);
+                obj->autoStateName = maybeConsumePexIdentEOL(file);
                 break;
               case TokenType::kVariableTable:
               {
