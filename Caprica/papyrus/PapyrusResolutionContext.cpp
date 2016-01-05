@@ -38,7 +38,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       delete parser;
       loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
       auto ctx = new PapyrusResolutionContext();
-      ctx->isExternalResolution = true;
+      ctx->resolvingReferenceScript = true;
       a->semantic(ctx);
       delete ctx;
       return a;
