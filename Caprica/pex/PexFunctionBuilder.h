@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
@@ -179,8 +180,11 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     func->instructions = instructions;
     func->locals = locals;
     debInfo->instructionLineMap.reserve(instructionLocations.size());
-    for (auto& l : instructionLocations)
-      debInfo->instructionLineMap.push_back(l.buildPex());
+    for (auto& l : instructionLocations) {
+      if (l.line > std::numeric_limits<uint16_t>::max())
+        CapricaError::fatal(l, "The file has too many lines for the debug info to be able to map correctly!");
+      debInfo->instructionLineMap.push_back((uint16_t)l.line);
+    }
   }
 
   PexLocalVariable* allocateLocal(PexFile* file, const std::string& name, const papyrus::PapyrusType& tp) {

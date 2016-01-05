@@ -18,11 +18,6 @@ struct CapricaFileLocation
   CapricaFileLocation(const CapricaFileLocation& other) = default;
   ~CapricaFileLocation() = default;
 
-  uint16_t buildPex() const {
-    assert(line <= std::numeric_limits<uint16_t>::max());
-    return (uint16_t)line;
-  }
-
   std::string buildString() const {
     std::ostringstream str;
     str << filename << "(" << line << "," << column << ")";

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <string>
 
 #include <common/CapricaFileLocation.h>
@@ -64,7 +65,9 @@ struct PapyrusProperty final
         fDebInfo->stateName = file->getString(""); // No state.
         fDebInfo->functionName = prop->name;
         fDebInfo->functionType = pex::PexDebugFunctionType::Getter;
-        fDebInfo->instructionLineMap.push_back(location.buildPex());
+        if (location.line > std::numeric_limits<uint16_t>::max())
+          CapricaError::fatal(location, "The file has too many lines for the debug info to be able to map correctly!");
+        fDebInfo->instructionLineMap.push_back((uint16_t)location.line);
         file->debugInfo->functions.push_back(fDebInfo);
       }
     } else if (isAuto) {
