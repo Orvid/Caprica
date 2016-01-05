@@ -16,7 +16,7 @@
 
 namespace caprica { namespace papyrus {
 
-void PapyrusResolutionContext::addImport(const parser::PapyrusFileLocation& location, const std::string& import) {
+void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
   auto sc = loadScript(import);
   if (!sc)
     CapricaError::fatal(location, "Failed to find imported script '%s.psc'!", import.c_str());
@@ -25,7 +25,7 @@ void PapyrusResolutionContext::addImport(const parser::PapyrusFileLocation& loca
 
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
-static thread_local std::map<const std::string, std::unique_ptr<PapyrusScript>, parser::CaselessStringComparer> loadedScripts{ };
+static thread_local std::map<const std::string, std::unique_ptr<PapyrusScript>, CaselessStringComparer> loadedScripts{ };
 PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
   auto f = loadedScripts.find(name);
   if (f != loadedScripts.end())

@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
@@ -15,7 +16,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
   expressions::PapyrusExpression* condition{ nullptr };
   std::vector<PapyrusStatement*> body{ };
 
-  PapyrusWhileStatement(const parser::PapyrusFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusWhileStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusWhileStatement() override {
     if (condition)
       delete condition;

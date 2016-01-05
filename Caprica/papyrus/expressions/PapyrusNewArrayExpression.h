@@ -2,7 +2,6 @@
 
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -15,7 +14,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
   PapyrusType type;
   PapyrusExpression* lengthExpression{ nullptr };
 
-  PapyrusNewArrayExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  PapyrusNewArrayExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   virtual ~PapyrusNewArrayExpression() override {
     if (lengthExpression)
       delete lengthExpression;

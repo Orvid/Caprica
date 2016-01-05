@@ -1,7 +1,6 @@
 #pragma once
 
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -22,7 +21,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   PapyrusUnaryOperatorType operation{ PapyrusUnaryOperatorType::None };
   PapyrusExpression* innerExpression{ nullptr };
 
-  PapyrusUnaryOpExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusUnaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusUnaryOpExpression() override {
     if (innerExpression)
       delete innerExpression;

@@ -17,7 +17,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   std::string name{ "" };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
-  PapyrusDeclareStatement(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
+  PapyrusDeclareStatement(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
   virtual ~PapyrusDeclareStatement() override {
     if (initialValue)
       delete initialValue;

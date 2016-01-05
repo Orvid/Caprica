@@ -3,11 +3,11 @@
 #include <string>
 #include <vector>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
 #include <pex/PexDebugFunctionInfo.h>
@@ -31,9 +31,9 @@ struct PapyrusFunction final
   std::vector<statements::PapyrusStatement*> statements{ };
   PapyrusObject* parentObject{ nullptr };
 
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
 
-  PapyrusFunction(const parser::PapyrusFileLocation& loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
+  PapyrusFunction(const CapricaFileLocation& loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
   ~PapyrusFunction() {
     for (auto p : parameters)
       delete p;

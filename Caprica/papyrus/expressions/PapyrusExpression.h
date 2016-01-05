@@ -1,8 +1,8 @@
 #pragma once
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -12,9 +12,9 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusExpression abstract
 {
-  const parser::PapyrusFileLocation location;
+  const CapricaFileLocation location;
 
-  PapyrusExpression(const parser::PapyrusFileLocation& loc) : location(loc) { }
+  PapyrusExpression(const CapricaFileLocation& loc) : location(loc) { }
   virtual ~PapyrusExpression() = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;

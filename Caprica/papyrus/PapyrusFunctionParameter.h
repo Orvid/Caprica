@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
@@ -24,9 +25,9 @@ struct PapyrusFunctionParameter final
   bool hasDefaultValue{ false };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
 
-  const parser::PapyrusFileLocation location;
+  const CapricaFileLocation location;
 
-  PapyrusFunctionParameter(const parser::PapyrusFileLocation loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  PapyrusFunctionParameter(const CapricaFileLocation loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusFunctionParameter() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexFunction* func) const {

@@ -13,7 +13,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
 {
   expressions::PapyrusExpression* returnValue{ nullptr };
 
-  PapyrusReturnStatement(const parser::PapyrusFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusReturnStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusReturnStatement() override {
     if (returnValue)
       delete returnValue;

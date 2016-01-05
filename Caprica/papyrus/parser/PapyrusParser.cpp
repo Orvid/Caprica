@@ -4,6 +4,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <common/CaselessStringComparer.h>
+
 #include <papyrus/PapyrusObject.h>
 
 #include <papyrus/expressions/PapyrusArrayIndexExpression.h>
@@ -27,6 +29,7 @@
 #include <papyrus/statements/PapyrusIfStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
 #include <papyrus/statements/PapyrusWhileStatement.h>
+
 
 namespace caprica { namespace papyrus { namespace parser {
 

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusPropertyGroup.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -26,15 +27,15 @@ struct PapyrusObject final
   PapyrusType parentClass;
   PapyrusState* autoState{ nullptr };
   
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
 
-  std::vector<std::pair<parser::PapyrusFileLocation, std::string>> imports{ };
+  std::vector<std::pair<CapricaFileLocation, std::string>> imports{ };
   std::vector<PapyrusStruct*> structs{ };
   std::vector<PapyrusVariable*> variables{ };
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
   std::vector<PapyrusState*> states{ };
 
-  PapyrusObject(const parser::PapyrusFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) { }
+  PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) { }
   ~PapyrusObject() {
     for (auto s : structs)
       delete s;

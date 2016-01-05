@@ -1,7 +1,6 @@
 #pragma once
 
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -37,7 +36,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   PapyrusBinaryOperatorType operation{ PapyrusBinaryOperatorType::None };
   PapyrusExpression* right{ nullptr };
 
-  PapyrusBinaryOpExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusBinaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusBinaryOpExpression() override {
     if (left)
       delete left;

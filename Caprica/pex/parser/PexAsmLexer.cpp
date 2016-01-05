@@ -5,7 +5,8 @@
 #include <unordered_map>
 
 #include <CapricaConfig.h>
-#include <papyrus/parser/PapyrusLexer.h>
+
+#include <common/CaselessStringComparer.h>
 
 namespace caprica { namespace pex { namespace parser {
 
@@ -77,7 +78,7 @@ const std::string PexAsmLexer::Token::prettyTokenType(TokenType tp) {
   return f->second;
 }
 
-void PexAsmLexer::setTok(TokenType tp, const PapyrusFileLocation& loc) {
+void PexAsmLexer::setTok(TokenType tp, const CapricaFileLocation& loc) {
   cur = Token(tp, loc);
 }
 
@@ -85,7 +86,7 @@ void PexAsmLexer::setTok(Token& tok) {
   cur = tok;
 }
 
-static const std::map<const std::string, TokenType, papyrus::parser::CaselessStringComparer> dotIdentifierMap{
+static const std::map<const std::string, TokenType, CaselessStringComparer> dotIdentifierMap{
   { "autostate", TokenType::kAutoState },
   { "autovar", TokenType::kAutoVar },
   { "code", TokenType::kCode },

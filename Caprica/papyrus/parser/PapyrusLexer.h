@@ -7,17 +7,9 @@
 #include <string>
 
 #include <CapricaError.h>
-
-#include <papyrus/parser/PapyrusFileLocation.h>
+#include <common/CapricaFileLocation.h>
 
 namespace caprica { namespace papyrus { namespace parser {
-
-struct CaselessStringComparer : public std::binary_function<std::string, std::string, bool>
-{
-  bool operator()(const std::string &lhs, const std::string &rhs) const {
-    return _stricmp(lhs.c_str(), rhs.c_str()) < 0;
-  }
-};
 
 enum class TokenType : int32_t
 {
@@ -116,12 +108,12 @@ struct PapyrusLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
-    PapyrusFileLocation location;
+    CapricaFileLocation location;
     std::string sValue{ "" };
     int32_t iValue{ };
     float fValue{ };
 
-    Token(TokenType tp, PapyrusFileLocation loc) : type(tp), location(loc) { }
+    Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -154,7 +146,7 @@ struct PapyrusLexer
     : filename(file),
       strm(file, std::ifstream::binary),
       location(file, 1, 0),
-      cur(TokenType::Unknown, PapyrusFileLocation{ "", 0, 0 })
+      cur(TokenType::Unknown, CapricaFileLocation{ "", 0, 0 })
   {
     consume(); // set the first token.
     strm.sync_with_stdio(false);
@@ -173,7 +165,7 @@ protected:
 
 private:
   std::ifstream strm;
-  PapyrusFileLocation location;
+  CapricaFileLocation location;
 
   void setTok(TokenType tp, int consumeChars = 0);
   void setTok(Token& tok);

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include <papyrus/parser/PapyrusFileLocation.h>
+#include <common/CapricaFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexValue.h>
@@ -21,7 +21,7 @@ enum class PapyrusValueType
 struct PapyrusValue final
 {
   PapyrusValueType type{ PapyrusValueType::None };
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
   std::string s;
   union
   {
@@ -36,22 +36,22 @@ struct PapyrusValue final
 
   struct None final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    None(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    None(const CapricaFileLocation& loc) : location(loc) { }
     ~None() = default;
   };
 
   struct Integer final
   {
     int32_t i;
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    Integer(const parser::PapyrusFileLocation& loc, int32_t val) : location(loc), i(val) { }
+    Integer(const CapricaFileLocation& loc, int32_t val) : location(loc), i(val) { }
     ~Integer() = default;
   };
 
-  PapyrusValue(const parser::PapyrusFileLocation& loc) : location(loc) { }
+  PapyrusValue(const CapricaFileLocation& loc) : location(loc) { }
   PapyrusValue(const Default& other) : type(PapyrusValueType::None), location("", 0, 0) { }
   PapyrusValue(const None& other) : type(PapyrusValueType::None), location(other.location) { }
   PapyrusValue(const Integer& other) : type(PapyrusValueType::Integer), location(other.location), i(other.i) { }

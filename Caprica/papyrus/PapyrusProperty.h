@@ -2,12 +2,12 @@
 
 #include <string>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusValue.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFile.h>
@@ -30,9 +30,9 @@ struct PapyrusProperty final
   PapyrusFunction* writeFunction{ nullptr };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
 
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
 
-  PapyrusProperty(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  PapyrusProperty(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusProperty() {
     if (readFunction)
       delete readFunction;

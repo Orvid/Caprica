@@ -2,7 +2,6 @@
 
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -12,7 +11,7 @@ namespace caprica { namespace papyrus { namespace expressions {
 
 struct PapyrusArrayLengthExpression final : public PapyrusExpression
 {
-  PapyrusArrayLengthExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusArrayLengthExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusArrayLengthExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

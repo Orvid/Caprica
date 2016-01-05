@@ -2,7 +2,6 @@
 
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -14,7 +13,7 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
 {
   PapyrusIdentifier identifier;
 
-  PapyrusIdentifierExpression(const parser::PapyrusFileLocation& loc, const PapyrusIdentifier& id) : PapyrusExpression(loc), identifier(id) { }
+  PapyrusIdentifierExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& id) : PapyrusExpression(loc), identifier(id) { }
   virtual ~PapyrusIdentifierExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

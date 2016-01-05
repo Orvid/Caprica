@@ -6,21 +6,21 @@
 #include <stdexcept>
 #include <string>
 
-#include <papyrus/parser/PapyrusFileLocation.h>
+#include <common/CapricaFileLocation.h>
 
 namespace caprica {
 
 struct CapricaError abstract
 {
   template<typename... Args>
-  static void error(const papyrus::parser::PapyrusFileLocation& location, const std::string& msg, Args&&... args) {
+  static void error(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     // TODO: Make sure the next stage doesn't occur if this is called.
     std::cerr << formatString(location, "Error", msg, args...) << std::endl;
   }
 
   template<typename... Args>
   [[noreturn]]
-  static void fatal(const papyrus::parser::PapyrusFileLocation& location, const std::string& msg, Args&&... args) {
+  static void fatal(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     auto str = formatString(location, "Fatal Error", msg, args...);
     std::cerr << str << std::endl;
     throw std::runtime_error(str);
@@ -39,7 +39,7 @@ struct CapricaError abstract
 
 private:
   template<typename... Args>
-  static std::string formatString(const papyrus::parser::PapyrusFileLocation& location, const std::string& msgType, const std::string& msg, Args&&... args) {
+  static std::string formatString(const CapricaFileLocation& location, const std::string& msgType, const std::string& msg, Args&&... args) {
     if (sizeof...(args)) {
       size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);

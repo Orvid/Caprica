@@ -9,9 +9,11 @@
 
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
+#include <common/CapricaFileLocation.h>
+#include <common/CaselessStringComparer.h>
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/parser/PapyrusLexer.h>
+
 
 namespace caprica { namespace papyrus {
 
@@ -38,7 +40,7 @@ struct PapyrusResolutionContext final
   // resolved.
   bool isExternalResolution{ false };
 
-  void addImport(const parser::PapyrusFileLocation& location, const std::string& import);
+  void addImport(const CapricaFileLocation& location, const std::string& import);
   PapyrusType resolveType(PapyrusType tp);
 
   void ensureCastable(PapyrusType src, PapyrusType dest) {
@@ -73,7 +75,7 @@ struct PapyrusResolutionContext final
   PapyrusResolutionContext() = default;
   ~PapyrusResolutionContext() = default;
 private:
-  std::vector<std::map<std::string, PapyrusIdentifier, parser::CaselessStringComparer>> identifierStack{ };
+  std::vector<std::map<std::string, PapyrusIdentifier, CaselessStringComparer>> identifierStack{ };
   std::vector<PapyrusScript*> importedScripts{ };
 
   PapyrusScript* loadScript(const std::string& name);

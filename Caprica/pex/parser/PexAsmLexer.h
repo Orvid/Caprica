@@ -7,12 +7,9 @@
 #include <string>
 
 #include <CapricaError.h>
-
-#include <papyrus/parser/PapyrusFileLocation.h>
+#include <common/CapricaFileLocation.h>
 
 namespace caprica { namespace pex { namespace parser {
-
-typedef papyrus::parser::PapyrusFileLocation PapyrusFileLocation;
 
 enum class TokenType : int32_t
 {
@@ -85,12 +82,12 @@ struct PexAsmLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
-    PapyrusFileLocation location;
+    CapricaFileLocation location;
     std::string sValue{ "" };
     int64_t iValue{ };
     float fValue{ };
 
-    Token(TokenType tp, const PapyrusFileLocation& loc) : type(tp), location(loc) { }
+    Token(TokenType tp, const CapricaFileLocation& loc) : type(tp), location(loc) { }
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -123,7 +120,7 @@ struct PexAsmLexer
     : filename(file),
       strm(file, std::ifstream::binary),
       location(file, 1, 0),
-      cur(TokenType::Unknown, PapyrusFileLocation{ "", 0, 0 })
+      cur(TokenType::Unknown, CapricaFileLocation{ "", 0, 0 })
   {
     consume(); // set the first token.
   }
@@ -138,7 +135,7 @@ protected:
 
 private:
   std::ifstream strm;
-  PapyrusFileLocation location;
+  CapricaFileLocation location;
 
   int getChar() {
     location.column++;
@@ -147,7 +144,7 @@ private:
   int peekChar() {
     return strm.peek();
   }
-  void setTok(TokenType tp, const PapyrusFileLocation& loc);
+  void setTok(TokenType tp, const CapricaFileLocation& loc);
   void setTok(Token& tok);
 };
 

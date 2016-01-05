@@ -6,7 +6,6 @@
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -30,7 +29,7 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   PapyrusIdentifier function;
   std::vector<Parameter*> arguments{ };
 
-  PapyrusFunctionCallExpression(const parser::PapyrusFileLocation& loc, const PapyrusIdentifier& f) : PapyrusExpression(loc), function(f) { }
+  PapyrusFunctionCallExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& f) : PapyrusExpression(loc), function(f) { }
   virtual ~PapyrusFunctionCallExpression() override {
     for (auto a : arguments)
       delete a;

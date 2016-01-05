@@ -3,7 +3,6 @@
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -17,7 +16,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  PapyrusSelfExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  PapyrusSelfExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   virtual ~PapyrusSelfExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

@@ -2,8 +2,7 @@
 
 #include <vector>
 
-// For the CaselessStringComparer
-#include <papyrus/parser/PapyrusLexer.h>
+#include <common/CaselessStringComparer.h>
 
 namespace caprica { namespace pex { namespace parser {
 
@@ -384,7 +383,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
         consume();
         expectConsumeEOL();
 
-        std::map<std::string, PexLabel*, papyrus::parser::CaselessStringComparer> labels{ };
+        std::map<std::string, PexLabel*, CaselessStringComparer> labels{ };
         while (!maybeConsumeTokEOL(TokenType::kEndCode)) {
           auto id = expectConsumeIdent();
           if (id[id.size() - 1] == ':') {

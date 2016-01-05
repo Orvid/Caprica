@@ -4,7 +4,6 @@
 #include <papyrus/expressions/PapyrusArrayLengthExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/expressions/PapyrusIdentifierExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -17,7 +16,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   PapyrusExpression* baseExpression{ nullptr };
   PapyrusExpression* accessExpression{ nullptr };
 
-  PapyrusMemberAccessExpression(const parser::PapyrusFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusMemberAccessExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusMemberAccessExpression() override {
     if (baseExpression)
       delete baseExpression;

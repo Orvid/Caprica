@@ -2,7 +2,6 @@
 
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -15,7 +14,7 @@ struct PapyrusIsExpression final : public PapyrusExpression
   PapyrusExpression* innerExpression{ nullptr };
   PapyrusType targetType;
 
-  PapyrusIsExpression(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), targetType(tp) { }
+  PapyrusIsExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), targetType(tp) { }
   virtual ~PapyrusIsExpression() override {
     if (innerExpression)
       delete innerExpression;

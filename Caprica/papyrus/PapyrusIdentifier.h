@@ -4,8 +4,8 @@
 
 #include <CapricaError.h>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -54,7 +54,7 @@ struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
   std::string name{ "" };
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
   PapyrusType arrayFuncElementType{ PapyrusType::None({ "", 0, 0 }) };
   union
   {
@@ -69,67 +69,67 @@ struct PapyrusIdentifier final
 
   struct Unresolved final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     const std::string name;
 
-    Unresolved(const parser::PapyrusFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
+    Unresolved(const CapricaFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
     ~Unresolved() = default;
   };
   struct Property final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     PapyrusProperty* prop;
 
-    Property(const parser::PapyrusFileLocation& loc, PapyrusProperty* p) : location(loc), prop(p) { }
+    Property(const CapricaFileLocation& loc, PapyrusProperty* p) : location(loc), prop(p) { }
     ~Property() = default;
   };
   struct Variable final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     PapyrusVariable* var;
 
-    Variable(const parser::PapyrusFileLocation& loc, PapyrusVariable* v) : location(loc), var(v) { }
+    Variable(const CapricaFileLocation& loc, PapyrusVariable* v) : location(loc), var(v) { }
     ~Variable() = default;
   };
   struct FunctionParameter final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     PapyrusFunctionParameter* param;
 
-    FunctionParameter(const parser::PapyrusFileLocation& loc, PapyrusFunctionParameter* p) : location(loc), param(p) { }
+    FunctionParameter(const CapricaFileLocation& loc, PapyrusFunctionParameter* p) : location(loc), param(p) { }
     ~FunctionParameter() = default;
   };
   struct DeclStatement final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     statements::PapyrusDeclareStatement* declStatement;
 
-    DeclStatement(const parser::PapyrusFileLocation& loc, statements::PapyrusDeclareStatement* s) : location(loc), declStatement(s) { }
+    DeclStatement(const CapricaFileLocation& loc, statements::PapyrusDeclareStatement* s) : location(loc), declStatement(s) { }
     ~DeclStatement() = default;
   };
   struct StructMember final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     PapyrusStructMember* member;
 
-    StructMember(const parser::PapyrusFileLocation& loc, PapyrusStructMember* m) : location(loc), member(m) { }
+    StructMember(const CapricaFileLocation& loc, PapyrusStructMember* m) : location(loc), member(m) { }
     ~StructMember() = default;
   };
   struct Function final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     PapyrusFunction* function;
 
-    Function(const parser::PapyrusFileLocation& loc, PapyrusFunction* f) : location(loc), function(f) { }
+    Function(const CapricaFileLocation& loc, PapyrusFunction* f) : location(loc), function(f) { }
     ~Function() = default;
   };
   struct ArrayFunction final
   {
-    const parser::PapyrusFileLocation location;
+    const CapricaFileLocation location;
     PapyrusBuiltinArrayFunctionKind arrayFuncKind;
     PapyrusType arrayFuncElementType;
 
-    ArrayFunction(const parser::PapyrusFileLocation& loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) : location(loc), arrayFuncKind(fk), arrayFuncElementType(elemType) { }
+    ArrayFunction(const CapricaFileLocation& loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) : location(loc), arrayFuncKind(fk), arrayFuncElementType(elemType) { }
     ~ArrayFunction() = default;
   };
 

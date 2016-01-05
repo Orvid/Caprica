@@ -6,7 +6,7 @@
 
 #include <CapricaError.h>
 
-#include <papyrus/parser/PapyrusFileLocation.h>
+#include <common/CapricaFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexString.h>
@@ -39,74 +39,74 @@ struct PapyrusType final
 
   struct Unresolved final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
     std::string name;
 
-    Unresolved(const parser::PapyrusFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
+    Unresolved(const CapricaFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
     ~Unresolved() = default;
   };
   struct Array final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
     std::shared_ptr<PapyrusType> type;
 
-    Array(const parser::PapyrusFileLocation& loc, std::shared_ptr<PapyrusType> tp) : location(loc), type(tp) { }
+    Array(const CapricaFileLocation& loc, std::shared_ptr<PapyrusType> tp) : location(loc), type(tp) { }
     ~Array() = default;
   };
   struct None final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    None(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    None(const CapricaFileLocation& loc) : location(loc) { }
     ~None() = default;
   };
   struct Bool final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    Bool(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    Bool(const CapricaFileLocation& loc) : location(loc) { }
     ~Bool() = default;
   };
   struct Float final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    Float(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    Float(const CapricaFileLocation& loc) : location(loc) { }
     ~Float() = default;
   };
   struct Int final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    Int(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    Int(const CapricaFileLocation& loc) : location(loc) { }
     ~Int() = default;
   };
   struct String final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    String(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    String(const CapricaFileLocation& loc) : location(loc) { }
     ~String() = default;
   };
   struct Var final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
 
-    Var(const parser::PapyrusFileLocation& loc) : location(loc) { }
+    Var(const CapricaFileLocation& loc) : location(loc) { }
     ~Var() = default;
   };
   struct ResolvedObject final
   {
-    parser::PapyrusFileLocation location;
+    CapricaFileLocation location;
     PapyrusObject* obj;
 
-    ResolvedObject(const parser::PapyrusFileLocation& loc, PapyrusObject* o) : location(loc), obj(o) { }
+    ResolvedObject(const CapricaFileLocation& loc, PapyrusObject* o) : location(loc), obj(o) { }
     ~ResolvedObject() = default;
   };
 
   Kind type{ Kind::None };
   std::string name{ "" };
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
   union
   {
     const PapyrusStruct* resolvedStruct{ nullptr };

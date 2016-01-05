@@ -4,8 +4,7 @@
 #include <map>
 #include <unordered_map>
 
-#include <papyrus/parser/PapyrusLexer.h>
-
+#include <common/CaselessStringComparer.h>
 #include <pex/PexFunctionBuilder.h>
 
 namespace caprica { namespace pex {
@@ -104,7 +103,7 @@ void PexInstruction::write(PexWriter& wtr) const {
   }
 }
 
-static const std::map<std::string, PexOpCode, papyrus::parser::CaselessStringComparer> opCodeNameMap{
+static const std::map<std::string, PexOpCode, CaselessStringComparer> opCodeNameMap{
   { "noop", PexOpCode::Nop },
   { "iadd", PexOpCode::IAdd },
   { "fadd", PexOpCode::FAdd },

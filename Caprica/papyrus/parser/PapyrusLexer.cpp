@@ -2,12 +2,15 @@
 
 #include <cctype>
 #include <map>
+#include <unordered_map>
 
 #include <CapricaConfig.h>
 
+#include <common/CaselessStringComparer.h>
+
 namespace caprica { namespace papyrus { namespace parser {
 
-static const std::map<TokenType, const std::string> prettyTokenTypeNameMap{
+static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNameMap{
   { TokenType::Unknown, "Unknown" },
   { TokenType::EOL, "EOL" },
   { TokenType::END, "EOF" },

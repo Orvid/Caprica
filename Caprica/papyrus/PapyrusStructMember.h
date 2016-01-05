@@ -2,11 +2,11 @@
 
 #include <string>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
 #include <papyrus/PapyrusValue.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexObject.h>
@@ -24,9 +24,9 @@ struct PapyrusStructMember final
   PapyrusValue defaultValue{ PapyrusValue::Default() };
   bool isConst{ false };
 
-  parser::PapyrusFileLocation location;
+  CapricaFileLocation location;
 
-  PapyrusStructMember(const parser::PapyrusFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusStructMember() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {

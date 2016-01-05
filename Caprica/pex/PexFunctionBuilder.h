@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/parser/PapyrusFileLocation.h>
 
 #include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFunction.h>
@@ -151,7 +151,7 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
   }
 
-  PexFunctionBuilder& operator <<(const papyrus::parser::PapyrusFileLocation& loc) {
+  PexFunctionBuilder& operator <<(const CapricaFileLocation& loc) {
     currentLocation = loc;
     return *this;
   }
@@ -191,7 +191,7 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     return loc;
   }
 
-  PexLocalVariable* getNoneLocal(const papyrus::parser::PapyrusFileLocation& location, PexFile* file) {
+  PexLocalVariable* getNoneLocal(const CapricaFileLocation& location, PexFile* file) {
     for (auto& loc : locals) {
       if (file->getStringValue(loc->name) == "::nonevar")
         return loc;
@@ -223,11 +223,11 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
     return *this;
   }
 
-  PexFunctionBuilder(const papyrus::parser::PapyrusFileLocation& loc) : currentLocation(loc) { }
+  PexFunctionBuilder(const CapricaFileLocation& loc) : currentLocation(loc) { }
 
 private:
-  papyrus::parser::PapyrusFileLocation currentLocation;
-  std::vector<papyrus::parser::PapyrusFileLocation> instructionLocations{ };
+  CapricaFileLocation currentLocation;
+  std::vector<CapricaFileLocation> instructionLocations{ };
   std::vector<PexInstruction*> instructions{ };
   std::vector<PexLocalVariable*> locals{ };
   std::vector<PexLabel*> labels{ };
