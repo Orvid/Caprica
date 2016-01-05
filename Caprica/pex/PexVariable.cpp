@@ -4,6 +4,16 @@
 
 namespace caprica { namespace pex {
 
+PexVariable* PexVariable::read(PexReader& rdr) {
+  auto var = new PexVariable();
+  var->name = rdr.read<PexString>();
+  var->typeName = rdr.read<PexString>();
+  var->userFlags = rdr.read<PexUserFlags>();
+  var->defaultValue = rdr.read<PexValue>();
+  var->isConst = rdr.read<uint8_t>() != 0;
+  return var;
+}
+
 void PexVariable::write(PexWriter& wtr) const {
   wtr.write<PexString>(name);
   wtr.write<PexString>(typeName);

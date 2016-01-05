@@ -10,6 +10,7 @@
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugInfo.h>
 #include <pex/PexObject.h>
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
 
@@ -74,6 +75,7 @@ struct PexFile final
     return flag;
   }
 
+  static PexFile* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(PexAsmWriter& wtr) const;
 

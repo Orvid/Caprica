@@ -11,6 +11,7 @@
 #include <papyrus/parser/PapyrusParser.h>
 
 #include <pex/PexAsmWriter.h>
+#include <pex/PexReader.h>
 #include <pex/PexWriter.h>
 #include <pex/parser/PexAsmParser.h>
 
@@ -43,6 +44,13 @@ void compileScript(std::string filename) {
     std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
+    delete pex;
+  } else if (boost::filesystem::extension(filename) == ".pex") {
+    caprica::pex::PexReader rdr(filename);
+    auto pex = caprica::pex::PexFile::read(rdr);
+    std::ofstream asmStrm(boost::filesystem::basename(filename) + ".pas", std::ofstream::binary);
+    caprica::pex::PexAsmWriter asmWtr(asmStrm);
+    pex->writeAsm(asmWtr);
     delete pex;
   } else {
     printf("Don't know how to compile %s!\n", filename.c_str());

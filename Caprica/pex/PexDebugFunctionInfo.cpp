@@ -2,6 +2,19 @@
 
 namespace caprica { namespace pex {
 
+PexDebugFunctionInfo* PexDebugFunctionInfo::read(PexReader& rdr) {
+  auto fi = new PexDebugFunctionInfo();
+  fi->objectName = rdr.read<PexString>();
+  fi->stateName = rdr.read<PexString>();
+  fi->functionName = rdr.read<PexString>();
+  fi->functionType = (PexDebugFunctionType)rdr.read<uint8_t>();
+  auto lnSize = rdr.read<uint16_t>();
+  fi->instructionLineMap.reserve(lnSize);
+  for (size_t i = 0; i < lnSize; i++)
+    fi->instructionLineMap.push_back(rdr.read<uint16_t>());
+  return fi;
+}
+
 void PexDebugFunctionInfo::write(PexWriter& wtr) const {
   wtr.write<PexString>(objectName);
   wtr.write<PexString>(stateName);

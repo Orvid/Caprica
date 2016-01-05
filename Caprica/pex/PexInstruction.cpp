@@ -6,7 +6,78 @@
 
 #include <papyrus/parser/PapyrusLexer.h>
 
+#include <pex/PexFunctionBuilder.h>
+
 namespace caprica { namespace pex {
+
+// Use the opcodes descriptions from the function builder to manage this.
+static size_t getArgCountForOpCode(PexOpCode op) {
+  switch (op) {
+#define OP_ARG1(name, opcode, at1, an1) \
+  case PexOpCode::opcode: return 1;
+#define OP_ARG2(name, opcode, at1, an1, at2, an2) \
+  case PexOpCode::opcode: return 2;
+#define OP_ARG3(name, opcode, at1, an1, at2, an2, at3, an3) \
+  case PexOpCode::opcode: return 3;
+#define OP_ARG4(name, opcode, at1, an1, at2, an2, at3, an3, at4, an4) \
+  case PexOpCode::opcode: return 4;
+#define OP_ARG5(name, opcode, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
+  case PexOpCode::opcode: return 5;
+    OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#undef OP_ARG1
+#undef OP_ARG2
+#undef OP_ARG3
+#undef OP_ARG4
+#undef OP_ARG5
+    default:
+      CapricaError::logicalFatal("Unknown PexOpCode!");
+  }
+}
+
+PexInstruction* PexInstruction::read(PexReader& rdr) {
+  auto inst = new PexInstruction();
+  inst->opCode = (PexOpCode)rdr.read<uint8_t>();
+
+  switch (inst->opCode) {
+    case PexOpCode::CallMethod:
+    case PexOpCode::CallStatic:
+    {
+      inst->args.reserve(3);
+      for (size_t i = 0; i < 3; i++)
+        inst->args.push_back(rdr.read<PexValue>());
+      goto CallCommon;
+    }
+    case PexOpCode::CallParent:
+    {
+      inst->args.reserve(2);
+      for (size_t i = 0; i < 2; i++)
+        inst->args.push_back(rdr.read<PexValue>());
+      goto CallCommon;
+    }
+    
+    CallCommon:
+    {
+      auto varVal = rdr.read<PexValue>();
+      if (varVal.type != PexValueType::Integer)
+        CapricaError::logicalFatal("The var arg count for call instructions should be an integer!");
+      inst->variadicArgs.reserve(varVal.i);
+      for (size_t i = 0; i < varVal.i; i++)
+        inst->variadicArgs.push_back(rdr.read<PexValue>());
+      break;
+    }
+
+    default:
+    {
+      auto aCount = getArgCountForOpCode(inst->opCode);
+      inst->args.reserve(aCount);
+      for (size_t i = 0; i < aCount; i++)
+        inst->args.push_back(rdr.read<PexValue>());
+      break;
+    }
+  }
+
+  return inst;
+}
 
 void PexInstruction::write(PexWriter& wtr) const {
   wtr.write<uint8_t>((uint8_t)opCode);

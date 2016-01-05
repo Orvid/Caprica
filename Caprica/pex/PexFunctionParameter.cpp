@@ -4,6 +4,13 @@
 
 namespace caprica { namespace pex {
 
+PexFunctionParameter* PexFunctionParameter::read(PexReader& rdr) {
+  auto param = new PexFunctionParameter();
+  param->name = rdr.read<PexString>();
+  param->type = rdr.read<PexString>();
+  return param;
+}
+
 void PexFunctionParameter::write(PexWriter& wtr) const {
   wtr.write<PexString>(name);
   wtr.write<PexString>(type);

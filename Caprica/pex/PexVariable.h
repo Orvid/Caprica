@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pex/PexAsmWriter.h>
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
@@ -21,6 +22,7 @@ struct PexVariable final
   PexVariable() = default;
   ~PexVariable() = default;
 
+  static PexVariable* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };

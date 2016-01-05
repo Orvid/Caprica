@@ -3,8 +3,11 @@
 #include <cstdint>
 #include <vector>
 
+#include <papyrus/PapyrusType.h>
 #include <papyrus/parser/PapyrusFileLocation.h>
 
+#include <pex/PexDebugFunctionInfo.h>
+#include <pex/PexFunction.h>
 #include <pex/PexInstruction.h>
 #include <pex/PexLabel.h>
 #include <pex/PexLocalVariable.h>

@@ -3,6 +3,7 @@
 #include <ctime>
 #include <vector>
 
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
 
@@ -26,6 +27,7 @@ struct PexDebugFunctionInfo final
   PexDebugFunctionInfo() = default;
   ~PexDebugFunctionInfo() = default;
 
+  static PexDebugFunctionInfo* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 };
 

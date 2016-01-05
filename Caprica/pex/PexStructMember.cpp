@@ -4,6 +4,17 @@
 
 namespace caprica { namespace pex {
 
+PexStructMember* PexStructMember::read(PexReader& rdr) {
+  auto mem = new PexStructMember();
+  mem->name = rdr.read<PexString>();
+  mem->typeName = rdr.read<PexString>();
+  mem->userFlags = rdr.read<PexUserFlags>();
+  mem->defaultValue = rdr.read<PexValue>();
+  mem->isConst = rdr.read<uint8_t>() != 0;
+  mem->documentationString = rdr.read<PexString>();
+  return mem;
+}
+
 void PexStructMember::write(PexWriter& wtr) const {
   wtr.write<PexString>(name);
   wtr.write<PexString>(typeName);

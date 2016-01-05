@@ -8,6 +8,35 @@
 
 namespace caprica { namespace pex {
 
+PexFunction* PexFunction::read(PexReader& rdr, bool isProperty) {
+  auto func = new PexFunction();
+  if (!isProperty)
+    func->name = rdr.read<PexString>();
+  func->returnTypeName = rdr.read<PexString>();
+  func->documentationString = rdr.read<PexString>();
+  func->userFlags = rdr.read<PexUserFlags>();
+  auto flags = rdr.read<uint8_t>();
+  if (flags & 0x01)
+    func->isGlobal = true;
+  if (flags & 0x02)
+    func->isNative = true;
+
+  auto pSize = rdr.read<uint16_t>();
+  func->parameters.reserve(pSize);
+  for (size_t i = 0; i < pSize; i++)
+    func->parameters.push_back(PexFunctionParameter::read(rdr));
+  auto lSize = rdr.read<uint16_t>();
+  func->locals.reserve(lSize);
+  for (size_t i = 0; i < lSize; i++)
+    func->locals.push_back(PexLocalVariable::read(rdr));
+  auto iSize = rdr.read<uint16_t>();
+  func->instructions.reserve(iSize);
+  for (size_t i = 0; i < iSize; i++)
+    func->instructions.push_back(PexInstruction::read(rdr));
+
+  return func;
+}
+
 void PexFunction::write(PexWriter& wtr) const {
   if (name.valid())
     wtr.write<PexString>(name);

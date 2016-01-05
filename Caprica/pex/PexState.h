@@ -4,6 +4,7 @@
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexFunction.h>
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
 
@@ -23,6 +24,7 @@ struct PexState final
       delete f;
   }
 
+  static PexState* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const;
 };

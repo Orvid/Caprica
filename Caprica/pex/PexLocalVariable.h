@@ -6,6 +6,7 @@
 namespace caprica { namespace pex {
 
 struct PexFile;
+struct PexReader;
 struct PexWriter;
 
 struct PexLocalVariable final
@@ -16,6 +17,7 @@ struct PexLocalVariable final
   PexLocalVariable() = default;
   ~PexLocalVariable() = default;
 
+  static PexLocalVariable* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };

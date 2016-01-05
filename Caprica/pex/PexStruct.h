@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <pex/PexAsmWriter.h>
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexStructMember.h>
 #include <pex/PexWriter.h>
@@ -22,6 +23,7 @@ struct PexStruct final
       delete m;
   }
 
+  static PexStruct* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };

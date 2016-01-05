@@ -5,6 +5,48 @@
 
 namespace caprica { namespace pex {
 
+PexFile* PexFile::read(PexReader& rdr) {
+  auto file = new PexFile();
+  if (rdr.read<uint32_t>() != 0xFA57C0DE)
+    CapricaError::logicalFatal("Unrecognized magic number!");
+  if ((file->majorVersion = rdr.read<uint8_t>()) != 3)
+    CapricaError::logicalFatal("We currently only support major version 3!");
+  if ((file->minorVersion = rdr.read<uint8_t>()) != 9)
+    CapricaError::logicalFatal("We currently only support minor version 9!");
+  file->gameID = rdr.read<uint16_t>();
+  file->compilationTime = rdr.read<time_t>();
+  file->sourceFileName = rdr.read<std::string>();
+  file->userName = rdr.read<std::string>();
+  file->computerName = rdr.read<std::string>();
+
+  auto strTableSize = rdr.read<uint16_t>();
+  file->stringTable.reserve(strTableSize);
+  for (size_t i = 0; i < strTableSize; i++) {
+    auto str = rdr.read<std::string>();
+    file->stringTable.push_back(str);
+    file->stringTableLookup[str] = i;
+  }
+
+  if (rdr.read<uint8_t>() != 0)
+    file->debugInfo = PexDebugInfo::read(rdr);
+
+  auto ufTableSize = rdr.read<uint16_t>();
+  file->userFlagTable.reserve(ufTableSize);
+  for (size_t i = 0; i < ufTableSize; i++) {
+    auto str = rdr.read<PexString>();
+    auto v = rdr.read<uint8_t>();
+    file->userFlagTable.push_back(std::make_pair(str, v));
+    file->userFlagTableLookup[str] = i;
+  }
+
+  auto objTableSize = rdr.read<uint16_t>();
+  file->objects.reserve(objTableSize);
+  for (size_t i = 0; i < objTableSize; i++)
+    file->objects.push_back(PexObject::read(rdr));
+
+  return file;
+}
+
 void PexFile::write(PexWriter& wtr) const {
   wtr.write<uint32_t>(0xFA57C0DE); // Magic Number
   wtr.write<uint8_t>(majorVersion);

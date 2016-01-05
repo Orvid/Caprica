@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexWriter.h>
@@ -19,6 +20,7 @@ struct PexDebugPropertyGroup final
   PexDebugPropertyGroup() = default;
   ~PexDebugPropertyGroup() = default;
 
+  static PexDebugPropertyGroup* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 };
 

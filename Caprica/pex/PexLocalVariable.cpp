@@ -1,9 +1,17 @@
 #include <pex/PexLocalVariable.h>
 
 #include <pex/PexFile.h>
+#include <pex/PexReader.h>
 #include <pex/PexWriter.h>
 
 namespace caprica { namespace pex {
+
+PexLocalVariable* PexLocalVariable::read(PexReader& rdr) {
+  auto loc = new PexLocalVariable();
+  loc->name = rdr.read<PexString>();
+  loc->type = rdr.read<PexString>();
+  return loc;
+}
 
 void PexLocalVariable::write(PexWriter& wtr) const {
   wtr.write<PexString>(name);

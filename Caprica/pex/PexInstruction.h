@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include <pex/PexReader.h>
 #include <pex/PexValue.h>
 #include <pex/PexWriter.h>
 
@@ -74,6 +75,7 @@ struct PexInstruction final
   PexInstruction(PexOpCode op, std::vector<PexValue> arguments, std::vector<PexValue> varArguments) : opCode(op), args(arguments), variadicArgs(varArguments) { }
   ~PexInstruction() = default;
 
+  static PexInstruction* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 
   static PexOpCode tryParseOpCode(const std::string& str);

@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
 
@@ -16,6 +17,7 @@ struct PexDebugStructOrder final
   PexDebugStructOrder() = default;
   ~PexDebugStructOrder() = default;
 
+  static PexDebugStructOrder* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 };
 

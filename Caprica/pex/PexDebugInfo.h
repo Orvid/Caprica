@@ -6,6 +6,7 @@
 #include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexDebugPropertyGroup.h>
 #include <pex/PexDebugStructOrder.h>
+#include <pex/PexReader.h>
 #include <pex/PexWriter.h>
 
 namespace caprica { namespace pex {
@@ -27,6 +28,7 @@ struct PexDebugInfo final
       delete s;
   }
 
+  static PexDebugInfo* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 };
 
