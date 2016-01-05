@@ -1,9 +1,11 @@
 #pragma once
 
+#include <pex/PexAsmWriter.h>
 #include <pex/PexString.h>
 
 namespace caprica { namespace pex {
 
+struct PexFile;
 struct PexWriter;
 
 struct PexLocalVariable final
@@ -15,6 +17,7 @@ struct PexLocalVariable final
   ~PexLocalVariable() = default;
 
   void write(PexWriter& wtr) const;
+  void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };
 
 }}

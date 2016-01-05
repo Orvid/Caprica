@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 
+#include <pex/PexAsmWriter.h>
 #include <pex/PexProperty.h>
 #include <pex/PexState.h>
 #include <pex/PexString.h>
@@ -12,6 +13,8 @@
 #include <pex/PexWriter.h>
 
 namespace caprica { namespace pex {
+
+struct PexFile;
 
 struct PexObject final
 {
@@ -39,6 +42,7 @@ struct PexObject final
   }
 
   void write(PexWriter& wtr) const;
+  void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };
 
 }}

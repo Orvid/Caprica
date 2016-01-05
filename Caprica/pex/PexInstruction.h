@@ -77,6 +77,7 @@ struct PexInstruction final
   void write(PexWriter& wtr) const;
 
   static PexOpCode tryParseOpCode(const std::string& str);
+  static std::string opCodeToPexAsm(PexOpCode op);
 };
 
 }}

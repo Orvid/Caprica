@@ -1,7 +1,10 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
+#include <pex/PexAsmWriter.h>
+#include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFunctionParameter.h>
 #include <pex/PexInstruction.h>
 #include <pex/PexLocalVariable.h>
@@ -10,6 +13,10 @@
 #include <pex/PexWriter.h>
 
 namespace caprica { namespace pex {
+
+struct PexFile;
+struct PexObject;
+struct PexState;
 
 struct PexFunction final
 {
@@ -37,6 +44,7 @@ struct PexFunction final
   }
 
   void write(PexWriter& wtr) const;
+  void writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const;
 };
 
 }}

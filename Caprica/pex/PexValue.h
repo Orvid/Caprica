@@ -3,11 +3,14 @@
 #include <cassert>
 #include <cstdint>
 
+#include <pex/PexAsmWriter.h>
 #include <pex/PexLabel.h>
 #include <pex/PexLocalVariable.h>
 #include <pex/PexString.h>
 
 namespace caprica { namespace pex {
+
+struct PexFile;
 
 enum class PexValueType : uint8_t
 {
@@ -77,6 +80,8 @@ struct PexValue final
   PexValue(const None& val) : type(PexValueType::None) { }
   PexValue(const Invalid& val) : type(PexValueType::Invalid) { }
   ~PexValue() = default;
+
+  void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };
 
 }}

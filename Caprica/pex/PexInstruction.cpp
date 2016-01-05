@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <map>
+#include <unordered_map>
 
 #include <papyrus/parser/PapyrusLexer.h>
 
@@ -88,6 +89,65 @@ PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
     return f->second;
   else
     return PexOpCode::Invalid;
+}
+
+static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap{
+  { PexOpCode::Invalid, "INVALID" },
+  { PexOpCode::Nop, "NOOP" },
+  { PexOpCode::IAdd, "IADD" },
+  { PexOpCode::FAdd, "FADD" },
+  { PexOpCode::ISub, "ISUB" },
+  { PexOpCode::FSub, "FSUB" },
+  { PexOpCode::IMul, "IMUL" },
+  { PexOpCode::FMul, "FMUL" },
+  { PexOpCode::IDiv, "IDIV" },
+  { PexOpCode::FDiv, "FDIV" },
+  { PexOpCode::IMod, "IMOD" },
+  { PexOpCode::Not, "NOT" },
+  { PexOpCode::INeg, "INEG" },
+  { PexOpCode::FNeg, "FNEG" },
+  { PexOpCode::Assign, "ASSIGN" },
+  { PexOpCode::Cast, "CAST" },
+  { PexOpCode::CmpEq, "COMPAREEQ" },
+  { PexOpCode::CmpLt, "COMPARELT" },
+  { PexOpCode::CmpLte, "COMPARELTE" },
+  { PexOpCode::CmpGt, "COMPAREGT" },
+  { PexOpCode::CmpGte, "COMPAREGTE" },
+  { PexOpCode::Jmp, "JUMP" },
+  { PexOpCode::JmpT, "JUMPT" },
+  { PexOpCode::JmpF, "JUMPF" },
+  { PexOpCode::CallMethod, "CALLMETHOD" },
+  { PexOpCode::CallParent, "CALLPARENT" },
+  { PexOpCode::CallStatic, "CALLSTATIC" },
+  { PexOpCode::Return, "RETURN" },
+  { PexOpCode::StrCat, "STRCAT" },
+  { PexOpCode::PropGet, "PROPGET" },
+  { PexOpCode::PropSet, "PROPSET" },
+  { PexOpCode::ArrayCreate, "ARRAYCREATE" },
+  { PexOpCode::ArrayLength, "ARRAYLENGTH" },
+  { PexOpCode::ArrayGetElement, "ARRAYGETELEMENT" },
+  { PexOpCode::ArraySetElement, "ARRAYSETELEMENT" },
+  { PexOpCode::ArrayFindElement, "ARRAYFINDELEMENT" },
+  { PexOpCode::ArrayRFindElement, "ARRAYRFINDELEMENT" },
+  { PexOpCode::Is, "IS" },
+  { PexOpCode::StructCreate, "STRUCTCREATE" },
+  { PexOpCode::StructGet, "STRUCTGET" },
+  { PexOpCode::StructSet, "STRUCTSET" },
+  { PexOpCode::ArrayFindStruct, "ARRAYFINDSTRUCT" },
+  { PexOpCode::ArrayRFindStruct, "ARRAYRFINDSTRUCT" },
+  { PexOpCode::ArrayAdd, "ARRAYADD" },
+  { PexOpCode::ArrayInsert, "ARRAYINSERT" },
+  { PexOpCode::ArrayRemoveLast, "ARRAYREMOVELAST" },
+  { PexOpCode::ArrayRemove, "ARRAYREMOVE" },
+  { PexOpCode::ArrayClear, "ARRAYCLEAR" },
+};
+
+std::string PexInstruction::opCodeToPexAsm(PexOpCode op) {
+  auto f = opCodeToPexAsmNameMap.find(op);
+  if (f != opCodeToPexAsmNameMap.end())
+    return f->second;
+  else
+    CapricaError::logicalFatal("Unknown PexOpCode '%u'!", (unsigned)op);
 }
 
 }}

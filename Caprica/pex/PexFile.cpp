@@ -37,4 +37,35 @@ void PexFile::write(PexWriter& wtr) const {
     o->write(wtr);
 }
 
+void PexFile::writeAsm(PexAsmWriter& wtr) const {
+  wtr.writeln(".info");
+  wtr.ident++;
+  wtr.writeKV<std::string>("source", sourceFileName);
+  if (debugInfo)
+    wtr.writeKV<time_t>("modifyTime", debugInfo->modificationTime);
+  else
+    wtr.writeln(".modifyTime 0 ;Debug info: No");
+  wtr.writeKV<time_t>("compileTime", compilationTime);
+  wtr.writeKV<std::string>("user", userName);
+  wtr.writeKV<std::string>("computer", computerName);
+  wtr.ident--;
+  wtr.writeln(".endInfo");
+
+  wtr.writeln(".userFlagsRef");
+  wtr.ident++;
+  for (auto a : userFlagTable)
+    wtr.writeln(".flag %s %u", getStringValue(a.first).c_str(), (unsigned)a.second);
+  wtr.ident--;
+  wtr.writeln(".endUserFlagsRef");
+
+  wtr.writeln(".objectTable");
+  wtr.ident++;
+  for (auto obj : objects)
+    obj->writeAsm(this, wtr);
+  wtr.ident--;
+  // Interestingly, the CK -keepasm option doesn't including a newline after
+  // the object table, although we'll choose to put one here.
+  wtr.writeln(".endObjectTable");
+}
+
 }}

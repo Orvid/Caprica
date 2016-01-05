@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include <pex/PexAsmWriter.h>
 #include <pex/PexDebugInfo.h>
 #include <pex/PexObject.h>
 #include <pex/PexString.h>
@@ -55,7 +56,7 @@ struct PexFile final
     return ret;
   }
 
-  std::string getStringValue(const PexString& str) {
+  std::string getStringValue(const PexString& str) const {
     return stringTable[str.index];
   }
 
@@ -74,6 +75,7 @@ struct PexFile final
   }
 
   void write(PexWriter& wtr) const;
+  void writeAsm(PexAsmWriter& wtr) const;
 
 private:
   std::vector<std::string> stringTable;

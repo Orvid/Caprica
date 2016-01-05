@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <pex/PexFile.h>
+
 namespace caprica { namespace pex {
 
 void PexObject::write(PexWriter& wtr) const {
@@ -30,6 +32,39 @@ void PexObject::write(PexWriter& wtr) const {
 
   wtr.boundWrite<uint32_t>(tmp.str().size());
   wtr.writeStream(tmp);
+}
+
+void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
+  wtr.writeln(".object %s %s", file->getStringValue(name).c_str(), file->getStringValue(parentClassName).c_str());
+  wtr.ident++;
+
+  wtr.writeKV<PexUserFlags>("userFlags", userFlags);
+  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
+  wtr.writeln(".autoState %s", file->getStringValue(autoStateName).c_str());
+  
+  wtr.writeln(".variableTable");
+  wtr.ident++;
+  for (auto v : variables)
+    v->writeAsm(file, wtr);
+  wtr.ident--;
+  wtr.writeln(".endVariableTable");
+
+  wtr.writeln(".propertyTable");
+  wtr.ident++;
+  for (auto p : properties)
+    p->writeAsm(file, this, wtr);
+  wtr.ident--;
+  wtr.writeln(".endPropertyTable");
+
+  wtr.writeln(".stateTable");
+  wtr.ident++;
+  for (auto s : states)
+    s->writeAsm(file, this, wtr);
+  wtr.ident--;
+  wtr.writeln(".endStateTable");
+
+  wtr.ident--;
+  wtr.writeln(".endObject");
 }
 
 }}

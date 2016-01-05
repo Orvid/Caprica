@@ -6,12 +6,13 @@
 
 #include <CapricaConfig.h>
 
-#include <papyrus/parser/PapyrusParser.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
+#include <papyrus/parser/PapyrusParser.h>
 
-#include <pex/parser/PexAsmParser.h>
+#include <pex/PexAsmWriter.h>
 #include <pex/PexWriter.h>
+#include <pex/parser/PexAsmParser.h>
 
 void compileScript(std::string filename) {
   printf("Compiling %s\n", filename.c_str());
@@ -27,6 +28,13 @@ void compileScript(std::string filename) {
     std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
+
+    if (caprica::CapricaConfig::dumpPexAsm) {
+      std::ofstream asmStrm(boost::filesystem::basename(filename) + ".pas", std::ofstream::binary);
+      caprica::pex::PexAsmWriter asmWtr(asmStrm);
+      pex->writeAsm(asmWtr);
+    }
+
     delete pex;
   } else if (boost::filesystem::extension(filename) == ".pas") {
     auto parser = new caprica::pex::parser::PexAsmParser(filename);
