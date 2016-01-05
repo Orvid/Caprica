@@ -38,7 +38,7 @@ struct PapyrusResolutionContext final
   // isn't being done to be able to emit the pex.
   // This means that function bodies shouldn't be
   // resolved.
-  bool isExternalResolution{ false };
+  bool resolvingReferenceScript{ false };
 
   void addImport(const CapricaFileLocation& location, const std::string& import);
   PapyrusType resolveType(PapyrusType tp);

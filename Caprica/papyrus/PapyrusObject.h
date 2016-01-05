@@ -95,14 +95,20 @@ struct PapyrusObject final
       ctx->addImport(i.first, i.second);
     for (auto s : structs)
       s->semantic(ctx);
-    for (auto v : variables)
-      v->semantic(ctx);
+    if (ctx->resolvingReferenceScript) {
+      for (auto v : variables)
+        delete v;
+      variables.clear();
+    } else {
+      for (auto v : variables)
+        v->semantic(ctx);
+    }
     for (auto g : propertyGroups)
       g->semantic(ctx);
     for (auto s : states)
       s->semantic(ctx);
 
-    if (!ctx->isExternalResolution) {
+    if (!ctx->resolvingReferenceScript) {
       // The first pass resolves the types on the public API,
       // property types, return types, and parameter types.
       // This second pass resolves the actual identifiers and

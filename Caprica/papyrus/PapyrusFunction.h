@@ -53,7 +53,7 @@ struct PapyrusFunction final
     ctx->pushIdentifierScope();
     for (auto p : parameters)
       p->semantic(ctx);
-    if (ctx->isExternalResolution) {
+    if (ctx->resolvingReferenceScript) {
       for (auto s : statements)
         delete s;
       statements.clear();
