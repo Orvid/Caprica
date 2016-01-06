@@ -13,6 +13,7 @@
 #include <papyrus/PapyrusStruct.h>
 
 #include <papyrus/parser/PapyrusParser.h>
+#include <pex/PexReflector.h>
 
 namespace caprica { namespace papyrus {
 
@@ -42,6 +43,15 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       a->semantic(ctx);
       delete ctx;
       return a;
+    } else if (boost::filesystem::exists(dir + name + ".pex")) {
+      auto a = pex::PexReflector::reflectScript(dir + name + ".pex");
+      loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
+      auto ctx = new PapyrusResolutionContext();
+      ctx->resolvingReferenceScript = true;
+      ctx->isPexResolution = true;
+      a->semantic(ctx);
+      delete ctx;
+      return a;
     }
   }
 
@@ -55,7 +65,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     return tp;
   }
 
-  if (CapricaConfig::enableDecompiledStructNameRefs) {
+  if (isPexResolution || CapricaConfig::enableDecompiledStructNameRefs) {
     auto pos = tp.name.find_first_of('#');
     if (pos != std::string::npos) {
       auto scName = tp.name.substr(0, pos);

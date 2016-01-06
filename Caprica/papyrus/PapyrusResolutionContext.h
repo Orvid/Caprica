@@ -39,6 +39,9 @@ struct PapyrusResolutionContext final
   // This means that function bodies shouldn't be
   // resolved.
   bool resolvingReferenceScript{ false };
+  // If true, we're resolving a tree generated from
+  // a pex file.
+  bool isPexResolution{ false };
 
   void addImport(const CapricaFileLocation& location, const std::string& import);
   PapyrusType resolveType(PapyrusType tp);

@@ -15,7 +15,7 @@ namespace caprica { namespace pex {
 
 struct PexReader final
 {
-  PexReader(std::string& file) : strm(file, std::ifstream::binary) { }
+  PexReader(const std::string& file) : strm(file, std::ifstream::binary) { }
   ~PexReader() = default;
 
   template<typename T>
