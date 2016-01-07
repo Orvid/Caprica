@@ -11,9 +11,9 @@
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/PapyrusStruct.h>
-
 #include <papyrus/parser/PapyrusParser.h>
 #include <pex/PexReflector.h>
+#include <pex/parser/PexAsmParser.h>
 
 namespace caprica { namespace papyrus {
 
@@ -43,8 +43,24 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       a->semantic(ctx);
       delete ctx;
       return a;
+    } else if (boost::filesystem::exists(dir + name + ".pas")) {
+      auto parser = new pex::parser::PexAsmParser(dir + name + ".pas");
+      auto pex = parser->parseFile();
+      delete parser;
+      auto a = pex::PexReflector::reflectScript(pex);
+      delete pex;
+      loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
+      auto ctx = new PapyrusResolutionContext();
+      ctx->resolvingReferenceScript = true;
+      ctx->isPexResolution = true;
+      a->semantic(ctx);
+      delete ctx;
+      return a;
     } else if (boost::filesystem::exists(dir + name + ".pex")) {
-      auto a = pex::PexReflector::reflectScript(dir + name + ".pex");
+      pex::PexReader rdr(dir + name + ".pex");
+      auto pex = pex::PexFile::read(rdr);
+      auto a = pex::PexReflector::reflectScript(pex);
+      delete pex;
       loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
       auto ctx = new PapyrusResolutionContext();
       ctx->resolvingReferenceScript = true;

@@ -1,6 +1,5 @@
 #include <pex/PexReflector.h>
 
-#include <pex/PexFile.h>
 #include <pex/PexReader.h>
 
 namespace caprica { namespace pex {
@@ -47,11 +46,9 @@ static PapyrusFunction* reflectFunction(const CapricaFileLocation& loc, PexFile*
   return func;
 }
 
-PapyrusScript* PexReflector::reflectScript(const std::string& filename) {
-  const CapricaFileLocation loc{ filename, 0, 0 };
+PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
+  const CapricaFileLocation loc{ pex->sourceFileName, 0, 0 };
 
-  PexReader rdr(filename);
-  auto pex = PexFile::read(rdr);
   auto script = new PapyrusScript();
   script->sourceFileName = pex->sourceFileName;
   
@@ -109,7 +106,6 @@ PapyrusScript* PexReflector::reflectScript(const std::string& filename) {
     script->objects.push_back(obj);
   }
 
-  delete pex;
   return script;
 }
 
