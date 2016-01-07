@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
@@ -204,17 +205,32 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
   }
 
   PexLocalVariable* allocTemp(PexFile* file, const papyrus::PapyrusType& tp) {
+    auto tpStr = tp.buildPex(file);
+    auto f = freeTempVars.find(tpStr);
+    if (f != freeTempVars.end() && f->second.size()) {
+      PexLocalVariable* b = f->second.back();
+      f->second.pop_back();
+      return b;
+    }
     auto loc = new PexLocalVariable();
     std::stringstream ss;
     ss << "::temp" << currentTempI++;
     loc->name = file->getString(ss.str());
-    loc->type = tp.buildPex(file);
+    loc->type = tpStr;
+    tempVarNameTypeMap.insert({ loc->name, loc });
     locals.push_back(loc);
     return loc;
   }
 
   void freeIfTemp(PexValue val) {
-    // TODO: alloc & free temps.
+    if (val.type == PexValueType::Identifier) {
+      auto f = tempVarNameTypeMap.find(val.s);
+      if (f != tempVarNameTypeMap.end()) {
+        if (!freeTempVars.count(f->second->type))
+          freeTempVars.insert({ f->second->type, { } });
+        freeTempVars[f->second->type].push_back(f->second);
+      }
+    }
   }
 
   PexFunctionBuilder& operator <<(PexLabel* loc) {
@@ -235,6 +251,8 @@ private:
   std::vector<PexInstruction*> instructions{ };
   std::vector<PexLocalVariable*> locals{ };
   std::vector<PexLabel*> labels{ };
+  std::map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
+  std::map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };
   size_t currentTempI = 0;
 
   template<typename... Args>
@@ -245,11 +263,11 @@ private:
   PexFunctionBuilder& push(PexInstruction* instr) {
     for (auto& v : instr->args) {
       if (v.type == PexValueType::Invalid)
-        CapricaError::logicalFatal("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+        CapricaError::fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     }
     for (auto& v : instr->variadicArgs) {
       if (v.type == PexValueType::Invalid)
-        CapricaError::logicalFatal("Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+        CapricaError::fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     }
     instructionLocations.push_back(currentLocation);
     instructions.push_back(instr);
