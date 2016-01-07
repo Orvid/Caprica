@@ -117,13 +117,21 @@ bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const P
           return false;
       }
 
+    case PapyrusType::Kind::ResolvedObject:
+      if (src.type == PapyrusType::Kind::ResolvedObject)
+        return isObjectSomeParentOf(dest.resolvedObject, src.resolvedObject);
+      return false;
+    case PapyrusType::Kind::Array:
+      if (src.type == PapyrusType::Kind::Array && src.getElementType().type == PapyrusType::Kind::ResolvedObject && dest.getElementType().type == PapyrusType::Kind::ResolvedObject) {
+        return isObjectSomeParentOf(dest.getElementType().resolvedObject, src.getElementType().resolvedObject);
+      }
+      return false;
+
     case PapyrusType::Kind::None:
     case PapyrusType::Kind::Bool:
     case PapyrusType::Kind::String:
     case PapyrusType::Kind::Var:
-    case PapyrusType::Kind::Array:
     case PapyrusType::Kind::Unresolved:
-    case PapyrusType::Kind::ResolvedObject:
     case PapyrusType::Kind::ResolvedStruct:
       return false;
 
