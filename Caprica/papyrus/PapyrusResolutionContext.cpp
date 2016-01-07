@@ -267,10 +267,27 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   CapricaError::fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 }
 
-PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusIdentifier& ident) const {
-  if (ident.type != PapyrusIdentifierType::Unresolved) {
-    return ident;
+void PapyrusResolutionContext::addIdentifier(const PapyrusIdentifier& ident) {
+  // TODO: Deal with checking identifiers on the parent class.
+  for (auto is : identifierStack) {
+    if (is.count(ident.name)) {
+      CapricaError::error(ident.location, "Attempted to redefined '%s' which was already defined in a parent scope!", ident.name.c_str());
+      return;
+    }
   }
+  identifierStack.back().insert({ ident.name, ident });
+}
+
+PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
+  auto id = tryResolveIdentifier(ident);
+  if (id.type == PapyrusIdentifierType::Unresolved)
+    CapricaError::fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
+  return id;
+}
+
+PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusIdentifier& ident) const {
+  if (ident.type != PapyrusIdentifierType::Unresolved)
+    return ident;
 
   for (auto& stack : boost::adaptors::reverse(identifierStack)) {
     auto f = stack.find(ident.name);
@@ -296,9 +313,8 @@ PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const Papyru
 }
 
 PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
-  if (ident.type != PapyrusIdentifierType::Unresolved) {
+  if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
-  }
 
   if (baseType.type == PapyrusType::Kind::ResolvedStruct) {
     for (auto& sm : baseType.resolvedStruct->members) {
@@ -333,9 +349,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
-  if (ident.type != PapyrusIdentifierType::Unresolved) {
+  if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
-  }
 
   if (baseType.type == PapyrusType::Kind::None) {
     for (auto& state : object->states) {

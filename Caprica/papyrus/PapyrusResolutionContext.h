@@ -46,7 +46,6 @@ struct PapyrusResolutionContext final
   bool isPexResolution{ false };
 
   void addImport(const CapricaFileLocation& location, const std::string& import);
-  PapyrusType resolveType(PapyrusType tp);
 
   void ensureCastable(PapyrusType src, PapyrusType dest) {
 
@@ -63,23 +62,9 @@ struct PapyrusResolutionContext final
     identifierStack.pop_back();
   }
 
-  void addIdentifier(const PapyrusIdentifier& ident) {
-    for (auto is : identifierStack) {
-      if (is.count(ident.name)) {
-        CapricaError::error(ident.location, "Attempted to redefined '%s' which was already defined in a parent scope!", ident.name.c_str());
-        return;
-      }
-    }
-    identifierStack.back().insert({ ident.name, ident });
-  }
-
-  PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const {
-    auto id = tryResolveIdentifier(ident);
-    if (id.type == PapyrusIdentifierType::Unresolved)
-      CapricaError::fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
-    return id;
-  }
-
+  PapyrusType resolveType(PapyrusType tp);
+  void addIdentifier(const PapyrusIdentifier& ident);
+  PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
