@@ -1,5 +1,11 @@
 #include <papyrus/PapyrusFunction.h>
 
+#include <sstream>
+#include <unordered_set>
+
+#include <papyrus/statements/PapyrusDeclareStatement.h>
+#include <papyrus/statements/PapyrusStatementVisitor.h>
+
 namespace caprica { namespace papyrus {
 
 pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
@@ -69,6 +75,56 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
     delete fDebInfo;
 
   return func;
+}
+
+void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
+  returnType = ctx->resolveType(returnType);
+  ctx->function = this;
+  ctx->pushIdentifierScope();
+  for (auto p : parameters)
+    p->semantic(ctx);
+  if (ctx->resolvingReferenceScript) {
+    for (auto s : statements)
+      delete s;
+    statements.clear();
+  }
+  ctx->popIdentifierScope();
+  ctx->function = nullptr;
+}
+
+void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
+  returnType = ctx->resolveType(returnType);
+  ctx->function = this;
+  ctx->pushIdentifierScope();
+  for (auto p : parameters)
+    p->semantic2(ctx);
+  for (auto s : statements)
+    s->semantic(ctx);
+  ctx->popIdentifierScope();
+  ctx->function = nullptr;
+
+  // We need to be able to distinguish between locals with the
+  // same name defined in different scopes, so we have to mangle
+  // the ones that are the same.
+  struct CheckLocalNamesStatementVisitor final : statements::PapyrusStatementVisitor
+  {
+    std::unordered_set<std::string, CaselessStringHasher> allLocalNames{ };
+
+    virtual void visit(statements::PapyrusDeclareStatement* s) {
+      int i = 0;
+      auto baseName = s->name;
+      while (allLocalNames.count(s->name)) {
+        std::ostringstream strm;
+        strm << "::mangled_" << baseName << "_" << i;
+        s->name = strm.str();
+        i++;
+      }
+      allLocalNames.insert(s->name);
+    }
+  } visitor;
+
+  for (auto s : statements)
+    s->visit(visitor);
 }
 
 }}

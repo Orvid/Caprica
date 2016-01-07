@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
+#include <common/CaselessStringComparer.h>
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
@@ -46,33 +47,8 @@ struct PapyrusFunction final
                              pex::PexState* state,
                              pex::PexDebugFunctionType funcType,
                              pex::PexString propName) const;
-
-  void semantic(PapyrusResolutionContext* ctx) {
-    returnType = ctx->resolveType(returnType);
-    ctx->function = this;
-    ctx->pushIdentifierScope();
-    for (auto p : parameters)
-      p->semantic(ctx);
-    if (ctx->resolvingReferenceScript) {
-      for (auto s : statements)
-        delete s;
-      statements.clear();
-    }
-    ctx->popIdentifierScope();
-    ctx->function = nullptr;
-  }
-
-  void semantic2(PapyrusResolutionContext* ctx) {
-    returnType = ctx->resolveType(returnType);
-    ctx->function = this;
-    ctx->pushIdentifierScope();
-    for (auto p : parameters)
-      p->semantic2(ctx);
-    for (auto s : statements)
-      s->semantic(ctx);
-    ctx->popIdentifierScope();
-    ctx->function = nullptr;
-  }
+  void semantic(PapyrusResolutionContext* ctx);
+  void semantic2(PapyrusResolutionContext* ctx);
 };
 
 }}
