@@ -43,6 +43,10 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
 
     ctx->addIdentifier(PapyrusIdentifier::DeclStatement(location, this));
   }
+
+  virtual void visit(PapyrusStatementVisitor& visitor) override {
+    visitor.visit(this);
+  }
 };
 
 }}}

@@ -25,6 +25,10 @@ struct PapyrusExpressionStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     expression->semantic(ctx);
   }
+
+  virtual void visit(PapyrusStatementVisitor& visitor) override {
+    visitor.visit(this);
+  }
 };
 
 }}}

@@ -38,6 +38,10 @@ struct PapyrusReturnStatement final : public PapyrusStatement
       returnValue = PapyrusResolutionContext::coerceExpression(returnValue, ctx->function->returnType);
     }
   }
+
+  virtual void visit(PapyrusStatementVisitor& visitor) override {
+    visitor.visit(this);
+  }
 };
 
 }}}

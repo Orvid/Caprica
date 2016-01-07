@@ -66,6 +66,17 @@ struct PapyrusIfStatement final : public PapyrusStatement
       s->semantic(ctx);
     ctx->popIdentifierScope();
   }
+
+  virtual void visit(PapyrusStatementVisitor& visitor) override {
+    visitor.visit(this);
+
+    for (auto& i : ifBodies) {
+      for (auto s : i.second)
+        s->visit(visitor);
+    }
+    for (auto s : elseStatements)
+      s->visit(visitor);
+  }
 };
 
 }}}

@@ -119,6 +119,10 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       CapricaError::fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
     }
   }
+
+  virtual void visit(PapyrusStatementVisitor& visitor) override {
+    visitor.visit(this);
+  }
 };
 
 }}}

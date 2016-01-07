@@ -2,6 +2,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusResolutionContext.h>
+#include <papyrus/statements/PapyrusStatementVisitor.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -18,6 +19,7 @@ struct PapyrusStatement abstract
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;
+  virtual void visit(PapyrusStatementVisitor& visitor) abstract;
 };
 
 }}}
