@@ -55,7 +55,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     for (auto& i : ifBodies) {
       i.first->semantic(ctx);
-      i.first = expressions::PapyrusExpression::coerceExpression(i.first, PapyrusType::Bool(i.first->location));
+      i.first = PapyrusResolutionContext::coerceExpression(i.first, PapyrusType::Bool(i.first->location));
       ctx->pushIdentifierScope();
       for (auto s : i.second)
         s->semantic(ctx);

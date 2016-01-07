@@ -154,8 +154,8 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
     switch (operation) {
       case PapyrusBinaryOperatorType::BooleanOr:
       case PapyrusBinaryOperatorType::BooleanAnd:
-        left = coerceExpression(left, PapyrusType::Bool(left->location));
-        right = coerceExpression(right, PapyrusType::Bool(right->location));
+        left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Bool(left->location));
+        right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Bool(right->location));
         break;
 
       case PapyrusBinaryOperatorType::CmpEq:
@@ -215,16 +215,16 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
 private:
   void coerceToSameType() {
     if (left->resultType().type == PapyrusType::Kind::String || right->resultType().type == PapyrusType::Kind::String) {
-      left = coerceExpression(left, PapyrusType::String(left->location));
-      right = coerceExpression(right, PapyrusType::String(right->location));
+      left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::String(left->location));
+      right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::String(right->location));
     } else if (left->resultType().type == PapyrusType::Kind::Bool || right->resultType().type == PapyrusType::Kind::Bool) {
-      left = coerceExpression(left, PapyrusType::Bool(left->location));
-      right = coerceExpression(right, PapyrusType::Bool(right->location));
+      left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Bool(left->location));
+      right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Bool(right->location));
     } else if (left->resultType().type == PapyrusType::Kind::Float || right->resultType().type == PapyrusType::Kind::Float) {
-      left = coerceExpression(left, PapyrusType::Float(left->location));
-      right = coerceExpression(right, PapyrusType::Float(right->location));
+      left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Float(left->location));
+      right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Float(right->location));
     } else {
-      right = coerceExpression(right, left->resultType());
+      right = PapyrusResolutionContext::coerceExpression(right, left->resultType());
     }
   }
 };

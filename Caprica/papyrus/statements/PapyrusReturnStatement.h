@@ -35,7 +35,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     if (returnValue) {
       returnValue->semantic(ctx);
-      returnValue = expressions::PapyrusExpression::coerceExpression(returnValue, ctx->function->returnType);
+      returnValue = PapyrusResolutionContext::coerceExpression(returnValue, ctx->function->returnType);
     }
   }
 };

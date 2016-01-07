@@ -48,7 +48,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     baseExpression->semantic(ctx);
     indexExpression->semantic(ctx);
-    indexExpression = PapyrusExpression::coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
+    indexExpression = PapyrusResolutionContext::coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
   }
 
   virtual PapyrusType resultType() const override {

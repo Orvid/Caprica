@@ -79,7 +79,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     if (operation == PapyrusAssignOperatorType::Assign) {
       lValue->semantic(ctx);
       rValue->semantic(ctx);
-      rValue = expressions::PapyrusExpression::coerceExpression(rValue, lValue->resultType());
+      rValue = PapyrusResolutionContext::coerceExpression(rValue, lValue->resultType());
     } else {
       binOpExpression = new expressions::PapyrusBinaryOpExpression(location);
       binOpExpression->left = lValue;
@@ -106,7 +106,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       binOpExpression->semantic(ctx);
       if (lValue->resultType().type == PapyrusType::Kind::Array && !CapricaConfig::enableLanguageExtensions)
         CapricaError::fatal(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
-      rValue = expressions::PapyrusExpression::coerceExpression(binOpExpression, lValue->resultType());
+      rValue = PapyrusResolutionContext::coerceExpression(binOpExpression, lValue->resultType());
     }
     if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
       if (id->identifier.type == PapyrusIdentifierType::Property && id->identifier.prop->isReadOnly)

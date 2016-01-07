@@ -163,7 +163,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'find'!");
-        arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 0));
@@ -171,7 +171,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiStartIndex"))
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
-          arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
+          arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
       }
@@ -196,7 +196,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         }
         if (elemType.type == PapyrusType::Kind::None)
           CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType.resolvedStruct->name.c_str());
-        arguments[1]->value = coerceExpression(arguments[1]->value, elemType);
+        arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
           auto p = new Parameter();
@@ -205,7 +205,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         } else {
           if (arguments[2]->name != "" && _stricmp(arguments[2]->name.c_str(), "aiStartIndex"))
             CapricaError::error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
-          arguments[2]->value = coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
+          arguments[2]->value = PapyrusResolutionContext::coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
         break;
       }
@@ -214,7 +214,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'rfind'!");
-        arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, -1));
@@ -222,7 +222,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiStartIndex"))
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
-          arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
+          arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
       }
@@ -247,7 +247,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         }
         if (elemType.type == PapyrusType::Kind::None)
           CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType.resolvedStruct->name.c_str());
-        arguments[1]->value = coerceExpression(arguments[1]->value, elemType);
+        arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
           auto p = new Parameter();
@@ -256,7 +256,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         } else {
           if (arguments[2]->name != "" && _stricmp(arguments[2]->name.c_str(), "aiStartIndex"))
             CapricaError::error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
-          arguments[2]->value = coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
+          arguments[2]->value = PapyrusResolutionContext::coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
         break;
       }
@@ -264,7 +264,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'add'!");
-        arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 1));
@@ -272,7 +272,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiCount"))
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
-          arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
+          arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
       }
@@ -283,14 +283,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       case PapyrusBuiltinArrayFunctionKind::Insert:
         if (arguments.size() != 2)
           CapricaError::fatal(location, "Expected 2 parameters to 'insert'!");
-        arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
-        arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         break;
       case PapyrusBuiltinArrayFunctionKind::Remove:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'remove'!");
-        arguments[0]->value = coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, PapyrusType::Int(arguments[0]->value->location));
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 1));
@@ -298,7 +298,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         } else {
           if (arguments[1]->name != "" && _stricmp(arguments[1]->name.c_str(), "aiCount"))
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
-          arguments[1]->value = coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
+          arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         break;
       }
@@ -345,7 +345,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
 
     for (size_t i = 0; i < arguments.size(); i++) {
       arguments[i]->value->semantic(ctx);
-      arguments[i]->value = coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
+      arguments[i]->value = PapyrusResolutionContext::coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
     }
   }
 }

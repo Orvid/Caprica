@@ -7,6 +7,33 @@
 
 namespace caprica { namespace papyrus {
 
+std::string PapyrusType::prettyString() const {
+  switch (type) {
+    case Kind::None:
+      return "None";
+    case Kind::Bool:
+      return "Bool";
+    case Kind::Float:
+      return "Float";
+    case Kind::Int:
+      return "Int";
+    case Kind::String:
+      return "String";
+    case Kind::Var:
+      return "Var";
+    case Kind::Array:
+      return arrayElementType->getTypeString() + "[]";
+    case Kind::Unresolved:
+      return "Unresolved(" + name + ")";
+    case Kind::ResolvedObject:
+      return resolvedObject->name;
+    case Kind::ResolvedStruct:
+      return "Struct " + resolvedStruct->parentObject->name + "." + resolvedStruct->name;
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  }
+}
+
 std::string PapyrusType::getTypeString() const {
   switch (type) {
     case Kind::None:

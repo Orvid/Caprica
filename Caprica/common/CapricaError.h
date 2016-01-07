@@ -13,11 +13,20 @@ namespace caprica {
 
 struct CapricaError abstract
 {
+  static size_t warningCount;
   static size_t errorCount;
 
   static void exitIfErrors() {
-    if (errorCount > 0)
-      exit(-1);
+    if (errorCount > 0) {
+      std::cerr << "Compilation failed, " << warningCount << " warnings and " << errorCount << " errors were encountered." << std::endl;
+      throw std::runtime_error("");
+    }
+  }
+
+  template<typename... Args>
+  static void warning(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
+    warningCount++;
+    std::cerr << formatString(location, "Warning", msg, args...) << std::endl;
   }
 
   template<typename... Args>

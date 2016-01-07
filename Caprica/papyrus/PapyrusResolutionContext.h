@@ -25,6 +25,8 @@ struct PapyrusScript;
 struct PapyrusState;
 struct PapyrusStruct;
 
+namespace expressions { struct PapyrusExpression; }
+
 struct PapyrusResolutionContext final
 {
   const PapyrusScript* script{ nullptr };
@@ -49,6 +51,9 @@ struct PapyrusResolutionContext final
   void ensureCastable(PapyrusType src, PapyrusType dest) {
 
   }
+  static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
+  static bool canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest);
+  static expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
 
   void pushIdentifierScope() {
     identifierStack.push_back({ });
@@ -59,7 +64,12 @@ struct PapyrusResolutionContext final
   }
 
   void addIdentifier(const PapyrusIdentifier& ident) {
-    // TODO: Ensure no parent scopes have the name.
+    for (auto is : identifierStack) {
+      if (is.count(ident.name)) {
+        CapricaError::error(ident.location, "Attempted to redefined '%s' which was already defined in a parent scope!", ident.name.c_str());
+        return;
+      }
+    }
     identifierStack.back().insert({ ident.name, ident });
   }
 

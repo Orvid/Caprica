@@ -38,7 +38,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
     type = ctx->resolveType(type);
     if (initialValue) {
       initialValue->semantic(ctx);
-      initialValue = expressions::PapyrusExpression::coerceExpression(initialValue, type);
+      initialValue = PapyrusResolutionContext::coerceExpression(initialValue, type);
     }
 
     ctx->addIdentifier(PapyrusIdentifier::DeclStatement(location, this));

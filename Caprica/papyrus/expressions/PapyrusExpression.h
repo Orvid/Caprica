@@ -21,8 +21,6 @@ struct PapyrusExpression abstract
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;
   virtual PapyrusType resultType() const abstract;
 
-  static PapyrusExpression* coerceExpression(PapyrusExpression* expr, const PapyrusType& target);
-
   template<typename T>
   T* as() {
     return dynamic_cast<T*>(this);

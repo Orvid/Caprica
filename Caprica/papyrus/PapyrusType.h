@@ -162,6 +162,7 @@ struct PapyrusType final
     return true;
   }
 
+  std::string prettyString() const;
 private:
   std::string getTypeString() const;
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
