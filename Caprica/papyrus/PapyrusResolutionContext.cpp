@@ -96,32 +96,63 @@ bool PapyrusResolutionContext::isObjectSomeParentOf(const PapyrusObject* child, 
   return false;
 }
 
+bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest) {
+  if (canImplicitlyCoerce(src, dest))
+    return true;
+
+  if (src.type == PapyrusType::Kind::Var)
+    return dest.type != PapyrusType::Kind::None;
+
+  switch (dest.type) {
+    case PapyrusType::Kind::Int:
+    case PapyrusType::Kind::Float:
+      switch (src.type) {
+        case PapyrusType::Kind::String:
+        case PapyrusType::Kind::Int:
+        case PapyrusType::Kind::Float:
+        case PapyrusType::Kind::Bool:
+        case PapyrusType::Kind::Var:
+          return true;
+        default:
+          return false;
+      }
+
+    case PapyrusType::Kind::None:
+    case PapyrusType::Kind::Bool:
+    case PapyrusType::Kind::String:
+    case PapyrusType::Kind::Var:
+    case PapyrusType::Kind::Array:
+    case PapyrusType::Kind::Unresolved:
+    case PapyrusType::Kind::ResolvedObject:
+    case PapyrusType::Kind::ResolvedStruct:
+      return false;
+
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  }
+}
+
 bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest) {
   if (src == dest)
     return true;
 
   switch (dest.type) {
-    case PapyrusType::Kind::None:
-      return false;
     case PapyrusType::Kind::Bool:
       return src.type != PapyrusType::Kind::None;
     case PapyrusType::Kind::Float:
       return src.type == PapyrusType::Kind::Int;
-    case PapyrusType::Kind::Int:
-      return false;
     case PapyrusType::Kind::String:
       return src.type != PapyrusType::Kind::None;
-    case PapyrusType::Kind::Var:
-      return true;
-    case PapyrusType::Kind::Array:
-      return false;
-    case PapyrusType::Kind::Unresolved:
-      return false;
     case PapyrusType::Kind::ResolvedObject:
-      if (src.type == PapyrusType::Kind::ResolvedObject) {
+      if (src.type == PapyrusType::Kind::ResolvedObject)
         return isObjectSomeParentOf(src.resolvedObject, dest.resolvedObject);
-      }
       return false;
+    case PapyrusType::Kind::Var:
+      return src.type != PapyrusType::Kind::None;
+    case PapyrusType::Kind::None:
+    case PapyrusType::Kind::Int:
+    case PapyrusType::Kind::Array:
+    case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::ResolvedStruct:
       return false;
     default:
@@ -129,59 +160,63 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
   }
 }
 
+bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target, bool& needsCast) {
+  needsCast = true;
+  bool canCast = canImplicitlyCoerce(expr->resultType(), target);
+  switch (target.type) {
+    case PapyrusType::Kind::Bool:
+    case PapyrusType::Kind::Int:
+    case PapyrusType::Kind::Float:
+    case PapyrusType::Kind::String:
+    case PapyrusType::Kind::Unresolved:
+      break;
+    case PapyrusType::Kind::Var:
+      // Implicit conversion from None->Var is allowed, but only for a literal None.
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+        canCast = true;
+        needsCast = false;
+      }
+      break;
+    case PapyrusType::Kind::Array:
+      // Implicit conversion from None->Array is allowed, but only for a literal None.
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+        canCast = true;
+        needsCast = false;
+      }
+      break;
+    case PapyrusType::Kind::ResolvedObject:
+      // Implicit conversion from None->Object is allowed, but only for a literal None.
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+        canCast = true;
+        needsCast = false;
+      }
+      break;
+    case PapyrusType::Kind::ResolvedStruct:
+      // Implicit conversion from None->Struct is allowed, but only for a literal None.
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+        canCast = true;
+        needsCast = false;
+      }
+      break;
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  }
+  return canCast;
+}
+
 expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
   if (expr->resultType() != target) {
     bool needsCast = true;
-    bool canCast = canImplicitlyCoerce(expr->resultType(), target);
-    switch (target.type) {
-      case PapyrusType::Kind::Bool:
-      case PapyrusType::Kind::Int:
-      case PapyrusType::Kind::String:
-      case PapyrusType::Kind::Unresolved:
-        break;
-      case PapyrusType::Kind::Float:
-        // Do the cast at compile time for int->float conversion of literals
-        if (canCast && CapricaConfig::enableOptimizations) {
-          if (auto le = expr->as<expressions::PapyrusLiteralExpression>()) {
-            le->value.f = (float)le->value.i;
-            le->value.type = PapyrusValueType::Float;
-            return expr;
-          }
-        }
-        break;
-      case PapyrusType::Kind::Var:
-        // Implicit conversion from None->Var is allowed, but only for a literal None.
-        if (expr->resultType().type == PapyrusType::Kind::None) {
-          if (expr->is<expressions::PapyrusLiteralExpression>())
-            needsCast = false;
-          else
-            canCast = false;
-        }
-        break;
-      case PapyrusType::Kind::Array:
-        // Implicit conversion from None->Array is allowed, but only for a literal None.
-        if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
-          canCast = true;
-          needsCast = false;
-        }
-        break;
-      case PapyrusType::Kind::ResolvedObject:
-        // Implicit conversion from None->Object is allowed, but only for a literal None.
-        if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
-          canCast = true;
-          needsCast = false;
-        }
-        break;
-      case PapyrusType::Kind::ResolvedStruct:
-        // Implicit conversion from None->Struct is allowed, but only for a literal None.
-        if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
-          canCast = true;
-          needsCast = false;
-        }
-        break;
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+    bool canCast = canImplicitlyCoerceExpression(expr, target, needsCast);
+
+    if (canCast && CapricaConfig::enableOptimizations && expr->resultType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float) {
+      if (auto le = expr->as<expressions::PapyrusLiteralExpression>()) {
+        le->value.f = (float)le->value.i;
+        le->value.type = PapyrusValueType::Float;
+        return expr;
+      }
     }
+
     if (!canCast) {
       CapricaError::error(expr->location, "No implicit conversion from '%s' to '%s' exists!", expr->resultType().prettyString().c_str(), target.prettyString().c_str());
       return expr;

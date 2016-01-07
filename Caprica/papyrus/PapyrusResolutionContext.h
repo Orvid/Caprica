@@ -47,11 +47,10 @@ struct PapyrusResolutionContext final
 
   void addImport(const CapricaFileLocation& location, const std::string& import);
 
-  void ensureCastable(PapyrusType src, PapyrusType dest) {
-
-  }
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
+  static bool canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest);
   static bool canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest);
+  static bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target, bool& needsCast);
   static expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
 
   void pushIdentifierScope() {
