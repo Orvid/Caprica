@@ -22,10 +22,13 @@ void compileScript(std::string filename) {
   if (ext == ".psc") {
     auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
     auto a = parser->parseScript();
+    caprica::CapricaError::exitIfErrors();
     delete parser;
     auto ctx = new caprica::papyrus::PapyrusResolutionContext();
     a->semantic(ctx);
+    caprica::CapricaError::exitIfErrors();
     auto pex = a->buildPex();
+    caprica::CapricaError::exitIfErrors();
     delete ctx;
     delete a;
     std::ofstream strm(baseName + ".pex", std::ofstream::binary);
@@ -42,6 +45,7 @@ void compileScript(std::string filename) {
   } else if (ext == ".pas") {
     auto parser = new caprica::pex::parser::PexAsmParser(filename);
     auto pex = parser->parseFile();
+    caprica::CapricaError::exitIfErrors();
     delete parser;
     std::ofstream strm(baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
@@ -50,6 +54,7 @@ void compileScript(std::string filename) {
   } else if (ext == ".pex") {
     caprica::pex::PexReader rdr(filename);
     auto pex = caprica::pex::PexFile::read(rdr);
+    caprica::CapricaError::exitIfErrors();
     std::ofstream asmStrm(baseName + ".pas", std::ofstream::binary);
     caprica::pex::PexAsmWriter asmWtr(asmStrm);
     pex->writeAsm(asmWtr);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -12,9 +13,16 @@ namespace caprica {
 
 struct CapricaError abstract
 {
+  static size_t errorCount;
+
+  static void exitIfErrors() {
+    if (errorCount > 0)
+      exit(-1);
+  }
+
   template<typename... Args>
   static void error(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
-    // TODO: Make sure the next stage doesn't occur if this is called.
+    errorCount++;
     std::cerr << formatString(location, "Error", msg, args...) << std::endl;
   }
 
