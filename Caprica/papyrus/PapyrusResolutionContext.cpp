@@ -5,9 +5,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
-#include <CapricaConfig.h>
-#include <CapricaError.h>
-
+#include <common/CapricaConfig.h>
+#include <common/CapricaError.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/PapyrusStruct.h>

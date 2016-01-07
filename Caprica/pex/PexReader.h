@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include <CapricaError.h>
+#include <common/CapricaError.h>
 
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>

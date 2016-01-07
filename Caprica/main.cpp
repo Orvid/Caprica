@@ -4,7 +4,7 @@
 #include <ppl.h>
 #include <boost/filesystem.hpp>
 
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>

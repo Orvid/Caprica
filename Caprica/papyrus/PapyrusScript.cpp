@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include <lmcons.h>
 
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 namespace caprica { namespace papyrus {
 

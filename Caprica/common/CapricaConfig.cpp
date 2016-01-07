@@ -1,4 +1,4 @@
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 namespace caprica { namespace CapricaConfig {
 

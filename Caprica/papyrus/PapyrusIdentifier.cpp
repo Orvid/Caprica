@@ -1,6 +1,6 @@
 #include <papyrus/PapyrusIdentifier.h>
 
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusProperty.h>

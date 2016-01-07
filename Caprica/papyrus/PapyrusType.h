@@ -4,8 +4,7 @@
 #include <memory>
 #include <string>
 
-#include <CapricaError.h>
-
+#include <common/CapricaError.h>
 #include <common/CapricaFileLocation.h>
 
 #include <pex/PexFile.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 #include <papyrus/expressions/PapyrusArrayIndexExpression.h>
 #include <papyrus/expressions/PapyrusBinaryOpExpression.h>

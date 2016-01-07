@@ -2,7 +2,7 @@
 
 #include <iomanip>
 
-#include <CapricaError.h>
+#include <common/CapricaError.h>
 
 #include <pex/PexFile.h>
 

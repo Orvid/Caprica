@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-#include <CapricaError.h>
+#include <common/CapricaError.h>
 #include <common/CapricaFileLocation.h>
 
 namespace caprica { namespace pex { namespace parser {

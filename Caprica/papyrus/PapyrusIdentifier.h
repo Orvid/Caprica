@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <CapricaError.h>
+#include <common/CapricaError.h>
 
 #include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusType.h>

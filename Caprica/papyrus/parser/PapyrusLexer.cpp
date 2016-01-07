@@ -4,7 +4,7 @@
 #include <map>
 #include <unordered_map>
 
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 #include <common/CaselessStringComparer.h>
 

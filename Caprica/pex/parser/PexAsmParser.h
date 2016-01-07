@@ -4,7 +4,7 @@
 #include <numeric>
 #include <string>
 
-#include <CapricaError.h>
+#include <common/CapricaError.h>
 
 #include <pex/PexFile.h>
 #include <pex/parser/PexAsmLexer.h>

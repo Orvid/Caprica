@@ -1,6 +1,6 @@
 #include <papyrus/expressions/PapyrusExpression.h>
 
-#include <CapricaConfig.h>
+#include <common/CapricaConfig.h>
 
 #include <papyrus/expressions/PapyrusCastExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
