@@ -17,7 +17,9 @@
 
 void compileScript(std::string filename) {
   printf("Compiling %s\n", filename.c_str());
-  if (boost::filesystem::extension(filename) == ".psc") {
+  auto baseName = boost::filesystem::basename(filename);
+  auto ext = boost::filesystem::extension(filename);
+  if (ext == ".psc") {
     auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
     auto a = parser->parseScript();
     delete parser;
@@ -26,29 +28,29 @@ void compileScript(std::string filename) {
     auto pex = a->buildPex();
     delete ctx;
     delete a;
-    std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
+    std::ofstream strm(baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
 
     if (caprica::CapricaConfig::dumpPexAsm) {
-      std::ofstream asmStrm(boost::filesystem::basename(filename) + ".pas", std::ofstream::binary);
+      std::ofstream asmStrm(baseName + ".pas", std::ofstream::binary);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       pex->writeAsm(asmWtr);
     }
 
     delete pex;
-  } else if (boost::filesystem::extension(filename) == ".pas") {
+  } else if (ext == ".pas") {
     auto parser = new caprica::pex::parser::PexAsmParser(filename);
     auto pex = parser->parseFile();
     delete parser;
-    std::ofstream strm(boost::filesystem::basename(filename) + ".pex", std::ofstream::binary);
+    std::ofstream strm(baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
     delete pex;
-  } else if (boost::filesystem::extension(filename) == ".pex") {
+  } else if (ext == ".pex") {
     caprica::pex::PexReader rdr(filename);
     auto pex = caprica::pex::PexFile::read(rdr);
-    std::ofstream asmStrm(boost::filesystem::basename(filename) + ".pas", std::ofstream::binary);
+    std::ofstream asmStrm(baseName + ".pas", std::ofstream::binary);
     caprica::pex::PexAsmWriter asmWtr(asmStrm);
     pex->writeAsm(asmWtr);
     delete pex;
@@ -70,6 +72,7 @@ int main(int argc, char* argv[])
 #endif
     std::string file = argv[1];
     if (boost::filesystem::is_directory(file)) {
+      caprica::CapricaConfig::importDirectories.push_back(boost::filesystem::absolute(file).string());
       std::vector<std::string> files;
       boost::system::error_code ec;
       for (auto e : boost::filesystem::directory_iterator(file, ec)) {
@@ -86,6 +89,7 @@ int main(int argc, char* argv[])
           compileScript(file);
       }
     } else {
+      caprica::CapricaConfig::importDirectories.push_back(boost::filesystem::path(boost::filesystem::absolute(file)).parent_path().string());
       compileScript(file);
     }
 #ifdef NDEBUG
