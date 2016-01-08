@@ -20,6 +20,16 @@
 
 namespace caprica { namespace papyrus {
 
+enum class PapyrusFunctionType
+{
+  Unknown,
+
+  Getter,
+  Setter,
+  Function,
+  Event,
+};
+
 struct PapyrusFunction final
 {
   std::string name{ "" };
@@ -31,6 +41,7 @@ struct PapyrusFunction final
   std::vector<PapyrusFunctionParameter*> parameters{ };
   std::vector<statements::PapyrusStatement*> statements{ };
   PapyrusObject* parentObject{ nullptr };
+  PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
 
   CapricaFileLocation location;
 
@@ -45,7 +56,6 @@ struct PapyrusFunction final
   pex::PexFunction* buildPex(pex::PexFile* file,
                              pex::PexObject* obj,
                              pex::PexState* state,
-                             pex::PexDebugFunctionType funcType,
                              pex::PexString propName) const;
   void semantic(PapyrusResolutionContext* ctx);
   void semantic2(PapyrusResolutionContext* ctx);

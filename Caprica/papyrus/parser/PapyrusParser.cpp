@@ -60,11 +60,13 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 
     // Otherwise we get to have some fun and generate GotoState and GetState.
     auto getState = new PapyrusFunction(cur.location, PapyrusType::String(cur.location));
+    getState->functionType = PapyrusFunctionType::Function;
     getState->parentObject = obj;
     getState->name = "GetState";
     obj->getRootState()->functions.push_back(getState);
 
     auto gotoState = new PapyrusFunction(cur.location, PapyrusType::None(cur.location));
+    gotoState->functionType = PapyrusFunctionType::Function;
     gotoState->parentObject = obj;
     gotoState->name = "GotoState";
     auto param = new PapyrusFunctionParameter(cur.location, PapyrusType::String(cur.location));
@@ -336,6 +338,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
             CapricaError::error(cur.location, "The set function for this property has already been defined!");
           consume();
           prop->writeFunction = parseFunction(script, object, nullptr, PapyrusType::None(cur.location), TokenType::kEndFunction);
+          prop->writeFunction->functionType = PapyrusFunctionType::Setter;
           if (_stricmp(prop->writeFunction->name.c_str(), "set"))
             CapricaError::error(cur.location, "The set function must be named \"Set\"!");
           if (prop->writeFunction->parameters.size() != 1)
@@ -358,6 +361,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
             CapricaError::error(cur.location, "The return type of the get function must be the same as the property!");
           expectConsume(TokenType::kFunction);
           prop->readFunction = parseFunction(script, object, nullptr, tp, TokenType::kEndFunction);
+          prop->readFunction->functionType = PapyrusFunctionType::Getter;
           if (_stricmp(prop->readFunction->name.c_str(), "get"))
             CapricaError::error(cur.location, "The get function must be named \"Get\"!");
           if (prop->readFunction->parameters.size() != 0)
@@ -398,6 +402,12 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
 
 PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken) {
   auto func = new PapyrusFunction(cur.location, returnType);
+  if (endToken == TokenType::kEndFunction)
+    func->functionType = PapyrusFunctionType::Function;
+  else if (endToken == TokenType::kEndEvent)
+    func->functionType = PapyrusFunctionType::Event;
+  else
+    CapricaError::logicalFatal("Unknown end token for a parseFunction call!");
   func->parentObject = object;
   func->name = expectConsumeIdent();
   expectConsume(TokenType::LParen);

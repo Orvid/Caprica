@@ -11,12 +11,24 @@ namespace caprica { namespace papyrus {
 pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
                                             pex::PexObject* obj,
                                             pex::PexState* state,
-                                            pex::PexDebugFunctionType funcType,
                                             pex::PexString propName) const {
   auto func = new pex::PexFunction();
   auto fDebInfo = new pex::PexDebugFunctionInfo();
   fDebInfo->objectName = obj->name;
-  fDebInfo->functionType = funcType;
+  switch (functionType) {
+    case PapyrusFunctionType::Function:
+    case PapyrusFunctionType::Event:
+      fDebInfo->functionType = pex::PexDebugFunctionType::Normal;
+      break;
+    case PapyrusFunctionType::Getter:
+      fDebInfo->functionType = pex::PexDebugFunctionType::Getter;
+      break;
+    case PapyrusFunctionType::Setter:
+      fDebInfo->functionType = pex::PexDebugFunctionType::Setter;
+      break;
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusFunctionType!");
+  }
   if (state) {
     assert(funcType == pex::PexDebugFunctionType::Normal);
     fDebInfo->stateName = state->name;
