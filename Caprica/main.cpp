@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
     printf("Invoke like: caprica.exe myFile.psc");
   }
 
-  printf("Caprica Papyrus Compiler v0.0.7\n");
+  printf("Caprica Papyrus Compiler v0.0.8\n");
 
 #ifdef NDEBUG
   try {
