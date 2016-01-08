@@ -11,8 +11,8 @@ bool enableLanguageExtensions{ true };
 bool enableOptimizations{ true };
 bool enableSpeculativeSyntax{ true };
 bool emitDebugInfo{ true };
-std::vector<std::string> importDirectories{
-  "./",
-};
+std::vector<std::string> importDirectories{ "./" };
+bool warningsAsErrors{ false };
+std::unordered_set<size_t> warningsToIgnore{ };
 
 }}

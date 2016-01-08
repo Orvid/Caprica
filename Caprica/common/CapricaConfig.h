@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace caprica { namespace CapricaConfig {
@@ -35,5 +36,9 @@ extern bool emitDebugInfo;
 // The directories to search in for imported types and
 // unknown types.
 extern std::vector<std::string> importDirectories;
+// If true, treat warnings as errors.
+extern bool warningsAsErrors;
+// The set of warnings to ignore.
+extern std::unordered_set<size_t> warningsToIgnore;
 
 }}

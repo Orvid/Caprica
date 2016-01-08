@@ -7,7 +7,9 @@
 #include <stdexcept>
 #include <string>
 
+#include <common/CapricaConfig.h>
 #include <common/CapricaFileLocation.h>
+#include <common/UtilMacros.h>
 
 namespace caprica {
 
@@ -16,27 +18,34 @@ struct CapricaError abstract
   static size_t warningCount;
   static size_t errorCount;
 
-  static void exitIfErrors() {
-    if (errorCount > 0) {
-      std::cerr << "Compilation failed, " << warningCount << " warnings and " << errorCount << " errors were encountered." << std::endl;
-      throw std::runtime_error("");
+  NEVER_INLINE
+  static void exitIfErrors();
+  NEVER_INLINE
+  static bool isWarningEnabled(size_t warningNumber);
+
+  template<typename... Args>
+  NEVER_INLINE
+  static void warning(size_t warningNumber, const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
+    if (isWarningEnabled(warningNumber)) {
+      warningCount++;
+      if (CapricaConfig::warningsAsErrors) {
+        errorCount++;
+        std::cerr << formatString(location, "Error (Warning as Error)", msg, args...) << std::endl;
+      } else {
+        std::cerr << formatString(location, "Warning", msg, args...) << std::endl;
+      }
     }
   }
 
   template<typename... Args>
-  static void warning(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
-    warningCount++;
-    std::cerr << formatString(location, "Warning", msg, args...) << std::endl;
-  }
-
-  template<typename... Args>
+  NEVER_INLINE
   static void error(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     errorCount++;
     std::cerr << formatString(location, "Error", msg, args...) << std::endl;
   }
 
   template<typename... Args>
-  [[noreturn]]
+  [[noreturn]] NEVER_INLINE
   static void fatal(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     auto str = formatString(location, "Fatal Error", msg, args...);
     std::cerr << str << std::endl;
@@ -47,7 +56,7 @@ struct CapricaError abstract
   // where the logic of Caprica itself has failed, and a location in a source
   // file is likely not available.
   template<typename... Args>
-  [[noreturn]]
+  [[noreturn]] NEVER_INLINE
   static void logicalFatal(const std::string& msg, Args&&... args) {
     auto str = formatString("Fatal Error", msg, args...);
     std::cerr << str << std::endl;
@@ -56,6 +65,7 @@ struct CapricaError abstract
 
 private:
   template<typename... Args>
+  NEVER_INLINE
   static std::string formatString(const CapricaFileLocation& location, const std::string& msgType, const std::string& msg, Args&&... args) {
     if (sizeof...(args)) {
       size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
@@ -68,6 +78,7 @@ private:
   }
 
   template<typename... Args>
+  NEVER_INLINE
   static std::string formatString(const std::string& msgType, const std::string& msg, Args&&... args) {
     if (sizeof...(args)) {
       size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
