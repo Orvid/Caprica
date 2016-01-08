@@ -30,7 +30,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
       CapricaError::logicalFatal("Unknown PapyrusFunctionType!");
   }
   if (state) {
-    assert(funcType == pex::PexDebugFunctionType::Normal);
+    assert(fDebInfo->functionType == pex::PexDebugFunctionType::Normal);
     fDebInfo->stateName = state->name;
     fDebInfo->functionName = file->getString(name);
     func->name = file->getString(name);

@@ -90,11 +90,11 @@ struct PapyrusProperty final
     } else {
       if (readFunction) {
         prop->isReadable = true;
-        prop->readFunction = readFunction->buildPex(file, obj, nullptr, pex::PexDebugFunctionType::Getter, prop->name);
+        prop->readFunction = readFunction->buildPex(file, obj, nullptr, prop->name);
       }
       if (writeFunction) {
         prop->isWritable = true;
-        prop->writeFunction = writeFunction->buildPex(file, obj, nullptr, pex::PexDebugFunctionType::Setter, prop->name);
+        prop->writeFunction = writeFunction->buildPex(file, obj, nullptr, prop->name);
       }
     }
     obj->properties.push_back(prop);

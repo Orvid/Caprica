@@ -28,7 +28,7 @@ struct PapyrusState final
     auto state = new pex::PexState();
     state->name = file->getString(name);
     for (auto f : functions)
-      state->functions.push_back(f->buildPex(file, obj, state, pex::PexDebugFunctionType::Normal, pex::PexString()));
+      state->functions.push_back(f->buildPex(file, obj, state, pex::PexString()));
     obj->states.push_back(state);
   }
 
