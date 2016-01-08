@@ -78,10 +78,14 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       if (pp->isAuto) {
         prop->isAuto = true;
       } else {
-        if (pp->isReadable)
+        if (pp->isReadable) {
           prop->readFunction = reflectFunction(loc, pex, obj, pp->readFunction, "get");
-        if (pp->isWritable)
+          prop->readFunction->functionType = PapyrusFunctionType::Getter;
+        }
+        if (pp->isWritable) {
           prop->writeFunction = reflectFunction(loc, pex, obj, pp->writeFunction, "set");
+          prop->writeFunction->functionType = PapyrusFunctionType::Setter;
+        }
       }
       obj->getRootPropertyGroup()->properties.push_back(prop);
     }
@@ -96,8 +100,13 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
         state = obj->getRootState();
       }
 
-      for (auto pf : ps->functions)
-        state->functions.push_back(reflectFunction(loc, pex, obj, pf, pex->getStringValue(pf->name)));
+      for (auto pf : ps->functions) {
+        auto f = reflectFunction(loc, pex, obj, pf, pex->getStringValue(pf->name));
+        f->functionType = PapyrusFunctionType::Function;
+        if (f->name.size() > 2 && !_stricmp(f->name.substr(0, 2).c_str(), "on"))
+          f->functionType = PapyrusFunctionType::Event;
+        state->functions.push_back(f);
+      }
       
       if (pushState)
         obj->states.push_back(state);
