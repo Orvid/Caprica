@@ -111,10 +111,10 @@ struct PapyrusObject final
     for (auto s : states)
       s->semantic(ctx);
 
-    std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer> identMap{ };
-    checkForInheritedIdentifierConflicts(identMap, false);
-
     if (!ctx->resolvingReferenceScript) {
+      std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer> identMap{ };
+      checkForInheritedIdentifierConflicts(identMap, false);
+
       // The first pass resolves the types on the public API,
       // property types, return types, and parameter types.
       // This second pass resolves the actual identifiers and
@@ -138,43 +138,38 @@ private:
       parentClass.resolvedObject->checkForInheritedIdentifierConflicts(identMap, true);
     }
 
+    const auto doError = [](const CapricaFileLocation& loc, bool isParent, const std::string& otherType, const std::string& identName) {
+      if (isParent)
+        CapricaError::error(loc, "A parent object already defines a %s named '%s'.", otherType.c_str(), identName.c_str());
+      else
+        CapricaError::error(loc, "A %s named '%s' was already defined in this object.", otherType.c_str(), identName.c_str());
+    };
+
     for (auto pg : propertyGroups) {
       for (auto p : pg->properties) {
         auto f = identMap.find(p->name);
-        if (f != identMap.end()) {
-          if (f->second.first)
-            CapricaError::error(p->location, "A parent object already defines a %s named '%s'.", f->second.second.c_str(), p->name.c_str());
-          else
-            CapricaError::error(p->location, "A %s named '%s' was already defined in this object.", f->second.second.c_str(), p->name.c_str());
-        } else {
+        if (f != identMap.end())
+          doError(p->location, f->second.first, f->second.second, p->name);
+        else
           identMap.insert({ p->name, std::make_pair(checkInheritedOnly, "property") });
-        }
       }
     }
 
     for (auto s : structs) {
       auto f = identMap.find(s->name);
-      if (f != identMap.end()) {
-        if (f->second.first)
-          CapricaError::error(s->location, "A parent object already defines a %s named '%s'.", f->second.second.c_str(), s->name.c_str());
-        else
-          CapricaError::error(s->location, "A %s named '%s' was already defined in this object.", f->second.second.c_str(), s->name.c_str());
-      } else {
+      if (f != identMap.end())
+        doError(s->location, f->second.first, f->second.second, s->name);
+      else
         identMap.insert({ s->name, std::make_pair(checkInheritedOnly, "struct") });
-      }
     }
 
     if (!checkInheritedOnly) {
       for (auto v : variables) {
         auto f = identMap.find(v->name);
-        if (f != identMap.end()) {
-          if (f->second.first)
-            CapricaError::error(v->location, "A parent object already defines a %s named '%s'.", f->second.second.c_str(), v->name.c_str());
-          else
-            CapricaError::error(v->location, "A %s named '%s' was already defined in this object.", f->second.second.c_str(), v->name.c_str());
-        } else {
+        if (f != identMap.end())
+          doError(v->location, f->second.first, f->second.second, v->name);
+        else
           identMap.insert({ v->name, std::make_pair(checkInheritedOnly, "variable") });
-        }
       }
     }
   }
