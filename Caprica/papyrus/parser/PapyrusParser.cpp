@@ -160,7 +160,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 }
 
 PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto) {
-  auto state = new PapyrusState();
+  auto state = new PapyrusState(cur.location);
   state->name = expectConsumeIdent();
   if (isAuto) {
     if (object->autoState != nullptr)
@@ -208,7 +208,7 @@ Return:
 }
 
 PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* object) {
-  auto struc = new PapyrusStruct();
+  auto struc = new PapyrusStruct(cur.location);
   struc->parentObject = object;
   struc->name = expectConsumeIdent();
   expectConsumeEOLs();
@@ -235,7 +235,12 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       case TokenType::Identifier:
       {
         auto tp = expectConsumePapyrusType();
-        struc->members.push_back(parseStructMember(script, object, struc, isConst, tp));
+        auto m = parseStructMember(script, object, struc, isConst, tp);
+        for (auto sm : struc->members) {
+          if (!_stricmp(sm->name.c_str(), m->name.c_str()))
+            CapricaError::error(m->location, "A member named '%s' was already defined in '%s'.", m->name.c_str(), struc->name.c_str());
+        }
+        struc->members.push_back(m);
         break;
       }
 
@@ -266,7 +271,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
 }
 
 PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
-  auto group = new PapyrusPropertyGroup();
+  auto group = new PapyrusPropertyGroup(cur.location);
   group->name = expectConsumeIdent();
   group->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::CollapsedOnBase | PapyrusUserFlags::CollapsedOnRef | PapyrusUserFlags::Hidden);
   expectConsumeEOLs();

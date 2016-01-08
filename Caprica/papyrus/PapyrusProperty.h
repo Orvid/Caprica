@@ -102,22 +102,17 @@ struct PapyrusProperty final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
-    ctx->prop = this;
     if (readFunction)
       readFunction->semantic(ctx);
     if (writeFunction)
       writeFunction->semantic(ctx);
-    ctx->prop = nullptr;
-    ctx->addIdentifier(PapyrusIdentifier::Property(location, this));
   }
 
   void semantic2(PapyrusResolutionContext* ctx) {
-    ctx->prop = this;
     if (readFunction)
       readFunction->semantic2(ctx);
     if (writeFunction)
       writeFunction->semantic2(ctx);
-    ctx->prop = nullptr;
   }
 };
 

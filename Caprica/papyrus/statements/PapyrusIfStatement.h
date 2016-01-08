@@ -56,15 +56,15 @@ struct PapyrusIfStatement final : public PapyrusStatement
     for (auto& i : ifBodies) {
       i.first->semantic(ctx);
       i.first = PapyrusResolutionContext::coerceExpression(i.first, PapyrusType::Bool(i.first->location));
-      ctx->pushIdentifierScope();
+      ctx->pushLocalVariableScope();
       for (auto s : i.second)
         s->semantic(ctx);
-      ctx->popIdentifierScope();
+      ctx->popLocalVariableScope();
     }
-    ctx->pushIdentifierScope();
+    ctx->pushLocalVariableScope();
     for (auto s : elseStatements)
       s->semantic(ctx);
-    ctx->popIdentifierScope();
+    ctx->popLocalVariableScope();
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {

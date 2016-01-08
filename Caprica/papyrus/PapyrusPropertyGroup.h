@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include <common/CapricaFileLocation.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusUserFlags.h>
 
@@ -19,7 +20,9 @@ struct PapyrusPropertyGroup final
   PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
   std::vector<PapyrusProperty*> properties{ };
 
-  PapyrusPropertyGroup() = default;
+  CapricaFileLocation location;
+
+  PapyrusPropertyGroup(const CapricaFileLocation& loc) : location(loc) { }
   ~PapyrusPropertyGroup() {
     for (auto p : properties)
       delete p;
@@ -42,17 +45,14 @@ struct PapyrusPropertyGroup final
   }
 
   void semantic(PapyrusResolutionContext* ctx) {
-    ctx->propGroup = this;
+    PapyrusResolutionContext::ensureNamesAreUnique(properties, "property");
     for (auto p : properties)
       p->semantic(ctx);
-    ctx->propGroup = nullptr;
   }
 
   void semantic2(PapyrusResolutionContext* ctx) {
-    ctx->propGroup = this;
     for (auto p : properties)
       p->semantic2(ctx);
-    ctx->propGroup = nullptr;
   }
 };
 

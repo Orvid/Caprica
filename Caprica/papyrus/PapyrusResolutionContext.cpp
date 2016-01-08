@@ -14,6 +14,7 @@
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
 #include <papyrus/parser/PapyrusParser.h>
+#include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <pex/PexReflector.h>
 #include <pex/parser/PexAsmParser.h>
 
@@ -22,7 +23,11 @@ namespace caprica { namespace papyrus {
 void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
   auto sc = loadScript(import);
   if (!sc)
-    CapricaError::fatal(location, "Failed to find imported script '%s.psc'!", import.c_str());
+    CapricaError::error(location, "Failed to find imported script '%s'!", import.c_str());
+  for (auto s : importedScripts) {
+    if (s == sc)
+      CapricaError::warning(4003, location, "Duplicate import of '%s'.", import.c_str());
+  }
   importedScripts.push_back(sc);
 }
 
@@ -310,15 +315,14 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   CapricaError::fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 }
 
-void PapyrusResolutionContext::addIdentifier(const PapyrusIdentifier& ident) {
-  // TODO: Deal with checking identifiers on the parent class.
-  for (auto is : identifierStack) {
-    if (is.count(ident.name)) {
-      CapricaError::error(ident.location, "Attempted to redefined '%s' which was already defined in a parent scope!", ident.name.c_str());
+void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
+  for (auto is : localVariableScopeStack) {
+    if (is.count(local->name)) {
+      CapricaError::error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.c_str());
       return;
     }
   }
-  identifierStack.back().insert({ ident.name, ident });
+  localVariableScopeStack.back().insert({ local->name, local });
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
@@ -332,10 +336,30 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
 
-  for (auto& stack : boost::adaptors::reverse(identifierStack)) {
+  // This handles local var resolution.
+  for (auto& stack : boost::adaptors::reverse(localVariableScopeStack)) {
     auto f = stack.find(ident.name);
     if (f != stack.end()) {
-      return f->second;
+      return PapyrusIdentifier::DeclStatement(ident.location, f->second);
+    }
+  }
+
+  if (function) {
+    for (auto p : function->parameters) {
+      if (!_stricmp(p->name.c_str(), ident.name.c_str()))
+        return PapyrusIdentifier::FunctionParameter(ident.location, p);
+    }
+  }
+
+  for (auto v : object->variables) {
+    if (!_stricmp(v->name.c_str(), ident.name.c_str()))
+      return PapyrusIdentifier::Variable(ident.location, v);
+  }
+
+  for (auto pg : object->propertyGroups) {
+    for (auto p : pg->properties) {
+      if (!_stricmp(p->name.c_str(), ident.name.c_str()))
+        return PapyrusIdentifier::Property(ident.location, p);
     }
   }
 
@@ -361,12 +385,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
 
   if (baseType.type == PapyrusType::Kind::ResolvedStruct) {
     for (auto& sm : baseType.resolvedStruct->members) {
-      if (!_stricmp(sm->name.c_str(), ident.name.c_str())) {
-        PapyrusIdentifier id = ident;
-        id.type = PapyrusIdentifierType::StructMember;
-        id.structMember = sm;
-        return id;
-      }
+      if (!_stricmp(sm->name.c_str(), ident.name.c_str()))
+        return PapyrusIdentifier::StructMember(ident.location, sm);
     }
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     for (auto& propGroup : baseType.resolvedObject->propertyGroups) {

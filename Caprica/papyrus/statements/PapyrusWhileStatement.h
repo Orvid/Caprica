@@ -46,10 +46,10 @@ struct PapyrusWhileStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
     condition = PapyrusResolutionContext::coerceExpression(condition, PapyrusType::Bool(condition->location));
-    ctx->pushIdentifierScope();
+    ctx->pushLocalVariableScope();
     for (auto s : body)
       s->semantic(ctx);
-    ctx->popIdentifierScope();
+    ctx->popLocalVariableScope();
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {

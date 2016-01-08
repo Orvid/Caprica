@@ -91,28 +91,24 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
 
 void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
   returnType = ctx->resolveType(returnType);
-  ctx->function = this;
-  ctx->pushIdentifierScope();
+  PapyrusResolutionContext::ensureNamesAreUnique(parameters, "parameter");
   for (auto p : parameters)
     p->semantic(ctx);
+
+  // We don't care about the body in reference scripts.
   if (ctx->resolvingReferenceScript) {
     for (auto s : statements)
       delete s;
     statements.clear();
   }
-  ctx->popIdentifierScope();
-  ctx->function = nullptr;
 }
 
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
-  returnType = ctx->resolveType(returnType);
   ctx->function = this;
-  ctx->pushIdentifierScope();
-  for (auto p : parameters)
-    p->semantic2(ctx);
+  ctx->pushLocalVariableScope();
   for (auto s : statements)
     s->semantic(ctx);
-  ctx->popIdentifierScope();
+  ctx->popLocalVariableScope();
   ctx->function = nullptr;
 
   // We need to be able to distinguish between locals with the

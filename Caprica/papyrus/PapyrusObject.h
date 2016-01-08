@@ -49,7 +49,7 @@ struct PapyrusObject final
 
   PapyrusPropertyGroup* getRootPropertyGroup() {
     if (!rootPropertyGroup) {
-      rootPropertyGroup = new PapyrusPropertyGroup();
+      rootPropertyGroup = new PapyrusPropertyGroup(location);
       propertyGroups.push_back(rootPropertyGroup);
     }
     return rootPropertyGroup;
@@ -57,7 +57,7 @@ struct PapyrusObject final
 
   PapyrusState* getRootState() {
     if (!rootState) {
-      rootState = new PapyrusState();
+      rootState = new PapyrusState(location);
       states.push_back(rootState);
     }
     return rootState;
@@ -90,9 +90,9 @@ struct PapyrusObject final
   void semantic(PapyrusResolutionContext* ctx) {
     parentClass = ctx->resolveType(parentClass);
     ctx->object = this;
-    ctx->pushIdentifierScope();
     for (auto i : imports)
       ctx->addImport(i.first, i.second);
+    PapyrusResolutionContext::ensureNamesAreUnique(structs, "struct");
     for (auto s : structs)
       s->semantic(ctx);
     if (ctx->resolvingReferenceScript) {
@@ -100,13 +100,19 @@ struct PapyrusObject final
         delete v;
       variables.clear();
     } else {
+      PapyrusResolutionContext::ensureNamesAreUnique(variables, "variable");
       for (auto v : variables)
         v->semantic(ctx);
     }
+    PapyrusResolutionContext::ensureNamesAreUnique(propertyGroups, "property group");
     for (auto g : propertyGroups)
       g->semantic(ctx);
+    PapyrusResolutionContext::ensureNamesAreUnique(states, "state");
     for (auto s : states)
       s->semantic(ctx);
+
+    std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer> identMap{ };
+    checkForInheritedIdentifierConflicts(identMap, false);
 
     if (!ctx->resolvingReferenceScript) {
       // The first pass resolves the types on the public API,
@@ -118,13 +124,60 @@ struct PapyrusObject final
       for (auto s : states)
         s->semantic2(ctx);
     }
-    ctx->popIdentifierScope();
     ctx->object = nullptr;
   }
 
 private:
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
+
+  void checkForInheritedIdentifierConflicts(std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer>& identMap, bool checkInheritedOnly) const {
+    if (parentClass.type != PapyrusType::Kind::None) {
+      if (parentClass.type != PapyrusType::Kind::ResolvedObject)
+        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+      parentClass.resolvedObject->checkForInheritedIdentifierConflicts(identMap, true);
+    }
+
+    for (auto pg : propertyGroups) {
+      for (auto p : pg->properties) {
+        auto f = identMap.find(p->name);
+        if (f != identMap.end()) {
+          if (f->second.first)
+            CapricaError::error(p->location, "A parent object already defines a %s named '%s'.", f->second.second.c_str(), p->name.c_str());
+          else
+            CapricaError::error(p->location, "A %s named '%s' was already defined in this object.", f->second.second.c_str(), p->name.c_str());
+        } else {
+          identMap.insert({ p->name, std::make_pair(checkInheritedOnly, "property") });
+        }
+      }
+    }
+
+    for (auto s : structs) {
+      auto f = identMap.find(s->name);
+      if (f != identMap.end()) {
+        if (f->second.first)
+          CapricaError::error(s->location, "A parent object already defines a %s named '%s'.", f->second.second.c_str(), s->name.c_str());
+        else
+          CapricaError::error(s->location, "A %s named '%s' was already defined in this object.", f->second.second.c_str(), s->name.c_str());
+      } else {
+        identMap.insert({ s->name, std::make_pair(checkInheritedOnly, "struct") });
+      }
+    }
+
+    if (!checkInheritedOnly) {
+      for (auto v : variables) {
+        auto f = identMap.find(v->name);
+        if (f != identMap.end()) {
+          if (f->second.first)
+            CapricaError::error(v->location, "A parent object already defines a %s named '%s'.", f->second.second.c_str(), v->name.c_str());
+          else
+            CapricaError::error(v->location, "A %s named '%s' was already defined in this object.", f->second.second.c_str(), v->name.c_str());
+        } else {
+          identMap.insert({ v->name, std::make_pair(checkInheritedOnly, "variable") });
+        }
+      }
+    }
+  }
 };
 
 }}

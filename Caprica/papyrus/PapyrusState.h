@@ -18,7 +18,9 @@ struct PapyrusState final
   std::string name{ "" };
   std::vector<PapyrusFunction*> functions{ };
 
-  PapyrusState() = default;
+  CapricaFileLocation location;
+
+  PapyrusState(const CapricaFileLocation& loc) : location(loc) { }
   ~PapyrusState() {
     for (auto f : functions)
       delete f;
@@ -34,6 +36,7 @@ struct PapyrusState final
 
   void semantic(PapyrusResolutionContext* ctx) {
     ctx->state = this;
+    PapyrusResolutionContext::ensureNamesAreUnique(functions, "function");
     for (auto f : functions)
       f->semantic(ctx);
     ctx->state = nullptr;

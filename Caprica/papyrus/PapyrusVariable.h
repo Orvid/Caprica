@@ -39,7 +39,6 @@ struct PapyrusVariable final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
-    ctx->addIdentifier(PapyrusIdentifier::Variable(location, this));
   }
 };
 

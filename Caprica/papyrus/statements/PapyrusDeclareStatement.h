@@ -41,7 +41,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
       initialValue = PapyrusResolutionContext::coerceExpression(initialValue, type);
     }
 
-    ctx->addIdentifier(PapyrusIdentifier::DeclStatement(location, this));
+    ctx->addLocalVariable(this);
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {

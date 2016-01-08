@@ -21,7 +21,9 @@ struct PapyrusStruct final
   std::vector<PapyrusStructMember*> members{ };
   PapyrusObject* parentObject{ nullptr };
 
-  PapyrusStruct() = default;
+  CapricaFileLocation location;
+
+  PapyrusStruct(const CapricaFileLocation& loc) : location(loc) { }
   ~PapyrusStruct() {
     for (auto m : members)
       delete m;
@@ -48,10 +50,9 @@ struct PapyrusStruct final
   }
 
   void semantic(PapyrusResolutionContext* ctx) {
-    ctx->struc = this;
+    PapyrusResolutionContext::ensureNamesAreUnique(members, "member");
     for (auto m : members)
       m->semantic(ctx);
-    ctx->struc = nullptr;
   }
 };
 

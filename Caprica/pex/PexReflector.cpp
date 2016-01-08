@@ -60,7 +60,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
     obj->name = pex->getStringValue(po->name);
 
     for (auto ps : po->structs) {
-      auto struc = new PapyrusStruct();
+      auto struc = new PapyrusStruct(loc);
       struc->parentObject = obj;
       struc->name = pex->getStringValue(ps->name);
       for (auto pm : ps->members) {
@@ -94,7 +94,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       bool pushState = pex->getStringValue(ps->name) != "";
       PapyrusState* state{ nullptr };
       if (pushState) {
-        state = new PapyrusState();
+        state = new PapyrusState(loc);
         state->name = pex->getStringValue(ps->name);
       } else {
         state = obj->getRootState();

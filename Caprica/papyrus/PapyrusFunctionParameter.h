@@ -40,10 +40,6 @@ struct PapyrusFunctionParameter final
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
   }
-
-  void semantic2(PapyrusResolutionContext* ctx) {
-    ctx->addIdentifier(PapyrusIdentifier::FunctionParameter(location, this));
-  }
 };
 
 }}
