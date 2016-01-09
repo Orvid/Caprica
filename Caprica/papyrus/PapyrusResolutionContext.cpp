@@ -35,84 +35,106 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
 static thread_local std::unordered_map<const std::string, std::unique_ptr<PapyrusScript>, CaselessStringHasher> loadedScripts{ };
+static thread_local std::unordered_map<const std::string, std::unordered_map<const std::string, PapyrusScript*, CaselessStringHasher>, CaselessStringHasher> localPerDirIdentMap{ };
 PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
-  const auto loadPsc = [](const std::string& filename) -> PapyrusScript* {
-    auto f = loadedScripts.find(filename);
-    if (f != loadedScripts.end())
-      return f->second.get();
+  auto baseDir = boost::filesystem::path(script->sourceFileName).parent_path().string();
 
-    auto parser = new parser::PapyrusParser(filename);
-    auto a = parser->parseScript();
-    CapricaError::exitIfErrors();
-    delete parser;
-    loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
-    auto ctx = new PapyrusResolutionContext();
-    ctx->resolvingReferenceScript = true;
-    a->semantic(ctx);
-    CapricaError::exitIfErrors();
-    delete ctx;
-    return a;
-  };
-  const auto loadPas = [](const std::string& filename) -> PapyrusScript* {
-    auto f = loadedScripts.find(filename);
-    if (f != loadedScripts.end())
-      return f->second.get();
+  auto sf2 = localPerDirIdentMap.find(baseDir);
+  if (sf2 != localPerDirIdentMap.end()) {
+    auto sf3 = sf2->second.find(name);
+    if (sf3 != sf2->second.end()) {
+      return sf3->second;
+    }
+  }
 
-    auto parser = new pex::parser::PexAsmParser(filename);
-    auto pex = parser->parseFile();
-    CapricaError::exitIfErrors();
-    delete parser;
-    auto a = pex::PexReflector::reflectScript(pex);
-    CapricaError::exitIfErrors();
-    delete pex;
-    loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
-    auto ctx = new PapyrusResolutionContext();
-    ctx->resolvingReferenceScript = true;
-    ctx->isPexResolution = true;
-    a->semantic(ctx);
-    CapricaError::exitIfErrors();
-    delete ctx;
-    return a;
-  };
-  const auto loadPex = [](const std::string& filename) -> PapyrusScript* {
-    auto f = loadedScripts.find(filename);
-    if (f != loadedScripts.end())
-      return f->second.get();
+  const auto searchDir = [](const std::string& baseDir, const std::string& scriptName) -> PapyrusScript* {
+    const auto loadPsc = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
+      auto f = loadedScripts.find(filename);
+      if (f != loadedScripts.end())
+        return f->second.get();
 
-    pex::PexReader rdr(filename);
-    auto pex = pex::PexFile::read(rdr);
-    CapricaError::exitIfErrors();
-    auto a = pex::PexReflector::reflectScript(pex);
-    CapricaError::exitIfErrors();
-    delete pex;
-    loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
-    auto ctx = new PapyrusResolutionContext();
-    ctx->resolvingReferenceScript = true;
-    ctx->isPexResolution = true;
-    a->semantic(ctx);
-    CapricaError::exitIfErrors();
-    delete ctx;
-    return a;
-  };
-  const auto normalizePath = [](const std::string& filename) -> std::string {
-    return boost::filesystem::canonical(boost::filesystem::absolute(filename)).string();
+      auto parser = new parser::PapyrusParser(filename);
+      auto a = parser->parseScript();
+      CapricaError::exitIfErrors();
+      delete parser;
+      if (!localPerDirIdentMap.count(baseDir))
+        localPerDirIdentMap.insert({ baseDir,{ } });
+      localPerDirIdentMap[baseDir].insert({ scriptName, a });
+      loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+      auto ctx = new PapyrusResolutionContext();
+      ctx->resolvingReferenceScript = true;
+      a->semantic(ctx);
+      CapricaError::exitIfErrors();
+      delete ctx;
+      return a;
+    };
+    const auto loadPas = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
+      auto f = loadedScripts.find(filename);
+      if (f != loadedScripts.end())
+        return f->second.get();
+
+      auto parser = new pex::parser::PexAsmParser(filename);
+      auto pex = parser->parseFile();
+      CapricaError::exitIfErrors();
+      delete parser;
+      auto a = pex::PexReflector::reflectScript(pex);
+      CapricaError::exitIfErrors();
+      delete pex;
+      if (!localPerDirIdentMap.count(baseDir))
+        localPerDirIdentMap.insert({ baseDir,{ } });
+      localPerDirIdentMap[baseDir].insert({ scriptName, a });
+      loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+      auto ctx = new PapyrusResolutionContext();
+      ctx->resolvingReferenceScript = true;
+      ctx->isPexResolution = true;
+      a->semantic(ctx);
+      CapricaError::exitIfErrors();
+      delete ctx;
+      return a;
+    };
+    const auto loadPex = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
+      auto f = loadedScripts.find(filename);
+      if (f != loadedScripts.end())
+        return f->second.get();
+
+      pex::PexReader rdr(filename);
+      auto pex = pex::PexFile::read(rdr);
+      CapricaError::exitIfErrors();
+      auto a = pex::PexReflector::reflectScript(pex);
+      CapricaError::exitIfErrors();
+      delete pex;
+      if (!localPerDirIdentMap.count(baseDir))
+        localPerDirIdentMap.insert({ baseDir,{ } });
+      localPerDirIdentMap[baseDir].insert({ scriptName, a });
+      loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+      auto ctx = new PapyrusResolutionContext();
+      ctx->resolvingReferenceScript = true;
+      ctx->isPexResolution = true;
+      a->semantic(ctx);
+      CapricaError::exitIfErrors();
+      delete ctx;
+      return a;
+    };
+    const auto normalizeDir = [](const std::string& filename) -> std::string {
+      return boost::filesystem::canonical(boost::filesystem::absolute(filename)).make_preferred().string();
+    };
+
+    if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".psc"))
+      return loadPsc(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".psc"));
+    else if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".pas"))
+      return loadPas(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pas"));
+    else if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".pex"))
+      return loadPex(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pex"));
+
+    return nullptr;
   };
 
-  auto baseDir = boost::filesystem::path(boost::filesystem::absolute(script->sourceFileName)).parent_path().string();
-  if (boost::filesystem::exists(baseDir + name + ".psc"))
-    return loadPsc(normalizePath(baseDir + name + ".psc"));
-  else if (boost::filesystem::exists(baseDir + name + ".pas"))
-    return loadPas(normalizePath(baseDir + name + ".pas"));
-  else if (boost::filesystem::exists(baseDir + name + ".pex"))
-    return loadPex(normalizePath(baseDir + name + ".pex"));
+  if (auto s = searchDir(baseDir, name))
+    return s;
 
   for (auto& dir : CapricaConfig::importDirectories) {
-    if (boost::filesystem::exists(dir + name + ".psc"))
-      return loadPsc(normalizePath(dir + name + ".psc"));
-    else if (boost::filesystem::exists(dir + name + ".pas"))
-      return loadPas(normalizePath(dir + name + ".pas"));
-    else if (boost::filesystem::exists(dir + name + ".pex"))
-      return loadPex(normalizePath(dir + name + ".pex"));
+    if (auto s = searchDir(dir, name))
+      return s;
   }
 
   return nullptr;

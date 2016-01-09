@@ -176,7 +176,7 @@ bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile)
       if (boost::filesystem::is_directory(f)) {
         boost::system::error_code ec;
         for (auto e : boost::filesystem::directory_iterator(f, ec)) {
-          if (boost::filesystem::extension(e.path()) == ".psc")
+          if (e.path().extension().string() == ".psc")
             filesToCompile.push_back(e.path().string());
         }
       } else {
@@ -215,6 +215,7 @@ int main(int argc, char* argv[])
         compileScript(file);
     }
   } catch (const std::runtime_error& err) {
+    err;
     //std::cout << err.what() << std::endl;
     __debugbreak();
   }

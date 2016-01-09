@@ -35,7 +35,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 PapyrusScript* PapyrusParser::parseScript() {
   auto script = new PapyrusScript();
-  script->sourceFileName = boost::filesystem::absolute(filename).string();
+  script->sourceFileName = boost::filesystem::canonical(boost::filesystem::absolute(filename)).make_preferred().string();
   script->objects.push_back(parseObject(script));
   return script;
 }
