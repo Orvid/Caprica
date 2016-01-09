@@ -118,7 +118,7 @@ bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile)
     po::positional_options_description p;
     p.add("input-file", -1);
 
-    po::options_description visibleDesc("Caprica Papyrus Compiler v0.0.8\nUsage: Caprica <sourceFile/directory>\nNote that when passing a directory, only Papyrus script files (*.psc) in it will be compiled. Pex (*.pex) and Pex assembly (*.pas) files will be ignored.");
+    po::options_description visibleDesc("Caprica Papyrus Compiler v0.0.9\nUsage: Caprica <sourceFile/directory>\nNote that when passing a directory, only Papyrus script files (*.psc) in it will be compiled. Pex (*.pex) and Pex assembly (*.pas) files will be ignored.");
     visibleDesc.add(desc).add(champollionCompatDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
