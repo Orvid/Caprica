@@ -62,6 +62,7 @@ struct PapyrusResolutionContext final
 
   void addLocalVariable(statements::PapyrusDeclareStatement* ident);
 
+  PapyrusState* tryResolveState(const std::string& name, const PapyrusObject* parentObj = nullptr) const;
   PapyrusType resolveType(PapyrusType tp);
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;

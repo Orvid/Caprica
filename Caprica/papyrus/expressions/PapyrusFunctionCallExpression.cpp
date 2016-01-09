@@ -347,6 +347,15 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       arguments[i]->value->semantic(ctx);
       arguments[i]->value = PapyrusResolutionContext::coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
     }
+
+    if (function.func->name == "GotoState" && arguments.size() == 1) {
+      auto le = arguments[0]->value->as<PapyrusLiteralExpression>();
+      if (le && le->value.type == PapyrusValueType::String) {
+        auto targetStateName = le->value.s;
+        if (!ctx->tryResolveState(targetStateName))
+          CapricaError::warning(4004, le->location, "The state '%s' does not exist in this context.", targetStateName.c_str());
+      }
+    }
   }
 }
 

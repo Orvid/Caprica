@@ -294,6 +294,24 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
   return expr;
 }
 
+PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name, const PapyrusObject* parentObj) const {
+  if (!parentObj)
+    parentObj = object;
+
+  for (auto s : parentObj->states) {
+    if (!_stricmp(s->name.c_str(), name.c_str()))
+      return s;
+  }
+
+  if (parentObj->parentClass.type != PapyrusType::Kind::None) {
+    if (parentObj->parentClass.type != PapyrusType::Kind::ResolvedObject)
+      CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+    return tryResolveState(name, parentObj->parentClass.resolvedObject);
+  }
+
+  return nullptr;
+}
+
 PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
     if (tp.type == PapyrusType::Kind::Array)
