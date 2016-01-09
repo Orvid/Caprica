@@ -87,7 +87,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToC
     po::options_description desc("General");
     desc.add_options()
       ("help,h", "Print usage information.")
-      ("import,i", po::value<std::vector<std::string>>(&conf::importDirectories), "Set the compiler's import directories.")
+      ("import,i", po::value<std::vector<std::string>>(), "Set the compiler's import directories.")
       ("optimize,O", po::bool_switch(&conf::enableOptimizations)->default_value(false), "Enable optimizations.")
       ("output,o", po::value<std::string>(&conf::outputDirectory)->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::compileInParallel)->default_value(false), "Compile files in parallel.")
@@ -168,6 +168,18 @@ static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToC
           return false;
         }
         conf::warningsToIgnore.insert(f);
+      }
+    }
+
+    if (vm.count("import-directory")) {
+      auto dirs = vm["import-directory"].as<std::vector<std::string>>();
+      conf::importDirectories.reserve(dirs.size());
+      for (auto d : dirs) {
+        if (!boost::filesystem::exists(d)) {
+          std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
+          return false;
+        }
+        conf::importDirectories.push_back(d);
       }
     }
 
