@@ -16,7 +16,9 @@
 #include <pex/PexWriter.h>
 #include <pex/parser/PexAsmParser.h>
 
-void compileScript(std::string filename) {
+#include <Windows.h>
+
+static void compileScript(std::string filename) {
   std::cout << "Compiling " << filename << std::endl;
   auto path = boost::filesystem::path(filename);
   auto baseName = boost::filesystem::basename(path.filename());
@@ -66,7 +68,7 @@ void compileScript(std::string filename) {
   }
 }
 
-std::pair<std::string, std::string> parseOddArguments(const std::string& str) {
+static std::pair<std::string, std::string> parseOddArguments(const std::string& str) {
   if (str == "WE")
     return std::make_pair("all-warnings-as-errors", "");
   else if (str.find("we") == 0)
@@ -77,7 +79,7 @@ std::pair<std::string, std::string> parseOddArguments(const std::string& str) {
     return std::make_pair(std::string(), std::string());
 }
 
-bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile) {
+static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile) {
   namespace po = boost::program_options;
   namespace conf = caprica::CapricaConfig;
 
@@ -87,7 +89,7 @@ bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile)
       ("help,h", "Print usage information.")
       ("import,i", po::value<std::vector<std::string>>(&conf::importDirectories), "Set the compiler's import directories.")
       ("optimize,O", po::bool_switch(&conf::enableOptimizations)->default_value(false), "Enable optimizations.")
-      ("output,o", po::value<std::string>(&conf::outputDirectory)->default_value(boost::filesystem::absolute("./").string()), "Set the directory to save compiler output to.")
+      ("output,o", po::value<std::string>(&conf::outputDirectory)->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::compileInParallel)->default_value(false), "Compile files in parallel.")
       ("dump-asm", po::bool_switch(&conf::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
       ("all-warnings-as-errors", po::bool_switch(&conf::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
@@ -118,7 +120,7 @@ bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile)
     po::positional_options_description p;
     p.add("input-file", -1);
 
-    po::options_description visibleDesc("Caprica Papyrus Compiler v0.0.9\nUsage: Caprica <sourceFile/directory>\nNote that when passing a directory, only Papyrus script files (*.psc) in it will be compiled. Pex (*.pex) and Pex assembly (*.pas) files will be ignored.");
+    po::options_description visibleDesc("");
     visibleDesc.add(desc).add(champollionCompatDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
@@ -133,6 +135,9 @@ bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile)
     po::notify(vm);
 
     if (vm.count("help") || !vm.count("input-file")) {
+      std::cout << "Caprica Papyrus Compiler v0.0.9" << std::endl;
+      std::cout << "Usage: Caprica <sourceFile / directory>" << std::endl;
+      std::cout << "Note that when passing a directory, only Papyrus script files (*.psc) in it will be compiled. Pex (*.pex) and Pex assembly (*.pas) files will be ignored." << std::endl;
       std::cout << visibleDesc << std::endl;
       return false;
     }
@@ -197,11 +202,17 @@ bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile)
   return true;
 }
 
+static void breakIfDebugging() {
+  if (IsDebuggerPresent()) {
+    __debugbreak();
+  }
+}
+
 int main(int argc, char* argv[])
 {
   std::vector<std::string> filesToCompile;
   if (!parseArgs(argc, argv, filesToCompile)) {
-    __debugbreak();
+    breakIfDebugging();
     return -1;
   }
 
@@ -214,10 +225,9 @@ int main(int argc, char* argv[])
       for (auto& file : filesToCompile)
         compileScript(file);
     }
-  } catch (const std::runtime_error& err) {
-    err;
-    //std::cout << err.what() << std::endl;
-    __debugbreak();
+  } catch (const std::runtime_error&) {
+    breakIfDebugging();
+    return -1;
   }
 
   return 0;
