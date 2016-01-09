@@ -34,14 +34,7 @@ struct PapyrusState final
     obj->states.push_back(state);
   }
 
-  void semantic(PapyrusResolutionContext* ctx) {
-    ctx->state = this;
-    PapyrusResolutionContext::ensureNamesAreUnique(functions, "function");
-    for (auto f : functions)
-      f->semantic(ctx);
-    ctx->state = nullptr;
-  }
-
+  void semantic(PapyrusResolutionContext* ctx);
   void semantic2(PapyrusResolutionContext* ctx) {
     ctx->state = this;
     for (auto f : functions)

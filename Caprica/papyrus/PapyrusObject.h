@@ -55,6 +55,7 @@ struct PapyrusObject final
     return rootPropertyGroup;
   }
 
+  const PapyrusState* tryGetRootState() const { return rootState; }
   PapyrusState* getRootState() {
     if (!rootState) {
       rootState = new PapyrusState(location);
