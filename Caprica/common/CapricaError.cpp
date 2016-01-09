@@ -15,7 +15,7 @@ void CapricaError::exitIfErrors() {
 }
 
 bool CapricaError::isWarningEnabled(size_t warningNumber) {
-  return CapricaConfig::warningsToIgnore.count(warningNumber) != 0;
+  return CapricaConfig::warningsToIgnore.count(warningNumber) == 0 && CapricaConfig::warningsToHandleAsErrors.count(warningNumber) == 0;
 }
 
 }

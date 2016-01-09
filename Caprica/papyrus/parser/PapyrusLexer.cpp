@@ -377,7 +377,7 @@ StartOver:
       while (isalnum(peekChar()) || peekChar() == '_')
         str.put(getChar());
 
-      if (CapricaConfig::enableDecompiledStructNameRefs && peekChar() == '#') {
+      if (CapricaConfig::allowDecompiledStructNameRefs && peekChar() == '#') {
         str.put(getChar());
 
         while (isalnum(peekChar()) || peekChar() == '_')

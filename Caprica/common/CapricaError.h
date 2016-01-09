@@ -28,7 +28,7 @@ struct CapricaError abstract
   static void warning(size_t warningNumber, const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     if (isWarningEnabled(warningNumber)) {
       warningCount++;
-      if (CapricaConfig::warningsAsErrors) {
+      if (CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber)) {
         errorCount++;
         std::cerr << formatString(location, "Error (Warning as Error)", msg, args...) << std::endl;
       } else {

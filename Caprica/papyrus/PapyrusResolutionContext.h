@@ -15,7 +15,6 @@ namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
 
-
 namespace caprica { namespace papyrus {
 
 struct PapyrusFunction;

@@ -3,16 +3,18 @@
 namespace caprica { namespace CapricaConfig {
 
 bool allowCompilerIdentifiers{ true };
+bool allowDecompiledStructNameRefs{ true };
 bool compileInParallel{ false };
 bool dumpPexAsm{ false };
 bool enableCKOptimizations{ true };
-bool enableDecompiledStructNameRefs{ true };
 bool enableLanguageExtensions{ true };
 bool enableOptimizations{ true };
 bool enableSpeculativeSyntax{ true };
 bool emitDebugInfo{ true };
 std::vector<std::string> importDirectories{ "./" };
-bool warningsAsErrors{ false };
+std::string outputDirectory{ "./" };
+bool treatWarningsAsErrors{ false };
+std::unordered_set<size_t> warningsToHandleAsErrors{ };
 std::unordered_set<size_t> warningsToIgnore{ };
 
 }}

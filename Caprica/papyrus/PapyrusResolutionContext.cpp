@@ -1,6 +1,7 @@
 #include <papyrus/PapyrusResolutionContext.h>
 
 #include <memory>
+#include <unordered_map>
 
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -33,57 +34,85 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
 
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
-static thread_local std::map<const std::string, std::unique_ptr<PapyrusScript>, CaselessStringComparer> loadedScripts{ };
+static thread_local std::unordered_map<const std::string, std::unique_ptr<PapyrusScript>, CaselessStringHasher> loadedScripts{ };
 PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
-  auto f = loadedScripts.find(name);
-  if (f != loadedScripts.end())
-    return f->second.get();
+  const auto loadPsc = [](const std::string& filename) -> PapyrusScript* {
+    auto f = loadedScripts.find(filename);
+    if (f != loadedScripts.end())
+      return f->second.get();
+
+    auto parser = new parser::PapyrusParser(filename);
+    auto a = parser->parseScript();
+    CapricaError::exitIfErrors();
+    delete parser;
+    loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+    auto ctx = new PapyrusResolutionContext();
+    ctx->resolvingReferenceScript = true;
+    a->semantic(ctx);
+    CapricaError::exitIfErrors();
+    delete ctx;
+    return a;
+  };
+  const auto loadPas = [](const std::string& filename) -> PapyrusScript* {
+    auto f = loadedScripts.find(filename);
+    if (f != loadedScripts.end())
+      return f->second.get();
+
+    auto parser = new pex::parser::PexAsmParser(filename);
+    auto pex = parser->parseFile();
+    CapricaError::exitIfErrors();
+    delete parser;
+    auto a = pex::PexReflector::reflectScript(pex);
+    CapricaError::exitIfErrors();
+    delete pex;
+    loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+    auto ctx = new PapyrusResolutionContext();
+    ctx->resolvingReferenceScript = true;
+    ctx->isPexResolution = true;
+    a->semantic(ctx);
+    CapricaError::exitIfErrors();
+    delete ctx;
+    return a;
+  };
+  const auto loadPex = [](const std::string& filename) -> PapyrusScript* {
+    auto f = loadedScripts.find(filename);
+    if (f != loadedScripts.end())
+      return f->second.get();
+
+    pex::PexReader rdr(filename);
+    auto pex = pex::PexFile::read(rdr);
+    CapricaError::exitIfErrors();
+    auto a = pex::PexReflector::reflectScript(pex);
+    CapricaError::exitIfErrors();
+    delete pex;
+    loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+    auto ctx = new PapyrusResolutionContext();
+    ctx->resolvingReferenceScript = true;
+    ctx->isPexResolution = true;
+    a->semantic(ctx);
+    CapricaError::exitIfErrors();
+    delete ctx;
+    return a;
+  };
+  const auto normalizePath = [](const std::string& filename) -> std::string {
+    return boost::filesystem::canonical(boost::filesystem::absolute(filename)).string();
+  };
+
+  auto baseDir = boost::filesystem::path(boost::filesystem::absolute(script->sourceFileName)).parent_path().string();
+  if (boost::filesystem::exists(baseDir + name + ".psc"))
+    return loadPsc(normalizePath(baseDir + name + ".psc"));
+  else if (boost::filesystem::exists(baseDir + name + ".pas"))
+    return loadPas(normalizePath(baseDir + name + ".pas"));
+  else if (boost::filesystem::exists(baseDir + name + ".pex"))
+    return loadPex(normalizePath(baseDir + name + ".pex"));
 
   for (auto& dir : CapricaConfig::importDirectories) {
-    if (boost::filesystem::exists(dir + name + ".psc")) {
-      auto parser = new parser::PapyrusParser(dir + name + ".psc");
-      auto a = parser->parseScript();
-      CapricaError::exitIfErrors();
-      delete parser;
-      loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
-      auto ctx = new PapyrusResolutionContext();
-      ctx->resolvingReferenceScript = true;
-      a->semantic(ctx);
-      CapricaError::exitIfErrors();
-      delete ctx;
-      return a;
-    } else if (boost::filesystem::exists(dir + name + ".pas")) {
-      auto parser = new pex::parser::PexAsmParser(dir + name + ".pas");
-      auto pex = parser->parseFile();
-      CapricaError::exitIfErrors();
-      delete parser;
-      auto a = pex::PexReflector::reflectScript(pex);
-      CapricaError::exitIfErrors();
-      delete pex;
-      loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
-      auto ctx = new PapyrusResolutionContext();
-      ctx->resolvingReferenceScript = true;
-      ctx->isPexResolution = true;
-      a->semantic(ctx);
-      CapricaError::exitIfErrors();
-      delete ctx;
-      return a;
-    } else if (boost::filesystem::exists(dir + name + ".pex")) {
-      pex::PexReader rdr(dir + name + ".pex");
-      auto pex = pex::PexFile::read(rdr);
-      CapricaError::exitIfErrors();
-      auto a = pex::PexReflector::reflectScript(pex);
-      CapricaError::exitIfErrors();
-      delete pex;
-      loadedScripts.insert({ a->objects[0]->name, std::unique_ptr<PapyrusScript>(a) });
-      auto ctx = new PapyrusResolutionContext();
-      ctx->resolvingReferenceScript = true;
-      ctx->isPexResolution = true;
-      a->semantic(ctx);
-      CapricaError::exitIfErrors();
-      delete ctx;
-      return a;
-    }
+    if (boost::filesystem::exists(dir + name + ".psc"))
+      return loadPsc(normalizePath(dir + name + ".psc"));
+    else if (boost::filesystem::exists(dir + name + ".pas"))
+      return loadPas(normalizePath(dir + name + ".pas"));
+    else if (boost::filesystem::exists(dir + name + ".pex"))
+      return loadPex(normalizePath(dir + name + ".pex"));
   }
 
   return nullptr;
@@ -250,7 +279,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     return tp;
   }
 
-  if (isPexResolution || CapricaConfig::enableDecompiledStructNameRefs) {
+  if (isPexResolution || CapricaConfig::allowDecompiledStructNameRefs) {
     auto pos = tp.name.find_first_of('#');
     if (pos != std::string::npos) {
       auto scName = tp.name.substr(0, pos);
