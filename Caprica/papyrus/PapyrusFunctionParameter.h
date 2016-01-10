@@ -20,9 +20,6 @@ struct PapyrusFunctionParameter final
 {
   std::string name{ "" };
   PapyrusType type;
-  // We need this because PapyrusValue doesn't
-  // have an "Undefined" state.
-  bool hasDefaultValue{ false };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
 
   const CapricaFileLocation location;
@@ -39,6 +36,7 @@ struct PapyrusFunctionParameter final
   
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
+    defaultValue = PapyrusResolutionContext::coerceDefaultValue(defaultValue, type);
   }
 };
 

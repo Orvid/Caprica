@@ -14,6 +14,7 @@ namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 #include <common/CaselessStringComparer.h>
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
+#include <papyrus/PapyrusValue.h>
 
 namespace caprica { namespace papyrus {
 
@@ -51,6 +52,7 @@ struct PapyrusResolutionContext final
   static bool canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest);
   static bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target, bool& needsCast);
   static expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
+  static PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target);
 
   void pushLocalVariableScope() {
     localVariableScopeStack.push_back({ });

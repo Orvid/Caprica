@@ -102,6 +102,7 @@ struct PapyrusProperty final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
+    defaultValue = PapyrusResolutionContext::coerceDefaultValue(defaultValue, type);
     if (readFunction)
       readFunction->semantic(ctx);
     if (writeFunction)

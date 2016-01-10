@@ -439,10 +439,8 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
 
       auto param = new PapyrusFunctionParameter(cur.location, expectConsumePapyrusType());
       param->name = expectConsumeIdent();
-      if (maybeConsume(TokenType::Equal)) {
-        param->hasDefaultValue = true;
+      if (maybeConsume(TokenType::Equal))
         param->defaultValue = expectConsumePapyrusValue();
-      }
       func->parameters.push_back(param);
     } while (cur.type == TokenType::Comma);
   }

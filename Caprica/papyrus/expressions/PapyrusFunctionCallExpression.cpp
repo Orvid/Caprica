@@ -334,7 +334,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
 
       for (size_t i = 0; i < newArgs.size(); i++) {
         if (newArgs[i] == nullptr) {
-          if (!function.func->parameters[i]->hasDefaultValue)
+          if (function.func->parameters[i]->defaultValue.type == PapyrusValueType::Invalid)
             CapricaError::fatal(location, "Not enough arguments provided.");
           newArgs[i] = new Parameter();
           newArgs[i]->value = new PapyrusLiteralExpression(location, function.func->parameters[i]->defaultValue);

@@ -4,6 +4,8 @@
 
 #include <common/CapricaFileLocation.h>
 
+#include <papyrus/PapyrusType.h>
+
 #include <pex/PexFile.h>
 #include <pex/PexValue.h>
 
@@ -11,7 +13,9 @@ namespace caprica { namespace papyrus {
 
 enum class PapyrusValueType
 {
-  None,
+  Invalid = -1,
+
+  None = 0,
   String,
   Integer,
   Float,
@@ -33,7 +37,6 @@ struct PapyrusValue final
   // This is intended purely for initializing values that may not
   // be filled to defaults, and doesn't track a location.
   struct Default final { };
-
   struct None final
   {
     CapricaFileLocation location;
@@ -41,7 +44,6 @@ struct PapyrusValue final
     None(const CapricaFileLocation& loc) : location(loc) { }
     ~None() = default;
   };
-
   struct Integer final
   {
     int32_t i;
@@ -50,17 +52,28 @@ struct PapyrusValue final
     Integer(const CapricaFileLocation& loc, int32_t val) : location(loc), i(val) { }
     ~Integer() = default;
   };
+  struct Float final
+  {
+    float f;
+    CapricaFileLocation location;
+
+    Float(const CapricaFileLocation& loc, float val) : location(loc), f(val) { }
+    ~Float() = default;
+  };
 
   PapyrusValue(const CapricaFileLocation& loc) : location(loc) { }
-  PapyrusValue(const Default& other) : type(PapyrusValueType::None), location("", 0, 0) { }
+  PapyrusValue(const Default& other) : type(PapyrusValueType::Invalid), location("", 0, 0) { }
   PapyrusValue(const None& other) : type(PapyrusValueType::None), location(other.location) { }
   PapyrusValue(const Integer& other) : type(PapyrusValueType::Integer), location(other.location), i(other.i) { }
+  PapyrusValue(const Float& other) : type(PapyrusValueType::Float), location(other.location), f(other.f) { }
   PapyrusValue(const PapyrusValue& other) = default;
   ~PapyrusValue() = default;
 
   pex::PexValue buildPex(pex::PexFile* file) const {
     pex::PexValue pe;
     switch (type) {
+      // Invalid always gets written as None.
+      case PapyrusValueType::Invalid:
       case PapyrusValueType::None:
         pe.type = pex::PexValueType::None;
         break;

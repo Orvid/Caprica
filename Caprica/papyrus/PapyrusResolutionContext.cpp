@@ -297,6 +297,28 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
   return expr;
 }
 
+PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) {
+  if (val.type == PapyrusValueType::Invalid || val.getPapyrusType() == target)
+    return val;
+
+  switch (target.type) {
+    case PapyrusType::Kind::Float:
+      if (val.getPapyrusType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float)
+        return PapyrusValue::Float(val.location, (float)val.i);
+      break;
+    case PapyrusType::Kind::Array:
+    case PapyrusType::Kind::ResolvedObject:
+    case PapyrusType::Kind::ResolvedStruct:
+      if (val.getPapyrusType().type == PapyrusType::Kind::None)
+        return val;
+      break;
+    default:
+      break;
+  }
+  CapricaError::error(val.location, "Cannot initialize a '%s' value with a '%s'!", target.prettyString().c_str(), val.getPapyrusType().prettyString().c_str());
+  return val;
+}
+
 PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name, const PapyrusObject* parentObj) const {
   if (!parentObj)
     parentObj = object;
