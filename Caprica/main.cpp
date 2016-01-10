@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ostream>
 #include <string>
 
@@ -18,13 +19,116 @@
 
 #include <Windows.h>
 
-static void compileScript(std::string filename) {
+boost::filesystem::path naive_uncomplete(boost::filesystem::path const p, boost::filesystem::path const base) {
+  using boost::filesystem::path;
+
+  if (p == base)
+    return "./";
+  /*!! this breaks stuff if path is a filename rather than a directory,
+  which it most likely is... but then base shouldn't be a filename so... */
+
+  boost::filesystem::path from_path, from_base, output;
+
+  boost::filesystem::path::iterator path_it = p.begin(), path_end = p.end();
+  boost::filesystem::path::iterator base_it = base.begin(), base_end = base.end();
+
+  // check for emptiness
+  if ((path_it == path_end) || (base_it == base_end))
+    throw std::runtime_error("path or base was empty; couldn't generate relative path");
+
+#ifdef WIN32
+  // drive letters are different; don't generate a relative path
+  if (*path_it != *base_it)
+    return p;
+
+  // now advance past drive letters; relative paths should only go up
+  // to the root of the drive and not past it
+  ++path_it, ++base_it;
+#endif
+
+  // Cache system-dependent dot, double-dot and slash strings
+  const std::string _dot = ".";
+  const std::string _dots = "..";
+  const std::string _sep = "\\";
+
+  // iterate over path and base
+  while (true) {
+
+    // compare all elements so far of path and base to find greatest common root;
+    // when elements of path and base differ, or run out:
+    if ((path_it == path_end) || (base_it == base_end) || (*path_it != *base_it)) {
+
+      // write to output, ../ times the number of remaining elements in base;
+      // this is how far we've had to come down the tree from base to get to the common root
+      for (; base_it != base_end; ++base_it) {
+        if (*base_it == _dot)
+          continue;
+        else if (*base_it == _sep)
+          continue;
+
+        output /= "../";
+      }
+
+      // write to output, the remaining elements in path;
+      // this is the path relative from the common root
+      boost::filesystem::path::iterator path_it_start = path_it;
+      for (; path_it != path_end; ++path_it) {
+
+        if (path_it != path_it_start)
+          output /= "/";
+
+        if (*path_it == _dot)
+          continue;
+        if (*path_it == _sep)
+          continue;
+
+        output /= *path_it;
+      }
+
+      break;
+    }
+
+    // add directory level to both paths and continue iteration
+    from_path /= path(*path_it);
+    from_base /= path(*base_it);
+
+    ++path_it, ++base_it;
+  }
+
+  return output;
+}
+
+struct ScriptToCompile final
+{
+  std::string sourceFileName;
+  std::string outputDirectory;
+  std::string expectedScriptName;
+
+  ScriptToCompile() = delete;
+  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const boost::filesystem::path& relOutputDir) {
+    sourceFileName = sourcePath.string();
+    outputDirectory = baseOutputDir + "\\" + relOutputDir.string();
+    expectedScriptName = relOutputDir.string();
+    std::replace(expectedScriptName.begin(), expectedScriptName.end(), '\\', ':');
+    expectedScriptName += ":" + boost::filesystem::basename(sourceFileName);
+  }
+  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir) {
+    sourceFileName = sourcePath.string();
+    outputDirectory = baseOutputDir;
+    expectedScriptName = boost::filesystem::basename(sourceFileName);
+  }
+  ~ScriptToCompile() = default;
+};
+
+static void compileScript(const ScriptToCompile& script) {
+  auto filename = script.sourceFileName;
+  auto outputDir = script.outputDirectory;
   std::cout << "Compiling " << filename << std::endl;
   auto path = boost::filesystem::path(filename);
   auto baseName = boost::filesystem::basename(path.filename());
   auto ext = boost::filesystem::extension(filename);
   if (!_stricmp(ext.c_str(), ".psc")) {
-    auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
+    auto parser = new caprica::papyrus::parser::PapyrusParser(filename, script.expectedScriptName);
     auto a = parser->parseScript();
     caprica::CapricaError::exitIfErrors();
     delete parser;
@@ -35,12 +139,12 @@ static void compileScript(std::string filename) {
     caprica::CapricaError::exitIfErrors();
     delete ctx;
     delete a;
-    std::ofstream strm(caprica::CapricaConfig::outputDirectory + baseName + ".pex", std::ofstream::binary);
+    std::ofstream strm(outputDir + "\\" + baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
 
     if (caprica::CapricaConfig::dumpPexAsm) {
-      std::ofstream asmStrm(caprica::CapricaConfig::outputDirectory + baseName + ".pas", std::ofstream::binary);
+      std::ofstream asmStrm(outputDir + "\\" + baseName + ".pas", std::ofstream::binary);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       pex->writeAsm(asmWtr);
     }
@@ -51,7 +155,7 @@ static void compileScript(std::string filename) {
     auto pex = parser->parseFile();
     caprica::CapricaError::exitIfErrors();
     delete parser;
-    std::ofstream strm(caprica::CapricaConfig::outputDirectory + baseName + ".pex", std::ofstream::binary);
+    std::ofstream strm(outputDir + "\\" + baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
     delete pex;
@@ -59,7 +163,7 @@ static void compileScript(std::string filename) {
     caprica::pex::PexReader rdr(filename);
     auto pex = caprica::pex::PexFile::read(rdr);
     caprica::CapricaError::exitIfErrors();
-    std::ofstream asmStrm(caprica::CapricaConfig::outputDirectory + baseName + ".pas", std::ofstream::binary);
+    std::ofstream asmStrm(outputDir + "\\" + baseName + ".pas", std::ofstream::binary);
     caprica::pex::PexAsmWriter asmWtr(asmStrm);
     pex->writeAsm(asmWtr);
     delete pex;
@@ -79,18 +183,21 @@ static std::pair<std::string, std::string> parseOddArguments(const std::string& 
     return std::make_pair(std::string(), std::string());
 }
 
-static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToCompile) {
+static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& filesToCompile) {
   namespace po = boost::program_options;
   namespace conf = caprica::CapricaConfig;
 
   try {
+    bool iterateCompiledDirectoriesRecursively = false;
+
     po::options_description desc("General");
     desc.add_options()
       ("help,h", "Print usage information.")
       ("import,i", po::value<std::vector<std::string>>(), "Set the compiler's import directories.")
       ("optimize,O", po::bool_switch(&conf::enableOptimizations)->default_value(false), "Enable optimizations.")
-      ("output,o", po::value<std::string>(&conf::outputDirectory)->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
+      ("output,o", po::value<std::string>()->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::compileInParallel)->default_value(false), "Compile files in parallel.")
+      ("recurse,r", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false), "Recursively compile all scripts in the directories passed.")
       ("dump-asm", po::bool_switch(&conf::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
       ("all-warnings-as-errors", po::bool_switch(&conf::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
       ("warning-as-error", po::value<std::vector<size_t>>(), "Treat a specific warning as an error.")
@@ -171,17 +278,22 @@ static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToC
       }
     }
 
-    if (vm.count("import-directory")) {
-      auto dirs = vm["import-directory"].as<std::vector<std::string>>();
+    if (vm.count("import")) {
+      auto dirs = vm["import"].as<std::vector<std::string>>();
       conf::importDirectories.reserve(dirs.size());
       for (auto d : dirs) {
         if (!boost::filesystem::exists(d)) {
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
         }
-        conf::importDirectories.push_back(d);
+        conf::importDirectories.push_back(boost::filesystem::canonical(boost::filesystem::absolute(d)).make_preferred().string());
       }
     }
+
+    auto baseOutputDir = vm["output"].as<std::string>();
+    if (!boost::filesystem::exists(baseOutputDir))
+      boost::filesystem::create_directories(baseOutputDir);
+    baseOutputDir = boost::filesystem::canonical(boost::filesystem::absolute(baseOutputDir)).make_preferred().string();
 
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     filesToCompile.reserve(filesPassed.size());
@@ -191,10 +303,26 @@ static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToC
         return false;
       }
       if (boost::filesystem::is_directory(f)) {
-        boost::system::error_code ec;
-        for (auto e : boost::filesystem::directory_iterator(f, ec)) {
-          if (e.path().extension().string() == ".psc")
-            filesToCompile.push_back(e.path().string());
+        if (iterateCompiledDirectoriesRecursively) {
+          auto absBaseDir = boost::filesystem::canonical(boost::filesystem::absolute(f)).make_preferred();
+          boost::system::error_code ec;
+          for (auto e : boost::filesystem::recursive_directory_iterator(f, ec)) {
+            if (e.path().extension().string() == ".psc") {
+              auto abs = boost::filesystem::canonical(boost::filesystem::absolute(e.path())).make_preferred();
+              auto rel = naive_uncomplete(abs, absBaseDir).make_preferred();
+              
+              if (rel.string() != e.path().filename())
+                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, rel.parent_path()));
+              else
+                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir));
+            }
+          }
+        } else {
+          boost::system::error_code ec;
+          for (auto e : boost::filesystem::directory_iterator(f, ec)) {
+            if (e.path().extension().string() == ".psc")
+              filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir));
+          }
         }
       } else {
         auto ext = boost::filesystem::extension(f);
@@ -203,7 +331,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<std::string>& filesToC
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        filesToCompile.push_back(f);
+        filesToCompile.push_back(ScriptToCompile(f, baseOutputDir));
       }
     }
   } catch (const std::exception& ex) {
@@ -222,7 +350,7 @@ static void breakIfDebugging() {
 
 int main(int argc, char* argv[])
 {
-  std::vector<std::string> filesToCompile;
+  std::vector<ScriptToCompile> filesToCompile;
   if (!parseArgs(argc, argv, filesToCompile)) {
     breakIfDebugging();
     return -1;
@@ -230,7 +358,7 @@ int main(int argc, char* argv[])
 
   try {
     if (caprica::CapricaConfig::compileInParallel) {
-      concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](std::string fl) {
+      concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](const ScriptToCompile& fl) {
         compileScript(fl);
       });
     } else {

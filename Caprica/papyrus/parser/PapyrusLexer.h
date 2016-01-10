@@ -155,6 +155,10 @@ struct PapyrusLexer
   ~PapyrusLexer() = default;
 
 protected:
+  // If true, then we are currently lexing a
+  // script name, and colons should be allowed
+  // in the name.
+  bool areLexingScriptName{ false };
   std::string filename;
   Token cur;
 

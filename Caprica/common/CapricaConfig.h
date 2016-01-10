@@ -36,8 +36,6 @@ extern bool emitDebugInfo;
 // The directories to search in for imported types and
 // unknown types.
 extern std::vector<std::string> importDirectories;
-// The directory to output files to.
-extern std::string outputDirectory;
 // If true, treat warnings as errors.
 extern bool treatWarningsAsErrors;
 // The set of warnings to treat as errors.
