@@ -132,11 +132,14 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
     return nullptr;
   };
 
-  if (auto s = searchDir(baseDir, name))
+  // Allow references to subdirs.
+  auto nm2 = name;
+  std::replace(nm2.begin(), nm2.end(), ':', '\\');
+  if (auto s = searchDir(baseDir, nm2))
     return s;
 
   for (auto& dir : CapricaConfig::importDirectories) {
-    if (auto s = searchDir(dir, name))
+    if (auto s = searchDir(dir, nm2))
       return s;
   }
 

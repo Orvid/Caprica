@@ -59,10 +59,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   if (maybeConsume(TokenType::kConst))
     isConst = true;
 
-  // These are where they are because of when consume() is called.
-  this->areLexingScriptName = true;
   expectConsume(TokenType::kScriptName);
-  this->areLexingScriptName = false;
   auto name = expectConsumeIdent();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
     CapricaError::error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());

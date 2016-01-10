@@ -374,13 +374,8 @@ StartOver:
         str.put(c);
       }
 
-      if (areLexingScriptName) {
-        while (isalnum(peekChar()) || peekChar() == '_' || peekChar() == ':')
-          str.put(getChar());
-      } else {
-        while (isalnum(peekChar()) || peekChar() == '_')
-          str.put(getChar());
-      }
+      while (isalnum(peekChar()) || peekChar() == '_' || peekChar() == ':')
+        str.put(getChar());
 
       if (CapricaConfig::allowDecompiledStructNameRefs && peekChar() == '#') {
         str.put(getChar());
