@@ -25,4 +25,11 @@ struct CaselessStringHasher final : public std::function<size_t(std::string)>
   }
 };
 
+struct CaselessStringEqual final : public std::function<bool(std::string, std::string)>
+{
+  bool operator()(const std::string &lhs, const std::string &rhs) const {
+    return _stricmp(lhs.c_str(), rhs.c_str()) == 0;
+  }
+};
+
 }

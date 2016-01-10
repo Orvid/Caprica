@@ -35,8 +35,8 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
 
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
-static thread_local std::unordered_map<const std::string, std::unique_ptr<PapyrusScript>, CaselessStringHasher> loadedScripts{ };
-static thread_local std::unordered_map<const std::string, std::unordered_map<const std::string, PapyrusScript*, CaselessStringHasher>, CaselessStringHasher> localPerDirIdentMap{ };
+static thread_local std::unordered_map<const std::string, std::unique_ptr<PapyrusScript>, CaselessStringHasher, CaselessStringEqual> loadedScripts{ };
+static thread_local std::unordered_map<const std::string, std::unordered_map<const std::string, PapyrusScript*, CaselessStringHasher, CaselessStringEqual>, CaselessStringHasher, CaselessStringEqual> localPerDirIdentMap{ };
 PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
   auto baseDir = boost::filesystem::path(script->sourceFileName).parent_path().string();
 
