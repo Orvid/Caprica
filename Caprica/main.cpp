@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 #include <ostream>
 #include <string>
 
@@ -195,6 +196,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("all-warnings-as-errors", po::bool_switch(&conf::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
       ("warning-as-error", po::value<std::vector<size_t>>(), "Treat a specific warning as an error.")
       ("disable-warning", po::value<std::vector<size_t>>(), "Disable a specific warning.")
+      ("config-file", po::value<std::string>()->default_value("caprica.cfg"), "Load additional options from a config file.")
     ;
 
     po::options_description champollionCompatDesc("Champollion Compatibility");
@@ -233,6 +235,19 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
               .positional(p)
               .run(), vm);
     po::notify(vm);
+
+    auto confFilePath = vm["config-file"].as<std::string>();
+    auto progamBasePath = boost::filesystem::absolute(boost::filesystem::path(argv[0]).parent_path()).string();
+    if (boost::filesystem::exists(progamBasePath + "\\" + confFilePath)) {
+      std::ifstream ifs(progamBasePath + confFilePath);
+      po::store(po::parse_config_file(ifs, commandLineDesc), vm);
+      po::notify(vm);
+    }
+    if (boost::filesystem::exists(confFilePath) && _stricmp(boost::filesystem::current_path().string().c_str(), progamBasePath.c_str())) {
+      std::ifstream ifs(progamBasePath + confFilePath);
+      po::store(po::parse_config_file(ifs, commandLineDesc), vm);
+      po::notify(vm);
+    }
 
     if (vm.count("help") || !vm.count("input-file")) {
       std::cout << "Caprica Papyrus Compiler v0.1.0" << std::endl;
