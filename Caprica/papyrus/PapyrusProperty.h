@@ -50,7 +50,7 @@ struct PapyrusProperty final
     prop->name = file->getString(name);
     prop->documentationString = file->getString(documentationComment);
     prop->typeName = type.buildPex(file);
-    prop->userFlags = buildPexUserFlags(file, userFlags);
+    prop->userFlags = buildPexUserFlags(file, userFlags & ~PapyrusUserFlags::Conditional);
     if (isAuto && isReadOnly) {
       prop->isReadable = true;
       auto func = new pex::PexFunction();
@@ -77,7 +77,8 @@ struct PapyrusProperty final
       auto var = new pex::PexVariable();
       var->name = file->getString(getAutoVarName());
       var->typeName = prop->typeName;
-      var->userFlags = buildPexUserFlags(file, userFlags);
+      if ((userFlags & PapyrusUserFlags::Conditional) == PapyrusUserFlags::Conditional)
+        var->userFlags = buildPexUserFlags(file, PapyrusUserFlags::Conditional);
       var->defaultValue = defaultValue.buildPex(file);
       // TODO: Investigate how the official compiler distinguishes between a const
       // underlying var and a non-const. Some props are const, others are not.

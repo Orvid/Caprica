@@ -20,6 +20,9 @@ enum class PapyrusUserFlags
   Mandatory       = 0b00100000,
 };
 
+inline PapyrusUserFlags operator ~(PapyrusUserFlags a) {
+  return (PapyrusUserFlags)(~(std::underlying_type<PapyrusUserFlags>::type)a);
+}
 inline PapyrusUserFlags operator &(PapyrusUserFlags a, PapyrusUserFlags b) {
   return (PapyrusUserFlags)((std::underlying_type<PapyrusUserFlags>::type)a & (std::underlying_type<PapyrusUserFlags>::type)b);
 }
