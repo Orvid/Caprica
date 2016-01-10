@@ -116,14 +116,12 @@ struct ScriptToCompile final
 };
 
 static void compileScript(const ScriptToCompile& script) {
-  auto filename = script.sourceFileName;
-  auto outputDir = script.outputDirectory;
-  std::cout << "Compiling " << filename << std::endl;
-  auto path = boost::filesystem::path(filename);
+  std::cout << "Compiling " << script.sourceFileName << std::endl;
+  auto path = boost::filesystem::path(script.sourceFileName);
   auto baseName = boost::filesystem::basename(path.filename());
-  auto ext = boost::filesystem::extension(filename);
+  auto ext = boost::filesystem::extension(script.sourceFileName);
   if (!_stricmp(ext.c_str(), ".psc")) {
-    auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
+    auto parser = new caprica::papyrus::parser::PapyrusParser(script.sourceFileName);
     auto a = parser->parseScript();
     caprica::CapricaError::exitIfErrors();
     delete parser;
@@ -134,36 +132,36 @@ static void compileScript(const ScriptToCompile& script) {
     caprica::CapricaError::exitIfErrors();
     delete ctx;
     delete a;
-    std::ofstream strm(outputDir + "\\" + baseName + ".pex", std::ofstream::binary);
+    std::ofstream strm(script.outputDirectory + "\\" + baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
 
     if (caprica::CapricaConfig::dumpPexAsm) {
-      std::ofstream asmStrm(outputDir + "\\" + baseName + ".pas", std::ofstream::binary);
+      std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       pex->writeAsm(asmWtr);
     }
 
     delete pex;
   } else if (!_stricmp(ext.c_str(), ".pas")) {
-    auto parser = new caprica::pex::parser::PexAsmParser(filename);
+    auto parser = new caprica::pex::parser::PexAsmParser(script.sourceFileName);
     auto pex = parser->parseFile();
     caprica::CapricaError::exitIfErrors();
     delete parser;
-    std::ofstream strm(outputDir + "\\" + baseName + ".pex", std::ofstream::binary);
+    std::ofstream strm(script.outputDirectory + "\\" + baseName + ".pex", std::ofstream::binary);
     caprica::pex::PexWriter wtr(strm);
     pex->write(wtr);
     delete pex;
   } else if (!_stricmp(ext.c_str(), ".pex")) {
-    caprica::pex::PexReader rdr(filename);
+    caprica::pex::PexReader rdr(script.sourceFileName);
     auto pex = caprica::pex::PexFile::read(rdr);
     caprica::CapricaError::exitIfErrors();
-    std::ofstream asmStrm(outputDir + "\\" + baseName + ".pas", std::ofstream::binary);
+    std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
     caprica::pex::PexAsmWriter asmWtr(asmStrm);
     pex->writeAsm(asmWtr);
     delete pex;
   } else {
-    std::cout << "Don't know how to compile " << filename << "!" << std::endl;
+    std::cout << "Don't know how to compile " << script.sourceFileName << "!" << std::endl;
   }
 }
 
