@@ -24,10 +24,9 @@ struct PapyrusIsExpression final : public PapyrusExpression
     namespace op = caprica::pex::op;
 
     auto val = innerExpression->generateLoad(file, bldr);
-    auto dest = bldr.allocTemp(file, resultType());
+    auto dest = bldr.allocTemp(resultType());
     bldr << location;
     bldr << op::is{ dest, val, targetType.buildPex(file) };
-    bldr.freeIfTemp(val);
     return dest;
   }
 

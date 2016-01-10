@@ -39,7 +39,6 @@ struct PapyrusIfStatement final : public PapyrusStatement
       auto lVal = ifBody.first->generateLoad(file, bldr);
       bldr << location;
       bldr << op::jmpf{ lVal, nextCondition };
-      bldr.freeIfTemp(lVal);
       for (auto s : ifBody.second)
         s->buildPex(file, bldr);
       bldr << location;

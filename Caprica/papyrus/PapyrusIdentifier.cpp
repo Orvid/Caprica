@@ -50,13 +50,12 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
+      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
-        auto ret = bldr.allocTemp(file, resultType());
+        auto ret = bldr.allocTemp(resultType());
         bldr << op::propget{ file->getString(prop->name), base, ret };
-        bldr.freeIfTemp(base);
         return ret;
       }
     case PapyrusIdentifierType::Variable:
@@ -67,9 +66,8 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
       return pex::PexValue::Identifier(file->getString(declStatement->name));
     case PapyrusIdentifierType::StructMember:
     {
-      auto ret = bldr.allocTemp(file, resultType());
+      auto ret = bldr.allocTemp(resultType());
       bldr << op::structget{ ret, base, file->getString(structMember->name) };
-      bldr.freeIfTemp(base);
       return ret;
     }
 
@@ -86,12 +84,11 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     case PapyrusIdentifierType::Property:
       if (prop->isReadOnly)
         CapricaError::fatal(location, "Attempted to generate a store to a read-only property!");
-      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && file->getStringValue(base.name) == "self") {
+      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
       } else {
         bldr << op::propset{ file->getString(prop->name), base, val };
-        bldr.freeIfTemp(base);
       }
       break;
     case PapyrusIdentifierType::Variable:
@@ -105,7 +102,6 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
       break;
     case PapyrusIdentifierType::StructMember:
       bldr << op::structset{ base, file->getString(structMember->name), val };
-      bldr.freeIfTemp(base);
       break;
 
     case PapyrusIdentifierType::Unresolved:
@@ -113,7 +109,6 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     default:
       CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
-  bldr.freeIfTemp(val);
 }
 
 PapyrusType PapyrusIdentifier::resultType() const {

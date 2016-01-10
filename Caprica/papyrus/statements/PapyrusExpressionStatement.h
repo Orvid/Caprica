@@ -19,7 +19,7 @@ struct PapyrusExpressionStatement final : public PapyrusStatement
   }
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
-    bldr.freeIfTemp(expression->generateLoad(file, bldr));
+    bldr.freeValueIfTemp(expression->generateLoad(file, bldr));
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

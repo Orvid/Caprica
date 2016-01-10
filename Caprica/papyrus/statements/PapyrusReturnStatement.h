@@ -28,7 +28,6 @@ struct PapyrusReturnStatement final : public PapyrusStatement
       auto val = returnValue->generateLoad(file, bldr);
       bldr << location;
       bldr << op::ret{ val };
-      bldr.freeIfTemp(val);
     }
   }
 

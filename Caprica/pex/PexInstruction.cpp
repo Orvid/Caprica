@@ -12,15 +12,15 @@ namespace caprica { namespace pex {
 // Use the opcodes descriptions from the function builder to manage this.
 static size_t getArgCountForOpCode(PexOpCode op) {
   switch (op) {
-#define OP_ARG1(name, opcode, at1, an1) \
+#define OP_ARG1(name, opcode, destArgIdx, at1, an1) \
   case PexOpCode::opcode: return 1;
-#define OP_ARG2(name, opcode, at1, an1, at2, an2) \
+#define OP_ARG2(name, opcode, destArgIdx, at1, an1, at2, an2) \
   case PexOpCode::opcode: return 2;
-#define OP_ARG3(name, opcode, at1, an1, at2, an2, at3, an3) \
+#define OP_ARG3(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3) \
   case PexOpCode::opcode: return 3;
-#define OP_ARG4(name, opcode, at1, an1, at2, an2, at3, an3, at4, an4) \
+#define OP_ARG4(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4) \
   case PexOpCode::opcode: return 4;
-#define OP_ARG5(name, opcode, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
+#define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
   case PexOpCode::opcode: return 5;
     OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1

@@ -27,10 +27,8 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     auto base = baseExpression->generateLoad(file, bldr);
     auto idx = indexExpression->generateLoad(file, bldr);
     bldr << location;
-    auto dest = bldr.allocTemp(file, this->resultType());
+    auto dest = bldr.allocTemp(this->resultType());
     bldr << op::arraygetelement{ dest, pex::PexValue::Identifier::fromVar(base), idx };
-    bldr.freeIfTemp(base);
-    bldr.freeIfTemp(idx);
     return dest;
   }
 
@@ -40,9 +38,6 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     auto idx = indexExpression->generateLoad(file, bldr);
     bldr << location;
     bldr << op::arraysetelement{ pex::PexValue::Identifier::fromVar(base), idx, val };
-    bldr.freeIfTemp(base);
-    bldr.freeIfTemp(idx);
-    bldr.freeIfTemp(val);
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

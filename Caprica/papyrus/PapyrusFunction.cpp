@@ -47,13 +47,13 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   for (auto p : parameters)
     p->buildPex(file, obj, func);
 
-  pex::PexFunctionBuilder bldr{ location };
+  pex::PexFunctionBuilder bldr{ location, file };
   // A couple of compiler-generated functions.
   if (name == "GetState") {
     bldr << pex::op::ret{ pex::PexValue::Identifier(file->getString("::State")) };
   } else if (name == "GotoState") {
-    auto noneVar = bldr.getNoneLocal(location, file);
-    auto soldState = bldr.allocateLocal(file, "soldState", PapyrusType::String(location));
+    auto noneVar = bldr.getNoneLocal(location);
+    auto soldState = bldr.allocateLocal("soldState", PapyrusType::String(location));
     bldr << pex::op::assign{ soldState, pex::PexValue::Identifier(file->getString("::State")) };
     bldr << pex::op::callmethod{
       file->getString("OnEndState"),

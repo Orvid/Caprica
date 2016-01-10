@@ -22,7 +22,16 @@ enum class PexValueType : uint8_t
   Bool = 5,
 
   Label = 20,
+  TemporaryVar = 21,
   Invalid = 50,
+};
+
+struct PexTemporaryVariableRef
+{
+  PexString type{ };
+  PexLocalVariable* var{ nullptr };
+
+  explicit PexTemporaryVariableRef(const PexString& tp) : type(tp) { }
 };
 
 struct PexValue final
@@ -35,22 +44,34 @@ struct PexValue final
     float f;
     bool b;
     PexLabel* l;
+    PexTemporaryVariableRef* tmpVar;
   };
 
+  struct TemporaryVariable
+  {
+    PexTemporaryVariableRef* var;
+
+    TemporaryVariable(PexTemporaryVariableRef* v) : var(v) { }
+    ~TemporaryVariable() = default;
+  };
   struct Identifier
   {
     PexString name;
+    PexTemporaryVariableRef* tmpVar{ nullptr };
 
     Identifier(PexString str) : name(str) { }
     Identifier(PexLocalVariable* var) : name(var->name) { }
+    Identifier(PexTemporaryVariableRef* v) : tmpVar(v) { }
+    Identifier(const TemporaryVariable& var) : tmpVar(var.var) { }
     ~Identifier() = default;
 
     static Identifier fromVar(const PexValue& var) {
+      if (var.type == PexValueType::TemporaryVar)
+        return Identifier(var.tmpVar);
       assert(var.type == PexValueType::Identifier);
       return Identifier(var.s);
     }
   };
-
   struct Integer
   {
     int32_t i;
@@ -58,7 +79,6 @@ struct PexValue final
     Integer(int32_t val) : i(val) { }
     ~Integer() = default;
   };
-
   struct Bool
   {
     bool b;
@@ -66,7 +86,6 @@ struct PexValue final
     Bool(bool val) : b(val) { }
     ~Bool() = default;
   };
-
   struct None { };
   struct Invalid { };
 
@@ -74,7 +93,13 @@ struct PexValue final
   PexValue(const PexValue&) = default;
   PexValue(PexLabel* lab) : type(PexValueType::Label), l(lab) { }
   PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { }
-  PexValue(const Identifier& id) : type(PexValueType::Identifier), s(id.name) { }
+  PexValue(const TemporaryVariable& val) : type(PexValueType::TemporaryVar), tmpVar(val.var) { }
+  PexValue(const Identifier& id) : type(PexValueType::Identifier), s(id.name) {
+    if (id.tmpVar != nullptr) {
+      type = PexValueType::TemporaryVar;
+      tmpVar = id.tmpVar;
+    }
+  }
   PexValue(const Integer& val) : type(PexValueType::Integer), i(val.i) { }
   PexValue(const Bool& val) : type(PexValueType::Bool), b(val.b) { }
   PexValue(const None& val) : type(PexValueType::None) { }

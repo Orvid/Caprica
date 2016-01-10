@@ -25,12 +25,11 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
-    auto loc = bldr.allocateLocal(file, name, type);
+    auto loc = bldr.allocateLocal(name, type);
     if (initialValue) {
       auto val = initialValue->generateLoad(file, bldr);
       bldr << location;
       bldr << op::assign{ loc, val };
-      bldr.freeIfTemp(val);
     }
   }
 

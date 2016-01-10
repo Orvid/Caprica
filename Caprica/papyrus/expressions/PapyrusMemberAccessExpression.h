@@ -31,13 +31,11 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
       auto base = baseExpression->generateLoad(file, bldr);
       bldr << location;
       dest = id->identifier.generateLoad(file, bldr, pex::PexValue::Identifier::fromVar(base));
-      bldr.freeIfTemp(base);
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
       auto base = baseExpression->generateLoad(file, bldr);
       bldr << location;
-      dest = bldr.allocTemp(file, PapyrusType::Int(location));
+      dest = bldr.allocTemp(PapyrusType::Int(location));
       bldr << op::arraylength{ pex::PexValue::Identifier::fromVar(dest), pex::PexValue::Identifier::fromVar(base) };
-      bldr.freeIfTemp(base);
     } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
       dest = fc->generateLoad(file, bldr, baseExpression);
     } else {
@@ -59,7 +57,6 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     } else {
       CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
     }
-    bldr.freeIfTemp(base);
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

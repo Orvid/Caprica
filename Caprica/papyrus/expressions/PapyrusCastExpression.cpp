@@ -6,10 +6,9 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
   namespace op = caprica::pex::op;
 
   auto val = innerExpression->generateLoad(file, bldr);
-  auto dest = bldr.allocTemp(file, targetType);
+  auto dest = bldr.allocTemp(targetType);
   bldr << location;
   bldr << op::cast{ dest, val };
-  bldr.freeIfTemp(val);
   return dest;
 }
 

@@ -47,7 +47,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     auto lVal = left->generateLoad(file, bldr);
-    auto dest = bldr.allocTemp(file, this->resultType());
+    auto dest = bldr.allocTemp(this->resultType());
     if (operation == PapyrusBinaryOperatorType::BooleanOr) {
       bldr << location;
       bldr << op::assign{ dest, lVal };
@@ -58,7 +58,6 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       bldr << location;
       bldr << op::assign{ dest, rVal };
       bldr << after;
-      bldr.freeIfTemp(rVal);
     } else if (operation == PapyrusBinaryOperatorType::BooleanAnd) {
       bldr << location;
       bldr << op::assign{ dest, lVal };
@@ -69,7 +68,6 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       bldr << location;
       bldr << op::assign{ dest, rVal };
       bldr << afterAll;
-      bldr.freeIfTemp(rVal);
     } else {
       auto rVal = right->generateLoad(file, bldr);
       bldr << location;
@@ -141,9 +139,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
         default:
           CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
       }
-      bldr.freeIfTemp(rVal);
     }
-    bldr.freeIfTemp(lVal);
     return dest;
   }
 

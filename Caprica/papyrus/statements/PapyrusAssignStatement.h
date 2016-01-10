@@ -71,8 +71,6 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     } else {
       CapricaError::logicalFatal("Invalid Lefthand Side for PapyrusAssignStatement!");
     }
-
-    bldr.freeIfTemp(rVal);
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

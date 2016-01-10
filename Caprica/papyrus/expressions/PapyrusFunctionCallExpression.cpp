@@ -20,12 +20,9 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
       {
         auto elem = arguments[0]->value->generateLoad(file, bldr);
         auto idx = arguments[1]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
+        auto dest = bldr.allocTemp(resultType());
         bldr << location;
         bldr << op::arrayfindelement{ bVal, dest, elem, idx };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(elem);
-        bldr.freeIfTemp(idx);
         return dest;
       }
       case PapyrusBuiltinArrayFunctionKind::FindStruct:
@@ -33,24 +30,18 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         auto memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.buildPex(file);
         auto elem = arguments[1]->value->generateLoad(file, bldr);
         auto idx = arguments[2]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
+        auto dest = bldr.allocTemp(resultType());
         bldr << location;
         bldr << op::arrayfindstruct{ bVal, dest, memberName, elem, idx };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(elem);
-        bldr.freeIfTemp(idx);
         return dest;
       }
       case PapyrusBuiltinArrayFunctionKind::RFind:
       {
         auto elem = arguments[0]->value->generateLoad(file, bldr);
         auto idx = arguments[1]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
+        auto dest = bldr.allocTemp(resultType());
         bldr << location;
         bldr << op::arrayrfindelement{ bVal, dest, elem, idx };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(elem);
-        bldr.freeIfTemp(idx);
         return dest;
       }
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:
@@ -58,73 +49,58 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         auto memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.buildPex(file);
         auto elem = arguments[1]->value->generateLoad(file, bldr);
         auto idx = arguments[2]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
+        auto dest = bldr.allocTemp(resultType());
         bldr << location;
         bldr << op::arrayrfindstruct{ bVal, dest, memberName, elem, idx };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(elem);
-        bldr.freeIfTemp(idx);
         return dest;
       }
       case PapyrusBuiltinArrayFunctionKind::Add:
       {
         auto elem = arguments[0]->value->generateLoad(file, bldr);
         auto cnt = arguments[1]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
         bldr << location;
         bldr << op::arrayadd{ bVal, elem, cnt };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(elem);
-        bldr.freeIfTemp(cnt);
         return pex::PexValue::Invalid();
       }
       case PapyrusBuiltinArrayFunctionKind::Clear:
       {
           bldr << location;
           bldr << op::arrayclear{ bVal };
-          bldr.freeIfTemp(bVal);
           return pex::PexValue::Invalid();
       }
       case PapyrusBuiltinArrayFunctionKind::Insert:
       {
         auto elem = arguments[0]->value->generateLoad(file, bldr);
         auto idx = arguments[1]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
         bldr << location;
         bldr << op::arrayinsert{ bVal, elem, idx };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(elem);
-        bldr.freeIfTemp(idx);
         return pex::PexValue::Invalid();
       }
       case PapyrusBuiltinArrayFunctionKind::Remove:
       {
         auto idx = arguments[0]->value->generateLoad(file, bldr);
         auto cnt = arguments[1]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(file, resultType());
         bldr << location;
         bldr << op::arrayremove{ bVal, idx, cnt };
-        bldr.freeIfTemp(bVal);
-        bldr.freeIfTemp(idx);
-        bldr.freeIfTemp(cnt);
         return pex::PexValue::Invalid();
       }
       case PapyrusBuiltinArrayFunctionKind::RemoveLast:
       {
         bldr << location;
         bldr << op::arrayremovelast{ bVal };
-        bldr.freeIfTemp(bVal);
         return pex::PexValue::Invalid();
       }
       default:
         CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
     }
   } else {
-    pex::PexLocalVariable* dest;
-    if (function.func->returnType.type == PapyrusType::Kind::None)
-      dest = bldr.getNoneLocal(location, file);
-    else
-      dest = bldr.allocTemp(file, resultType());
+    const auto getDest = [](pex::PexFunctionBuilder& bldr, const CapricaFileLocation& loc, const PapyrusType& tp) -> pex::PexValue::Identifier {
+      if (tp.type == PapyrusType::Kind::None)
+        return bldr.getNoneLocal(loc);
+      else
+        return bldr.allocTemp(tp);
+    };
+    auto dest = getDest(bldr, location, function.func->returnType);
 
     std::vector<pex::PexValue> args;
     for (auto param : arguments)
@@ -139,12 +115,11 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     } else if (base) {
       auto bVal = base->generateLoad(file, bldr);
       bldr << op::callmethod{ file->getString(function.func->name), bVal, dest, args };
-      bldr.freeIfTemp(bVal);
     } else {
       bldr << op::callmethod{ file->getString(function.func->name), pex::PexValue::Identifier(file->getString("self")), dest, args };
     }
 
-    if (file->getStringValue(dest->type) == "None")
+    if (function.func->returnType.type == PapyrusType::Kind::None)
       return pex::PexValue::Invalid();
     return dest;
   }

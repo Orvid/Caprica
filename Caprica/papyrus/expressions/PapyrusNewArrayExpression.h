@@ -24,9 +24,8 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
     namespace op = caprica::pex::op;
     auto len = lengthExpression->generateLoad(file, bldr);
     bldr << location;
-    auto dest = bldr.allocTemp(file, type);
+    auto dest = bldr.allocTemp(type);
     bldr << op::arraycreate{ dest, len };
-    bldr.freeIfTemp(len);
     return dest;
   }
 

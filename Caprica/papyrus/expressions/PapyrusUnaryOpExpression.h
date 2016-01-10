@@ -30,7 +30,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     auto iVal = innerExpression->generateLoad(file, bldr);
-    auto dest = bldr.allocTemp(file, this->resultType());
+    auto dest = bldr.allocTemp(this->resultType());
     bldr << location;
     switch (operation) {
       case PapyrusUnaryOperatorType::Negate:
@@ -47,7 +47,6 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
       default:
         CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
     }
-    bldr.freeIfTemp(iVal);
     return dest;
   }
 
