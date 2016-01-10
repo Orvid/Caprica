@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -53,6 +54,8 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       if (f != loadedScripts.end())
         return f->second.get();
 
+      // We should only ever be searching for things in the root import dir,
+      // so this is safe.
       auto parser = new parser::PapyrusParser(filename);
       auto a = parser->parseScript();
       CapricaError::exitIfErrors();

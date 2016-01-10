@@ -102,20 +102,15 @@ struct ScriptToCompile final
 {
   std::string sourceFileName;
   std::string outputDirectory;
-  std::string expectedScriptName;
 
   ScriptToCompile() = delete;
   ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const boost::filesystem::path& relOutputDir) {
     sourceFileName = sourcePath.string();
     outputDirectory = baseOutputDir + "\\" + relOutputDir.string();
-    expectedScriptName = relOutputDir.string();
-    std::replace(expectedScriptName.begin(), expectedScriptName.end(), '\\', ':');
-    expectedScriptName += ":" + boost::filesystem::basename(sourceFileName);
   }
   ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir) {
     sourceFileName = sourcePath.string();
     outputDirectory = baseOutputDir;
-    expectedScriptName = boost::filesystem::basename(sourceFileName);
   }
   ~ScriptToCompile() = default;
 };
@@ -128,7 +123,7 @@ static void compileScript(const ScriptToCompile& script) {
   auto baseName = boost::filesystem::basename(path.filename());
   auto ext = boost::filesystem::extension(filename);
   if (!_stricmp(ext.c_str(), ".psc")) {
-    auto parser = new caprica::papyrus::parser::PapyrusParser(filename, script.expectedScriptName);
+    auto parser = new caprica::papyrus::parser::PapyrusParser(filename);
     auto a = parser->parseScript();
     caprica::CapricaError::exitIfErrors();
     delete parser;

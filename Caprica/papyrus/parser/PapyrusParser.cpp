@@ -40,6 +40,18 @@ PapyrusScript* PapyrusParser::parseScript() {
   return script;
 }
 
+static bool doesScriptNameMatchNextPartOfDir(const boost::filesystem::path curPath, const std::string curName) {
+  auto idx = curName.find_last_of(':');
+  if (idx != std::string::npos) {
+    auto namePiece = curName.substr(idx + 1);
+    auto basePath = boost::filesystem::basename(curPath);
+    if (_stricmp(namePiece.c_str(), basePath.c_str()))
+      return false;
+    return doesScriptNameMatchNextPartOfDir(curPath.parent_path(), curName.substr(0, idx));
+  }
+  return !_stricmp(boost::filesystem::basename(curPath).c_str(), curName.c_str());
+}
+
 PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   auto loc = cur.location;
   bool isConst = false;
@@ -52,8 +64,8 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   expectConsume(TokenType::kScriptName);
   this->areLexingScriptName = false;
   auto name = expectConsumeIdent();
-  if (_stricmp(expectedScriptName.c_str(), name.c_str()))
-    CapricaError::error(cur.location, "The script name '%s' must match the name of the file '%s'! Expected name '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str(), expectedScriptName.c_str());
+  if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
+    CapricaError::error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {
