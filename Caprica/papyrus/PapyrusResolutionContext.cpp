@@ -242,31 +242,23 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
       break;
     case PapyrusType::Kind::Var:
       // Implicit conversion from None->Var is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
         canCast = true;
-        needsCast = false;
-      }
       break;
     case PapyrusType::Kind::Array:
       // Implicit conversion from None->Array is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
         canCast = true;
-        needsCast = false;
-      }
       break;
     case PapyrusType::Kind::ResolvedObject:
       // Implicit conversion from None->Object is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
         canCast = true;
-        needsCast = false;
-      }
       break;
     case PapyrusType::Kind::ResolvedStruct:
       // Implicit conversion from None->Struct is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
         canCast = true;
-        needsCast = false;
-      }
       break;
     default:
       CapricaError::logicalFatal("Unknown PapyrusTypeKind!");

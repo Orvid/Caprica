@@ -37,17 +37,17 @@ std::string PapyrusType::prettyString() const {
 std::string PapyrusType::getTypeString() const {
   switch (type) {
     case Kind::None:
-      return "none";
+      return "None";
     case Kind::Bool:
-      return "bool";
+      return "Bool";
     case Kind::Float:
-      return "float";
+      return "Float";
     case Kind::Int:
-      return "int";
+      return "Int";
     case Kind::String:
-      return "string";
+      return "String";
     case Kind::Var:
-      return "var";
+      return "Var";
     case Kind::Array:
       return arrayElementType->getTypeString() + "[]";
     case Kind::Unresolved:

@@ -56,6 +56,8 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   }
 
   virtual PapyrusType resultType() const override {
+    if (operation == PapyrusUnaryOperatorType::Not)
+      return PapyrusType::Bool(location);
     return innerExpression->resultType();
   }
 };
