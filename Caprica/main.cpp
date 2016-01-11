@@ -118,7 +118,8 @@ struct ScriptToCompile final
 };
 
 static void compileScript(const ScriptToCompile& script) {
-  std::cout << "Compiling " << script.sourceFileName << std::endl;
+  if (!caprica::CapricaConfig::quietCompile)
+    std::cout << "Compiling " << script.sourceFileName << std::endl;
   auto path = boost::filesystem::path(script.sourceFileName);
   auto baseName = boost::filesystem::basename(path.filename());
   auto ext = boost::filesystem::extension(script.sourceFileName);
@@ -199,6 +200,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("warning-as-error", po::value<std::vector<size_t>>()->composing(), "Treat a specific warning as an error.")
       ("disable-warning", po::value<std::vector<size_t>>()->composing(), "Disable a specific warning.")
       ("config-file", po::value<std::string>()->default_value("caprica.cfg"), "Load additional options from a config file.")
+      ("quiet,q", po::bool_switch(&conf::quietCompile)->default_value(false), "Do not report progress, only failures.")
     ;
 
     po::options_description champollionCompatDesc("Champollion Compatibility");

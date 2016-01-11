@@ -38,6 +38,8 @@ extern bool emitDebugInfo;
 // The directories to search in for imported types and
 // unknown types.
 extern std::vector<std::string> importDirectories;
+// If true, only report failures, not progress.
+extern bool quietCompile;
 // If true, treat warnings as errors.
 extern bool treatWarningsAsErrors;
 // The user flags definition.
