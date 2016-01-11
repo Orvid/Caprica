@@ -149,7 +149,6 @@ struct PapyrusLexer
       cur(TokenType::Unknown, CapricaFileLocation{ "", 0, 0 })
   {
     consume(); // set the first token.
-    strm.sync_with_stdio(false);
   }
 
   ~PapyrusLexer() = default;
