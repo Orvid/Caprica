@@ -20,7 +20,7 @@ struct PapyrusStructMember final
   std::string name{ "" };
   std::string documentationString{ "" };
   PapyrusType type;
-  PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
+  PapyrusUserFlags userFlags{ };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
   bool isConst{ false };
 
@@ -34,7 +34,7 @@ struct PapyrusStructMember final
     member->name = file->getString(name);
     member->documentationString = file->getString(documentationString);
     member->typeName = type.buildPex(file);
-    member->userFlags = buildPexUserFlags(file, userFlags);
+    member->userFlags = userFlags.buildPex(file);
     member->defaultValue = defaultValue.buildPex(file);
     member->isConst = isConst;
     struc->members.push_back(member);

@@ -18,7 +18,7 @@ struct PapyrusVariable final
 {
   std::string name{ "" };
   PapyrusType type;
-  PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
+  PapyrusUserFlags userFlags{ };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
   bool isConst{ false };
 
@@ -31,7 +31,7 @@ struct PapyrusVariable final
     auto var = new pex::PexVariable();
     var->name = file->getString(name);
     var->typeName = type.buildPex(file);
-    var->userFlags = buildPexUserFlags(file, userFlags);
+    var->userFlags = userFlags.buildPex(file);
     var->defaultValue = defaultValue.buildPex(file);
     var->isConst = isConst;
     obj->variables.push_back(var);

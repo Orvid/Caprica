@@ -41,7 +41,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
 
   func->documentationString = file->getString(documentationComment);
   func->returnTypeName = returnType.buildPex(file);
-  func->userFlags = buildPexUserFlags(file, userFlags);
+  func->userFlags = userFlags.buildPex(file);
   func->isGlobal = isGlobal;
   func->isNative = isNative;
   for (auto p : parameters)

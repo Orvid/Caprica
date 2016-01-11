@@ -89,7 +89,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   }
   obj->isConst = isConst;
   obj->name = name;
-  obj->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Default | PapyrusUserFlags::Hidden);
+  obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocString();
 
@@ -277,7 +277,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
     CapricaError::error(cur.location, "A constant member must have a value!");
   }
 
-  mem->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden);
+  mem->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::StructMember);
   expectConsumeEOLs();
   mem->documentationString = maybeConsumeDocString();
   return mem;
@@ -286,7 +286,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
 PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
   auto group = new PapyrusPropertyGroup(cur.location);
   group->name = expectConsumeIdent();
-  group->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::CollapsedOnBase | PapyrusUserFlags::CollapsedOnRef | PapyrusUserFlags::Hidden);
+  group->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::PropertyGroup);
   expectConsumeEOLs();
   group->documentationComment = maybeConsumeDocString();
 
@@ -344,7 +344,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     if (!hadDefaultValue)
       CapricaError::error(cur.location, "An AutoReadOnly property must have a value!");
   }
-  prop->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional | PapyrusUserFlags::Hidden | PapyrusUserFlags::Mandatory);
+  prop->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Property, prop->isAuto && !prop->isReadOnly);
   expectConsumeEOLs();
   prop->documentationComment = maybeConsumeDocString();
 
@@ -413,7 +413,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
     CapricaError::error(cur.location, "A constant variable must have a value!");
   }
 
-  var->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::Conditional);
+  var->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Variable);
   expectConsumeEOLs();
   return var;
 }
@@ -453,7 +453,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     func->isGlobal = true;
   }
 
-  func->userFlags = maybeConsumeUserFlags(PapyrusUserFlags::None);
+  func->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Function);
   expectConsumeEOLs();
   func->documentationComment = maybeConsumeDocString();
   if (!func->isNative) {
@@ -993,25 +993,16 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
   }
 }
 
-static std::map<std::string, PapyrusUserFlags, CaselessStringComparer> userFlagMap {
-  { "hidden", PapyrusUserFlags::Hidden },
-  { "conditional", PapyrusUserFlags::Conditional },
-  { "default", PapyrusUserFlags::Default },
-  { "collapsedonref", PapyrusUserFlags::CollapsedOnRef },
-  { "collapsedonbase", PapyrusUserFlags::CollapsedOnBase },
-  { "mandatory", PapyrusUserFlags::Mandatory },
-};
-
-PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(PapyrusUserFlags validFlags) {
-  auto flags = PapyrusUserFlags::None;
+PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location, bool isAutoProperty) {
+  PapyrusUserFlags flags;
   while (cur.type == TokenType::Identifier) {
-    auto a = userFlagMap.find(cur.sValue);
-    if (a == userFlagMap.end())
-      CapricaError::fatal(cur.location, "Unknown flag '%s'!", cur.sValue.c_str());
-
-    if ((validFlags & a->second) != a->second)
+    auto flg = CapricaConfig::userFlagsDefinition.findFlag(cur.location, cur.sValue);
+    if ((flg.validLocations & location) != location && (!isAutoProperty || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
       CapricaError::error(cur.location, "The flag '%s' is not valid in this location.", cur.sValue.c_str());
-    flags |= a->second;
+
+    PapyrusUserFlags newFlag;
+    newFlag.data = 1ULL << flg.flagNum;
+    flags |= newFlag;
     consume();
   }
   return flags;

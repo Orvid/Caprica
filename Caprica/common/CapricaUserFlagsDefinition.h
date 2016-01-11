@@ -31,6 +31,7 @@ struct CapricaUserFlagsDefinition final
     ValidLocations validLocations{ ValidLocations::None };
     std::string name{ "" };
     uint8_t bitIndex{ };
+    size_t flagNum{ };
     CapricaFileLocation location;
 
     UserFlag(const CapricaFileLocation& loc) : location(loc) { }
@@ -38,6 +39,10 @@ struct CapricaUserFlagsDefinition final
   };
 
   void registerUserFlag(const UserFlag& flag);
+  const UserFlag& findFlag(const CapricaFileLocation& loc, const std::string& name) const;
+  // Not that flag num is NOT the flag's bit index, it is instead
+  // the flag's index in the user flags vector.
+  const UserFlag& getFlag(size_t flagNum) const;
 
 private:
   std::map<std::string, size_t, CaselessStringComparer> flagNameMap{ };

@@ -17,7 +17,7 @@ struct PapyrusPropertyGroup final
 {
   std::string name{ "" };
   std::string documentationComment{ "" };
-  PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
+  PapyrusUserFlags userFlags{ };
   std::vector<PapyrusProperty*> properties{ };
 
   CapricaFileLocation location;
@@ -34,7 +34,7 @@ struct PapyrusPropertyGroup final
       pg->objectName = obj->name;
       pg->groupName = file->getString(name);
       pg->documentationString = file->getString(documentationComment);
-      pg->userFlags = buildPexUserFlags(file, userFlags);
+      pg->userFlags = userFlags.buildPex(file);
       for (auto p : properties)
         pg->properties.push_back(file->getString(p->name));
       file->debugInfo->propertyGroups.push_back(pg);

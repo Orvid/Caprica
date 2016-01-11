@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <common/CapricaUserFlagsDefinition.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/parser/PapyrusLexer.h>
@@ -42,7 +43,7 @@ private:
 
   PapyrusType expectConsumePapyrusType();
   PapyrusValue expectConsumePapyrusValue();
-  PapyrusUserFlags maybeConsumeUserFlags(PapyrusUserFlags validFlags);
+  PapyrusUserFlags maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location, bool isAutoProperty = false);
 
   void expect(TokenType tp) {
     if (cur.type != tp) {

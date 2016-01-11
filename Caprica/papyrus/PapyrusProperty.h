@@ -26,7 +26,7 @@ struct PapyrusProperty final
   PapyrusType type;
   bool isAuto{ false };
   bool isReadOnly{ false };
-  PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
+  PapyrusUserFlags userFlags{ };
   PapyrusFunction* readFunction{ nullptr };
   PapyrusFunction* writeFunction{ nullptr };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
@@ -50,7 +50,7 @@ struct PapyrusProperty final
     prop->name = file->getString(name);
     prop->documentationString = file->getString(documentationComment);
     prop->typeName = type.buildPex(file);
-    prop->userFlags = buildPexUserFlags(file, userFlags & ~PapyrusUserFlags::Conditional);
+    prop->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Property);
     if (isAuto && isReadOnly) {
       prop->isReadable = true;
       auto func = new pex::PexFunction();
@@ -77,8 +77,7 @@ struct PapyrusProperty final
       auto var = new pex::PexVariable();
       var->name = file->getString(getAutoVarName());
       var->typeName = prop->typeName;
-      if ((userFlags & PapyrusUserFlags::Conditional) == PapyrusUserFlags::Conditional)
-        var->userFlags = buildPexUserFlags(file, PapyrusUserFlags::Conditional);
+      var->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Variable);
       var->defaultValue = defaultValue.buildPex(file);
       // TODO: Investigate how the official compiler distinguishes between a const
       // underlying var and a non-const. Some props are const, others are not.

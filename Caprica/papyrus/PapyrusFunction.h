@@ -35,7 +35,7 @@ struct PapyrusFunction final
   std::string name{ "" };
   std::string documentationComment{ "" };
   PapyrusType returnType;
-  PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
+  PapyrusUserFlags userFlags{ };
   bool isGlobal{ false };
   bool isNative{ false };
   std::vector<PapyrusFunctionParameter*> parameters{ };

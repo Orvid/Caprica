@@ -23,7 +23,7 @@ struct PapyrusObject final
   std::string name{ "" };
   std::string documentationString{ "" };
   bool isConst{ false };
-  PapyrusUserFlags userFlags{ PapyrusUserFlags::None };
+  PapyrusUserFlags userFlags{ };
   PapyrusType parentClass;
   PapyrusState* autoState{ nullptr };
   
@@ -67,14 +67,20 @@ struct PapyrusObject final
   void buildPex(pex::PexFile* file) const {
     auto obj = new pex::PexObject();
     obj->name = file->getString(name);
-    obj->parentClassName = parentClass.buildPex(file);
+    if (parentClass.type != PapyrusType::Kind::None) {
+      if (parentClass.type != PapyrusType::Kind::ResolvedObject)
+        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+      obj->parentClassName = file->getString(parentClass.resolvedObject->name);
+    } else {
+      obj->parentClassName = file->getString("");
+    }
     obj->documentationString = file->getString(documentationString);
     obj->isConst = isConst;
     if (autoState)
       obj->autoStateName = file->getString(autoState->name);
     else
       obj->autoStateName = file->getString("");
-    obj->userFlags = buildPexUserFlags(file, userFlags);
+    obj->userFlags = userFlags.buildPex(file);
 
     for (auto s : structs)
       s->buildPex(file, obj);
