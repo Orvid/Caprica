@@ -169,11 +169,11 @@ static void compileScript(const ScriptToCompile& script) {
 }
 
 static std::pair<std::string, std::string> parseOddArguments(const std::string& str) {
-  if (str == "WE")
+  if (str == "-WE")
     return std::make_pair("all-warnings-as-errors", "");
-  else if (str.find("we") == 0)
+  else if (str.find("-we") == 0)
     return std::make_pair("warning-as-error", str.substr(2));
-  else if (str.find("wd") == 0)
+  else if (str.find("-wd") == 0)
     return std::make_pair("disable-warning", str.substr(2));
   else
     return std::make_pair(std::string(), std::string());
