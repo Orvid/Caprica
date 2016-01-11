@@ -5,6 +5,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <common/CapricaUserFlagsDefinition.h>
+
 namespace caprica { namespace CapricaConfig {
 
 // If true, allow identifiers to be prefixed with '::', which are normally
@@ -38,6 +40,8 @@ extern bool emitDebugInfo;
 extern std::vector<std::string> importDirectories;
 // If true, treat warnings as errors.
 extern bool treatWarningsAsErrors;
+// The user flags definition.
+extern CapricaUserFlagsDefinition userFlagsDefinition;
 // The set of warnings to treat as errors.
 extern std::unordered_set<size_t> warningsToHandleAsErrors;
 // The set of warnings to ignore.

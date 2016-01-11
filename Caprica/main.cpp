@@ -8,6 +8,7 @@
 #include <boost/program_options.hpp>
 
 #include <common/CapricaConfig.h>
+#include <common/parser/CapricaUserFlagsParser.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
@@ -187,15 +188,16 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     po::options_description desc("General");
     desc.add_options()
       ("help,h", "Print usage information.")
-      ("import,i", po::value<std::vector<std::string>>(), "Set the compiler's import directories.")
+      ("import,i", po::value<std::vector<std::string>>()->composing(), "Set the compiler's import directories.")
+      ("flags,f", po::value<std::string>(), "Set the file defining the user flags.")
       ("optimize,O", po::bool_switch(&conf::enableOptimizations)->default_value(false), "Enable optimizations.")
       ("output,o", po::value<std::string>()->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::compileInParallel)->default_value(false), "Compile files in parallel.")
       ("recurse,r", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false), "Recursively compile all scripts in the directories passed.")
       ("dump-asm", po::bool_switch(&conf::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
       ("all-warnings-as-errors", po::bool_switch(&conf::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
-      ("warning-as-error", po::value<std::vector<size_t>>(), "Treat a specific warning as an error.")
-      ("disable-warning", po::value<std::vector<size_t>>(), "Disable a specific warning.")
+      ("warning-as-error", po::value<std::vector<size_t>>()->composing(), "Treat a specific warning as an error.")
+      ("disable-warning", po::value<std::vector<size_t>>()->composing(), "Disable a specific warning.")
       ("config-file", po::value<std::string>()->default_value("caprica.cfg"), "Load additional options from a config file.")
     ;
 
@@ -238,15 +240,22 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     auto confFilePath = vm["config-file"].as<std::string>();
     auto progamBasePath = boost::filesystem::absolute(boost::filesystem::path(argv[0]).parent_path()).string();
+    bool loadedConfigFile = false;
     if (boost::filesystem::exists(progamBasePath + "\\" + confFilePath)) {
-      std::ifstream ifs(progamBasePath + confFilePath);
+      loadedConfigFile = true;
+      std::ifstream ifs(progamBasePath + "\\" + confFilePath);
       po::store(po::parse_config_file(ifs, commandLineDesc), vm);
       po::notify(vm);
     }
     if (boost::filesystem::exists(confFilePath) && _stricmp(boost::filesystem::current_path().string().c_str(), progamBasePath.c_str())) {
-      std::ifstream ifs(progamBasePath + confFilePath);
+      loadedConfigFile = true;
+      std::ifstream ifs(progamBasePath + "\\" + confFilePath);
       po::store(po::parse_config_file(ifs, commandLineDesc), vm);
       po::notify(vm);
+    }
+    if (!loadedConfigFile && confFilePath != "caprica.cfg") {
+      std::cout << "Unable to locate config file '" << confFilePath << "'." << std::endl;
+      return false;
     }
 
     if (vm.count("help") || !vm.count("input-file")) {
@@ -303,6 +312,36 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       boost::filesystem::create_directories(baseOutputDir);
     baseOutputDir = boost::filesystem::canonical(boost::filesystem::absolute(baseOutputDir)).make_preferred().string();
 
+    if (vm.count("flags")) {
+      const auto findFlags = [progamBasePath, baseOutputDir](const std::string& flagsPath) -> std::string {
+        if (boost::filesystem::exists(flagsPath))
+          return flagsPath;
+
+        for (auto& i : conf::importDirectories) {
+          if (boost::filesystem::exists(i + "\\" + flagsPath))
+            return i + "\\" + flagsPath;
+        }
+
+        if (boost::filesystem::exists(baseOutputDir + "\\" + flagsPath))
+          return baseOutputDir + "\\" + flagsPath;
+        if (boost::filesystem::exists(progamBasePath + "\\" + flagsPath))
+          return progamBasePath + "\\" + flagsPath;
+
+        return "";
+      };
+      
+      auto flagsPath = findFlags(vm["flags"].as<std::string>());
+      if (flagsPath == "") {
+        std::cout << "Unable to locate flags file '" << vm["flags"].as<std::string>() << "'." << std::endl;
+        return false;
+      }
+
+      auto parser = new caprica::parser::CapricaUserFlagsParser(flagsPath);
+      parser->parseUserFlags(conf::userFlagsDefinition);
+      delete parser;
+    }
+
+
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     filesToCompile.reserve(filesPassed.size());
     for (auto f : filesPassed) {
@@ -343,7 +382,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       }
     }
   } catch (const std::exception& ex) {
-    std::cout << ex.what() << std::endl;
+    if (ex.what() != "")
+      std::cout << ex.what() << std::endl;
     return false;
   }
 
@@ -373,7 +413,9 @@ int main(int argc, char* argv[])
       for (auto& file : filesToCompile)
         compileScript(file);
     }
-  } catch (const std::runtime_error&) {
+  } catch (const std::runtime_error& ex) {
+    if (ex.what() != "")
+      std::cout << ex.what() << std::endl;
     breakIfDebugging();
     return -1;
   }

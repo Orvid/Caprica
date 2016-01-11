@@ -13,6 +13,7 @@ bool enableSpeculativeSyntax{ true };
 bool emitDebugInfo{ true };
 std::vector<std::string> importDirectories{ };
 bool treatWarningsAsErrors{ false };
+CapricaUserFlagsDefinition userFlagsDefinition{ };
 std::unordered_set<size_t> warningsToHandleAsErrors{ };
 std::unordered_set<size_t> warningsToIgnore{ };
 

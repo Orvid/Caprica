@@ -49,7 +49,7 @@ struct CapricaError abstract
   static void fatal(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     auto str = formatString(location, "Fatal Error", msg, args...);
     std::cerr << str << std::endl;
-    throw std::runtime_error(str);
+    throw std::runtime_error("");
   }
 
   // The difference between this and fatal is that this is intended for places
@@ -60,7 +60,7 @@ struct CapricaError abstract
   static void logicalFatal(const std::string& msg, Args&&... args) {
     auto str = formatString("Fatal Error", msg, args...);
     std::cerr << str << std::endl;
-    throw std::runtime_error(str);
+    throw std::runtime_error("");
   }
 
 private:
