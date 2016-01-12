@@ -9,7 +9,7 @@ set(PACKAGE_BUGREPORT "https://github.com/Orvid/Caprica/issues")
 
 project(${PACKAGE_NAME} CXX)
 
-find_package(Boost 1.52.0 COMPONENTS filesystem REQUIRED)
+find_package(Boost 1.52.0 COMPONENTS filesystem program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
