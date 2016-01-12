@@ -2,40 +2,6 @@
 
 namespace caprica { namespace pex {
 
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::nop& instr) { return push(PexOpCode::Nop); }
-
-#define OP_ARG1(name, opcode, destArgIdx, at1, an1) \
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1); }
-#define OP_ARG2(name, opcode, destArgIdx, at1, an1, at2, an2) \
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2); }
-#define OP_ARG3(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3) \
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
-#define OP_ARG4(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4) \
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
-#define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
-OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
-#undef OP_ARG1
-#undef OP_ARG2
-#undef OP_ARG3
-#undef OP_ARG4
-#undef OP_ARG5
-
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::callmethod& instr) {
-  return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
-}
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::callparent& instr) {
-  return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, instr.variadicArgs));
-}
-PexFunctionBuilder& PexFunctionBuilder::operator <<(op::callstatic& instr) {
-  return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
-}
-
-PexFunctionBuilder& PexFunctionBuilder::operator <<(const CapricaFileLocation& loc) {
-  currentLocation = loc;
-  return *this;
-}
-
 void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
   for (size_t i = 0; i < instructions.size(); i++) {
     for (auto& arg : instructions[i]->args) {
@@ -73,46 +39,6 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   }
 }
 
-PexLocalVariable* PexFunctionBuilder::allocateLocal(const std::string& name, const papyrus::PapyrusType& tp) {
-  auto loc = new PexLocalVariable();
-  loc->name = file->getString(name);
-  loc->type = tp.buildPex(file);
-  locals.push_back(loc);
-  return loc;
-}
-
-PexLocalVariable* PexFunctionBuilder::getNoneLocal(const CapricaFileLocation& location) {
-  for (auto& loc : locals) {
-    if (file->getStringValue(loc->name) == "::nonevar")
-      return loc;
-  }
-  return allocateLocal("::nonevar", papyrus::PapyrusType::None(location));
-}
-
-PexLocalVariable* PexFunctionBuilder::allocLongLivedTemp(const papyrus::PapyrusType& tp) {
-  return internalAllocateTempVar(tp.buildPex(file));
-}
-
-void PexFunctionBuilder::freeLongLivedTemp(PexLocalVariable* loc) {
-  return freeValueIfTemp(PexValue::Identifier(loc));
-}
-
-PexValue::TemporaryVariable PexFunctionBuilder::allocTemp(const papyrus::PapyrusType& tp) {
-  auto vRef = new PexTemporaryVariableRef(tp.buildPex(file));
-  tempVarRefs.push_back(vRef);
-  return PexValue::TemporaryVariable(vRef);
-}
-
-PexFunctionBuilder& PexFunctionBuilder::operator <<(PexLabel* loc) {
-  loc->targetIdx = instructions.size();
-  return *this;
-}
-PexFunctionBuilder& PexFunctionBuilder::operator >>(PexLabel*& loc) {
-  loc = new PexLabel();
-  labels.push_back(loc);
-  return *this;
-}
-
 static int32_t getDestArgIndexForOpCode(PexOpCode op) {
   switch (op) {
     case PexOpCode::Nop:
@@ -132,7 +58,7 @@ static int32_t getDestArgIndexForOpCode(PexOpCode op) {
     case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
     case PexOpCode::opcode: return destArgIdx;
-      OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3

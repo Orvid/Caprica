@@ -124,44 +124,89 @@ struct callstatic final
 
 struct PexFunctionBuilder final
 {
-  PexFunctionBuilder& operator <<(op::nop& instr);
+  PexFunctionBuilder& operator <<(op::nop& instr) { return push(PexOpCode::Nop); }
+
 #define OP_ARG1(name, opcode, destArgIdx, at1, an1) \
-  PexFunctionBuilder& operator <<(op::name& instr);
+PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1); }
 #define OP_ARG2(name, opcode, destArgIdx, at1, an1, at2, an2) \
-  PexFunctionBuilder& operator <<(op::name& instr);
+PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2); }
 #define OP_ARG3(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3) \
-  PexFunctionBuilder& operator <<(op::name& instr);
+PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
 #define OP_ARG4(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4) \
-  PexFunctionBuilder& operator <<(op::name& instr);
+PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
 #define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
-  PexFunctionBuilder& operator <<(op::name& instr);
-OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
+  OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
-  PexFunctionBuilder& operator <<(op::callmethod& instr);
-  PexFunctionBuilder& operator <<(op::callparent& instr);
-  PexFunctionBuilder& operator <<(op::callstatic& instr);
 
-  PexFunctionBuilder& operator <<(const CapricaFileLocation& loc);
-  void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
-  PexLocalVariable* allocateLocal(const std::string& name, const papyrus::PapyrusType& tp);
-  PexLocalVariable* getNoneLocal(const CapricaFileLocation& location);
-  PexLocalVariable* allocLongLivedTemp(const papyrus::PapyrusType& tp);
-  void freeLongLivedTemp(PexLocalVariable* loc);
-  PexValue::TemporaryVariable allocTemp(const papyrus::PapyrusType& tp);
-  void freeValueIfTemp(const PexValue& v);
-  PexFunctionBuilder& operator <<(PexLabel* loc);
-  PexFunctionBuilder& operator >>(PexLabel*& loc);
+  PexFunctionBuilder& operator <<(op::callmethod& instr) {
+    return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
+  }
+  PexFunctionBuilder& operator <<(op::callparent& instr) {
+    return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, instr.variadicArgs));
+  }
+  PexFunctionBuilder& operator <<(op::callstatic& instr) {
+    return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
+  }
+
+  PexFunctionBuilder& operator <<(const CapricaFileLocation& loc) {
+    currentLocation = loc;
+    return *this;
+  }
+
+  PexLocalVariable* allocateLocal(const std::string& name, const papyrus::PapyrusType& tp) {
+    auto loc = new PexLocalVariable();
+    loc->name = file->getString(name);
+    loc->type = tp.buildPex(file);
+    locals.push_back(loc);
+    return loc;
+  }
+
+  PexLocalVariable* getNoneLocal(const CapricaFileLocation& location) {
+    for (auto& loc : locals) {
+      if (file->getStringValue(loc->name) == "::nonevar")
+        return loc;
+    }
+    return allocateLocal("::nonevar", papyrus::PapyrusType::None(location));
+  }
+
+  PexLocalVariable* allocLongLivedTemp(const papyrus::PapyrusType& tp) {
+    return internalAllocateTempVar(tp.buildPex(file));
+  }
+
+  void freeLongLivedTemp(PexLocalVariable* loc) {
+    return freeValueIfTemp(PexValue::Identifier(loc));
+  }
+
+  PexValue::TemporaryVariable allocTemp(const papyrus::PapyrusType& tp) {
+    auto vRef = new PexTemporaryVariableRef(tp.buildPex(file));
+    tempVarRefs.push_back(vRef);
+    return PexValue::TemporaryVariable(vRef);
+  }
+
+  PexFunctionBuilder& operator <<(PexLabel* loc) {
+    loc->targetIdx = instructions.size();
+    return *this;
+  }
+
+  PexFunctionBuilder& operator >>(PexLabel*& loc) {
+    loc = new PexLabel();
+    labels.push_back(loc);
+    return *this;
+  }
 
   PexLabel* currentBreakTarget() {
     return curBreakStack.back();
   }
+
   void pushBreakScope(PexLabel* destLabel) {
     curBreakStack.push_back(destLabel);
   }
+
   void popBreakScope() {
     curBreakStack.pop_back();
   }
@@ -169,15 +214,20 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
   PexLabel* currentContinueTarget() {
     return curContinueStack.back();
   }
+
   void pushBreakContinueScope(PexLabel* breakLabel, PexLabel* continueLabel) {
     curBreakStack.push_back(breakLabel);
     curContinueStack.push_back(continueLabel);
   }
+
   void popBreakContinueScope() {
     curBreakStack.pop_back();
     curContinueStack.pop_back();
   }
 
+
+  void freeValueIfTemp(const PexValue& v);
+  void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
 
   PexFunctionBuilder(const CapricaFileLocation& loc, PexFile* fl) : currentLocation(loc), file(fl) { }
 
