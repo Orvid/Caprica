@@ -98,6 +98,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kEndSwitch, "EndSwitch" },
   { TokenType::kFor, "For" },
   { TokenType::kForEach, "ForEach" },
+  { TokenType::kIn, "In" },
   { TokenType::kSwitch, "Switch" },
 };
 
@@ -193,6 +194,7 @@ static const std::map<std::string, TokenType, CaselessStringComparer> languageEx
   { "endswitch", TokenType::kEndSwitch },
   { "for", TokenType::kFor },
   { "foreach", TokenType::kForEach },
+  { "in", TokenType::kIn },
   { "switch", TokenType::kSwitch },
 };
 

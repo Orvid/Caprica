@@ -501,6 +501,13 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
+  auto id = tryResolveFunctionIdentifier(baseType, ident);
+  if (id.type == PapyrusIdentifierType::Unresolved)
+    CapricaError::fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
+  return id;
+}
+
+PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
   if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
 
@@ -576,7 +583,7 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
     }
   }
 
-  CapricaError::fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
+  return ident;
 }
 
 }}

@@ -113,6 +113,7 @@ enum class TokenType : int32_t
   kEndSwitch,
   kFor,
   kForEach,
+  kIn,
   kSwitch,
 };
 
