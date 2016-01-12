@@ -2,15 +2,18 @@
 
 namespace caprica { namespace CapricaConfig {
 
-bool allowCompilerIdentifiers{ true };
-bool allowDecompiledStructNameRefs{ true };
+// These should always be defaulted to false/empty, and their real
+// default values set in the command line parsing.
+
+bool allowCompilerIdentifiers{ false };
+bool allowDecompiledStructNameRefs{ false };
 bool compileInParallel{ false };
 bool dumpPexAsm{ false };
-bool enableCKOptimizations{ true };
-bool enableLanguageExtensions{ true };
-bool enableOptimizations{ true };
-bool enableSpeculativeSyntax{ true };
-bool emitDebugInfo{ true };
+bool enableCKOptimizations{ false };
+bool enableLanguageExtensions{ false };
+bool enableOptimizations{ false };
+bool enableSpeculativeSyntax{ false };
+bool emitDebugInfo{ false };
 std::vector<std::string> importDirectories{ };
 bool quietCompile{ false };
 bool treatWarningsAsErrors{ false };

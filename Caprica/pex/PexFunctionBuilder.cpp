@@ -199,12 +199,12 @@ PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
   }
 
   // Special case for dead assigns.
- /* if (instr->opCode == PexOpCode::Assign) {
+  if (CapricaConfig::enableOptimizations && instr->opCode == PexOpCode::Assign) {
     auto dst = instr->args[0];
     auto src = instr->args[1];
     if (dst.type == src.type && dst.type == PexValueType::Identifier && dst.s.index == src.s.index)
       return *this;
-  }*/
+  }
 
   instructionLocations.push_back(currentLocation);
   instructions.push_back(instr);

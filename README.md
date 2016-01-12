@@ -14,3 +14,7 @@ Deliberate Differences from the Papyrus compiler in the Creation Kit:
  - The CK compiler allows implicit coercion from `None` to arrays and objects, regardless of the origin. Caprica only allows implicit coercion to arrays, objects, structs, and `Var` when the source is a literal `None`.
  - The CK compiler will generate direct reads of the underlying variable for `Auto` properties defined in parent classes. This is not safe, and Caprica will only do this for `Auto` properties defined on the current class.
  - The CK compiler for FO4 appears to not check to see if parameter names conflict with names in a parent scope. Previous versions of the CK compiler did check this correctly, and Caprica does as well, but RobotSelfDestructScript.frenzyFX appears to be a victim of this bug, and does have parameter names that conflict with property names.
+
+And, because it can, Caprica allows a few things that the CK compiler does not. Here's a non-exaustive list:
+ - Op-equals operations (`+=`, `-=`, etc.) on array elements are allowed.
+ - Integer literals can be used as the default value for floats, so no more `.0` on the end of those literals.
