@@ -526,6 +526,22 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
+    case TokenType::kAuto:
+    {
+      if (!CapricaConfig::enableLanguageExtensions)
+        goto DefaultCase;
+
+      auto eLoc = cur.location;
+      auto ret = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
+      consume();
+      ret->isAuto = true;
+      ret->name = expectConsumeIdent();
+      expectConsume(TokenType::Equal);
+      ret->initialValue = parseExpression(func);
+      expectConsumeEOLs();
+      return ret;
+    }
+
     case TokenType::kBool:
     case TokenType::kFloat:
     case TokenType::kInt:
@@ -541,6 +557,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
+    DefaultCase:
     case TokenType::Identifier:
     default:
     {

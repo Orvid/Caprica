@@ -15,6 +15,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
 {
   PapyrusType type;
   std::string name{ "" };
+  bool isAuto{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
   PapyrusDeclareStatement(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
@@ -34,10 +35,16 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
-    type = ctx->resolveType(type);
-    if (initialValue) {
+    if (isAuto) {
       initialValue->semantic(ctx);
-      initialValue = PapyrusResolutionContext::coerceExpression(initialValue, type);
+      type = initialValue->resultType();
+    } else {
+      type = ctx->resolveType(type);
+
+      if (initialValue) {
+        initialValue->semantic(ctx);
+        initialValue = PapyrusResolutionContext::coerceExpression(initialValue, type);
+      }
     }
 
     ctx->addLocalVariable(this);
