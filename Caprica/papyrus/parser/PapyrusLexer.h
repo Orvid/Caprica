@@ -174,6 +174,11 @@ protected:
   Token cur;
 
   void consume();
+  CapricaFileLocation consumeLocation() {
+    auto loc = cur.location;
+    consume();
+    return loc;
+  }
   // Use this sparingly, as it means
   // tokens get lexed multiple times.
   Token peekToken(int distance = 0);

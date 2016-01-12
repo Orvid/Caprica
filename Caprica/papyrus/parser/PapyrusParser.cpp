@@ -480,8 +480,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
   switch (cur.type) {
     case TokenType::kReturn:
     {
-      auto ret = new statements::PapyrusReturnStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusReturnStatement(consumeLocation());
       if (cur.type != TokenType::EOL)
         ret->returnValue = parseExpression(func);
       expectConsumeEOLs();
@@ -490,8 +489,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kIf:
     {
-      auto ret = new statements::PapyrusIfStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusIfStatement(consumeLocation());
       while (true) {
         auto cond = parseExpression(func);
         expectConsumeEOLs();
@@ -519,24 +517,21 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kBreak:
     {
-      auto ret = new statements::PapyrusBreakStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusBreakStatement(consumeLocation());
       expectConsumeEOLs();
       return ret;
     }
 
     case TokenType::kContinue:
     {
-      auto ret = new statements::PapyrusContinueStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusContinueStatement(consumeLocation());
       expectConsumeEOLs();
       return ret;
     }
 
     case TokenType::kDo:
     {
-      auto ret = new statements::PapyrusDoWhileStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusDoWhileStatement(consumeLocation());
       expectConsumeEOLs();
       while (cur.type != TokenType::kLoopWhile)
         ret->body.push_back(parseStatement(func));
@@ -548,8 +543,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kFor:
     {
-      auto baseLoc = cur.location;
-      consume();
+      auto baseLoc = consumeLocation();
       auto eLoc = cur.location;
       PapyrusIdentifier* ident{ nullptr };
       statements::PapyrusDeclareStatement* declStatement{ nullptr };
@@ -584,8 +578,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kForEach:
     {
-      auto ret = new statements::PapyrusForEachStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusForEachStatement(consumeLocation());
       bool hadLParen = maybeConsume(TokenType::LParen);
       auto eLoc = cur.location;
       statements::PapyrusDeclareStatement* declStatement;
@@ -613,8 +606,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kSwitch:
     {
-      auto ret = new statements::PapyrusSwitchStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusSwitchStatement(consumeLocation());
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
 
@@ -657,8 +649,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kWhile:
     {
-      auto ret = new statements::PapyrusWhileStatement(cur.location);
-      consume();
+      auto ret = new statements::PapyrusWhileStatement(consumeLocation());
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
       while (cur.type != TokenType::kEndWhile)
@@ -673,9 +664,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       if (!CapricaConfig::enableLanguageExtensions)
         goto DefaultCase;
 
-      auto eLoc = cur.location;
+      auto eLoc = consumeLocation();
       auto ret = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
-      consume();
       ret->isAuto = true;
       ret->name = expectConsumeIdent();
       expectConsume(TokenType::Equal);
@@ -736,9 +726,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           goto AssignStatementCommon;
         AssignStatementCommon:
         {
-          auto assStat = new statements::PapyrusAssignStatement(cur.location);
+          auto assStat = new statements::PapyrusAssignStatement(consumeLocation());
           assStat->lValue = expr;
-          consume();
           assStat->operation = op;
           assStat->rValue = parseExpression(func);
           expectConsumeEOLs();
@@ -760,10 +749,9 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* func) {
   auto expr = parseAndExpression(func);
   while (cur.type == TokenType::BooleanOr) {
-    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+    auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
     binExpr->left = expr;
     binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanOr;
-    consume();
     binExpr->right = parseAndExpression(func);
     expr = binExpr;
   }
@@ -773,10 +761,9 @@ expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* 
 expressions::PapyrusExpression* PapyrusParser::parseAndExpression(PapyrusFunction* func) {
   auto expr = parseCmpExpression(func);
   while (cur.type == TokenType::BooleanAnd) {
-    auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+    auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
     binExpr->left = expr;
     binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanAnd;
-    consume();
     binExpr->right = parseCmpExpression(func);
     expr = binExpr;
   }
@@ -809,10 +796,9 @@ expressions::PapyrusExpression* PapyrusParser::parseCmpExpression(PapyrusFunctio
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
-        consume();
         binExpr->right = parseAddExpression(func);
         expr = binExpr;
         break;
@@ -840,10 +826,9 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
-        consume();
         binExpr->right = parseMultExpression(func);
         expr = binExpr;
         break;
@@ -874,10 +859,9 @@ expressions::PapyrusExpression* PapyrusParser::parseMultExpression(PapyrusFuncti
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
-        consume();
         binExpr->right = parseUnaryExpression(func);
         expr = binExpr;
         break;
@@ -903,9 +887,8 @@ expressions::PapyrusExpression* PapyrusParser::parseUnaryExpression(PapyrusFunct
 
     OperatorCommon:
     {
-      auto unExpr = new expressions::PapyrusUnaryOpExpression(cur.location);
+      auto unExpr = new expressions::PapyrusUnaryOpExpression(consumeLocation());
       unExpr->operation = op;
-      consume();
       unExpr->innerExpression = parseCastExpression(func);
       return unExpr;
     }
@@ -918,14 +901,12 @@ expressions::PapyrusExpression* PapyrusParser::parseCastExpression(PapyrusFuncti
   auto expr = parseDotExpression(func);
 
   if (cur.type == TokenType::kIs) {
-    auto loc = cur.location;
-    consume();
+    auto loc = consumeLocation();
     auto isExpr = new expressions::PapyrusIsExpression(loc, expectConsumePapyrusType());
     isExpr->innerExpression = expr;
     expr = isExpr;
   } else if (cur.type == TokenType::kAs) {
-    auto loc = cur.location;
-    consume();
+    auto loc = consumeLocation();
     auto castExpr = new expressions::PapyrusCastExpression(loc, expectConsumePapyrusType());
     castExpr->innerExpression = expr;
     expr = castExpr;
@@ -951,14 +932,12 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     {
       auto expr = parseArrayExpression(func);
       while (cur.type == TokenType::Dot) {
-        auto maExpr = new expressions::PapyrusMemberAccessExpression(cur.location);
-        consume();
+        auto maExpr = new expressions::PapyrusMemberAccessExpression(consumeLocation());
         maExpr->baseExpression = expr;
         maExpr->accessExpression = parseFuncOrIdExpression(func);
 
         if (cur.type == TokenType::LSquare) {
-          auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.location);
-          consume();
+          auto aiExpr = new expressions::PapyrusArrayIndexExpression(consumeLocation());
           aiExpr->baseExpression = maExpr;
           aiExpr->indexExpression = parseExpression(func);
           expectConsume(TokenType::RSquare);
@@ -976,8 +955,7 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
 expressions::PapyrusExpression* PapyrusParser::parseArrayExpression(PapyrusFunction* func) {
   auto expr = parseAtomExpression(func);
   if (cur.type == TokenType::LSquare) {
-    auto aiExpr = new expressions::PapyrusArrayIndexExpression(cur.location);
-    consume();
+    auto aiExpr = new expressions::PapyrusArrayIndexExpression(consumeLocation());
     aiExpr->baseExpression = expr;
     aiExpr->indexExpression = parseExpression(func);
     expectConsume(TokenType::RSquare);
@@ -1021,17 +999,9 @@ expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFuncti
 expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {
   switch (cur.type) {
     case TokenType::kLength:
-    {
-      auto lenExpr = new expressions::PapyrusArrayLengthExpression(cur.location);
-      consume();
-      return lenExpr;
-    }
+      return new expressions::PapyrusArrayLengthExpression(consumeLocation());
     case TokenType::kParent:
-    {
-      auto parExpr = new expressions::PapyrusParentExpression(cur.location, func->parentObject->parentClass);
-      consume();
-      return parExpr;
-    }
+      return new expressions::PapyrusParentExpression(consumeLocation(), func->parentObject->parentClass);
     case TokenType::kSelf:
     {
       auto selfExpr = new expressions::PapyrusSelfExpression(cur.location, PapyrusType::ResolvedObject(cur.location, func->parentObject));
@@ -1075,24 +1045,19 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
   PapyrusType tp = PapyrusType::Default();
   switch (cur.type) {
     case TokenType::kBool:
-      tp = PapyrusType::Bool(cur.location);
-      consume();
+      tp = PapyrusType::Bool(consumeLocation());
       break;
     case TokenType::kFloat:
-      tp = PapyrusType::Float(cur.location);
-      consume();
+      tp = PapyrusType::Float(consumeLocation());
       break;
     case TokenType::kInt:
-      tp = PapyrusType::Int(cur.location);
-      consume();
+      tp = PapyrusType::Int(consumeLocation());
       break;
     case TokenType::kString:
-      tp = PapyrusType::String(cur.location);
-      consume();
+      tp = PapyrusType::String(consumeLocation());
       break;
     case TokenType::kVar:
-      tp = PapyrusType::Var(cur.location);
-      consume();
+      tp = PapyrusType::Var(consumeLocation());
       break;
     case TokenType::Identifier:
     {
