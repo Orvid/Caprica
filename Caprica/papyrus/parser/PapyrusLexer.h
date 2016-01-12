@@ -114,6 +114,7 @@ enum class TokenType : int32_t
   kFor,
   kForEach,
   kIn,
+  kLoopWhile,
   kSwitch,
   kTo,
 };

@@ -23,3 +23,4 @@ And, because it can, Caprica allows a few things that the CK compiler does not. 
  - Switch-Case statements on `Int` and `String` values are allowed. Case values must be literals.
  - ForEach statements can be used to iterate over an array or Collection.
  - For statements can be used.
+ - Do-LoopWhile statements can be used.

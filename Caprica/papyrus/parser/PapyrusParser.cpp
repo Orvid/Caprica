@@ -27,6 +27,7 @@
 #include <papyrus/statements/PapyrusBreakStatement.h>
 #include <papyrus/statements/PapyrusContinueStatement.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
+#include <papyrus/statements/PapyrusDoWhileStatement.h>
 #include <papyrus/statements/PapyrusExpressionStatement.h>
 #include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusForEachStatement.h>
@@ -528,6 +529,19 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     {
       auto ret = new statements::PapyrusContinueStatement(cur.location);
       consume();
+      expectConsumeEOLs();
+      return ret;
+    }
+
+    case TokenType::kDo:
+    {
+      auto ret = new statements::PapyrusDoWhileStatement(cur.location);
+      consume();
+      expectConsumeEOLs();
+      while (cur.type != TokenType::kLoopWhile)
+        ret->body.push_back(parseStatement(func));
+      expectConsume(TokenType::kLoopWhile);
+      ret->condition = parseExpression(func);
       expectConsumeEOLs();
       return ret;
     }
