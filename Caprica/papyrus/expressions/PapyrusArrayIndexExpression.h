@@ -49,7 +49,10 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   }
 
   virtual PapyrusType resultType() const override {
-    return baseExpression->resultType().getElementType();
+    auto res = baseExpression->resultType();
+    if (res.type == PapyrusType::Kind::Array)
+      return res.getElementType();
+    return PapyrusType::None(location);
   }
 };
 
