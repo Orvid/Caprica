@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <limits>
 #include <map>
+#include <set>
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
@@ -175,10 +176,13 @@ PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode
   }
 
   PexLocalVariable* allocLongLivedTemp(const papyrus::PapyrusType& tp) {
-    return internalAllocateTempVar(tp.buildPex(file));
+    auto v = internalAllocateTempVar(tp.buildPex(file));
+    longLivedTempVars.insert(v->name);
+    return v;
   }
 
   void freeLongLivedTemp(PexLocalVariable* loc) {
+    longLivedTempVars.erase(loc->name);
     return freeValueIfTemp(PexValue::Identifier(loc));
   }
 
@@ -240,6 +244,7 @@ private:
   std::vector<PexLabel*> labels{ };
   std::vector<PexTemporaryVariableRef*> tempVarRefs{ };
   std::map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
+  std::set<PexString> longLivedTempVars{ };
   std::map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };
   size_t currentTempI = 0;
   std::vector<PexLabel*> curBreakStack{ };

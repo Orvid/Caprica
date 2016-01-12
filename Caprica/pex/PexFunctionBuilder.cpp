@@ -79,7 +79,7 @@ void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
     return;
 
   auto f = tempVarNameTypeMap.find(varName);
-  if (f != tempVarNameTypeMap.end()) {
+  if (f != tempVarNameTypeMap.end() && !longLivedTempVars.count(varName)) {
     if (!freeTempVars.count(f->second->type))
       freeTempVars.insert({ f->second->type, { } });
     freeTempVars[f->second->type].push_back(f->second);
