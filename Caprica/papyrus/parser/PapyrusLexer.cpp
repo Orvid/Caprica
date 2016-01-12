@@ -100,6 +100,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kForEach, "ForEach" },
   { TokenType::kIn, "In" },
   { TokenType::kSwitch, "Switch" },
+  { TokenType::kTo, "To" },
 };
 
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
@@ -196,6 +197,7 @@ static const std::map<std::string, TokenType, CaselessStringComparer> languageEx
   { "foreach", TokenType::kForEach },
   { "in", TokenType::kIn },
   { "switch", TokenType::kSwitch },
+  { "to", TokenType::kTo },
 };
 
 void PapyrusLexer::consume() {

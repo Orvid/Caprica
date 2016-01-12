@@ -28,6 +28,7 @@
 #include <papyrus/statements/PapyrusContinueStatement.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusExpressionStatement.h>
+#include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusForEachStatement.h>
 #include <papyrus/statements/PapyrusIfStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
@@ -528,6 +529,42 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       auto ret = new statements::PapyrusContinueStatement(cur.location);
       consume();
       expectConsumeEOLs();
+      return ret;
+    }
+
+    case TokenType::kFor:
+    {
+      auto baseLoc = cur.location;
+      consume();
+      auto eLoc = cur.location;
+      PapyrusIdentifier* ident{ nullptr };
+      statements::PapyrusDeclareStatement* declStatement{ nullptr };
+      if (peekToken().type == TokenType::Identifier) {
+        if (cur.type == TokenType::kAuto) {
+          declStatement = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
+          declStatement->isAuto = true;
+          expectConsume(TokenType::kAuto);
+        } else {
+          declStatement = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
+        }
+        declStatement->name = expectConsumeIdent();
+      } else {
+        ident = new PapyrusIdentifier(PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
+      }
+      expectConsume(TokenType::Equal);
+      auto initValue = expectConsumePapyrusValue();
+      expectConsume(TokenType::kTo);
+      auto targValue = expectConsumePapyrusValue();
+      expectConsumeEOLs();
+
+      auto ret = new statements::PapyrusForStatement(baseLoc, initValue, targValue);
+      ret->declareStatement = declStatement;
+      ret->iteratorVariable = ident;
+
+      while (!maybeConsume(TokenType::kEndFor))
+        ret->body.push_back(parseStatement(func));
+      expectConsumeEOLs();
+
       return ret;
     }
 

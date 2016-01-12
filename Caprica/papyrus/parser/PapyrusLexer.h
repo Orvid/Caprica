@@ -115,6 +115,7 @@ enum class TokenType : int32_t
   kForEach,
   kIn,
   kSwitch,
+  kTo,
 };
 
 struct PapyrusLexer
