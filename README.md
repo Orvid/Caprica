@@ -21,3 +21,4 @@ And, because it can, Caprica allows a few things that the CK compiler does not. 
  - Local variables can be declared as `Auto` and their type will be inferred from the initializer expression.
  - Break/Continue statements with the same semantics as are present in C++, are allowed.
  - Switch-Case statements on `Int` and `String` values are allowed. Case values must be literals.
+ - ForEach statements can be used to iterate over an array or Collection.

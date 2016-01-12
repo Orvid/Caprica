@@ -42,6 +42,8 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     baseExpression->semantic(ctx);
+    if (baseExpression->resultType().type != PapyrusType::Kind::Array)
+      CapricaError::error(baseExpression->location, "You can only index arrays! Got '%s'!", baseExpression->resultType().prettyString().c_str());
     indexExpression->semantic(ctx);
     indexExpression = PapyrusResolutionContext::coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
   }
