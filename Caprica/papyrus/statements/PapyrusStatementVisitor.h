@@ -3,10 +3,13 @@
 namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusAssignStatement;
+struct PapyrusBreakStatement;
+struct PapyrusContinueStatement;
 struct PapyrusDeclareStatement;
 struct PapyrusExpressionStatement;
 struct PapyrusIfStatement;
 struct PapyrusReturnStatement;
+struct PapyrusSwitchStatement;
 struct PapyrusWhileStatement;
 
 struct PapyrusStatementVisitor abstract
@@ -15,10 +18,13 @@ struct PapyrusStatementVisitor abstract
   virtual ~PapyrusStatementVisitor() = default;
 
   virtual void visit(PapyrusAssignStatement* s) { }
+  virtual void visit(PapyrusBreakStatement* s) { }
+  virtual void visit(PapyrusContinueStatement* s) { }
   virtual void visit(PapyrusDeclareStatement* s) { }
   virtual void visit(PapyrusExpressionStatement* s) { }
   virtual void visit(PapyrusIfStatement* s) { }
   virtual void visit(PapyrusReturnStatement* s) { }
+  virtual void visit(PapyrusSwitchStatement* s) { }
   virtual void visit(PapyrusWhileStatement* s) { }
 };
 

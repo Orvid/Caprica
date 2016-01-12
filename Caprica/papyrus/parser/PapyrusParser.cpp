@@ -24,10 +24,13 @@
 #include <papyrus/expressions/PapyrusUnaryOpExpression.h>
 
 #include <papyrus/statements/PapyrusAssignStatement.h>
+#include <papyrus/statements/PapyrusBreakStatement.h>
+#include <papyrus/statements/PapyrusContinueStatement.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusExpressionStatement.h>
 #include <papyrus/statements/PapyrusIfStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
+#include <papyrus/statements/PapyrusSwitchStatement.h>
 #include <papyrus/statements/PapyrusWhileStatement.h>
 
 
@@ -507,10 +510,68 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         }
         expectConsume(TokenType::kEndIf);
         expectConsumeEOLs();
-        goto Return;
+        return ret;
       }
-    Return:
+    }
+
+    case TokenType::kBreak:
+    {
+      auto ret = new statements::PapyrusBreakStatement(cur.location);
+      consume();
+      expectConsumeEOLs();
       return ret;
+    }
+
+    case TokenType::kContinue:
+    {
+      auto ret = new statements::PapyrusContinueStatement(cur.location);
+      consume();
+      expectConsumeEOLs();
+      return ret;
+    }
+
+    case TokenType::kSwitch:
+    {
+      auto ret = new statements::PapyrusSwitchStatement(cur.location);
+      consume();
+      ret->condition = parseExpression(func);
+      expectConsumeEOLs();
+
+      while (true) {
+        switch (cur.type) {
+          case TokenType::kCase:
+          {
+            consume();
+            auto cond = expectConsumePapyrusValue();
+            expectConsumeEOLs();
+            std::vector<statements::PapyrusStatement*> curStatements{ };
+            while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
+              curStatements.push_back(parseStatement(func));
+            ret->caseBodies.push_back(std::make_pair(cond, curStatements));
+            break;
+          }
+
+          case TokenType::kDefault:
+          {
+            if (ret->defaultStatements.size() > 0)
+              CapricaError::error(cur.location, "The default case was already defined!");
+            consume();
+            expectConsumeEOLs();
+
+            while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
+              ret->defaultStatements.push_back(parseStatement(func));
+            break;
+          }
+
+          case TokenType::kEndSwitch:
+            consume();
+            expectConsumeEOLs();
+            return ret;
+
+          default:
+            CapricaError::fatal(cur.location, "Unexpected token in switch body '%s'!", cur.prettyString().c_str());
+        }
+      }
     }
 
     case TokenType::kWhile:
@@ -1012,10 +1073,15 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
 
 PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location, bool isAutoProperty) {
   PapyrusUserFlags flags;
-  while (cur.type == TokenType::Identifier) {
-    auto flg = CapricaConfig::userFlagsDefinition.findFlag(cur.location, cur.sValue);
+  while (cur.type == TokenType::Identifier || cur.type == TokenType::kDefault) {
+    auto loc = cur.location;
+    auto str = cur.sValue;
+    if (cur.type == TokenType::kDefault)
+      str = "default";
+
+    auto flg = CapricaConfig::userFlagsDefinition.findFlag(loc, str);
     if ((flg.validLocations & location) != location && (!isAutoProperty || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
-      CapricaError::error(cur.location, "The flag '%s' is not valid in this location.", cur.sValue.c_str());
+      CapricaError::error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
     PapyrusUserFlags newFlag;
     newFlag.data = 1ULL << flg.flagNum;

@@ -79,6 +79,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kString, "String" },
   { TokenType::kTrue, "True" },
   { TokenType::kWhile, "While" },
+
   { TokenType::kConst, "Const" },
   { TokenType::kEndPropertyGroup, "EndPropertyGroup" },
   { TokenType::kEndStruct, "EndStruct" },
@@ -86,6 +87,18 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kPropertyGroup, "PropertyGroup" },
   { TokenType::kStruct, "Struct" },
   { TokenType::kVar, "Var" },
+
+  { TokenType::kBreak, "Break" },
+  { TokenType::kCase, "Case" },
+  { TokenType::kContinue, "Continue" },
+  { TokenType::kDefault, "Default" },
+  { TokenType::kDo, "Do" },
+  { TokenType::kEndFor, "EndFor" },
+  { TokenType::kEndForEach, "EndForEach" },
+  { TokenType::kEndSwitch, "EndSwitch" },
+  { TokenType::kFor, "For" },
+  { TokenType::kForEach, "ForEach" },
+  { TokenType::kSwitch, "Switch" },
 };
 
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
@@ -166,6 +179,21 @@ static const std::map<std::string, TokenType, CaselessStringComparer> speculativ
   { "propertygroup", TokenType::kPropertyGroup },
   { "struct", TokenType::kStruct },
   { "var", TokenType::kVar },
+};
+
+// Language extension keywords
+static const std::map<std::string, TokenType, CaselessStringComparer> languageExtensionsKeywordMap{
+  { "break", TokenType::kBreak },
+  { "case", TokenType::kCase },
+  { "continue", TokenType::kContinue },
+  { "default", TokenType::kDefault },
+  { "do", TokenType::kDo },
+  { "endfor", TokenType::kEndFor },
+  { "endforeach", TokenType::kEndForEach },
+  { "endswitch", TokenType::kEndSwitch },
+  { "for", TokenType::kFor },
+  { "foreach", TokenType::kForEach },
+  { "switch", TokenType::kSwitch },
 };
 
 void PapyrusLexer::consume() {
@@ -392,6 +420,12 @@ StartOver:
       if (CapricaConfig::enableSpeculativeSyntax) {
         auto f2 = speculativeKeywordMap.find(ident);
         if (f2 != speculativeKeywordMap.end())
+          return setTok(f2->second, baseLoc);
+      }
+
+      if (CapricaConfig::enableLanguageExtensions) {
+        auto f2 = languageExtensionsKeywordMap.find(ident);
+        if (f2 != languageExtensionsKeywordMap.end())
           return setTok(f2->second, baseLoc);
       }
 

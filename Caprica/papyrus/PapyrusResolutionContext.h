@@ -62,6 +62,28 @@ struct PapyrusResolutionContext final
     localVariableScopeStack.pop_back();
   }
 
+  bool canBreak() const {
+    return currentBreakScopeDepth > 0;
+  }
+  void pushBreakScope() {
+    currentBreakScopeDepth++;
+  }
+  void popBreakScope() {
+    currentBreakScopeDepth--;
+  }
+
+  bool canContinue() const {
+    return currentContinueScopeDepth > 0;
+  }
+  void pushBreakContinueScope() {
+    currentBreakScopeDepth++;
+    currentContinueScopeDepth++;
+  }
+  void popBreakContinueScope() {
+    currentBreakScopeDepth--;
+    currentContinueScopeDepth--;
+  }
+
   void addLocalVariable(statements::PapyrusDeclareStatement* ident);
 
   PapyrusState* tryResolveState(const std::string& name, const PapyrusObject* parentObj = nullptr) const;
@@ -94,6 +116,8 @@ struct PapyrusResolutionContext final
 private:
   std::vector<std::map<std::string, statements::PapyrusDeclareStatement*, CaselessStringComparer>> localVariableScopeStack{ };
   std::vector<PapyrusScript*> importedScripts{ };
+  size_t currentBreakScopeDepth{ 0 };
+  size_t currentContinueScopeDepth{ 0 };
 
   PapyrusScript* loadScript(const std::string& name);
 };

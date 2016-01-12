@@ -89,6 +89,14 @@ PexLocalVariable* PexFunctionBuilder::getNoneLocal(const CapricaFileLocation& lo
   return allocateLocal("::nonevar", papyrus::PapyrusType::None(location));
 }
 
+PexLocalVariable* PexFunctionBuilder::allocLongLivedTemp(const papyrus::PapyrusType& tp) {
+  return internalAllocateTempVar(tp.buildPex(file));
+}
+
+void PexFunctionBuilder::freeLongLivedTemp(PexLocalVariable* loc) {
+  return freeValueIfTemp(PexValue::Identifier(loc));
+}
+
 PexValue::TemporaryVariable PexFunctionBuilder::allocTemp(const papyrus::PapyrusType& tp) {
   auto vRef = new PexTemporaryVariableRef(tp.buildPex(file));
   tempVarRefs.push_back(vRef);
@@ -152,6 +160,24 @@ void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
   }
 }
 
+PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& typeName) {
+  auto f = freeTempVars.find(typeName);
+  if (f != freeTempVars.end() && f->second.size()) {
+    PexLocalVariable* b = f->second.back();
+    f->second.pop_back();
+    return b;
+  }
+
+  auto loc = new PexLocalVariable();
+  std::stringstream ss;
+  ss << "::temp" << currentTempI++;
+  loc->name = file->getString(ss.str());
+  loc->type = typeName;
+  tempVarNameTypeMap.insert({ loc->name, loc });
+  locals.push_back(loc);
+  return loc;
+}
+
 PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
   for (auto& v : instr->args) {
     if (v.type == PexValueType::Invalid)
@@ -170,23 +196,9 @@ PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
 
   auto destIdx = getDestArgIndexForOpCode(instr->opCode);
   if (destIdx != -1 && instr->args[destIdx].type == PexValueType::TemporaryVar) {
-    auto f = freeTempVars.find(instr->args[destIdx].tmpVar->type);
-    if (f != freeTempVars.end() && f->second.size()) {
-      PexLocalVariable* b = f->second.back();
-      f->second.pop_back();
-      instr->args[destIdx].tmpVar->var = b;
-      instr->args[destIdx] = PexValue::Identifier(b->name);
-    } else {
-      auto loc = new PexLocalVariable();
-      std::stringstream ss;
-      ss << "::temp" << currentTempI++;
-      loc->name = file->getString(ss.str());
-      loc->type = instr->args[destIdx].tmpVar->type;
-      tempVarNameTypeMap.insert({ loc->name, loc });
-      locals.push_back(loc);
-      instr->args[destIdx].tmpVar->var = loc;
-      instr->args[destIdx] = PexValue::Identifier(loc);
-    }
+    auto loc = internalAllocateTempVar(instr->args[destIdx].tmpVar->type);
+    instr->args[destIdx].tmpVar->var = loc;
+    instr->args[destIdx] = PexValue::Identifier(loc);
   }
 
   for (auto& v : instr->args) {

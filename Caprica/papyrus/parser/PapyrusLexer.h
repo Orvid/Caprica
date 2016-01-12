@@ -101,6 +101,19 @@ enum class TokenType : int32_t
   kPropertyGroup,
   kStruct,
   kVar,
+
+  // Language extension keywords
+  kBreak,
+  kCase,
+  kContinue,
+  kDefault,
+  kDo,
+  kEndFor,
+  kEndForEach,
+  kEndSwitch,
+  kFor,
+  kForEach,
+  kSwitch,
 };
 
 struct PapyrusLexer

@@ -149,10 +149,35 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
   PexLocalVariable* allocateLocal(const std::string& name, const papyrus::PapyrusType& tp);
   PexLocalVariable* getNoneLocal(const CapricaFileLocation& location);
+  PexLocalVariable* allocLongLivedTemp(const papyrus::PapyrusType& tp);
+  void freeLongLivedTemp(PexLocalVariable* loc);
   PexValue::TemporaryVariable allocTemp(const papyrus::PapyrusType& tp);
   void freeValueIfTemp(const PexValue& v);
   PexFunctionBuilder& operator <<(PexLabel* loc);
   PexFunctionBuilder& operator >>(PexLabel*& loc);
+
+  PexLabel* currentBreakTarget() {
+    return curBreakStack.back();
+  }
+  void pushBreakScope(PexLabel* destLabel) {
+    curBreakStack.push_back(destLabel);
+  }
+  void popBreakScope() {
+    curBreakStack.pop_back();
+  }
+
+  PexLabel* currentContinueTarget() {
+    return curContinueStack.back();
+  }
+  void pushBreakContinueScope(PexLabel* breakLabel, PexLabel* continueLabel) {
+    curBreakStack.push_back(breakLabel);
+    curContinueStack.push_back(continueLabel);
+  }
+  void popBreakContinueScope() {
+    curBreakStack.pop_back();
+    curContinueStack.pop_back();
+  }
+
 
   PexFunctionBuilder(const CapricaFileLocation& loc, PexFile* fl) : currentLocation(loc), file(fl) { }
 
@@ -167,6 +192,8 @@ private:
   std::map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
   std::map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };
   size_t currentTempI = 0;
+  std::vector<PexLabel*> curBreakStack{ };
+  std::vector<PexLabel*> curContinueStack{ };
 
   template<typename... Args>
   PexFunctionBuilder& push(PexOpCode op, Args&&... args) {
@@ -174,6 +201,7 @@ private:
   }
   
   PexFunctionBuilder& push(PexInstruction* instr);
+  PexLocalVariable* internalAllocateTempVar(const PexString& typeName);
 };
 
 }}

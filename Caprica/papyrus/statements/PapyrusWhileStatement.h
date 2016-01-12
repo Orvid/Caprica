@@ -31,6 +31,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
     bldr << beforeCondition;
     pex::PexLabel* afterAll;
     bldr >> afterAll;
+    bldr.pushBreakContinueScope(afterAll, beforeCondition);
     auto lVal = condition->generateLoad(file, bldr);
     bldr << location;
     bldr << op::jmpf{ lVal, afterAll };
@@ -41,15 +42,18 @@ struct PapyrusWhileStatement final : public PapyrusStatement
     bldr << op::jmp{ beforeCondition };
 
     bldr << afterAll;
+    bldr.popBreakContinueScope();
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
     condition = PapyrusResolutionContext::coerceExpression(condition, PapyrusType::Bool(condition->location));
+    ctx->pushBreakContinueScope();
     ctx->pushLocalVariableScope();
     for (auto s : body)
       s->semantic(ctx);
     ctx->popLocalVariableScope();
+    ctx->popBreakContinueScope();
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {
