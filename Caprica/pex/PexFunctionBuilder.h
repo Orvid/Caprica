@@ -197,6 +197,12 @@ PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode
     return *this;
   }
 
+  PexLabel* label() {
+    PexLabel* l;
+    *this >> l;
+    return l;
+  }
+
   PexFunctionBuilder& operator >>(PexLabel*& loc) {
     loc = new PexLabel();
     labels.push_back(loc);

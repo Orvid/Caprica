@@ -79,6 +79,13 @@ struct PexValue final
     Integer(int32_t val) : i(val) { }
     ~Integer() = default;
   };
+  struct Float
+  {
+    float f;
+
+    Float(float val) : f(val) { }
+    ~Float() = default;
+  };
   struct Bool
   {
     bool b;
@@ -101,6 +108,7 @@ struct PexValue final
     }
   }
   PexValue(const Integer& val) : type(PexValueType::Integer), i(val.i) { }
+  PexValue(const Float& val) : type(PexValueType::Float), f(val.f) { }
   PexValue(const Bool& val) : type(PexValueType::Bool), b(val.b) { }
   PexValue(const None& val) : type(PexValueType::None) { }
   PexValue(const Invalid& val) : type(PexValueType::Invalid) { }

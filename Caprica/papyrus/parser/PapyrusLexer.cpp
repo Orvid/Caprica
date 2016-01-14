@@ -100,6 +100,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kForEach, "ForEach" },
   { TokenType::kIn, "In" },
   { TokenType::kLoopWhile, "LoopWhile" },
+  { TokenType::kStep, "Step" },
   { TokenType::kSwitch, "Switch" },
   { TokenType::kTo, "To" },
 };
@@ -198,6 +199,7 @@ static const std::map<std::string, TokenType, CaselessStringComparer> languageEx
   { "foreach", TokenType::kForEach },
   { "in", TokenType::kIn },
   { "loopwhile", TokenType::kLoopWhile },
+  { "step", TokenType::kStep },
   { "switch", TokenType::kSwitch },
   { "to", TokenType::kTo },
 };

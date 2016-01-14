@@ -543,7 +543,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kFor:
     {
-      auto baseLoc = consumeLocation();
+      auto ret = new statements::PapyrusForStatement(consumeLocation());
       auto eLoc = cur.location;
       PapyrusIdentifier* ident{ nullptr };
       statements::PapyrusDeclareStatement* declStatement{ nullptr };
@@ -556,18 +556,18 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           declStatement = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
         }
         declStatement->name = expectConsumeIdent();
+        ret->declareStatement = declStatement;
       } else {
         ident = new PapyrusIdentifier(PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
+        ret->iteratorVariable = ident;
       }
       expectConsume(TokenType::Equal);
-      auto initValue = expectConsumePapyrusValue();
+      ret->initialValue = parseExpression(func);
       expectConsume(TokenType::kTo);
-      auto targValue = expectConsumePapyrusValue();
+      ret->targetValue = parseExpression(func);
+      if (maybeConsume(TokenType::kStep))
+        ret->stepValue = parseExpression(func);
       expectConsumeEOLs();
-
-      auto ret = new statements::PapyrusForStatement(baseLoc, initValue, targValue);
-      ret->declareStatement = declStatement;
-      ret->iteratorVariable = ident;
 
       while (!maybeConsume(TokenType::kEndFor))
         ret->body.push_back(parseStatement(func));

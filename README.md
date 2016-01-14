@@ -24,3 +24,43 @@ And, because it can, Caprica allows a few things that the CK compiler does not. 
  - ForEach statements can be used to iterate over an array or Collection.
  - For statements can be used.
  - Do-LoopWhile statements can be used.
+
+
+# Language Extensions
+### For
+The statement whose absence has most annoyed Papyrus users working with arrays. Fear not, for your cries have been heard, and your calls answered! The behaviour of it is the same as in [VB.Net](https://msdn.microsoft.com/en-us/library/5z06z1kb.aspx) with the difference that `<identifier>` will never implicitly be defined. If you want to declare it as a variable, you must prefix it with a type.
+```
+<for> ::= 'For' ['Int'|'Float'|'Auto'] <identifier> '=' <expression> 'To' <expression> ['Step' <expression>]
+            <statement>*
+          'EndFor'
+```
+### ForEach
+The ForEach statement may be used to iterate over arrays or collections. A collection is defined as any Object which implements a method named `GetCount` that accepts no parameters and returns an `Int`, and also implements a method named `GetAt` which accepts a single `Int` argument and returns the value at that index. `<expression>` is evaluated exactly once before the loop begins.
+```
+<foreach> ::= 'ForEach' (<type>|'Auto') <identifier> 'In' <expression>
+                <statement>*
+              'EndForEach'
+```
+### Switch
+The Switch statement may only be used on an `Int` or `String`, and the case values must be literals.
+```
+<switch> ::= 'Switch' <expression>
+               ['Case' (<integer>|<string>)
+                 <statement>*]*
+               ['Default'
+                 <statement>*]
+             'EndSwitch'
+```
+### Do-LoopWhile
+The Do-LoopWhile statement is the same as a While statement, with the difference that the body is alway executed at least once.
+```
+<do-loop-while> ::= 'Do'
+                      <statement>*
+                    'LoopWhile' <expression>
+```
+### Break/Continue
+Break and Continue statements are both also supported as part of extensions to the language. Break will cause control to transfer after the innermost Switch, For, ForEach, Do-LoopWhile, or While statement containing the Break statement. Continue will cause control to tranfer to the next iteration of the innermost For, ForEach, Do-LoopWhile, or While statement containing the Continue statement.
+```
+<break> ::= 'Break'
+<continue> ::= 'Continue'
+```
