@@ -10,36 +10,41 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
   bldr >> beforeCondition;
   pex::PexLabel* afterAll;
   bldr >> afterAll;
-  bldr.pushBreakContinueScope(afterAll, beforeCondition);
+  pex::PexLabel* continueLabel;
+  bldr >> continueLabel;
+  bldr.pushBreakContinueScope(afterAll, continueLabel);
   auto counter = bldr.allocLongLivedTemp(PapyrusType::Int(location));
+  auto iterVal = bldr.allocLongLivedTemp(expressionToIterate->resultType());
   bldr << location;
   bldr << op::assign{ counter, pex::PexValue::Integer(0) };
-  bldr << beforeCondition;
-  auto baseVal = pex::PexValue::Identifier::fromVar(expressionToIterate->generateLoad(file, bldr));
+  auto baseVal = expressionToIterate->generateLoad(file, bldr);
   bldr << location;
+  bldr << op::assign{ iterVal, baseVal };
+  bldr << beforeCondition;
   auto cTemp = bldr.allocTemp(PapyrusType::Int(location));
   if (expressionToIterate->resultType().type == PapyrusType::Kind::Array)
-    bldr << op::arraylength{ cTemp, baseVal };
+    bldr << op::arraylength{ cTemp, iterVal };
   else
-    bldr << op::callmethod{ file->getString("GetCount"), baseVal, cTemp, { } };
+    bldr << op::callmethod{ file->getString("GetCount"), iterVal, cTemp, { } };
   auto bTemp = bldr.allocTemp(PapyrusType::Bool(location));
   bldr << op::cmplt{ bTemp, counter, cTemp };
   bldr << op::jmpf{ bTemp, afterAll };
 
   auto loc = bldr.allocateLocal(declareStatement->name, declareStatement->type);
-  auto bodyBaseVal = pex::PexValue::Identifier::fromVar(expressionToIterate->generateLoad(file, bldr));
   bldr << location;
   if (expressionToIterate->resultType().type == PapyrusType::Kind::Array)
-    bldr << op::arraygetelement{ loc, bodyBaseVal, counter };
+    bldr << op::arraygetelement{ loc, iterVal, counter };
   else
-    bldr << op::callmethod{ file->getString("GetAt"), bodyBaseVal, loc, { counter } };
+    bldr << op::callmethod{ file->getString("GetAt"), iterVal, loc, { counter } };
 
   for (auto s : body)
     s->buildPex(file, bldr);
 
   bldr << location;
+  bldr << continueLabel;
   bldr << op::iadd{ counter, counter, pex::PexValue::Integer(1) };
   bldr << op::jmp{ beforeCondition };
+  bldr.freeLongLivedTemp(iterVal);
   bldr.freeLongLivedTemp(counter);
   bldr.popBreakContinueScope();
   bldr << afterAll;
