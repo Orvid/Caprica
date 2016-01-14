@@ -271,7 +271,7 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
     bool needsCast = true;
     bool canCast = canImplicitlyCoerceExpression(expr, target, needsCast);
 
-    if (canCast && CapricaConfig::enableOptimizations && expr->resultType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float) {
+    if (canCast && expr->resultType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float) {
       if (auto le = expr->as<expressions::PapyrusLiteralExpression>()) {
         le->value.f = (float)le->value.i;
         le->value.type = PapyrusValueType::Float;
@@ -537,6 +537,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
         }
       }
     }
+
+    return resolveFunctionIdentifier(PapyrusType::ResolvedObject(ident.location, object), ident);
   } else if (baseType.type == PapyrusType::Kind::Array) {
     auto fk = PapyrusBuiltinArrayFunctionKind::Unknown;
     if (!_stricmp(ident.name.c_str(), "find")) {

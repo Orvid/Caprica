@@ -97,9 +97,9 @@ struct PapyrusType final
   struct ResolvedObject final
   {
     CapricaFileLocation location;
-    PapyrusObject* obj;
+    const PapyrusObject* obj;
 
-    ResolvedObject(const CapricaFileLocation& loc, PapyrusObject* o) : location(loc), obj(o) { }
+    ResolvedObject(const CapricaFileLocation& loc, const PapyrusObject* o) : location(loc), obj(o) { }
     ~ResolvedObject() = default;
   };
 
