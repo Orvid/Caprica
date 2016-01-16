@@ -8,55 +8,34 @@
 #include <string>
 #include <sstream>
 
+#include <common/CapricaBinaryWriter.h>
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
 
 namespace caprica { namespace pex {
 
-struct PexWriter final
+struct PexWriter final : public CapricaBinaryWriter
 {
-  PexWriter(std::ostream& dest) : strm(dest) {
-
-  }
+  PexWriter(std::ostream& dest) : CapricaBinaryWriter(dest) { }
   ~PexWriter() = default;
 
   template<typename T>
-  void boundWrite(size_t val) {
-    assert(val <= std::numeric_limits<T>::max());
-    write<T>((T)val);
+  void write(T val) {
+    CapricaBinaryWriter::write<T>(val);
   }
 
-  template<typename T>
-  void write(T val) {
-    static_assert(false, "Invalid type passed to write!");
-  }
-  template<>
-  void write(uint8_t val) {
-    strm.write((char*)&val, sizeof(val));
-  }
-  template<>
-  void write(uint16_t val) {
-    strm.write((char*)&val, sizeof(val));
-  }
-  template<>
-  void write(uint32_t val) {
-    strm.write((char*)&val, sizeof(val));
-  }
-  template<>
-  void write(time_t val) {
-    static_assert(sizeof(time_t) == 8, "time_t is not 64 bits");
-    strm.write((char*)&val, sizeof(val));
-  }
   template<>
   void write(PexString val) {
     assert(val.index != -1);
     boundWrite<uint16_t>(val.index);
   }
+
   template<>
   void write(PexUserFlags val) {
     boundWrite<uint32_t>(val.data);
   }
+
   template<>
   void write(PexValue val) {
     write<uint8_t>((uint8_t)val.type);
@@ -71,7 +50,7 @@ struct PexWriter final
         write<uint32_t>((uint32_t)val.i);
         break;
       case PexValueType::Float:
-        strm.write((char*)&val.f, sizeof(float));
+        write<float>(val.f);
         break;
       case PexValueType::Bool:
         write<uint8_t>(val.b ? 0x01 : 0x00);
@@ -82,12 +61,6 @@ struct PexWriter final
         break;
     }
   }
-  template<>
-  void write(std::string val) {
-    boundWrite<uint16_t>(val.size());
-    if (val.size())
-      strm.write(val.c_str(), val.size());
-  }
 
   // This is intended specifically for use when
   // writing a PexObject, which needs to know
@@ -97,9 +70,6 @@ struct PexWriter final
     auto str = s.str();
     strm.write(str.c_str(), str.size());
   }
-
-private:
-  std::ostream& strm;
 };
 
 }}

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include <common/CapricaBinaryReader.h>
 #include <common/CapricaError.h>
 
 #include <pex/PexString.h>
@@ -13,43 +14,14 @@
 
 namespace caprica { namespace pex {
 
-struct PexReader final
+struct PexReader final : public CapricaBinaryReader
 {
-  PexReader(const std::string& file) : strm(file, std::ifstream::binary) { }
+  PexReader(const std::string& file) : CapricaBinaryReader(file) { }
   ~PexReader() = default;
 
   template<typename T>
   T read() {
-    static_assert(false, "Invalid type passed to write!");
-  }
-
-  template<>
-  uint8_t read() {
-    uint8_t val;
-    strm.read((char*)&val, sizeof(val));
-    return val;
-  }
-
-  template<>
-  uint16_t read() {
-    uint16_t val;
-    strm.read((char*)&val, sizeof(val));
-    return val;
-  }
-
-  template<>
-  uint32_t read() {
-    uint32_t val;
-    strm.read((char*)&val, sizeof(val));
-    return val;
-  }
-
-  template<>
-  time_t read() {
-    static_assert(sizeof(time_t) == 8, "time_t is not 64 bits");
-    time_t val;
-    strm.read((char*)&val, sizeof(val));
-    return val;
+    return CapricaBinaryReader::read<T>();
   }
 
   template<>
@@ -83,12 +55,8 @@ struct PexReader final
         val.i = (int32_t)read<uint32_t>();
         break;
       case PexValueType::Float:
-      {
-        float f;
-        strm.read((char*)&f, sizeof(float));
-        val.f = f;
+        val.f = read<float>();
         break;
-      }
       case PexValueType::Bool:
         val.b = read<uint8_t>() ? true : false;
         break;
@@ -97,17 +65,6 @@ struct PexReader final
     }
     return val;
   }
-
-  template<>
-  std::string read() {
-    auto len = read<uint16_t>();
-    std::unique_ptr<char[]> buf(new char[len]);
-    strm.read(buf.get(), len);
-    return std::string(buf.get(), buf.get() + len);
-  }
-
-private:
-  std::ifstream strm;
 };
 
 }}
