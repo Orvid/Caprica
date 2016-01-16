@@ -18,19 +18,25 @@ pex::PexFile* PapyrusScript::buildPex() const {
   pex->compilationTime = time(nullptr);
   pex->sourceFileName = sourceFileName;
 
-  char compNameBuf[MAX_COMPUTERNAME_LENGTH + 1];
-  DWORD compNameBufLength = sizeof(compNameBuf);
-  if (!GetComputerNameA(compNameBuf, &compNameBufLength))
-    CapricaError::logicalFatal("Failed to get the computer name!");
-  pex->computerName = std::string(compNameBuf, compNameBufLength);
+  static std::string computerName = []() -> std::string {
+    char compNameBuf[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD compNameBufLength = sizeof(compNameBuf);
+    if (!GetComputerNameA(compNameBuf, &compNameBufLength))
+      CapricaError::logicalFatal("Failed to get the computer name!");
+    return std::string(compNameBuf, compNameBufLength);
+  }();
+  pex->computerName = computerName;
 
-  char userNameBuf[UNLEN + 1];
-  DWORD userNameBufLength = sizeof(userNameBuf);
-  if (!GetUserNameA(userNameBuf, &userNameBufLength))
-    CapricaError::logicalFatal("Failed to get the user name!");
-  if (userNameBufLength > 0)
-    userNameBufLength--;
-  pex->userName = std::string(userNameBuf, userNameBufLength);
+  static std::string userName = []() -> std::string {
+    char userNameBuf[UNLEN + 1];
+    DWORD userNameBufLength = sizeof(userNameBuf);
+    if (!GetUserNameA(userNameBuf, &userNameBufLength))
+      CapricaError::logicalFatal("Failed to get the user name!");
+    if (userNameBufLength > 0)
+      userNameBufLength--;
+    return std::string(userNameBuf, userNameBufLength);
+  }();
+  pex->userName = userName;
 
   for (auto o : objects)
     o->buildPex(pex);
