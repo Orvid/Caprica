@@ -328,7 +328,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       if (le && le->value.type == PapyrusValueType::String) {
         auto targetStateName = le->value.s;
         if (!ctx->tryResolveState(targetStateName))
-          CapricaError::warning(4004, le->location, "The state '%s' does not exist in this context.", targetStateName.c_str());
+          CapricaError::Warning::W4003_State_Doesnt_Exist(le->location, targetStateName.c_str());
       }
     }
   }

@@ -18,24 +18,25 @@ struct CapricaError abstract
   static size_t warningCount;
   static size_t errorCount;
 
+  struct Warning abstract
+  {
+#define DEFINE_WARNING_A1(num, id, msg, arg1Type, arg1Name) \
+NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name) { CapricaError::warning(num, location, msg, arg1Name); }
+#define DEFINE_WARNING_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \
+NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name, arg2Type arg2Name) { CapricaError::warning(num, location, msg, arg1Name, arg2Name); }
+
+    DEFINE_WARNING_A2(4001, Unecessary_Cast, "Unecessary cast from '%s' to '%s'.", const char*, sourceType, const char*, targetType)
+    DEFINE_WARNING_A1(4002, Duplicate_Import, "Duplicate import of '%s'.", const char*, importName)
+    DEFINE_WARNING_A1(4003, State_Doesnt_Exist, "The state '%s' doesn't exist in this context.", const char*, stateName)
+
+#undef DEFINE_WARNING_A1
+#undef DEFINE_WARNING_A2
+  };
+
   NEVER_INLINE
   static void exitIfErrors();
   NEVER_INLINE
   static bool isWarningEnabled(size_t warningNumber);
-
-  template<typename... Args>
-  NEVER_INLINE
-  static void warning(size_t warningNumber, const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
-    if (isWarningEnabled(warningNumber)) {
-      warningCount++;
-      if (CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber)) {
-        errorCount++;
-        std::cerr << formatString(location, "Error (Warning as Error)", msg, args...) << std::endl;
-      } else {
-        std::cerr << formatString(location, "Warning", msg, args...) << std::endl;
-      }
-    }
-  }
 
   template<typename... Args>
   NEVER_INLINE
@@ -64,6 +65,20 @@ struct CapricaError abstract
   }
 
 private:
+  template<typename... Args>
+  NEVER_INLINE
+  static void warning(size_t warningNumber, const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
+    if (isWarningEnabled(warningNumber)) {
+      warningCount++;
+      if (CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber)) {
+        errorCount++;
+        std::cerr << formatString(location, "Error (Warning as Error)", msg, args...) << std::endl;
+      } else {
+        std::cerr << formatString(location, "Warning", msg, args...) << std::endl;
+      }
+    }
+  }
+
   template<typename... Args>
   NEVER_INLINE
   static std::string formatString(const CapricaFileLocation& location, const std::string& msgType, const std::string& msg, Args&&... args) {
