@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 
 #include <common/CaselessStringComparer.h>
+#include <common/FSUtils.h>
 
 #include <papyrus/PapyrusObject.h>
 
@@ -41,7 +42,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 PapyrusScript* PapyrusParser::parseScript() {
   auto script = new PapyrusScript();
-  script->sourceFileName = boost::filesystem::canonical(boost::filesystem::absolute(filename)).make_preferred().string();
+  script->sourceFileName = FSUtils::canonical(filename).string();
   script->objects.push_back(parseObject(script));
   return script;
 }

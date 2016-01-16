@@ -9,6 +9,8 @@
 
 #include <common/CapricaConfig.h>
 #include <common/CapricaError.h>
+#include <common/FSUtils.h>
+
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/PapyrusStruct.h>
@@ -17,6 +19,7 @@
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
 #include <papyrus/parser/PapyrusParser.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
+
 #include <pex/PexReflector.h>
 #include <pex/parser/PexAsmParser.h>
 
@@ -119,7 +122,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       return a;
     };
     const auto normalizeDir = [](const std::string& filename) -> std::string {
-      return boost::filesystem::canonical(boost::filesystem::absolute(filename)).make_preferred().string();
+      return FSUtils::canonical(filename).string();
     };
 
     if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".psc"))

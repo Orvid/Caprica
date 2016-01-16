@@ -16,6 +16,7 @@ bool enableSpeculativeSyntax{ false };
 bool emitDebugInfo{ false };
 std::vector<std::string> importDirectories{ };
 bool quietCompile{ false };
+bool resolveSymlinks{ false };
 bool treatWarningsAsErrors{ false };
 CapricaUserFlagsDefinition userFlagsDefinition{ };
 std::unordered_set<size_t> warningsToHandleAsErrors{ };

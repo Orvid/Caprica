@@ -40,6 +40,9 @@ extern bool emitDebugInfo;
 extern std::vector<std::string> importDirectories;
 // If true, only report failures, not progress.
 extern bool quietCompile;
+// If true, resolve symlinks while building canonical
+// paths.
+extern bool resolveSymlinks;
 // If true, treat warnings as errors.
 extern bool treatWarningsAsErrors;
 // The user flags definition.

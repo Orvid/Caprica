@@ -8,6 +8,7 @@
 #include <boost/program_options.hpp>
 
 #include <common/CapricaConfig.h>
+#include <common/FSUtils.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
@@ -20,85 +21,6 @@
 #include <pex/parser/PexAsmParser.h>
 
 #include <Windows.h>
-
-boost::filesystem::path naive_uncomplete(boost::filesystem::path const p, boost::filesystem::path const base) {
-  using boost::filesystem::path;
-
-  if (p == base)
-    return "./";
-  /*!! this breaks stuff if path is a filename rather than a directory,
-  which it most likely is... but then base shouldn't be a filename so... */
-
-  boost::filesystem::path from_path, from_base, output;
-
-  boost::filesystem::path::iterator path_it = p.begin(), path_end = p.end();
-  boost::filesystem::path::iterator base_it = base.begin(), base_end = base.end();
-
-  // check for emptiness
-  if ((path_it == path_end) || (base_it == base_end))
-    throw std::runtime_error("path or base was empty; couldn't generate relative path");
-
-#ifdef WIN32
-  // drive letters are different; don't generate a relative path
-  if (*path_it != *base_it)
-    return p;
-
-  // now advance past drive letters; relative paths should only go up
-  // to the root of the drive and not past it
-  ++path_it, ++base_it;
-#endif
-
-  // Cache system-dependent dot, double-dot and slash strings
-  const std::string _dot = ".";
-  const std::string _dots = "..";
-  const std::string _sep = "\\";
-
-  // iterate over path and base
-  while (true) {
-
-    // compare all elements so far of path and base to find greatest common root;
-    // when elements of path and base differ, or run out:
-    if ((path_it == path_end) || (base_it == base_end) || (*path_it != *base_it)) {
-
-      // write to output, ../ times the number of remaining elements in base;
-      // this is how far we've had to come down the tree from base to get to the common root
-      for (; base_it != base_end; ++base_it) {
-        if (*base_it == _dot)
-          continue;
-        else if (*base_it == _sep)
-          continue;
-
-        output /= "../";
-      }
-
-      // write to output, the remaining elements in path;
-      // this is the path relative from the common root
-      boost::filesystem::path::iterator path_it_start = path_it;
-      for (; path_it != path_end; ++path_it) {
-
-        if (path_it != path_it_start)
-          output /= "/";
-
-        if (*path_it == _dot)
-          continue;
-        if (*path_it == _sep)
-          continue;
-
-        output /= *path_it;
-      }
-
-      break;
-    }
-
-    // add directory level to both paths and continue iteration
-    from_path /= path(*path_it);
-    from_base /= path(*base_it);
-
-    ++path_it, ++base_it;
-  }
-
-  return output;
-}
 
 struct ScriptToCompile final
 {
@@ -216,6 +138,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("enable-debug-info", po::value<bool>(&conf::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
       ("enable-language-extensions", po::value<bool>(&conf::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
       ("enable-speculative-syntax", po::value<bool>(&conf::enableSpeculativeSyntax)->default_value(true), "Enable the speculated syntax for the new Papyrus features in Fallout 4.")
+      ("resolve-symlinks", po::value<bool>(&conf::resolveSymlinks)->default_value(false), "Fully resolve symlinks when determining file paths.")
     ;
 
     po::options_description hiddenDesc("");
@@ -353,12 +276,12 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       }
       if (boost::filesystem::is_directory(f)) {
         if (iterateCompiledDirectoriesRecursively) {
-          auto absBaseDir = boost::filesystem::canonical(boost::filesystem::absolute(f)).make_preferred();
+          auto absBaseDir = caprica::FSUtils::canonical(f);
           boost::system::error_code ec;
           for (auto e : boost::filesystem::recursive_directory_iterator(f, ec)) {
             if (e.path().extension().string() == ".psc") {
-              auto abs = boost::filesystem::canonical(boost::filesystem::absolute(e.path())).make_preferred();
-              auto rel = naive_uncomplete(abs, absBaseDir).make_preferred();
+              auto abs = caprica::FSUtils::canonical(e.path());
+              auto rel = caprica::FSUtils::naive_uncomplete(abs, absBaseDir).make_preferred();
               
               if (rel.string() != e.path().filename())
                 filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, rel.parent_path()));
