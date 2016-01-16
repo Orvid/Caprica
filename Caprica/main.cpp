@@ -7,7 +7,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include <common/CapricaBinaryReader.h>
 #include <common/CapricaConfig.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
@@ -19,8 +18,6 @@
 #include <pex/PexReader.h>
 #include <pex/PexWriter.h>
 #include <pex/parser/PexAsmParser.h>
-
-#include <vmad/VMADInfo.h>
 
 #include <Windows.h>
 
@@ -166,17 +163,6 @@ static void compileScript(const ScriptToCompile& script) {
     caprica::pex::PexAsmWriter asmWtr(asmStrm);
     pex->writeAsm(asmWtr);
     delete pex;
-  } else if (!_stricmp(ext.c_str(), ".vmad")) {
-    caprica::CapricaBinaryReader rdr(script.sourceFileName);
-    auto inf = caprica::vmad::VMADInfo::read(rdr);
-    delete inf;
-    /*auto pex = parser->parseFile();
-    caprica::CapricaError::exitIfErrors();
-    delete parser;
-    std::ofstream strm(script.outputDirectory + "\\" + baseName + ".pex", std::ofstream::binary);
-    caprica::pex::PexWriter wtr(strm);
-    pex->write(wtr);
-    delete pex;*/
   } else {
     std::cout << "Don't know how to compile " << script.sourceFileName << "!" << std::endl;
   }
@@ -389,7 +375,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         }
       } else {
         auto ext = boost::filesystem::extension(f);
-        if (_stricmp(ext.c_str(), ".psc") && _stricmp(ext.c_str(), ".pas") && _stricmp(ext.c_str(), ".pex") && _stricmp(ext.c_str(), ".vmad")) {
+        if (_stricmp(ext.c_str(), ".psc") && _stricmp(ext.c_str(), ".pas") && _stricmp(ext.c_str(), ".pex")) {
           std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
