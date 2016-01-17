@@ -548,7 +548,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       auto eLoc = cur.location;
       PapyrusIdentifier* ident{ nullptr };
       statements::PapyrusDeclareStatement* declStatement{ nullptr };
-      if (peekToken().type == TokenType::Identifier) {
+      if (peekTokenType() == TokenType::Identifier) {
         if (cur.type == TokenType::kAuto) {
           declStatement = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
           declStatement->isAuto = true;
@@ -694,7 +694,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     case TokenType::Identifier:
     default:
     {
-      if (cur.type == TokenType::Identifier && (peekToken().type == TokenType::Identifier ||  (peekToken().type == TokenType::LSquare && peekToken(1).type == TokenType::RSquare && peekToken(2).type == TokenType::Identifier))) {
+      if (cur.type == TokenType::Identifier && (peekTokenType() == TokenType::Identifier ||  (peekTokenType() == TokenType::LSquare && peekTokenType(1) == TokenType::RSquare && peekTokenType(2) == TokenType::Identifier))) {
         auto eLoc = cur.location;
         auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
         ret->name = expectConsumeIdent();
@@ -1011,7 +1011,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
     }
     case TokenType::Identifier:
     {
-      if (peekToken().type == TokenType::LParen) {
+      if (peekTokenType() == TokenType::LParen) {
         auto eLoc = cur.location;
         auto fCallExpr = new expressions::PapyrusFunctionCallExpression(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
         expectConsume(TokenType::LParen);
@@ -1021,7 +1021,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
             maybeConsume(TokenType::Comma);
 
             auto param = new expressions::PapyrusFunctionCallExpression::Parameter();
-            if (cur.type == TokenType::Identifier && peekToken().type == TokenType::Equal) {
+            if (cur.type == TokenType::Identifier && peekTokenType() == TokenType::Equal) {
               param->name = expectConsumeIdent();
               expectConsume(TokenType::Equal);
             }
@@ -1071,7 +1071,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
       CapricaError::fatal(cur.location, "Expected a type, got '%s'!", cur.prettyString().c_str());
   }
 
-  if (cur.type == TokenType::LSquare && peekToken().type == TokenType::RSquare) {
+  if (cur.type == TokenType::LSquare && peekTokenType() == TokenType::RSquare) {
     consume();
     expectConsume(TokenType::RSquare);
     return PapyrusType::Array(tp.location, std::make_shared<PapyrusType>(tp));

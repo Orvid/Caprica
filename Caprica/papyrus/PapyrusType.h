@@ -113,7 +113,7 @@ struct PapyrusType final
   };
 
   Kind type{ Kind::None };
-  std::string name{ "" };
+  std::string name{ };
   CapricaFileLocation location;
   union
   {

@@ -44,7 +44,7 @@ PapyrusIdentifier::PapyrusIdentifier(const ArrayFunction& other)
   : type(PapyrusIdentifierType::BuiltinArrayFunction),
     location(other.location),
     arrayFuncKind(other.arrayFuncKind),
-    arrayFuncElementType(other.arrayFuncElementType) { }
+    arrayFuncElementType(std::make_shared<PapyrusType>(other.arrayFuncElementType)) { }
 
 pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const {
   namespace op = caprica::pex::op;

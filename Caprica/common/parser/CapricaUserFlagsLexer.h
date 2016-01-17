@@ -38,10 +38,10 @@ struct CapricaUserFlagsLexer
   {
     TokenType type{ TokenType::Unknown };
     CapricaFileLocation location;
-    std::string sValue{ "" };
+    std::string sValue{ };
     int32_t iValue{ };
 
-    explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
+    explicit Token(TokenType tp, const CapricaFileLocation& loc) : type(tp), location(loc) { }
     Token(const Token&) = default;
     ~Token() = default;
 

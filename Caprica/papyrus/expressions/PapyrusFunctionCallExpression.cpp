@@ -138,7 +138,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'find'!");
-        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 0));
@@ -163,14 +163,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         
         std::string memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
         PapyrusType elemType = PapyrusType::Default();
-        for (auto m : function.arrayFuncElementType.resolvedStruct->members) {
+        for (auto m : function.arrayFuncElementType->resolvedStruct->members) {
           if (!_stricmp(m->name.c_str(), memberName.c_str())) {
             elemType = m->type;
             break;
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType.resolvedStruct->name.c_str());
+          CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType->resolvedStruct->name.c_str());
         arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -189,7 +189,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'rfind'!");
-        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, -1));
@@ -214,14 +214,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
 
         std::string memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
         PapyrusType elemType = PapyrusType::Default();
-        for (auto m : function.arrayFuncElementType.resolvedStruct->members) {
+        for (auto m : function.arrayFuncElementType->resolvedStruct->members) {
           if (!_stricmp(m->name.c_str(), memberName.c_str())) {
             elemType = m->type;
             break;
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType.resolvedStruct->name.c_str());
+          CapricaError::fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType->resolvedStruct->name.c_str());
         arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -239,7 +239,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       {
         if (arguments.size() < 1 || arguments.size() > 2)
           CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'add'!");
-        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
           p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 1));
@@ -258,7 +258,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       case PapyrusBuiltinArrayFunctionKind::Insert:
         if (arguments.size() != 2)
           CapricaError::fatal(location, "Expected 2 parameters to 'insert'!");
-        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, function.arrayFuncElementType);
+        arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         break;
       case PapyrusBuiltinArrayFunctionKind::Remove:

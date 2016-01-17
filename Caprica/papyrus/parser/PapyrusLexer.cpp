@@ -112,29 +112,34 @@ const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
   return f->second;
 }
 
-void PapyrusLexer::setTok(TokenType tp, const CapricaFileLocation& loc, int consumeChars) {
-  cur = Token(tp, loc);
+void PapyrusLexer::setTok(TokenType tp, const CapricaFileLocation::Partial& loc, int consumeChars) {
+  cur.type = tp;
+  cur.location.updatePartial(loc);
   for (int i = 0; i < consumeChars; i++)
     getChar();
 }
 
-void PapyrusLexer::setTok(Token& tok) {
-  cur = tok;
-}
-
-PapyrusLexer::Token PapyrusLexer::peekToken(int distance) {
-  auto oldCur = cur;
-  auto oldLoc = location;
+TokenType PapyrusLexer::peekTokenType(int distance) {
+  auto oldCurTp = cur.type;
+  auto oldCurPLoc = CapricaFileLocation::Partial(cur.location);
+  auto oldCurI = cur.iValue;
+  auto oldCurF = cur.fValue;
+  auto oldCurS = cur.sValue;
+  auto oldLoc = CapricaFileLocation::Partial(location);
   auto oldPos = strm.tellg();
 
   for (int i = 0; i <= distance; i++)
     consume();
 
-  auto newTok = cur;
-  cur = oldCur;
-  location = oldLoc;
+  auto newTokTp = cur.type;
+  cur.type = oldCurTp;
+  cur.location.updatePartial(oldCurPLoc);
+  cur.iValue = oldCurI;
+  cur.fValue = oldCurF;
+  cur.sValue = oldCurS;
+  location.updatePartial(oldLoc);
   strm.seekg(oldPos);
-  return newTok;
+  return newTokTp;
 }
 
 static const std::map<std::string, TokenType, CaselessStringComparer> keywordMap {
@@ -206,7 +211,7 @@ static const std::map<std::string, TokenType, CaselessStringComparer> languageEx
 
 void PapyrusLexer::consume() {
 StartOver:
-  auto baseLoc = location;
+  auto baseLoc = CapricaFileLocation::Partial(location);
   auto c = getChar();
   
   switch (c) {
@@ -266,11 +271,11 @@ StartOver:
 
     case '|':
       if (peekChar() != '|')
-        CapricaError::fatal(baseLoc, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
+        CapricaError::fatal(baseLoc + location, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
       return setTok(TokenType::BooleanOr, baseLoc, 1);
     case '&':
       if (peekChar() != '&')
-        CapricaError::fatal(baseLoc, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
+        CapricaError::fatal(baseLoc + location, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
       return setTok(TokenType::BooleanAnd, baseLoc, 1);
 
     Number:
@@ -295,9 +300,9 @@ StartOver:
           str.put(getChar());
         
         auto i = std::stoul(str.str(), nullptr, 16);
-        auto tok = Token(TokenType::Integer, baseLoc);
-        tok.iValue = (int32_t)i;
-        return setTok(tok);
+        setTok(TokenType::Integer, baseLoc);
+        cur.iValue = (int32_t)i;
+        return;
       }
 
       // Either normal int or float.
@@ -322,9 +327,9 @@ StartOver:
         }
 
         auto f = std::stof(str.str());
-        auto tok = Token(TokenType::Float, baseLoc);
-        tok.fValue = f;
-        return setTok(tok);
+        setTok(TokenType::Float, baseLoc);
+        cur.fValue = f;
+        return;
       }
 
       auto s = str.str();
@@ -332,16 +337,16 @@ StartOver:
         // It is probably an integer, but maybe not.
         try {
           auto i = std::stoul(s);
-          auto tok = Token(TokenType::Integer, baseLoc);
-          tok.iValue = (int32_t)i;
-          return setTok(tok);
+          setTok(TokenType::Integer, baseLoc);
+          cur.iValue = (int32_t)i;
+          return;
         } catch (std::out_of_range oor) { }
       }
       // It's very definitely a float, and a very large one at that.
       auto f = std::stof(s);
-      auto tok = Token(TokenType::Float, baseLoc);
-      tok.fValue = f;
-      return setTok(tok);
+      setTok(TokenType::Float, baseLoc);
+      cur.fValue = f;
+      return;
     }
 
     case ':':
@@ -402,7 +407,7 @@ StartOver:
       std::ostringstream str;
       if (c == ':') {
         if (!CapricaConfig::allowCompilerIdentifiers || peekChar() != ':')
-          CapricaError::fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+          CapricaError::fatal(baseLoc + location, "Unexpected character '%c'!", (char)c);
         getChar();
         str.put(':');
         str.put(':');
@@ -437,9 +442,9 @@ StartOver:
           return setTok(f2->second, baseLoc);
       }
 
-      auto tok = Token(TokenType::Identifier, baseLoc);
-      tok.sValue = ident;
-      return setTok(tok);
+      setTok(TokenType::Identifier, baseLoc);
+      cur.sValue = ident;
+      return;
     }
 
     case '"':
@@ -477,9 +482,9 @@ StartOver:
         CapricaError::fatal(location, "Unclosed string!");
       getChar();
 
-      auto tok = Token(TokenType::String, baseLoc);
-      tok.sValue = str.str();
-      return setTok(tok);
+      setTok(TokenType::String, baseLoc);
+      cur.sValue = str.str();
+      return;
     }
 
     case ';':
@@ -540,19 +545,19 @@ StartOver:
         CapricaError::fatal(location, "Unexpected EOF before the end of a documentation comment!");
       getChar();
 
-      auto tok = Token(TokenType::DocComment, baseLoc);
-      tok.sValue = str.str();
+      setTok(TokenType::DocComment, baseLoc);
+      cur.sValue = str.str();
       // Trim trailing whitespace.
-      if (tok.sValue.length())
-        tok.sValue = tok.sValue.substr(0, tok.sValue.find_last_not_of(" \t\n\v\f\r") + 1);
-      return setTok(tok);
+      if (cur.sValue.length())
+        cur.sValue = cur.sValue.substr(0, cur.sValue.find_last_not_of(" \t\n\v\f\r") + 1);
+      return;
     }
 
     case '\\':
     {
       consume();
       if (cur.type != TokenType::EOL)
-        CapricaError::fatal(baseLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
+        CapricaError::fatal(baseLoc + location, "Unexpected '\\'! Division is done with a forward slash '/'.");
       goto StartOver;
     }
 
@@ -574,7 +579,7 @@ StartOver:
     }
 
     default:
-      CapricaError::fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+      CapricaError::fatal(baseLoc + location, "Unexpected character '%c'!", (char)c);
   }
 }
 

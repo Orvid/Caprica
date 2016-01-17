@@ -53,9 +53,9 @@ enum class PapyrusBuiltinArrayFunctionKind
 struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
-  std::string name{ "" };
+  std::string name{ };
   CapricaFileLocation location;
-  PapyrusType arrayFuncElementType{ PapyrusType::None(CapricaFileLocation{ "", 0, 0 }) };
+  std::shared_ptr<PapyrusType> arrayFuncElementType{ nullptr };
   union
   {
     PapyrusProperty* prop{ nullptr };

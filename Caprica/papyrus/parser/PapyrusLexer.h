@@ -126,15 +126,18 @@ struct PapyrusLexer
   {
     TokenType type{ TokenType::Unknown };
     CapricaFileLocation location;
-    std::string sValue{ "" };
+    std::string sValue{ };
     int32_t iValue{ };
     float fValue{ };
 
-    explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
-    Token(const Token&) = default;
+    explicit Token(TokenType tp, const CapricaFileLocation& loc) : type(tp), location(loc) { }
+    // This is deleted deliberately. The assign operator of the std::string in the location
+    // is not cheap, but that string value is never going to be different within the same file,
+    // so there's no need to keep calling it. Instead we modify everything else about the
+    // token and location.
+    Token(const Token&) = delete;
     ~Token() = default;
 
-    // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
       switch (type) {
         case TokenType::Identifier:
@@ -165,7 +168,7 @@ struct PapyrusLexer
     : filename(file),
       strm(file, std::ifstream::binary),
       location(file, 1, 0),
-      cur(TokenType::Unknown, CapricaFileLocation{ "", 0, 0 })
+      cur(TokenType::Unknown, CapricaFileLocation{ file, 0, 0 })
   {
     consume(); // set the first token.
   }
@@ -184,7 +187,7 @@ protected:
   }
   // Use this sparingly, as it means
   // tokens get lexed multiple times.
-  Token peekToken(int distance = 0);
+  TokenType peekTokenType(int distance = 0);
 
 private:
   std::ifstream strm;
@@ -197,8 +200,7 @@ private:
   int peekChar() {
     return strm.peek();
   }
-  void setTok(TokenType tp, const CapricaFileLocation& loc, int consumeChars = 0);
-  void setTok(Token& tok);
+  void setTok(TokenType tp, const CapricaFileLocation::Partial& loc, int consumeChars = 0);
 };
 
 }}}

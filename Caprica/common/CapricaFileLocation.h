@@ -8,13 +8,28 @@
 
 namespace caprica {
 
-struct CapricaFileLocation
+struct CapricaFileLocation final
 {
-  std::string filename{ "" };
+  struct Partial final
+  {
+    size_t line{ };
+    size_t column{ };
+
+    explicit Partial(const CapricaFileLocation& loc) : line(loc.line), column(loc.column) { }
+    Partial(const Partial&) = default;
+    ~Partial() = default;
+
+    CapricaFileLocation operator +(CapricaFileLocation loc) {
+      loc.updatePartial(*this);
+      return loc;
+    }
+  };
+
+  std::string filename{ };
   size_t line{ 0 };
   size_t column{ 0 };
 
-  explicit CapricaFileLocation(std::string fn, size_t ln, size_t col) : filename(fn), line(ln), column(col) { }
+  explicit CapricaFileLocation(const std::string& fn, size_t ln, size_t col) : filename(fn), line(ln), column(col) { }
   CapricaFileLocation(const CapricaFileLocation& other) = default;
   ~CapricaFileLocation() = default;
 
@@ -27,6 +42,11 @@ struct CapricaFileLocation
     std::ostringstream str;
     str << filename << "(" << line << "," << column << ")";
     return str.str();
+  }
+
+  void updatePartial(const Partial& part) {
+    line = part.line;
+    column = part.column;
   }
 };
 
