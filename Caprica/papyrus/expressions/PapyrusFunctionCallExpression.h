@@ -29,7 +29,7 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   PapyrusIdentifier function;
   std::vector<Parameter*> arguments{ };
 
-  PapyrusFunctionCallExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& f) : PapyrusExpression(loc), function(f) { }
+  explicit PapyrusFunctionCallExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& f) : PapyrusExpression(loc), function(f) { }
   virtual ~PapyrusFunctionCallExpression() override {
     for (auto a : arguments)
       delete a;

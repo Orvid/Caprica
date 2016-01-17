@@ -21,7 +21,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   PapyrusUnaryOperatorType operation{ PapyrusUnaryOperatorType::None };
   PapyrusExpression* innerExpression{ nullptr };
 
-  PapyrusUnaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  explicit PapyrusUnaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusUnaryOpExpression() override {
     if (innerExpression)
       delete innerExpression;

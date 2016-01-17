@@ -16,7 +16,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  PapyrusSelfExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusSelfExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   virtual ~PapyrusSelfExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

@@ -17,7 +17,7 @@ struct PapyrusForEachStatement final : public PapyrusStatement
   PapyrusIdentifier* getCountIdentifier{ nullptr };
   PapyrusIdentifier* getAtIdentifier{ nullptr };
 
-  PapyrusForEachStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusForEachStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusForEachStatement() override {
     if (expressionToIterate)
       delete expressionToIterate;

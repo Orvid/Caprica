@@ -14,7 +14,7 @@ struct CapricaFileLocation
   size_t line{ 0 };
   size_t column{ 0 };
 
-  CapricaFileLocation(std::string fn, size_t ln, size_t col) : filename(fn), line(ln), column(col) { }
+  explicit CapricaFileLocation(std::string fn, size_t ln, size_t col) : filename(fn), line(ln), column(col) { }
   CapricaFileLocation(const CapricaFileLocation& other) = default;
   ~CapricaFileLocation() = default;
 

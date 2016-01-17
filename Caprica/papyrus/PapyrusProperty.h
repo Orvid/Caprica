@@ -33,7 +33,7 @@ struct PapyrusProperty final
 
   CapricaFileLocation location;
 
-  PapyrusProperty(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusProperty(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusProperty() {
     if (readFunction)
       delete readFunction;

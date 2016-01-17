@@ -69,10 +69,10 @@ struct PexInstruction final
   std::vector<PexValue> args{ };
   std::vector<PexValue> variadicArgs{ };
 
-  PexInstruction() = default;
-  PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
-  PexInstruction(PexOpCode op, std::vector<PexValue> arguments) : opCode(op), args(arguments) { }
-  PexInstruction(PexOpCode op, std::vector<PexValue> arguments, std::vector<PexValue> varArguments) : opCode(op), args(arguments), variadicArgs(varArguments) { }
+  explicit PexInstruction() = default;
+  explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
+  explicit PexInstruction(PexOpCode op, std::vector<PexValue> arguments) : opCode(op), args(arguments) { }
+  explicit PexInstruction(PexOpCode op, std::vector<PexValue> arguments, std::vector<PexValue> varArguments) : opCode(op), args(arguments), variadicArgs(varArguments) { }
   ~PexInstruction() = default;
 
   static PexInstruction* read(PexReader& rdr);

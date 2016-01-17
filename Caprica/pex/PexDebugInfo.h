@@ -18,7 +18,7 @@ struct PexDebugInfo final
   std::vector<PexDebugPropertyGroup*> propertyGroups{ };
   std::vector<PexDebugStructOrder*> structOrders{ };
 
-  PexDebugInfo() = default;
+  explicit PexDebugInfo() = default;
   ~PexDebugInfo() {
     for (auto f : functions)
       delete f;

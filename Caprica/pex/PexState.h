@@ -18,7 +18,7 @@ struct PexState final
   PexString name{ };
   std::vector<PexFunction*> functions{ };
 
-  PexState() = default;
+  explicit PexState() = default;
   ~PexState() {
     for (auto f : functions)
       delete f;

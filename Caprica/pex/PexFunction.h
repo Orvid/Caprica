@@ -34,7 +34,7 @@ struct PexFunction final
   std::vector<PexLocalVariable*> locals{ };
   std::vector<PexInstruction*> instructions{ };
 
-  PexFunction() = default;
+  explicit PexFunction() = default;
   ~PexFunction() {
     for (auto p : parameters)
       delete p;

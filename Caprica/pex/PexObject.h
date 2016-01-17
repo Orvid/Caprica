@@ -30,7 +30,7 @@ struct PexObject final
   std::vector<PexProperty*> properties{ };
   std::vector<PexState*> states{ };
 
-  PexObject() = default;
+  explicit PexObject() = default;
   ~PexObject() {
     for (auto s : structs)
       delete s;

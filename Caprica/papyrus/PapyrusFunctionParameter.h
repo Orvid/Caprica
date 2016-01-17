@@ -24,7 +24,7 @@ struct PapyrusFunctionParameter final
 
   const CapricaFileLocation location;
 
-  PapyrusFunctionParameter(const CapricaFileLocation loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusFunctionParameter(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusFunctionParameter() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexFunction* func) const {

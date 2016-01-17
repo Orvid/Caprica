@@ -12,7 +12,7 @@ struct PapyrusExpressionStatement final : public PapyrusStatement
 {
   expressions::PapyrusExpression* expression{ nullptr };
 
-  PapyrusExpressionStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusExpressionStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusExpressionStatement() override {
     if (expression)
       delete expression;

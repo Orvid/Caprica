@@ -20,7 +20,7 @@ struct PapyrusForStatement final : public PapyrusStatement
   expressions::PapyrusExpression* stepValue{ nullptr };
   std::vector<PapyrusStatement*> body{ };
 
-  PapyrusForStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusForStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusForStatement() override {
     if (declareStatement)
       delete declareStatement;

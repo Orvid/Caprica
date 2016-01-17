@@ -11,7 +11,7 @@ namespace caprica {
 
 struct CapricaBinaryReader
 {
-  CapricaBinaryReader(const std::string& file) : strm(file, std::ifstream::binary) {
+  explicit CapricaBinaryReader(const std::string& file) : strm(file, std::ifstream::binary) {
     strm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
   }
   ~CapricaBinaryReader() = default;

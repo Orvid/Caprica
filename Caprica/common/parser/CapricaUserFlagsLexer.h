@@ -41,7 +41,7 @@ struct CapricaUserFlagsLexer
     std::string sValue{ "" };
     int32_t iValue{ };
 
-    Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
+    explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -62,7 +62,7 @@ struct CapricaUserFlagsLexer
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  CapricaUserFlagsLexer(std::string file)
+  explicit CapricaUserFlagsLexer(std::string file)
     : filename(file),
       strm(file, std::ifstream::binary),
       location(file, 1, 0),

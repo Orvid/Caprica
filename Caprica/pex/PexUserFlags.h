@@ -8,7 +8,7 @@ struct PexUserFlags final
 {
   size_t data{ 0 };
 
-  PexUserFlags() = default;
+  explicit PexUserFlags() = default;
   ~PexUserFlags() = default;
 
   PexUserFlags& operator |=(const PexUserFlags& b) {

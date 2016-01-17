@@ -17,7 +17,7 @@ namespace caprica { namespace pex {
 
 struct PexWriter final : public CapricaBinaryWriter
 {
-  PexWriter(std::ostream& dest) : CapricaBinaryWriter(dest) { }
+  explicit PexWriter(std::ostream& dest) : CapricaBinaryWriter(dest) { }
   ~PexWriter() = default;
 
   template<typename T>

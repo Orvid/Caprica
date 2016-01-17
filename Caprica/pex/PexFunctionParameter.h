@@ -14,7 +14,7 @@ struct PexFunctionParameter final
   PexString name{ };
   PexString type{ };
 
-  PexFunctionParameter() = default;
+  explicit PexFunctionParameter() = default;
   ~PexFunctionParameter() = default;
 
   static PexFunctionParameter* read(PexReader& rdr);

@@ -13,7 +13,7 @@ namespace caprica { namespace pex { namespace parser {
 
 struct PexAsmParser final : private PexAsmLexer
 {
-  PexAsmParser(std::string file) : PexAsmLexer(file) { }
+  explicit PexAsmParser(std::string file) : PexAsmLexer(file) { }
   ~PexAsmParser() = default;
 
   PexFile* parseFile();

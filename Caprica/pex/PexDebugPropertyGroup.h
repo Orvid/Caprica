@@ -17,7 +17,7 @@ struct PexDebugPropertyGroup final
   PexUserFlags userFlags{ };
   std::vector<PexString> properties{ };
 
-  PexDebugPropertyGroup() = default;
+  explicit PexDebugPropertyGroup() = default;
   ~PexDebugPropertyGroup() = default;
 
   static PexDebugPropertyGroup* read(PexReader& rdr);

@@ -8,7 +8,7 @@ struct PexString final
 {
   size_t index{ (size_t)-1 };
 
-  PexString() = default;
+  explicit PexString() = default;
   PexString(const PexString&) = default;
   ~PexString() = default;
 

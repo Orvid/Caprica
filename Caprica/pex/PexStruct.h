@@ -17,7 +17,7 @@ struct PexStruct final
   PexString name{ };
   std::vector<PexStructMember*> members{ };
 
-  PexStruct() = default;
+  explicit PexStruct() = default;
   ~PexStruct() {
     for (auto m : members)
       delete m;

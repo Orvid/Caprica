@@ -28,7 +28,7 @@ struct PexFile final
   PexDebugInfo* debugInfo{ nullptr };
   std::vector<PexObject*> objects{ };
 
-  PexFile() = default;
+  explicit PexFile() = default;
   PexFile(const PexFile&) = delete;
   ~PexFile() {
     if (debugInfo)

@@ -13,7 +13,7 @@ struct PapyrusDoWhileStatement final : public PapyrusStatement
   expressions::PapyrusExpression* condition{ nullptr };
   std::vector<PapyrusStatement*> body{ };
 
-  PapyrusDoWhileStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusDoWhileStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   virtual ~PapyrusDoWhileStatement() override {
     if (condition)
       delete condition;

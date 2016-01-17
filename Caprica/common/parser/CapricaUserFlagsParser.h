@@ -9,7 +9,7 @@ namespace caprica { namespace parser {
 
 struct CapricaUserFlagsParser final : private CapricaUserFlagsLexer
 {
-  CapricaUserFlagsParser(std::string file) : CapricaUserFlagsLexer(file) { }
+  explicit CapricaUserFlagsParser(std::string file) : CapricaUserFlagsLexer(file) { }
   ~CapricaUserFlagsParser() = default;
 
   void parseUserFlags(CapricaUserFlagsDefinition& def);

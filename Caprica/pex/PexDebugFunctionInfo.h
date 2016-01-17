@@ -24,7 +24,7 @@ struct PexDebugFunctionInfo final
   PexDebugFunctionType functionType{ PexDebugFunctionType::Normal };
   std::vector<uint16_t> instructionLineMap{ };
 
-  PexDebugFunctionInfo() = default;
+  explicit PexDebugFunctionInfo() = default;
   ~PexDebugFunctionInfo() = default;
 
   static PexDebugFunctionInfo* read(PexReader& rdr);

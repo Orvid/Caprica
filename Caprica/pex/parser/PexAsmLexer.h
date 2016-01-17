@@ -87,7 +87,7 @@ struct PexAsmLexer
     int64_t iValue{ };
     float fValue{ };
 
-    Token(TokenType tp, const CapricaFileLocation& loc) : type(tp), location(loc) { }
+    explicit Token(TokenType tp, const CapricaFileLocation& loc) : type(tp), location(loc) { }
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -116,7 +116,7 @@ struct PexAsmLexer
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  PexAsmLexer(std::string file)
+  explicit PexAsmLexer(std::string file)
     : filename(file),
       strm(file, std::ifstream::binary),
       location(file, 1, 0),

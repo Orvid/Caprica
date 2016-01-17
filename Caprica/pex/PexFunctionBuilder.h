@@ -239,7 +239,7 @@ PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode
   void freeValueIfTemp(const PexValue& v);
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
 
-  PexFunctionBuilder(const CapricaFileLocation& loc, PexFile* fl) : currentLocation(loc), file(fl) { }
+  explicit PexFunctionBuilder(const CapricaFileLocation& loc, PexFile* fl) : currentLocation(loc), file(fl) { }
 
 private:
   PexFile* file;

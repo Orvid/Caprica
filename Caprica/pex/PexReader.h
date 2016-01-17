@@ -16,7 +16,7 @@ namespace caprica { namespace pex {
 
 struct PexReader final : public CapricaBinaryReader
 {
-  PexReader(const std::string& file) : CapricaBinaryReader(file) { }
+  explicit PexReader(const std::string& file) : CapricaBinaryReader(file) { }
   ~PexReader() = default;
 
   template<typename T>

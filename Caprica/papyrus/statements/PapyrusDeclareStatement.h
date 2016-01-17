@@ -18,7 +18,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   bool isAuto{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
-  PapyrusDeclareStatement(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
+  explicit PapyrusDeclareStatement(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
   virtual ~PapyrusDeclareStatement() override {
     if (initialValue)
       delete initialValue;

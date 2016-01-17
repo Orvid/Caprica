@@ -22,7 +22,7 @@ struct PapyrusPropertyGroup final
 
   CapricaFileLocation location;
 
-  PapyrusPropertyGroup(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusPropertyGroup(const CapricaFileLocation& loc) : location(loc) { }
   ~PapyrusPropertyGroup() {
     for (auto p : properties)
       delete p;

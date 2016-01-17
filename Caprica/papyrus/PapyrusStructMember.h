@@ -26,7 +26,7 @@ struct PapyrusStructMember final
 
   CapricaFileLocation location;
 
-  PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
   ~PapyrusStructMember() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {

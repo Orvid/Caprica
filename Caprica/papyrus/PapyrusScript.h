@@ -16,7 +16,7 @@ struct PapyrusScript final
   std::string sourceFileName{ "" };
   std::vector<PapyrusObject*> objects{ };
 
-  PapyrusScript() = default;
+  explicit PapyrusScript() = default;
   ~PapyrusScript() {
     for (auto obj : objects)
       delete obj;

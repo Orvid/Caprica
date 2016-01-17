@@ -14,7 +14,7 @@ struct PexDebugStructOrder final
   PexString structName{ };
   std::vector<PexString> members{ };
 
-  PexDebugStructOrder() = default;
+  explicit PexDebugStructOrder() = default;
   ~PexDebugStructOrder() = default;
 
   static PexDebugStructOrder* read(PexReader& rdr);

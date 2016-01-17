@@ -13,7 +13,7 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
 {
   PapyrusIdentifier identifier;
 
-  PapyrusIdentifierExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& id) : PapyrusExpression(loc), identifier(id) { }
+  explicit PapyrusIdentifierExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& id) : PapyrusExpression(loc), identifier(id) { }
   virtual ~PapyrusIdentifierExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

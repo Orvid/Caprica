@@ -19,7 +19,7 @@ struct PexVariable final
   PexValue defaultValue{ };
   bool isConst{ false };
 
-  PexVariable() = default;
+  explicit PexVariable() = default;
   ~PexVariable() = default;
 
   static PexVariable* read(PexReader& rdr);

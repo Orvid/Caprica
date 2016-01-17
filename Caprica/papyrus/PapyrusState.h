@@ -20,7 +20,7 @@ struct PapyrusState final
 
   CapricaFileLocation location;
 
-  PapyrusState(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusState(const CapricaFileLocation& loc) : location(loc) { }
   ~PapyrusState() {
     for (auto f : functions)
       delete f;

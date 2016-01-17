@@ -11,7 +11,7 @@ namespace caprica {
 
 struct CapricaBinaryWriter
 {
-  CapricaBinaryWriter(std::ostream& dest) : strm(dest) { }
+  explicit CapricaBinaryWriter(std::ostream& dest) : strm(dest) { }
   ~CapricaBinaryWriter() = default;
 
   template<typename T>

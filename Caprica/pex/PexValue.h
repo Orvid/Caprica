@@ -51,7 +51,7 @@ struct PexValue final
   {
     PexTemporaryVariableRef* var;
 
-    TemporaryVariable(PexTemporaryVariableRef* v) : var(v) { }
+    explicit TemporaryVariable(PexTemporaryVariableRef* v) : var(v) { }
     ~TemporaryVariable() = default;
   };
   struct Identifier
@@ -76,27 +76,27 @@ struct PexValue final
   {
     int32_t i;
 
-    Integer(int32_t val) : i(val) { }
+    explicit Integer(int32_t val) : i(val) { }
     ~Integer() = default;
   };
   struct Float
   {
     float f;
 
-    Float(float val) : f(val) { }
+    explicit Float(float val) : f(val) { }
     ~Float() = default;
   };
   struct Bool
   {
     bool b;
 
-    Bool(bool val) : b(val) { }
+    explicit Bool(bool val) : b(val) { }
     ~Bool() = default;
   };
   struct None { };
   struct Invalid { };
 
-  PexValue() { };
+  explicit PexValue() { };
   PexValue(const PexValue&) = default;
   PexValue(PexLabel* lab) : type(PexValueType::Label), l(lab) { }
   PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { }

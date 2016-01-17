@@ -20,7 +20,7 @@ struct PexStructMember final
   bool isConst{ false };
   PexString documentationString{ };
 
-  PexStructMember() = default;
+  explicit PexStructMember() = default;
   ~PexStructMember() = default;
 
   static PexStructMember* read(PexReader& rdr);

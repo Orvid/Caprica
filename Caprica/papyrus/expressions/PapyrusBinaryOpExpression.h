@@ -36,7 +36,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   PapyrusBinaryOperatorType operation{ PapyrusBinaryOperatorType::None };
   PapyrusExpression* right{ nullptr };
 
-  PapyrusBinaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  explicit PapyrusBinaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   virtual ~PapyrusBinaryOpExpression() override {
     if (left)
       delete left;

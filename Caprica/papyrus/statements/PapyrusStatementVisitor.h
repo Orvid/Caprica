@@ -17,7 +17,7 @@ struct PapyrusWhileStatement;
 
 struct PapyrusStatementVisitor abstract
 {
-  PapyrusStatementVisitor() = default;
+  explicit PapyrusStatementVisitor() = default;
   virtual ~PapyrusStatementVisitor() = default;
 
   virtual void visit(PapyrusAssignStatement* s) { }

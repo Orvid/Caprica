@@ -16,7 +16,7 @@ struct PexAsmWriter final
   // The indent level. Yes, this spelling is deliberate.
   size_t ident{ 0 };
 
-  PexAsmWriter(std::ostream& dest) : strm(dest) { }
+  explicit PexAsmWriter(std::ostream& dest) : strm(dest) { }
   ~PexAsmWriter() = default;
 
   template<typename T>

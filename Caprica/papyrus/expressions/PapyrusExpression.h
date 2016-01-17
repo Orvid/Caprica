@@ -14,7 +14,7 @@ struct PapyrusExpression abstract
 {
   const CapricaFileLocation location;
 
-  PapyrusExpression(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusExpression(const CapricaFileLocation& loc) : location(loc) { }
   virtual ~PapyrusExpression() = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
