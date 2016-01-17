@@ -17,6 +17,7 @@ struct PapyrusScript final
   std::vector<PapyrusObject*> objects{ };
 
   explicit PapyrusScript() = default;
+  PapyrusScript(const PapyrusScript&) = delete;
   ~PapyrusScript() {
     for (auto obj : objects)
       delete obj;

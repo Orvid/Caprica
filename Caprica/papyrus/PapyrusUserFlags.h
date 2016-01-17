@@ -16,6 +16,7 @@ struct PapyrusUserFlags final
   size_t data{ 0 };
 
   explicit PapyrusUserFlags() = default;
+  PapyrusUserFlags(const PapyrusUserFlags&) = default;
   ~PapyrusUserFlags() = default;
 
   pex::PexUserFlags buildPex(pex::PexFile* file, CapricaUserFlagsDefinition::ValidLocations limitLocations = CapricaUserFlagsDefinition::ValidLocations::AllLocations) const {

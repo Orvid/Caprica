@@ -10,6 +10,7 @@ namespace caprica { namespace papyrus { namespace statements {
 struct PapyrusBreakStatement final : public PapyrusStatement
 {
   explicit PapyrusBreakStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusBreakStatement(const PapyrusBreakStatement&) = delete;
   virtual ~PapyrusBreakStatement() = default;
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

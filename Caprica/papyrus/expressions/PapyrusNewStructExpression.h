@@ -14,6 +14,7 @@ struct PapyrusNewStructExpression final : public PapyrusExpression
   PapyrusType type;
 
   explicit PapyrusNewStructExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  PapyrusNewStructExpression(const PapyrusNewStructExpression&) = delete;
   virtual ~PapyrusNewStructExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

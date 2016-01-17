@@ -20,6 +20,7 @@ struct PexVariable final
   bool isConst{ false };
 
   explicit PexVariable() = default;
+  PexVariable(const PexVariable&) = delete;
   ~PexVariable() = default;
 
   static PexVariable* read(PexReader& rdr);

@@ -17,6 +17,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
   std::vector<PapyrusStatement*> elseStatements{ };
 
   explicit PapyrusIfStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusIfStatement(const PapyrusIfStatement&) = delete;
   virtual ~PapyrusIfStatement() override {
     for (auto& i : ifBodies) {
       delete i.first;

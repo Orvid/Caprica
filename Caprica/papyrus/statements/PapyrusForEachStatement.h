@@ -18,6 +18,7 @@ struct PapyrusForEachStatement final : public PapyrusStatement
   PapyrusIdentifier* getAtIdentifier{ nullptr };
 
   explicit PapyrusForEachStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusForEachStatement(const PapyrusForEachStatement&) = delete;
   virtual ~PapyrusForEachStatement() override {
     if (expressionToIterate)
       delete expressionToIterate;

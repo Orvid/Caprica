@@ -46,6 +46,7 @@ struct PapyrusFunction final
   CapricaFileLocation location;
 
   explicit PapyrusFunction(const CapricaFileLocation& loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
+  PapyrusFunction(const PapyrusFunction&) = delete;
   ~PapyrusFunction() {
     for (auto p : parameters)
       delete p;

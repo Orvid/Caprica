@@ -36,6 +36,7 @@ struct PapyrusObject final
   std::vector<PapyrusState*> states{ };
 
   explicit PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) { }
+  PapyrusObject(const PapyrusObject&) = delete;
   ~PapyrusObject() {
     for (auto s : structs)
       delete s;

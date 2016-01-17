@@ -26,6 +26,7 @@ struct PexProperty final
   bool isWritable{ false };
 
   explicit PexProperty() = default;
+  PexProperty(const PexProperty&) = delete;
   ~PexProperty() {
     if (readFunction)
       delete readFunction;

@@ -31,6 +31,7 @@ struct PexObject final
   std::vector<PexState*> states{ };
 
   explicit PexObject() = default;
+  PexObject(const PexObject&) = delete;
   ~PexObject() {
     for (auto s : structs)
       delete s;

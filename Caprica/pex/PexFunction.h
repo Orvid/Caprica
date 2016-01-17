@@ -35,6 +35,7 @@ struct PexFunction final
   std::vector<PexInstruction*> instructions{ };
 
   explicit PexFunction() = default;
+  PexFunction(const PexFunction&) = delete;
   ~PexFunction() {
     for (auto p : parameters)
       delete p;

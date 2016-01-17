@@ -25,6 +25,7 @@ struct PapyrusVariable final
   CapricaFileLocation location;
 
   explicit PapyrusVariable(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  PapyrusVariable(const PapyrusVariable&) = delete;
   ~PapyrusVariable() = default;
 
   void buildPex(pex::PexFile* file, pex::PexObject* obj) const {

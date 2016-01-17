@@ -17,6 +17,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
   std::vector<PapyrusStatement*> body{ };
 
   explicit PapyrusWhileStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusWhileStatement(const PapyrusWhileStatement&) = delete;
   virtual ~PapyrusWhileStatement() override {
     if (condition)
       delete condition;

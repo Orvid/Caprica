@@ -17,6 +17,7 @@ struct PapyrusParentExpression final : public PapyrusExpression
   PapyrusType type;
 
   explicit PapyrusParentExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  PapyrusParentExpression(const PapyrusParentExpression&) = delete;
   virtual ~PapyrusParentExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

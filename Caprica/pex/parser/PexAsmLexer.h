@@ -124,7 +124,7 @@ struct PexAsmLexer
   {
     consume(); // set the first token.
   }
-
+  PexAsmLexer(const PexAsmLexer&) = delete;
   ~PexAsmLexer() = default;
 
 protected:

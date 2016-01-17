@@ -15,6 +15,7 @@ struct PapyrusStatement abstract
   const CapricaFileLocation location;
 
   explicit PapyrusStatement(const CapricaFileLocation& loc) : location(loc) { }
+  PapyrusStatement(const PapyrusStatement&) = delete;
   virtual ~PapyrusStatement() = default;
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;

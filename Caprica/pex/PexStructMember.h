@@ -21,6 +21,7 @@ struct PexStructMember final
   PexString documentationString{ };
 
   explicit PexStructMember() = default;
+  PexStructMember(const PexStructMember&) = delete;
   ~PexStructMember() = default;
 
   static PexStructMember* read(PexReader& rdr);

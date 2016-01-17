@@ -18,6 +18,7 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
   std::vector<PapyrusStatement*> defaultStatements{ };
 
   explicit PapyrusSwitchStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusSwitchStatement(const PapyrusSwitchStatement&) = delete;
   virtual ~PapyrusSwitchStatement() override {
     if (condition)
       delete condition;

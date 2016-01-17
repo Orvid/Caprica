@@ -34,7 +34,8 @@ struct CapricaUserFlagsDefinition final
     size_t flagNum{ };
     CapricaFileLocation location;
 
-    UserFlag(const CapricaFileLocation& loc) : location(loc) { }
+    explicit UserFlag(const CapricaFileLocation& loc) : location(loc) { }
+    UserFlag(const UserFlag&) = default;
     ~UserFlag() = default;
   };
 
@@ -43,6 +44,10 @@ struct CapricaUserFlagsDefinition final
   // Not that flag num is NOT the flag's bit index, it is instead
   // the flag's index in the user flags vector.
   const UserFlag& getFlag(size_t flagNum) const;
+
+  CapricaUserFlagsDefinition() = default;
+  CapricaUserFlagsDefinition(const CapricaUserFlagsDefinition&) = delete;
+  ~CapricaUserFlagsDefinition() = default;
 
 private:
   std::map<std::string, size_t, CaselessStringComparer> flagNameMap{ };

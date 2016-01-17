@@ -15,6 +15,7 @@ struct PexLocalVariable final
   PexString type{ };
 
   explicit PexLocalVariable() = default;
+  PexLocalVariable(const PexLocalVariable&) = delete;
   ~PexLocalVariable() = default;
 
   static PexLocalVariable* read(PexReader& rdr);

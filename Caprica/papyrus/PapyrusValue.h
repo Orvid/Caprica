@@ -42,6 +42,7 @@ struct PapyrusValue final
     CapricaFileLocation location;
 
     explicit None(const CapricaFileLocation& loc) : location(loc) { }
+    None(const None&) = delete;
     ~None() = default;
   };
   struct Integer final
@@ -50,6 +51,7 @@ struct PapyrusValue final
     CapricaFileLocation location;
 
     explicit Integer(const CapricaFileLocation& loc, int32_t val) : location(loc), i(val) { }
+    Integer(const Integer&) = delete;
     ~Integer() = default;
   };
   struct Float final
@@ -58,9 +60,11 @@ struct PapyrusValue final
     CapricaFileLocation location;
 
     explicit Float(const CapricaFileLocation& loc, float val) : location(loc), f(val) { }
+    Float(const Float&) = delete;
     ~Float() = default;
   };
 
+  PapyrusValue() = delete;
   explicit PapyrusValue(const CapricaFileLocation& loc) : location(loc) { }
   PapyrusValue(const Default& other) : type(PapyrusValueType::Invalid), location("", 0, 0) { }
   PapyrusValue(const None& other) : type(PapyrusValueType::None), location(other.location) { }

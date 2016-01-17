@@ -21,6 +21,7 @@ struct PapyrusForStatement final : public PapyrusStatement
   std::vector<PapyrusStatement*> body{ };
 
   explicit PapyrusForStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusForStatement(const PapyrusForStatement&) = delete;
   virtual ~PapyrusForStatement() override {
     if (declareStatement)
       delete declareStatement;

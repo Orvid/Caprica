@@ -18,6 +18,7 @@ struct PexDebugPropertyGroup final
   std::vector<PexString> properties{ };
 
   explicit PexDebugPropertyGroup() = default;
+  PexDebugPropertyGroup(const PexDebugPropertyGroup&) = delete;
   ~PexDebugPropertyGroup() = default;
 
   static PexDebugPropertyGroup* read(PexReader& rdr);

@@ -13,6 +13,7 @@ namespace caprica { namespace papyrus { namespace parser {
 struct PapyrusParser final : private PapyrusLexer
 {
   explicit PapyrusParser(std::string file) : PapyrusLexer(file) { }
+  PapyrusParser(const PapyrusParser&) = delete;
   ~PapyrusParser() = default;
 
   PapyrusScript* parseScript();

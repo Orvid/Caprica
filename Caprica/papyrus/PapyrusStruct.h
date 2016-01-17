@@ -24,6 +24,7 @@ struct PapyrusStruct final
   CapricaFileLocation location;
 
   explicit PapyrusStruct(const CapricaFileLocation& loc) : location(loc) { }
+  PapyrusStruct(const PapyrusStruct&) = delete;
   ~PapyrusStruct() {
     for (auto m : members)
       delete m;

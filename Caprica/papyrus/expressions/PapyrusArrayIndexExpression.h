@@ -15,6 +15,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   PapyrusExpression* indexExpression{ nullptr };
 
   explicit PapyrusArrayIndexExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusArrayIndexExpression(const PapyrusArrayIndexExpression&) = delete;
   virtual ~PapyrusArrayIndexExpression() override {
     if (baseExpression)
       delete baseExpression;

@@ -17,6 +17,7 @@ struct PexAsmWriter final
   size_t ident{ 0 };
 
   explicit PexAsmWriter(std::ostream& dest) : strm(dest) { }
+  PexAsmWriter(const PexAsmWriter&) = delete;
   ~PexAsmWriter() = default;
 
   template<typename T>

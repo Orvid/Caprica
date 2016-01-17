@@ -73,6 +73,7 @@ struct PapyrusIdentifier final
     const std::string name;
 
     explicit Unresolved(const CapricaFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
+    Unresolved(const Unresolved&) = delete;
     ~Unresolved() = default;
   };
   struct Property final
@@ -81,6 +82,7 @@ struct PapyrusIdentifier final
     PapyrusProperty* prop;
 
     explicit Property(const CapricaFileLocation& loc, PapyrusProperty* p) : location(loc), prop(p) { }
+    Property(const Property&) = delete;
     ~Property() = default;
   };
   struct Variable final
@@ -89,6 +91,7 @@ struct PapyrusIdentifier final
     PapyrusVariable* var;
 
     explicit Variable(const CapricaFileLocation& loc, PapyrusVariable* v) : location(loc), var(v) { }
+    Variable(const Variable&) = delete;
     ~Variable() = default;
   };
   struct FunctionParameter final
@@ -97,6 +100,7 @@ struct PapyrusIdentifier final
     PapyrusFunctionParameter* param;
 
     explicit FunctionParameter(const CapricaFileLocation& loc, PapyrusFunctionParameter* p) : location(loc), param(p) { }
+    FunctionParameter(const FunctionParameter&) = delete;
     ~FunctionParameter() = default;
   };
   struct DeclStatement final
@@ -105,6 +109,7 @@ struct PapyrusIdentifier final
     statements::PapyrusDeclareStatement* declStatement;
 
     explicit DeclStatement(const CapricaFileLocation& loc, statements::PapyrusDeclareStatement* s) : location(loc), declStatement(s) { }
+    DeclStatement(const DeclStatement&) = delete;
     ~DeclStatement() = default;
   };
   struct StructMember final
@@ -113,6 +118,7 @@ struct PapyrusIdentifier final
     PapyrusStructMember* member;
 
     explicit StructMember(const CapricaFileLocation& loc, PapyrusStructMember* m) : location(loc), member(m) { }
+    StructMember(const StructMember&) = delete;
     ~StructMember() = default;
   };
   struct Function final
@@ -121,6 +127,7 @@ struct PapyrusIdentifier final
     PapyrusFunction* function;
 
     explicit Function(const CapricaFileLocation& loc, PapyrusFunction* f) : location(loc), function(f) { }
+    Function(const Function&) = delete;
     ~Function() = default;
   };
   struct ArrayFunction final
@@ -130,9 +137,11 @@ struct PapyrusIdentifier final
     PapyrusType arrayFuncElementType;
 
     explicit ArrayFunction(const CapricaFileLocation& loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) : location(loc), arrayFuncKind(fk), arrayFuncElementType(elemType) { }
+    ArrayFunction(const ArrayFunction&) = delete;
     ~ArrayFunction() = default;
   };
 
+  PapyrusIdentifier() = delete;
   PapyrusIdentifier(const Unresolved& other) : type(PapyrusIdentifierType::Unresolved), location(other.location), name(other.name) { }
   PapyrusIdentifier(const Property& other);
   PapyrusIdentifier(const Variable& other);

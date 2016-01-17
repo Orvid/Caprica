@@ -42,6 +42,8 @@ struct CapricaUserFlagsLexer
     int32_t iValue{ };
 
     explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
+    Token(const Token&) = default;
+    ~Token() = default;
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -70,7 +72,7 @@ struct CapricaUserFlagsLexer
   {
     consume(); // set the first token.
   }
-
+  CapricaUserFlagsLexer(const CapricaUserFlagsLexer&) = delete;
   ~CapricaUserFlagsLexer() = default;
 
 protected:

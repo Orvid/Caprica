@@ -15,6 +15,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
   PapyrusExpression* lengthExpression{ nullptr };
 
   explicit PapyrusNewArrayExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  PapyrusNewArrayExpression(const PapyrusNewArrayExpression&) = delete;
   virtual ~PapyrusNewArrayExpression() override {
     if (lengthExpression)
       delete lengthExpression;

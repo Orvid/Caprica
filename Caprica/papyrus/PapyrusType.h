@@ -42,6 +42,7 @@ struct PapyrusType final
     std::string name;
 
     explicit Unresolved(const CapricaFileLocation& loc, const std::string& nm) : location(loc), name(nm) { }
+    Unresolved(const Unresolved&) = delete;
     ~Unresolved() = default;
   };
   struct Array final
@@ -50,6 +51,7 @@ struct PapyrusType final
     std::shared_ptr<PapyrusType> type;
 
     explicit Array(const CapricaFileLocation& loc, std::shared_ptr<PapyrusType> tp) : location(loc), type(tp) { }
+    Array(const Array&) = delete;
     ~Array() = default;
   };
   struct None final
@@ -57,6 +59,7 @@ struct PapyrusType final
     CapricaFileLocation location;
 
     explicit None(const CapricaFileLocation& loc) : location(loc) { }
+    None(const None&) = delete;
     ~None() = default;
   };
   struct Bool final
@@ -64,6 +67,7 @@ struct PapyrusType final
     CapricaFileLocation location;
 
     explicit Bool(const CapricaFileLocation& loc) : location(loc) { }
+    Bool(const Bool&) = delete;
     ~Bool() = default;
   };
   struct Float final
@@ -71,6 +75,7 @@ struct PapyrusType final
     CapricaFileLocation location;
 
     explicit Float(const CapricaFileLocation& loc) : location(loc) { }
+    Float(const Float&) = delete;
     ~Float() = default;
   };
   struct Int final
@@ -78,6 +83,7 @@ struct PapyrusType final
     CapricaFileLocation location;
 
     explicit Int(const CapricaFileLocation& loc) : location(loc) { }
+    Int(const Int&) = delete;
     ~Int() = default;
   };
   struct String final
@@ -85,6 +91,7 @@ struct PapyrusType final
     CapricaFileLocation location;
 
     explicit String(const CapricaFileLocation& loc) : location(loc) { }
+    String(const String&) = delete;
     ~String() = default;
   };
   struct Var final
@@ -92,6 +99,7 @@ struct PapyrusType final
     CapricaFileLocation location;
 
     explicit Var(const CapricaFileLocation& loc) : location(loc) { }
+    Var(const Var&) = delete;
     ~Var() = default;
   };
   struct ResolvedObject final
@@ -100,6 +108,7 @@ struct PapyrusType final
     const PapyrusObject* obj;
 
     explicit ResolvedObject(const CapricaFileLocation& loc, const PapyrusObject* o) : location(loc), obj(o) { }
+    ResolvedObject(const ResolvedObject&) = delete;
     ~ResolvedObject() = default;
   };
 
@@ -112,6 +121,7 @@ struct PapyrusType final
     const PapyrusObject* resolvedObject;
   };
 
+  PapyrusType() = delete;
   PapyrusType(const Default& other) : type(Kind::Unresolved), location(CapricaFileLocation{ "", 0, 0 }) { }
   PapyrusType(const Unresolved& other) : type(Kind::Unresolved), name(other.name), location(other.location) { }
   PapyrusType(const Array& other) : type(Kind::Array), arrayElementType(other.type), location(other.location) { }
@@ -123,6 +133,7 @@ struct PapyrusType final
   PapyrusType(const Var& other) : type(Kind::Var), location(other.location) { }
   PapyrusType(const ResolvedObject& other) : type(Kind::ResolvedObject), location(other.location), resolvedObject(other.obj) { }
   PapyrusType(const PapyrusType& other) = default;
+  ~PapyrusType() = default;
 
   pex::PexString buildPex(pex::PexFile* file) const {
     return file->getString(getTypeString());

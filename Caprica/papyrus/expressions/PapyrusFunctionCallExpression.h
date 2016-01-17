@@ -20,7 +20,8 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
     std::string name{ "" };
     PapyrusExpression* value{ nullptr };
 
-    Parameter() = default;
+    explicit Parameter() = default;
+    Parameter(const Parameter&) = delete;
     ~Parameter() {
       if (value)
         delete value;
@@ -30,6 +31,7 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   std::vector<Parameter*> arguments{ };
 
   explicit PapyrusFunctionCallExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& f) : PapyrusExpression(loc), function(f) { }
+  PapyrusFunctionCallExpression(const PapyrusFunctionCallExpression&) = delete;
   virtual ~PapyrusFunctionCallExpression() override {
     for (auto a : arguments)
       delete a;

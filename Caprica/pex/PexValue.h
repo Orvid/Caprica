@@ -52,6 +52,7 @@ struct PexValue final
     PexTemporaryVariableRef* var;
 
     explicit TemporaryVariable(PexTemporaryVariableRef* v) : var(v) { }
+    TemporaryVariable(const TemporaryVariable&) = default;
     ~TemporaryVariable() = default;
   };
   struct Identifier
@@ -59,10 +60,12 @@ struct PexValue final
     PexString name;
     PexTemporaryVariableRef* tmpVar{ nullptr };
 
+    Identifier() = delete;
     Identifier(PexString str) : name(str) { }
     Identifier(PexLocalVariable* var) : name(var->name) { }
     Identifier(PexTemporaryVariableRef* v) : tmpVar(v) { }
     Identifier(const TemporaryVariable& var) : tmpVar(var.var) { }
+    Identifier(const Identifier&) = default;
     ~Identifier() = default;
 
     static Identifier fromVar(const PexValue& var) {
@@ -77,6 +80,7 @@ struct PexValue final
     int32_t i;
 
     explicit Integer(int32_t val) : i(val) { }
+    Integer(const Integer&) = delete;
     ~Integer() = default;
   };
   struct Float
@@ -84,6 +88,7 @@ struct PexValue final
     float f;
 
     explicit Float(float val) : f(val) { }
+    Float(const Float&) = delete;
     ~Float() = default;
   };
   struct Bool
@@ -91,6 +96,7 @@ struct PexValue final
     bool b;
 
     explicit Bool(bool val) : b(val) { }
+    Bool(const Bool&) = delete;
     ~Bool() = default;
   };
   struct None { };

@@ -12,6 +12,7 @@ namespace caprica { namespace papyrus { namespace expressions {
 struct PapyrusArrayLengthExpression final : public PapyrusExpression
 {
   explicit PapyrusArrayLengthExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusArrayLengthExpression(const PapyrusArrayLengthExpression&) = delete;
   virtual ~PapyrusArrayLengthExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

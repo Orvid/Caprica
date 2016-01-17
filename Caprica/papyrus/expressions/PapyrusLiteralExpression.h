@@ -14,6 +14,7 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
   PapyrusValue value;
 
   explicit PapyrusLiteralExpression(const CapricaFileLocation& loc, const PapyrusValue& val) : PapyrusExpression(loc), value(val) { }
+  PapyrusLiteralExpression(const PapyrusLiteralExpression&) = delete;
   virtual ~PapyrusLiteralExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

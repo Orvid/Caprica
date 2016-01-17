@@ -131,6 +131,8 @@ struct PapyrusLexer
     float fValue{ };
 
     explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
+    Token(const Token&) = default;
+    ~Token() = default;
 
     // When fixing this, fix expect() to output expected token type as well.
     std::string prettyString() const {
@@ -167,7 +169,7 @@ struct PapyrusLexer
   {
     consume(); // set the first token.
   }
-
+  PapyrusLexer(const PapyrusLexer&) = delete;
   ~PapyrusLexer() = default;
 
 protected:

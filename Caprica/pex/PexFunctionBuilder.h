@@ -240,6 +240,8 @@ PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
 
   explicit PexFunctionBuilder(const CapricaFileLocation& loc, PexFile* fl) : currentLocation(loc), file(fl) { }
+  PexFunctionBuilder(const PexFunctionBuilder&) = delete;
+  ~PexFunctionBuilder() = default;
 
 private:
   PexFile* file;

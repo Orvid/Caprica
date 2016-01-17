@@ -15,11 +15,19 @@ namespace caprica {
 
 struct CapricaError abstract
 {
+  CapricaError() = delete;
+  CapricaError(const CapricaError&) = delete;
+  ~CapricaError() = delete;
+
   static size_t warningCount;
   static size_t errorCount;
 
   struct Warning abstract
   {
+    Warning() = delete;
+    Warning(const Warning&) = delete;
+    ~Warning() = delete;
+
 #define DEFINE_WARNING_A1(num, id, msg, arg1Type, arg1Name) \
 NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name) { CapricaError::warning(num, location, msg, arg1Name); }
 #define DEFINE_WARNING_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \

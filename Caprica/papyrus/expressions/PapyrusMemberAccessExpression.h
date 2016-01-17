@@ -17,6 +17,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   PapyrusExpression* accessExpression{ nullptr };
 
   explicit PapyrusMemberAccessExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  PapyrusMemberAccessExpression(const PapyrusMemberAccessExpression&) = delete;
   virtual ~PapyrusMemberAccessExpression() override {
     if (baseExpression)
       delete baseExpression;

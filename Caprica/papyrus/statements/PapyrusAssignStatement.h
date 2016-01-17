@@ -34,6 +34,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   expressions::PapyrusBinaryOpExpression* binOpExpression{ nullptr };
 
   explicit PapyrusAssignStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  PapyrusAssignStatement(const PapyrusAssignStatement&) = delete;
   virtual ~PapyrusAssignStatement() override {
     // This is a bit of a special case, because we still need the lValue, but
     // we've given ownership of the lValue to the binOpExpression, to avoid

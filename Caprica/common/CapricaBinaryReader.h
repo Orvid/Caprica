@@ -14,6 +14,7 @@ struct CapricaBinaryReader
   explicit CapricaBinaryReader(const std::string& file) : strm(file, std::ifstream::binary) {
     strm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
   }
+  CapricaBinaryReader(const CapricaBinaryReader&) = delete;
   ~CapricaBinaryReader() = default;
 
   bool eof() {

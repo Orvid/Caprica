@@ -113,6 +113,7 @@ struct PapyrusResolutionContext final
   }
 
   explicit PapyrusResolutionContext() = default;
+  PapyrusResolutionContext(const PapyrusResolutionContext&) = delete;
   ~PapyrusResolutionContext() = default;
 private:
   std::vector<std::map<std::string, statements::PapyrusDeclareStatement*, CaselessStringComparer>> localVariableScopeStack{ };
