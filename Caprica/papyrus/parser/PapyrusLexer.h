@@ -8,6 +8,7 @@
 
 #include <common/CapricaError.h>
 #include <common/CapricaFileLocation.h>
+#include <common/FSUtils.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -164,16 +165,22 @@ struct PapyrusLexer
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  explicit PapyrusLexer(std::string file)
+  explicit PapyrusLexer(const std::string& file)
     : filename(file),
-      strm(file, std::ifstream::binary),
       location(file, 1, 0),
       cur(TokenType::Unknown, CapricaFileLocation{ file, 0, 0 })
   {
+    auto s = FSUtils::Cache::cachedReadFull(file);
+    strm = _strdup(s.c_str());
+    strmOriginal = strm;
+    strmLen = s.size();
     consume(); // set the first token.
   }
   PapyrusLexer(const PapyrusLexer&) = delete;
-  ~PapyrusLexer() = default;
+  ~PapyrusLexer() {
+    if (strmOriginal)
+      free((void*)strmOriginal);
+  }
 
 protected:
   std::string filename;
@@ -190,15 +197,25 @@ protected:
   TokenType peekTokenType(int distance = 0);
 
 private:
-  std::ifstream strm;
+  const char* strmOriginal{ nullptr };
+  const char* strm{ nullptr };
+  size_t strmI{ 0 };
+  size_t strmLen{ 0 };
   CapricaFileLocation location;
 
   int getChar() {
+    if (strmI >= strmLen)
+      return -1;
     location.column++;
-    return strm.get();
+    strmI++;
+    auto c = *strm;
+    strm++;
+    return (unsigned)c;
   }
   int peekChar() {
-    return strm.peek();
+    if (strmI + 1 >= strmLen)
+      return -1;
+    return *strm;
   }
   void setTok(TokenType tp, const CapricaFileLocation::Partial& loc, int consumeChars = 0);
 };

@@ -126,7 +126,8 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
   auto oldCurF = cur.fValue;
   auto oldCurS = cur.sValue;
   auto oldLoc = CapricaFileLocation::Partial(location);
-  auto oldPos = strm.tellg();
+  auto oldPos = strmI;
+  auto oldStrm = strm;
 
   for (int i = 0; i <= distance; i++)
     consume();
@@ -138,11 +139,12 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
   cur.fValue = oldCurF;
   cur.sValue = oldCurS;
   location.updatePartial(oldLoc);
-  strm.seekg(oldPos);
+  strm = oldStrm;
+  strmI = oldPos;
   return newTokTp;
 }
 
-static const std::map<std::string, TokenType, CaselessStringComparer> keywordMap {
+static const std::map<const char* const, TokenType, CaselessStringComparer> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
@@ -180,7 +182,7 @@ static const std::map<std::string, TokenType, CaselessStringComparer> keywordMap
 };
 
 // Additional speculative keywords for FO4
-static const std::map<std::string, TokenType, CaselessStringComparer> speculativeKeywordMap {
+static const std::map<const char* const, TokenType, CaselessStringComparer> speculativeKeywordMap {
   { "const", TokenType::kConst },
   { "endpropertygroup", TokenType::kEndPropertyGroup },
   { "endstruct", TokenType::kEndStruct },
@@ -191,7 +193,7 @@ static const std::map<std::string, TokenType, CaselessStringComparer> speculativ
 };
 
 // Language extension keywords
-static const std::map<std::string, TokenType, CaselessStringComparer> languageExtensionsKeywordMap{
+static const std::map<const char* const, TokenType, CaselessStringComparer> languageExtensionsKeywordMap{
   { "break", TokenType::kBreak },
   { "case", TokenType::kCase },
   { "continue", TokenType::kContinue },
@@ -290,16 +292,17 @@ StartOver:
     case '8':
     case '9':
     {
-      std::ostringstream str;
-      str.put(c);
+      std::string str;
+      str.reserve(64);
+      str.append(1, (char)c);
 
       // It's hex.
       if (c == '0' && peekChar() == 'x') {
-        str.put(getChar());
+        str.append(1, (char)getChar());
         while (isxdigit(peekChar()))
-          str.put(getChar());
+          str.append(1, (char)getChar());
         
-        auto i = std::stoul(str.str(), nullptr, 16);
+        auto i = std::stoul(str, nullptr, 16);
         setTok(TokenType::Integer, baseLoc);
         cur.iValue = (int32_t)i;
         return;
@@ -307,43 +310,42 @@ StartOver:
 
       // Either normal int or float.
       while (isdigit(peekChar()))
-        str.put(getChar());
+        str.append(1, (char)getChar());
 
       // It's a float.
       if (peekChar() == '.') {
-        str.put(getChar());
+        str.append(1, (char)getChar());
         while (isdigit(peekChar()))
-          str.put(getChar());
+          str.append(1, (char)getChar());
 
         // Allow e+ notation.
         if (CapricaConfig::enableLanguageExtensions && peekChar() == 'e') {
-          str.put(getChar());
+          str.append(1, (char)getChar());
           if (getChar() != '+')
             CapricaError::fatal(location, "Unexpected character 'e'!");
-          str.put('+');
+          str.append(1, '+');
 
           while (isdigit(peekChar()))
-            str.put(getChar());
+            str.append(1, (char)getChar());
         }
 
-        auto f = std::stof(str.str());
+        auto f = std::stof(str);
         setTok(TokenType::Float, baseLoc);
         cur.fValue = f;
         return;
       }
 
-      auto s = str.str();
-      if (s.size() < 8 || (s.size() == 8 && s[0] <= '4')) {
+      if (str.size() < 8 || (str.size() == 8 && str[0] <= '4')) {
         // It is probably an integer, but maybe not.
         try {
-          auto i = std::stoul(s);
+          auto i = std::stoul(str);
           setTok(TokenType::Integer, baseLoc);
           cur.iValue = (int32_t)i;
           return;
         } catch (std::out_of_range oor) { }
       }
       // It's very definitely a float, and a very large one at that.
-      auto f = std::stof(s);
+      auto f = std::stof(str);
       setTok(TokenType::Float, baseLoc);
       cur.fValue = f;
       return;
@@ -404,52 +406,54 @@ StartOver:
     case 'Y':
     case 'Z':
     {
-      std::ostringstream str;
+      std::string str;
+      str.reserve(64);
+      
       if (c == ':') {
         if (!CapricaConfig::allowCompilerIdentifiers || peekChar() != ':')
           CapricaError::fatal(baseLoc + location, "Unexpected character '%c'!", (char)c);
         getChar();
-        str.put(':');
-        str.put(':');
+        str.append("::");
       } else {
-        str.put(c);
+        str.append(1, (char)c);
       }
 
       while (isalnum(peekChar()) || peekChar() == '_' || peekChar() == ':')
-        str.put(getChar());
+        str.append(1, (char)getChar());
 
       if (CapricaConfig::allowDecompiledStructNameRefs && peekChar() == '#') {
-        str.put(getChar());
+        str.append(1, (char)getChar());
 
         while (isalnum(peekChar()) || peekChar() == '_')
-          str.put(getChar());
+          str.append(1, (char)getChar());
       }
 
-      auto ident = str.str();
-      auto f = keywordMap.find(ident);
+      auto f = keywordMap.find(str.c_str());
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
 
       if (CapricaConfig::enableSpeculativeSyntax) {
-        auto f2 = speculativeKeywordMap.find(ident);
+        auto f2 = speculativeKeywordMap.find(str.c_str());
         if (f2 != speculativeKeywordMap.end())
           return setTok(f2->second, baseLoc);
       }
 
       if (CapricaConfig::enableLanguageExtensions) {
-        auto f2 = languageExtensionsKeywordMap.find(ident);
+        auto f2 = languageExtensionsKeywordMap.find(str.c_str());
         if (f2 != languageExtensionsKeywordMap.end())
           return setTok(f2->second, baseLoc);
       }
 
       setTok(TokenType::Identifier, baseLoc);
-      cur.sValue = ident;
+      str.shrink_to_fit();
+      cur.sValue = str;
       return;
     }
 
     case '"':
     {
-      std::ostringstream str;
+      std::string str;
+      str.reserve(64);
 
       while (peekChar() != '"' && peekChar() != '\r' && peekChar() != '\n' && peekChar() != -1) {
         if (peekChar() == '\\') {
@@ -457,16 +461,16 @@ StartOver:
           auto escapeChar = getChar();
           switch (escapeChar) {
             case 'n':
-              str.put('\n');
+              str.append(1, '\n');
               break;
             case 't':
-              str.put('\t');
+              str.append(1, '\t');
               break;
             case '\\':
-              str.put('\\');
+              str.append(1, '\\');
               break;
             case '"':
-              str.put('"');
+              str.append(1, '"');
               break;
             case -1:
               CapricaError::fatal(location, "Unexpected EOF before the end of the string.");
@@ -474,7 +478,7 @@ StartOver:
               CapricaError::fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
-          str.put(getChar());
+          str.append(1, (char)getChar());
         }
       }
 
@@ -483,7 +487,8 @@ StartOver:
       getChar();
 
       setTok(TokenType::String, baseLoc);
-      cur.sValue = str.str();
+      str.shrink_to_fit();
+      cur.sValue = str;
       return;
     }
 
@@ -518,7 +523,8 @@ StartOver:
 
     case '{':
     {
-      std::ostringstream str;
+      std::string str;
+      str.reserve(64);
 
       // Trim all leading whitespace.
       while (isspace(peekChar()))
@@ -530,14 +536,14 @@ StartOver:
         auto c2 = getChar();
         if (c2 == '\r' && peekChar() == '\n') {
           getChar();
-          str.put('\n');
+          str.append(1, '\n');
           location.nextLine();
         } else {
           if (c2 == '\n')
             location.nextLine();
           // Whether this is a Unix newline, or a normal character,
           // we don't care, they both get written as-is.
-          str.put(c2);
+          str.append(1, (char)c2);
         }
       }
 
@@ -546,7 +552,8 @@ StartOver:
       getChar();
 
       setTok(TokenType::DocComment, baseLoc);
-      cur.sValue = str.str();
+      str.shrink_to_fit();
+      cur.sValue = str;
       // Trim trailing whitespace.
       if (cur.sValue.length())
         cur.sValue = cur.sValue.substr(0, cur.sValue.find_last_not_of(" \t\n\v\f\r") + 1);

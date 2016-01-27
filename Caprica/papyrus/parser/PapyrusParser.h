@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <string>
 
 #include <common/CapricaUserFlagsDefinition.h>
@@ -12,7 +13,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 struct PapyrusParser final : private PapyrusLexer
 {
-  explicit PapyrusParser(std::string file) : PapyrusLexer(file) { }
+  explicit PapyrusParser(const std::string& file) : PapyrusLexer(file) { }
   PapyrusParser(const PapyrusParser&) = delete;
   ~PapyrusParser() = default;
 
