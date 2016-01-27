@@ -7,13 +7,23 @@
 #include <limits>
 #include <string>
 
+#include <common/FSUtils.h>
+
 namespace caprica {
 
 struct CapricaBinaryWriter
 {
-  explicit CapricaBinaryWriter(std::ostream& dest) : strm(dest) { }
+  explicit CapricaBinaryWriter() = default;
   CapricaBinaryWriter(const CapricaBinaryWriter&) = delete;
   ~CapricaBinaryWriter() = default;
+
+  std::string getOutputBuffer() const {
+    return strm.str();
+  }
+
+  void writeToFile(const std::string& filename) const {
+    FSUtils::async_write(filename, getOutputBuffer());
+  }
 
   template<typename T>
   void boundWrite(size_t val) {
@@ -75,7 +85,7 @@ struct CapricaBinaryWriter
   }
 
 protected:
-  std::ostream& strm;
+  std::ostringstream strm{ std::ostringstream::binary };
 };
 
 }

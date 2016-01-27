@@ -17,7 +17,7 @@ namespace caprica { namespace pex {
 
 struct PexWriter final : public CapricaBinaryWriter
 {
-  explicit PexWriter(std::ostream& dest) : CapricaBinaryWriter(dest) { }
+  explicit PexWriter() = default;
   PexWriter(const PexWriter&) = delete;
   ~PexWriter() = default;
 
@@ -67,8 +67,7 @@ struct PexWriter final : public CapricaBinaryWriter
   // writing a PexObject, which needs to know
   // the full length of its data before writing
   // the actual data.
-  void writeStream(std::stringstream& s) {
-    auto str = s.str();
+  void writeStream(const std::string& str) {
     strm.write(str.c_str(), str.size());
   }
 };

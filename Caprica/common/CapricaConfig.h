@@ -16,6 +16,15 @@ extern bool allowCompilerIdentifiers;
 // Champollion, where the script name is prepended to the struct
 // name and separated by a '#'.
 extern bool allowDecompiledStructNameRefs;
+// If true, read files asyncronously in an attempt to pre-emptively
+// read them from disk. This results in worse performance on HDDs,
+// but better performance on SSDs, as they are actually able to read
+// multiple files at once.
+extern bool asyncFileRead;
+// If true, write files to disk on background threads, allowing
+// the main compile threads to keep working while waiting for the
+// disk to catch up.
+extern bool asyncFileWrite;
 // If true, when compiling multiple files, do so
 // in multiple threads.
 extern bool compileInParallel;

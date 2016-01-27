@@ -1,8 +1,62 @@
 #include <common/FSUtils.h>
 
+#include <concurrent_unordered_map.h>
+#include <future>
+
 #include <common/CapricaConfig.h>
+#include <common/CaselessStringComparer.h>
 
 namespace caprica { namespace FSUtils {
+
+static Concurrency::concurrent_unordered_map<std::string, std::future<std::string>, CaselessStringHasher, CaselessStringEqual> futureFileReadMap{ };
+static Concurrency::concurrent_unordered_map<std::string, std::string, CaselessStringHasher, CaselessStringEqual> readFilesMap{ };
+std::string Cache::readFile(const std::string& filename) {
+  std::ifstream inFile{ filename, std::ifstream::binary };
+  std::stringstream strStream;
+  strStream << inFile.rdbuf();
+  auto str = strStream.str();
+  readFilesMap[filename] = str;
+  return str;
+}
+
+void Cache::push_need(const std::string& filename) {
+  if (CapricaConfig::asyncFileRead) {
+    if (!futureFileReadMap.count(filename)) {
+      futureFileReadMap[filename] = std::async([filename]() {
+        return readFile(filename);
+      });
+    }
+  }
+}
+
+std::string Cache::cachedReadFull(const std::string& filename) {
+  push_need(filename);
+  auto f = readFilesMap.find(filename);
+  if (f != readFilesMap.end())
+    return f->second;
+
+  if (!CapricaConfig::asyncFileRead)
+    return readFile(filename);
+
+  futureFileReadMap[filename].wait();
+  return readFilesMap[filename];
+}
+
+static Concurrency::concurrent_unordered_map<std::string, std::future<void>, CaselessStringHasher, CaselessStringEqual> futureFileWriteMap{ };
+static void writeFile(const std::string& filename, const std::string& value) {
+  std::ofstream destFile{ filename, std::ifstream::binary };
+  destFile << value;
+}
+
+void async_write(const std::string& filename, const std::string& value) {
+  if (!CapricaConfig::asyncFileWrite) {
+    writeFile(filename, value);
+  } else {
+    futureFileWriteMap[filename] = std::async([](const std::string& filename, const std::string& value) {
+      return writeFile(filename, value);
+    }, filename, value);
+  }
+}
 
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
 boost::filesystem::path canonical(const boost::filesystem::path& path) {

@@ -31,10 +31,12 @@ struct ScriptToCompile final
   ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const boost::filesystem::path& relOutputDir) {
     sourceFileName = sourcePath.string();
     outputDirectory = baseOutputDir + "\\" + relOutputDir.string();
+    caprica::FSUtils::Cache::push_need(sourceFileName);
   }
   ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir) {
     sourceFileName = sourcePath.string();
     outputDirectory = baseOutputDir;
+    caprica::FSUtils::Cache::push_need(sourceFileName);
   }
   ~ScriptToCompile() = default;
 };
@@ -57,9 +59,9 @@ static void compileScript(const ScriptToCompile& script) {
     caprica::CapricaError::exitIfErrors();
     delete ctx;
     delete a;
-    std::ofstream strm(script.outputDirectory + "\\" + baseName + ".pex", std::ofstream::binary);
-    caprica::pex::PexWriter wtr(strm);
+    caprica::pex::PexWriter wtr{ };
     pex->write(wtr);
+    wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
 
     if (caprica::CapricaConfig::dumpPexAsm) {
       std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
@@ -73,9 +75,9 @@ static void compileScript(const ScriptToCompile& script) {
     auto pex = parser->parseFile();
     caprica::CapricaError::exitIfErrors();
     delete parser;
-    std::ofstream strm(script.outputDirectory + "\\" + baseName + ".pex", std::ofstream::binary);
-    caprica::pex::PexWriter wtr(strm);
+    caprica::pex::PexWriter wtr{ };
     pex->write(wtr);
+    wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
     delete pex;
   } else if (!_stricmp(ext.c_str(), ".pex")) {
     caprica::pex::PexReader rdr(script.sourceFileName);
@@ -134,6 +136,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     po::options_description advancedDesc("Advanced");
     advancedDesc.add_options()
+      ("async-read", po::value<bool>(&conf::asyncFileRead)->default_value(false), "Allow async file reading. This is primarily useful on SSDs.")
+      ("async-write", po::value<bool>(&conf::asyncFileWrite)->default_value(true), "Allow writing output to disk on background threads.")
       ("enable-ck-optimizations", po::value<bool>(&conf::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
       ("enable-debug-info", po::value<bool>(&conf::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
       ("enable-language-extensions", po::value<bool>(&conf::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
