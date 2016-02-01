@@ -483,12 +483,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     for (auto& propGroup : baseType.resolvedObject->propertyGroups) {
       for (auto& prop : propGroup->properties) {
-        if (!_stricmp(prop->name.c_str(), ident.name.c_str())) {
-          PapyrusIdentifier id = ident;
-          id.type = PapyrusIdentifierType::Property;
-          id.prop = prop;
-          return id;
-        }
+        if (!_stricmp(prop->name.c_str(), ident.name.c_str()))
+          return PapyrusIdentifier::Property(ident.location, prop);
       }
     }
 
@@ -517,12 +513,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
   if (baseType.type == PapyrusType::Kind::None) {
     for (auto& state : object->states) {
       for (auto& func : state->functions) {
-        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
-          PapyrusIdentifier id = ident;
-          id.type = PapyrusIdentifierType::Function;
-          id.func = func;
-          return id;
-        }
+        if (!_stricmp(func->name.c_str(), ident.name.c_str()))
+          return PapyrusIdentifier::Function(ident.location, func);
       }
     }
 
@@ -530,12 +522,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       for (auto obj : sc->objects) {
         for (auto stat : obj->states) {
           for (auto func : stat->functions) {
-            if (func->isGlobal && !_stricmp(func->name.c_str(), ident.name.c_str())) {
-              PapyrusIdentifier id = ident;
-              id.type = PapyrusIdentifierType::Function;
-              id.func = func;
-              return id;
-            }
+            if (func->isGlobal && !_stricmp(func->name.c_str(), ident.name.c_str()))
+              return PapyrusIdentifier::Function(ident.location, func);
           }
         }
       }
@@ -571,12 +559,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     for (auto& state : baseType.resolvedObject->states) {
       for (auto& func : state->functions) {
-        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
-          PapyrusIdentifier id = ident;
-          id.type = PapyrusIdentifierType::Function;
-          id.func = func;
-          return id;
-        }
+        if (!_stricmp(func->name.c_str(), ident.name.c_str()))
+          return PapyrusIdentifier::Function(ident.location, func);
       }
     }
 
