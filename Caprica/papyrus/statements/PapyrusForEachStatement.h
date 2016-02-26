@@ -32,6 +32,10 @@ struct PapyrusForEachStatement final : public PapyrusStatement
       delete s;
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    cfg.appendStatement(declareStatement);
+    return cfg.processCommonLoopBody(body);
+  }
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override;
   virtual void semantic(PapyrusResolutionContext* ctx) override;
   virtual void visit(PapyrusStatementVisitor& visitor) override {

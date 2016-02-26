@@ -25,6 +25,11 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
       delete initialValue;
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    cfg.appendStatement(this);
+    return false;
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     auto loc = bldr.allocateLocal(name, type);

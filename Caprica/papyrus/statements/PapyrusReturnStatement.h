@@ -20,6 +20,11 @@ struct PapyrusReturnStatement final : public PapyrusStatement
       delete returnValue;
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    cfg.terminateNode(PapyrusControlFlowNodeEdgeType::Return);
+    return true;
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     if (!returnValue) {

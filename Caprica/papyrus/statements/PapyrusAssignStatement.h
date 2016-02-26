@@ -52,6 +52,11 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     }
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    cfg.appendStatement(this);
+    return false;
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     pex::PexValue rVal;

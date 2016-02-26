@@ -3,6 +3,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include <papyrus/PapyrusCFG.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusStatementVisitor.h>
 
@@ -111,6 +112,10 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   ctx->popLocalVariableScope();
   ctx->function = nullptr;
 
+  PapyrusCFG cfg;
+  cfg.processStatements(statements);
+  //cfg.debugDump();
+
   // We need to be able to distinguish between locals with the
   // same name defined in different scopes, so we have to mangle
   // the ones that are the same.
@@ -118,7 +123,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   {
     std::unordered_set<std::string, CaselessStringHasher, CaselessStringEqual> allLocalNames{ };
 
-    virtual void visit(statements::PapyrusDeclareStatement* s) {
+    virtual void visit(statements::PapyrusDeclareStatement* s) override {
       int i = 0;
       auto baseName = s->name;
       while (allLocalNames.count(s->name)) {

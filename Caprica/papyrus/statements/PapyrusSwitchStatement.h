@@ -30,6 +30,28 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
       delete s;
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    cfg.pushBreakTerminal();
+    for (auto p : caseBodies) {
+      cfg.addLeaf();
+      if (!cfg.processStatements(p.second))
+        CapricaError::error(p.first.location, "Control is not allowed to fall through to the next case.");
+    }
+
+    if (defaultStatements.size()) {
+      cfg.addLeaf();
+      if (!cfg.processStatements(defaultStatements))
+        CapricaError::error(defaultStatements[0]->location, "Control is not allowed to fall through to the next case.");
+    }
+
+    bool isTerminal = !cfg.popBreakTerminal();
+    if (isTerminal)
+      cfg.terminateNode(PapyrusControlFlowNodeEdgeType::Children);
+    else
+      cfg.createSibling();
+    return isTerminal;
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
 

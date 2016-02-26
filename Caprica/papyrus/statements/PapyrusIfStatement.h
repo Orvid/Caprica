@@ -28,6 +28,26 @@ struct PapyrusIfStatement final : public PapyrusStatement
       delete s;
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    bool isTerminal = true;
+
+    for (auto p : ifBodies) {
+      cfg.addLeaf();
+      isTerminal = cfg.processStatements(p.second) && isTerminal;
+    }
+
+    if (elseStatements.size()) {
+      cfg.addLeaf();
+      isTerminal = cfg.processStatements(elseStatements) && isTerminal;
+    }
+
+    if (isTerminal)
+      cfg.terminateNode(PapyrusControlFlowNodeEdgeType::Children);
+    else
+      cfg.createSibling();
+    return isTerminal;
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     pex::PexLabel* afterAll;

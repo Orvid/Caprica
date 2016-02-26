@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/CapricaFileLocation.h>
+#include <papyrus/PapyrusCFG.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/statements/PapyrusStatementVisitor.h>
 
@@ -18,6 +19,7 @@ struct PapyrusStatement abstract
   PapyrusStatement(const PapyrusStatement&) = delete;
   virtual ~PapyrusStatement() = default;
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const abstract;
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;
   virtual void visit(PapyrusStatementVisitor& visitor) abstract;

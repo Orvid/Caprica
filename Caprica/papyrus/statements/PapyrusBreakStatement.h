@@ -13,6 +13,12 @@ struct PapyrusBreakStatement final : public PapyrusStatement
   PapyrusBreakStatement(const PapyrusBreakStatement&) = delete;
   virtual ~PapyrusBreakStatement() = default;
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    cfg.markBreakTerminal();
+    cfg.terminateNode(PapyrusControlFlowNodeEdgeType::Break);
+    return true;
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     bldr << op::jmp{ bldr.currentBreakTarget() };

@@ -37,6 +37,12 @@ struct PapyrusForStatement final : public PapyrusStatement
       delete s;
   }
 
+  virtual bool buildCFG(PapyrusCFG& cfg) const override {
+    if (declareStatement)
+      cfg.appendStatement(declareStatement);
+    return cfg.processCommonLoopBody(body);
+  }
+
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     namespace op = caprica::pex::op;
