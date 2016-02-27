@@ -80,9 +80,9 @@ private:
       warningCount++;
       if (CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber)) {
         errorCount++;
-        std::cerr << formatString(location, "Error (Warning as Error)", msg, args...) << std::endl;
+        std::cerr << formatString(location, "Error (Warning as Error) W" + std::to_string(warningNumber), msg, args...) << std::endl;
       } else {
-        std::cerr << formatString(location, "Warning", msg, args...) << std::endl;
+        std::cerr << formatString(location, "Warning W" + std::to_string(warningNumber), msg, args...) << std::endl;
       }
     }
   }
