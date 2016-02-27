@@ -31,10 +31,7 @@ struct PapyrusControlFlowNode final
   std::vector<PapyrusControlFlowNode*> children{ };
   PapyrusControlFlowNode* nextSibling{ nullptr };
 
-  PapyrusControlFlowNode() {
-    static int i = 0;
-    id = i++;
-  }
+  PapyrusControlFlowNode(int i) : id(i) { }
   ~PapyrusControlFlowNode() {
     for (auto c : children)
       delete c;
@@ -42,18 +39,23 @@ struct PapyrusControlFlowNode final
       delete nextSibling;
   }
 
-  void iterate(int depth);
+  void dumpNode(int currentDepth);
 };
 
 struct PapyrusCFG final
 {
-  PapyrusCFG() : root(new PapyrusControlFlowNode()) {
+  PapyrusControlFlowNode* root{ nullptr };
+
+  PapyrusCFG() {
+    root = new PapyrusControlFlowNode(nextNodeID++);
     nodeStack.push(root);
   }
   ~PapyrusCFG() {
     if (root)
       delete root;
   }
+
+  bool processStatements(const std::vector<statements::PapyrusStatement*>& stmts);
 
   bool processCommonLoopBody(const std::vector<statements::PapyrusStatement*>& stmts) {
     pushBreakTerminal();
@@ -66,7 +68,6 @@ struct PapyrusCFG final
       createSibling();
     return isTerminal;
   }
-  bool processStatements(const std::vector<statements::PapyrusStatement*>& stmts);
 
   void appendStatement(const statements::PapyrusStatement* stmt) {
     nodeStack.top()->statements.push_back(stmt);
@@ -78,20 +79,16 @@ struct PapyrusCFG final
   }
 
   void addLeaf() {
-    auto n = new PapyrusControlFlowNode();
+    auto n = new PapyrusControlFlowNode(nextNodeID++);
     nodeStack.top()->children.push_back(n);
     nodeStack.push(n);
   }
 
   void createSibling() {
-    auto n = new PapyrusControlFlowNode();
+    auto n = new PapyrusControlFlowNode(nextNodeID++);
     nodeStack.top()->nextSibling = n;
     nodeStack.pop();
     nodeStack.push(n);
-  }
-
-  void debugDump() {
-    root->iterate(0);
   }
 
   void pushBreakTerminal() {
@@ -108,8 +105,12 @@ struct PapyrusCFG final
     return b;
   }
 
+  void dumpGraph() {
+    root->dumpNode(0);
+  }
+
 private:
-  PapyrusControlFlowNode* root{ nullptr };
+  int nextNodeID{ 0 };
   std::stack<PapyrusControlFlowNode*> nodeStack{ };
   std::stack<bool> breakTargetStack{ };
 };

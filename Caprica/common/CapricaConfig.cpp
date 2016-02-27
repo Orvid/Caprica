@@ -10,6 +10,7 @@ bool allowDecompiledStructNameRefs{ false };
 bool asyncFileRead{ false };
 bool asyncFileWrite{ false };
 bool compileInParallel{ false };
+bool debugControlFlowGraph{ false };
 bool dumpPexAsm{ false };
 bool enableCKOptimizations{ false };
 bool enableLanguageExtensions{ false };

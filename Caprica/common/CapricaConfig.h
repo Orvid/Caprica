@@ -28,6 +28,9 @@ extern bool asyncFileWrite;
 // If true, when compiling multiple files, do so
 // in multiple threads.
 extern bool compileInParallel;
+// If true, output the control flow graph of every function in the
+// files being compiled to stdout.
+extern bool debugControlFlowGraph;
 // If true, dump the Asm representation of the Pex file generated
 // for the Papyrus scripts being compiled.
 extern bool dumpPexAsm;

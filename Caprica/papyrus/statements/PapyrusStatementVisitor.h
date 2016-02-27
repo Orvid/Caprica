@@ -21,18 +21,38 @@ struct PapyrusStatementVisitor abstract
   PapyrusStatementVisitor(const PapyrusStatementVisitor&) = delete;
   virtual ~PapyrusStatementVisitor() = default;
 
-  virtual void visit(PapyrusAssignStatement* s) { }
-  virtual void visit(PapyrusBreakStatement* s) { }
-  virtual void visit(PapyrusContinueStatement* s) { }
-  virtual void visit(PapyrusDeclareStatement* s) { }
-  virtual void visit(PapyrusDoWhileStatement* s) { }
-  virtual void visit(PapyrusExpressionStatement* s) { }
-  virtual void visit(PapyrusForStatement* s) { }
-  virtual void visit(PapyrusForEachStatement* s) { }
-  virtual void visit(PapyrusIfStatement* s) { }
-  virtual void visit(PapyrusReturnStatement* s) { }
-  virtual void visit(PapyrusSwitchStatement* s) { }
-  virtual void visit(PapyrusWhileStatement* s) { }
+  virtual void visit(PapyrusAssignStatement* s) abstract;
+  virtual void visit(PapyrusBreakStatement* s) abstract;
+  virtual void visit(PapyrusContinueStatement* s) abstract;
+  virtual void visit(PapyrusDeclareStatement* s) abstract;
+  virtual void visit(PapyrusDoWhileStatement* s) abstract;
+  virtual void visit(PapyrusExpressionStatement* s) abstract;
+  virtual void visit(PapyrusForStatement* s) abstract;
+  virtual void visit(PapyrusForEachStatement* s) abstract;
+  virtual void visit(PapyrusIfStatement* s) abstract;
+  virtual void visit(PapyrusReturnStatement* s) abstract;
+  virtual void visit(PapyrusSwitchStatement* s) abstract;
+  virtual void visit(PapyrusWhileStatement* s) abstract;
+};
+
+struct PapyrusSelectiveStatementVisitor abstract : public PapyrusStatementVisitor
+{
+  explicit PapyrusSelectiveStatementVisitor() = default;
+  PapyrusSelectiveStatementVisitor(const PapyrusSelectiveStatementVisitor&) = delete;
+  virtual ~PapyrusSelectiveStatementVisitor() = default;
+
+  virtual void visit(PapyrusAssignStatement* s) override { }
+  virtual void visit(PapyrusBreakStatement* s) override { }
+  virtual void visit(PapyrusContinueStatement* s) override { }
+  virtual void visit(PapyrusDeclareStatement* s) override { }
+  virtual void visit(PapyrusDoWhileStatement* s) override { }
+  virtual void visit(PapyrusExpressionStatement* s) override { }
+  virtual void visit(PapyrusForStatement* s) override { }
+  virtual void visit(PapyrusForEachStatement* s) override { }
+  virtual void visit(PapyrusIfStatement* s) override { }
+  virtual void visit(PapyrusReturnStatement* s) override { }
+  virtual void visit(PapyrusSwitchStatement* s) override { }
+  virtual void visit(PapyrusWhileStatement* s) override { }
 };
 
 }}}

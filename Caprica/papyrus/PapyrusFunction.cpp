@@ -112,14 +112,33 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   ctx->popLocalVariableScope();
   ctx->function = nullptr;
 
-  PapyrusCFG cfg;
-  cfg.processStatements(statements);
-  //cfg.debugDump();
+  // Don't build the CFG for the special functions.
+  if (!isNative && name != "GetState" && name != "GotoState") {
+    PapyrusCFG cfg;
+    cfg.processStatements(statements);
+
+    if (returnType.type != PapyrusType::Kind::None) {
+      auto curNode = cfg.root;
+      while (curNode != nullptr) {
+        if (curNode->edgeType == PapyrusControlFlowNodeEdgeType::Children || curNode->edgeType == PapyrusControlFlowNodeEdgeType::Return)
+          break;
+        curNode = curNode->nextSibling;
+      }
+
+      if (curNode == nullptr)
+        CapricaError::error(location, "Not all control paths of '%s' return a value.", name.c_str());
+    }
+
+    if (CapricaConfig::debugControlFlowGraph) {
+      std::cout << "CFG for " << name << ":" << std::endl;
+      cfg.dumpGraph();
+    }
+  }
 
   // We need to be able to distinguish between locals with the
   // same name defined in different scopes, so we have to mangle
   // the ones that are the same.
-  struct CheckLocalNamesStatementVisitor final : statements::PapyrusStatementVisitor
+  struct CheckLocalNamesStatementVisitor final : statements::PapyrusSelectiveStatementVisitor
   {
     std::unordered_set<std::string, CaselessStringHasher, CaselessStringEqual> allLocalNames{ };
 

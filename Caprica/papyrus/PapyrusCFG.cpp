@@ -75,35 +75,54 @@ static void writeStatementType(const statements::PapyrusStatement* stmt) {
   ((statements::PapyrusStatement*)stmt)->visit(visitor);
 }
 
-void PapyrusControlFlowNode::iterate(int depth) {
-  for (int i = 0; i < depth; i++)
-    std::cout << "  ";
+void PapyrusControlFlowNode::dumpNode(int currentDepth) {
+  const auto writeIndent = [](int depth) {
+    for (int i = 0; i < depth; i++)
+      std::cout << "  ";
+  };
+
+  writeIndent(currentDepth);
   std::cout << "Node " << id << " " << std::endl;
   
   for (auto s : statements) {
-    for (int i = 0; i < depth + 1; i++)
-      std::cout << "  ";
+    writeIndent(currentDepth + 1);
     writeStatementType(s);
     std::cout << std::endl;
   }
 
-  /*if (edgeStatement != nullptr) {
-    for (int i = 0; i < depth + 1; i++)
-      std::cout << "  ";
+  if (edgeType != PapyrusControlFlowNodeEdgeType::None) {
+    writeIndent(currentDepth + 1);
     std::cout << "Edge: ";
-    writeStatementType(edgeStatement);
+    switch (edgeType) {
+      case PapyrusControlFlowNodeEdgeType::None:
+        std::cout << "None";
+        break;
+      case PapyrusControlFlowNodeEdgeType::Break:
+        std::cout << "Break";
+        break;
+      case PapyrusControlFlowNodeEdgeType::Continue:
+        std::cout << "Continue";
+        break;
+      case PapyrusControlFlowNodeEdgeType::Return:
+        std::cout << "Return";
+        break;
+      case PapyrusControlFlowNodeEdgeType::Children:
+        std::cout << "Children";
+        break;
+      default:
+        CapricaError::logicalFatal("Unknown PapyrusControlFlowNodeEdgeType!");
+    }
     std::cout << std::endl;
-  }*/
+  }
 
   for (auto c : children) {
-    c->iterate(depth + 1);
+    c->dumpNode(currentDepth + 1);
   }
 
   if (nextSibling) {
-    for (int i = 0; i < depth; i++)
-      std::cout << "--";
+    writeIndent(currentDepth - 1);
     std::cout << ">" << std::endl;
-    nextSibling->iterate(depth);
+    nextSibling->dumpNode(currentDepth);
   }
 }
 
