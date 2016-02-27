@@ -64,7 +64,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       struc->parentObject = obj;
       struc->name = pex->getStringValue(ps->name);
       for (auto pm : ps->members) {
-        auto mem = new PapyrusStructMember(loc, reflectType(loc, pex, pm->typeName));
+        auto mem = new PapyrusStructMember(loc, reflectType(loc, pex, pm->typeName), struc);
         mem->isConst = pm->isConst;
         mem->name = pex->getStringValue(pm->name);
         struc->members.push_back(mem);
@@ -73,7 +73,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
     }
 
     for (auto pp : po->properties) {
-      auto prop = new PapyrusProperty(loc, reflectType(loc, pex, pp->typeName));
+      auto prop = new PapyrusProperty(loc, reflectType(loc, pex, pp->typeName), obj);
       prop->name = pex->getStringValue(pp->name);
       if (pp->isAuto) {
         prop->isAuto = true;

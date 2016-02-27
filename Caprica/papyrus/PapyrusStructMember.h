@@ -25,8 +25,9 @@ struct PapyrusStructMember final
   bool isConst{ false };
 
   CapricaFileLocation location;
+  const PapyrusStruct* parent{ nullptr };
 
-  explicit PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusStruct* par) : location(loc), type(tp), parent(par) { }
   PapyrusStructMember(const PapyrusStructMember&) = delete;
   ~PapyrusStructMember() = default;
 

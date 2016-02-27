@@ -3,6 +3,7 @@
 #include <common/CapricaConfig.h>
 
 #include <papyrus/PapyrusFunctionParameter.h>
+#include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusStructMember.h>
 #include <papyrus/PapyrusVariable.h>
@@ -106,6 +107,36 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
 
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  }
+}
+
+void PapyrusIdentifier::ensureAssignable() const {
+  switch (type) {
+    case PapyrusIdentifierType::Property:
+      if (prop->isReadOnly)
+        return CapricaError::error(location, "You cannot assign to the read-only property '%s'.", prop->name.c_str());
+      if (prop->parent->isConst)
+        return CapricaError::error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.c_str(), prop->parent->name.c_str());
+      break;
+    case PapyrusIdentifierType::Variable:
+      if (var->isConst)
+        return CapricaError::error(location, "You cannot assign to the const variable '%s'.", var->name.c_str());
+      if (var->parent->isConst)
+        return CapricaError::error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.c_str(), var->parent->name.c_str());
+      break;
+    case PapyrusIdentifierType::StructMember:
+      if (structMember->isConst)
+        return CapricaError::error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
+      break;
+
+    case PapyrusIdentifierType::Parameter:
+    case PapyrusIdentifierType::DeclareStatement:
+      break;
+
+    case PapyrusIdentifierType::Unresolved:
+      break;
     default:
       CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }

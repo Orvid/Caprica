@@ -109,16 +109,17 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       }
       binOpExpression->semantic(ctx);
       if (lValue->resultType().type == PapyrusType::Kind::Array && !CapricaConfig::enableLanguageExtensions)
-        CapricaError::fatal(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
+        CapricaError::error(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
       rValue = PapyrusResolutionContext::coerceExpression(binOpExpression, lValue->resultType());
     }
+
     if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
-      if (id->identifier.type == PapyrusIdentifierType::Property && id->identifier.prop->isReadOnly)
-        CapricaError::fatal(location, "Attempted to assign to a read-only property!");
+      id->identifier.ensureAssignable();
     } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
       // It's valid.
     } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
-      // It's valid.
+      if (auto id = ma->accessExpression->as<expressions::PapyrusIdentifierExpression>())
+        id->identifier.ensureAssignable();
     } else {
       CapricaError::fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
     }

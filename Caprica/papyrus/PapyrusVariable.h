@@ -23,25 +23,14 @@ struct PapyrusVariable final
   bool isConst{ false };
 
   CapricaFileLocation location;
+  const PapyrusObject* parent{ nullptr };
 
-  explicit PapyrusVariable(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusVariable(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
   PapyrusVariable(const PapyrusVariable&) = delete;
   ~PapyrusVariable() = default;
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
-    auto var = new pex::PexVariable();
-    var->name = file->getString(name);
-    var->typeName = type.buildPex(file);
-    var->userFlags = userFlags.buildPex(file);
-    var->defaultValue = defaultValue.buildPex(file);
-    var->isConst = isConst;
-    obj->variables.push_back(var);
-  }
-
-  void semantic(PapyrusResolutionContext* ctx) {
-    type = ctx->resolveType(type);
-    defaultValue = PapyrusResolutionContext::coerceDefaultValue(defaultValue, type);
-  }
+  void buildPex(pex::PexFile* file, pex::PexObject* obj) const;
+  void semantic(PapyrusResolutionContext* ctx);
 };
 
 }}

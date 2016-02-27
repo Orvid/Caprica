@@ -32,8 +32,9 @@ struct PapyrusProperty final
   PapyrusValue defaultValue{ PapyrusValue::Default() };
 
   CapricaFileLocation location;
+  const PapyrusObject* parent{ nullptr };
 
-  explicit PapyrusProperty(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusProperty(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
   PapyrusProperty(const PapyrusProperty&) = delete;
   ~PapyrusProperty() {
     if (readFunction)

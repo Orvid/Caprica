@@ -154,7 +154,8 @@ struct PapyrusIdentifier final
   ~PapyrusIdentifier() = default;
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
-  void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;
+  void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;
+  void ensureAssignable() const;
   PapyrusType resultType() const;
 };
 

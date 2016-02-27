@@ -274,7 +274,7 @@ Return:
 }
 
 PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, bool isConst, PapyrusType tp) {
-  auto mem = new PapyrusStructMember(cur.location, tp);
+  auto mem = new PapyrusStructMember(cur.location, tp, struc);
   mem->isConst = isConst;
   mem->name = expectConsumeIdent();
 
@@ -328,7 +328,7 @@ Return:
 }
 
 PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType type) {
-  auto prop = new PapyrusProperty(cur.location, type);
+  auto prop = new PapyrusProperty(cur.location, type, object);
   prop->name = expectConsumeIdent();
 
   bool isFullProp = true;
@@ -410,7 +410,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
 }
 
 PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type) {
-  auto var = new PapyrusVariable(cur.location, type);
+  auto var = new PapyrusVariable(cur.location, type, object);
   var->isConst = isConst;
   var->name = expectConsumeIdent();
 
