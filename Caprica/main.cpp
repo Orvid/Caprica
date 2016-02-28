@@ -28,15 +28,15 @@ struct ScriptToCompile final
   std::string outputDirectory;
 
   ScriptToCompile() = delete;
-  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const boost::filesystem::path& relOutputDir) {
+  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const std::string& absolutePath, const boost::filesystem::path& relOutputDir) {
     sourceFileName = sourcePath.string();
     outputDirectory = baseOutputDir + "\\" + relOutputDir.string();
-    caprica::FSUtils::Cache::push_need(sourceFileName);
+    caprica::FSUtils::Cache::push_need(absolutePath);
   }
-  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir) {
+  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const std::string& absolutePath) {
     sourceFileName = sourcePath.string();
     outputDirectory = baseOutputDir;
-    caprica::FSUtils::Cache::push_need(sourceFileName);
+    caprica::FSUtils::Cache::push_need(absolutePath);
   }
   ~ScriptToCompile() = default;
 };
@@ -136,7 +136,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     po::options_description advancedDesc("Advanced");
     advancedDesc.add_options()
-      ("async-read", po::value<bool>(&conf::asyncFileRead)->default_value(false), "Allow async file reading. This is primarily useful on SSDs.")
+      ("async-read", po::value<bool>(&conf::asyncFileRead)->default_value(true), "Allow async file reading. This is primarily useful on SSDs.")
       ("async-write", po::value<bool>(&conf::asyncFileWrite)->default_value(true), "Allow writing output to disk on background threads.")
       ("debug-control-flow-graph", po::value<bool>(&conf::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
       ("enable-ck-optimizations", po::value<bool>(&conf::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
@@ -149,6 +149,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     po::options_description hiddenDesc("");
     hiddenDesc.add_options()
       ("input-file", po::value<std::vector<std::string>>(), "The input file.")
+      ("performance-test-mode", po::value<bool>(&conf::performanceTestMode)->default_value(false)->implicit_value(true), "Enable performance test mode.")
     ;
 
     po::positional_options_description p;
@@ -199,6 +200,11 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     if (vm["champollion-compat"].as<bool>()) {
       conf::allowCompilerIdentifiers = true;
       conf::allowDecompiledStructNameRefs = true;
+    }
+
+    if (vm["performance-test-mode"].as<bool>()) {
+      conf::asyncFileRead = true;
+      conf::asyncFileWrite = false;
     }
 
     if (vm.count("warning-as-error")) {
@@ -289,16 +295,16 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
               auto rel = caprica::FSUtils::naive_uncomplete(abs, absBaseDir).make_preferred();
               
               if (rel.string() != e.path().filename())
-                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, rel.parent_path()));
+                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, abs.string(), rel.parent_path()));
               else
-                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir));
+                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, abs.string()));
             }
           }
         } else {
           boost::system::error_code ec;
           for (auto e : boost::filesystem::directory_iterator(f, ec)) {
             if (e.path().extension().string() == ".psc")
-              filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir));
+              filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, caprica::FSUtils::canonical(e.path()).string()));
           }
         }
       } else {
@@ -308,7 +314,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        filesToCompile.push_back(ScriptToCompile(f, baseOutputDir));
+        filesToCompile.push_back(ScriptToCompile(f, baseOutputDir, caprica::FSUtils::canonical(f).string()));
       }
     }
   } catch (const std::exception& ex) {
@@ -332,6 +338,10 @@ int main(int argc, char* argv[])
   if (!parseArgs(argc, argv, filesToCompile)) {
     breakIfDebugging();
     return -1;
+  }
+
+  if (caprica::CapricaConfig::performanceTestMode) {
+    caprica::FSUtils::Cache::waitForAll();
   }
 
   try {

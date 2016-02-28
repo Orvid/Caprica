@@ -50,6 +50,10 @@ extern bool emitDebugInfo;
 // The directories to search in for imported types and
 // unknown types.
 extern std::vector<std::string> importDirectories;
+// If true, we pause and wait for all files to be read in before
+// compiling them, and we also don't write them out to disk.
+// This is done to increase the consistency of the test runs.
+extern bool performanceTestMode;
 // If true, only report failures, not progress.
 extern bool quietCompile;
 // If true, resolve symlinks while building canonical

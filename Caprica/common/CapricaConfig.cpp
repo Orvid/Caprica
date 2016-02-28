@@ -18,6 +18,7 @@ bool enableOptimizations{ false };
 bool enableSpeculativeSyntax{ false };
 bool emitDebugInfo{ false };
 std::vector<std::string> importDirectories{ };
+bool performanceTestMode{ false };
 bool quietCompile{ false };
 bool resolveSymlinks{ false };
 bool treatWarningsAsErrors{ false };

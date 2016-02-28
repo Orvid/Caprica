@@ -19,33 +19,42 @@ std::string Cache::readFile(const std::string& filename) {
   return str;
 }
 
+void Cache::waitForAll() {
+  for (auto& f : futureFileReadMap) {
+    f.second.get();
+  }
+}
+
 void Cache::push_need(const std::string& filename) {
   if (CapricaConfig::asyncFileRead) {
-    if (!futureFileReadMap.count(filename)) {
-      futureFileReadMap[filename] = std::async([filename]() {
-        return readFile(filename);
+    auto abs = canonical(filename).string();
+    if (!futureFileReadMap.count(abs)) {
+      futureFileReadMap[abs] = std::async([abs]() {
+        return readFile(abs);
       });
     }
   }
 }
 
 std::string Cache::cachedReadFull(const std::string& filename) {
-  push_need(filename);
-  auto f = readFilesMap.find(filename);
+  auto abs = canonical(filename).string();
+  push_need(abs);
+  auto f = readFilesMap.find(abs);
   if (f != readFilesMap.end())
     return f->second;
 
   if (!CapricaConfig::asyncFileRead)
-    return readFile(filename);
+    return readFile(abs);
 
-  futureFileReadMap[filename].wait();
-  return readFilesMap[filename];
+  return futureFileReadMap[abs].get();
 }
 
 static Concurrency::concurrent_unordered_map<std::string, std::future<void>, CaselessStringHasher, CaselessStringEqual> futureFileWriteMap{ };
 static void writeFile(const std::string& filename, const std::string& value) {
-  std::ofstream destFile{ filename, std::ifstream::binary };
-  destFile << value;
+  if (!CapricaConfig::performanceTestMode) {
+    std::ofstream destFile{ filename, std::ifstream::binary };
+    destFile << value;
+  }
 }
 
 void async_write(const std::string& filename, const std::string& value) {
@@ -53,7 +62,7 @@ void async_write(const std::string& filename, const std::string& value) {
     writeFile(filename, value);
   } else {
     futureFileWriteMap[filename] = std::async([](const std::string& filename, const std::string& value) {
-      return writeFile(filename, value);
+      writeFile(filename, value);
     }, filename, value);
   }
 }
