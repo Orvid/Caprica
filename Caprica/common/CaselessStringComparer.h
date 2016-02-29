@@ -5,8 +5,8 @@
 #include <cstring>
 #include <functional>
 #include <string>
-
-#include <boost/algorithm/string/case_conv.hpp>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace caprica {
 
@@ -47,5 +47,10 @@ struct CaselessStringEqual final : public std::function<bool(std::string, std::s
     return _stricmp(lhs.c_str(), rhs.c_str()) == 0;
   }
 };
+
+template<typename T>
+using caseless_unordered_set = typename std::unordered_set<T, CaselessStringHasher, CaselessStringEqual>;
+template<typename K, typename V>
+using caseless_unordered_map = typename std::unordered_map<K, V, CaselessStringHasher, CaselessStringEqual>;
 
 }

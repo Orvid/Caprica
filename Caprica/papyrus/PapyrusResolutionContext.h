@@ -99,7 +99,7 @@ struct PapyrusResolutionContext final
   static void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
     // TODO: This has a short enough lifetime that an
     // std::set might actually outperform this.
-    std::unordered_set<std::string, CaselessStringHasher, CaselessStringEqual> foundNames{ };
+    caseless_unordered_set<std::string> foundNames{ };
     foundNames.reserve(nameset.size());
     for (auto member : nameset) {
       // TODO: Output location of first name.
