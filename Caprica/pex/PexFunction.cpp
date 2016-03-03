@@ -151,7 +151,7 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
         }
       }
 
-      if (debInf) {
+      if (debInf && i < debInf->instructionLineMap.size()) {
         wtr.write(" ;@line %u", debInf->instructionLineMap[i]);
       }
 
