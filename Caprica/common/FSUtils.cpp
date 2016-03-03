@@ -15,7 +15,7 @@ std::string Cache::readFile(const std::string& filename) {
   std::stringstream strStream;
   strStream << inFile.rdbuf();
   auto str = strStream.str();
-  readFilesMap[filename] = str;
+  readFilesMap.insert({ filename, str });
   return str;
 }
 
