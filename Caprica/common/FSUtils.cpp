@@ -39,14 +39,21 @@ void Cache::push_need(const std::string& filename) {
 std::string Cache::cachedReadFull(const std::string& filename) {
   auto abs = canonical(filename).string();
   push_need(abs);
-  auto f = readFilesMap.find(abs);
-  if (f != readFilesMap.end())
-    return f->second;
+  if (readFilesMap.count(abs))
+    return readFilesMap[abs];
 
   if (!CapricaConfig::asyncFileRead)
     return readFile(abs);
 
-  return futureFileReadMap[abs].get();
+  // Doing wait is stupid expensive, and you can only call .get() once, so
+  // we'd have to lock on the individual future, and it's cheaper to just
+  // catch the exception when it's already been gotten once between when
+  // we checked the map and when we get here.
+  try {
+    return futureFileReadMap[abs].get();
+  } catch (...) {
+    return readFilesMap[abs];
+  }
 }
 
 static Concurrency::concurrent_unordered_map<std::string, std::future<void>, CaselessStringHasher, CaselessStringEqual> futureFileWriteMap{ };
