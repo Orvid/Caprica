@@ -48,16 +48,11 @@ static int32_t getDestArgIndexForOpCode(PexOpCode op) {
       return 2;
     case PexOpCode::CallParent:
       return 1;
-#define OP_ARG1(name, opcode, destArgIdx, at1, an1) \
-    case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG2(name, opcode, destArgIdx, at1, an1, at2, an2) \
-    case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG3(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3) \
-    case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG4(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4) \
-    case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
-    case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG1(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG2(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG3(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG4(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG5(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
