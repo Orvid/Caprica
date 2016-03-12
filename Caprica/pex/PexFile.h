@@ -42,6 +42,38 @@ struct PexFile final
       debugInfo = new PexDebugInfo();
   }
 
+  PexDebugFunctionInfo* tryFindFunctionDebugInfo(const PexObject* object,
+                                                 const PexState* state,
+                                                 const PexFunction* function,
+                                                 const std::string& propertyName,
+                                                 PexDebugFunctionType functionType) {
+    if (debugInfo) {
+      assert(function);
+      assert(object);
+      auto fName = propertyName == "" ? getStringValue(function->name) : propertyName;
+      auto objectName = getStringValue(object->name);
+      auto stateName = state ? getStringValue(state->name) : "";
+
+      for (auto fi : debugInfo->functions) {
+        if (getStringValue(fi->objectName) == objectName &&
+            getStringValue(fi->stateName) == stateName &&
+            getStringValue(fi->functionName) == fName &&
+            fi->functionType == functionType) {
+          return fi;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  const PexDebugFunctionInfo* tryFindFunctionDebugInfo(const PexObject* object,
+                                                 const PexState* state,
+                                                 const PexFunction* function,
+                                                 const std::string& propertyName,
+                                                 PexDebugFunctionType functionType) const {
+    return ((PexFile*)this)->tryFindFunctionDebugInfo(object, state, function, propertyName, functionType);
+  }
+
   PexString getString(const std::string& str) {
     auto a = stringTableLookup.find(str);
     if (a != stringTableLookup.end())

@@ -76,6 +76,34 @@ struct PexInstruction final
   PexInstruction(const PexInstruction&) = delete;
   ~PexInstruction() = default;
 
+  bool isBranch() const noexcept {
+    return opCode == PexOpCode::Jmp || opCode == PexOpCode::JmpT || opCode == PexOpCode::JmpF;
+  }
+
+  /**
+   * The target of this branch instruction, as a
+   * number representing the relative target in
+   * number of instructions.
+   */
+  int branchTarget() const {
+    if (opCode == PexOpCode::Jmp) {
+      assert(args.size() == 1);
+      assert(args[0].type == PexValueType::Integer);
+      return args[0].i;
+    } else if (opCode == PexOpCode::JmpT || opCode == PexOpCode::JmpF) {
+      assert(args.size() == 2);
+      assert(args[1].type == PexValueType::Integer);
+      return args[1].i;
+    }
+    CapricaError::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
+  }
+
+  void makeNop() {
+    opCode = PexOpCode::Nop;
+    args.clear();
+    variadicArgs.clear();
+  }
+
   static PexInstruction* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 

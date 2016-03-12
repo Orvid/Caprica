@@ -69,10 +69,12 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
     wtr.write("set");
   else
     wtr.write(file->getStringValue(name).c_str());
+
   if (isNative)
     wtr.write(" native");
   if (isGlobal)
     wtr.write(" static");
+
   wtr.writeln();
   wtr.ident++;
 
@@ -98,29 +100,13 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
     wtr.writeln(".code");
     wtr.ident++;
 
-    PexDebugFunctionInfo* debInf{ nullptr };
-    if (file->debugInfo) {
-      auto objName = file->getStringValue(obj->name);
-      auto stateName = state ? file->getStringValue(state->name) : "";
-      auto fName = propName == "" ? file->getStringValue(name) : propName;
-
-      for (auto fi : file->debugInfo->functions) {
-        if (file->getStringValue(fi->objectName) == objName && file->getStringValue(fi->stateName) == stateName && file->getStringValue(fi->functionName) == fName && fi->functionType == funcType) {
-          debInf = fi;
-          break;
-        }
-      }
-    }
+    auto debInf = file->tryFindFunctionDebugInfo(obj, state, this, propName, funcType);
 
     // This is the fun part.
     std::unordered_map<size_t, size_t> labelMap;
     for (size_t i = 0; i < instructions.size(); i++) {
-      if (instructions[i]->opCode == PexOpCode::Jmp) {
-        auto targI = instructions[i]->args[0].i + i;
-        if (!labelMap.count((size_t)(targI)))
-          labelMap.insert({ (size_t)targI, labelMap.size() });
-      } else if (instructions[i]->opCode == PexOpCode::JmpT || instructions[i]->opCode == PexOpCode::JmpF) {
-        auto targI = instructions[i]->args[1].i + i;
+      if (instructions[i]->isBranch()) {
+        auto targI = instructions[i]->branchTarget() + i;
         if (!labelMap.count((size_t)(targI)))
           labelMap.insert({ (size_t)targI, labelMap.size() });
       }
