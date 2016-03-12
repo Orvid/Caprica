@@ -124,6 +124,11 @@ struct PexValue final
   ~PexValue() = default;
 
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
+
+  bool operator ==(const PexValue& other) const;
+  bool operator !=(const PexValue& other) const {
+    return !(*this == other);
+  }
 };
 
 }}
