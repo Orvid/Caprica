@@ -125,18 +125,18 @@ struct callstatic final
 
 struct PexFunctionBuilder final
 {
-  PexFunctionBuilder& operator <<(op::nop& instr) { return push(PexOpCode::Nop); }
+  PexFunctionBuilder& operator <<(const op::nop& instr) { return push(PexOpCode::Nop); }
 
-#define OP_ARG1(name, opcode, destArgIdx, at1, an1) \
-PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1); }
-#define OP_ARG2(name, opcode, destArgIdx, at1, an1, at2, an2) \
-PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2); }
-#define OP_ARG3(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3) \
-PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
-#define OP_ARG4(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4) \
-PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
-#define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
-PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
+#define OP_ARG1(name, opcode, ...) \
+PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1); }
+#define OP_ARG2(name, opcode, ...) \
+PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2); }
+#define OP_ARG3(name, opcode, ...) \
+PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
+#define OP_ARG4(name, opcode, ...) \
+PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
+#define OP_ARG5(name, opcode, ...) \
+PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
   OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
@@ -144,13 +144,13 @@ PexFunctionBuilder& operator <<(op::name& instr) { return push(PexOpCode::opcode
 #undef OP_ARG4
 #undef OP_ARG5
 
-  PexFunctionBuilder& operator <<(op::callmethod& instr) {
+  PexFunctionBuilder& operator <<(const op::callmethod& instr) {
     return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
   }
-  PexFunctionBuilder& operator <<(op::callparent& instr) {
+  PexFunctionBuilder& operator <<(const op::callparent& instr) {
     return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, instr.variadicArgs));
   }
-  PexFunctionBuilder& operator <<(op::callstatic& instr) {
+  PexFunctionBuilder& operator <<(const op::callstatic& instr) {
     return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
   }
 

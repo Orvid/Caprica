@@ -12,16 +12,11 @@ namespace caprica { namespace pex {
 // Use the opcodes descriptions from the function builder to manage this.
 static size_t getArgCountForOpCode(PexOpCode op) {
   switch (op) {
-#define OP_ARG1(name, opcode, destArgIdx, at1, an1) \
-  case PexOpCode::opcode: return 1;
-#define OP_ARG2(name, opcode, destArgIdx, at1, an1, at2, an2) \
-  case PexOpCode::opcode: return 2;
-#define OP_ARG3(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3) \
-  case PexOpCode::opcode: return 3;
-#define OP_ARG4(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4) \
-  case PexOpCode::opcode: return 4;
-#define OP_ARG5(name, opcode, destArgIdx, at1, an1, at2, an2, at3, an3, at4, an4, at5, an5) \
-  case PexOpCode::opcode: return 5;
+#define OP_ARG1(name, opcode, ...) case PexOpCode::opcode: return 1;
+#define OP_ARG2(name, opcode, ...) case PexOpCode::opcode: return 2;
+#define OP_ARG3(name, opcode, ...) case PexOpCode::opcode: return 3;
+#define OP_ARG4(name, opcode, ...) case PexOpCode::opcode: return 4;
+#define OP_ARG5(name, opcode, ...) case PexOpCode::opcode: return 5;
     OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
@@ -103,7 +98,7 @@ void PexInstruction::write(PexWriter& wtr) const {
   }
 }
 
-static const std::map<std::string, PexOpCode, CaselessStringComparer> opCodeNameMap{
+static const caseless_map<const char*, PexOpCode> opCodeNameMap{
   { "noop", PexOpCode::Nop },
   { "iadd", PexOpCode::IAdd },
   { "fadd", PexOpCode::FAdd },
@@ -154,14 +149,14 @@ static const std::map<std::string, PexOpCode, CaselessStringComparer> opCodeName
 };
 
 PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
-  auto f = opCodeNameMap.find(str);
+  auto f = opCodeNameMap.find(str.c_str());
   if (f != opCodeNameMap.end())
     return f->second;
   else
     return PexOpCode::Invalid;
 }
 
-static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap{
+static const std::map<PexOpCode, std::string> opCodeToPexAsmNameMap{
   { PexOpCode::Invalid, "INVALID" },
   { PexOpCode::Nop, "NOOP" },
   { PexOpCode::IAdd, "IADD" },
