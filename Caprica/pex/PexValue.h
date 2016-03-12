@@ -103,7 +103,6 @@ struct PexValue final
   struct Invalid { };
 
   explicit PexValue() { };
-  PexValue(const PexValue&) = default;
   PexValue(PexLabel* lab) : type(PexValueType::Label), l(lab) { }
   PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { }
   PexValue(const TemporaryVariable& val) : type(PexValueType::TemporaryVar), tmpVar(val.var) { }
@@ -118,6 +117,10 @@ struct PexValue final
   PexValue(const Bool& val) : type(PexValueType::Bool), b(val.b) { }
   PexValue(const None& val) : type(PexValueType::None) { }
   PexValue(const Invalid& val) : type(PexValueType::Invalid) { }
+  PexValue(const PexValue&) = default;
+  PexValue(PexValue&& other) = default;
+  PexValue& operator =(const PexValue&) = default;
+  PexValue& operator =(PexValue&&) = default;
   ~PexValue() = default;
 
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;

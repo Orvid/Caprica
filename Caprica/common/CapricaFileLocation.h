@@ -17,6 +17,9 @@ struct CapricaFileLocation final
 
     explicit Partial(const CapricaFileLocation& loc) : line(loc.line), column(loc.column) { }
     Partial(const Partial&) = default;
+    Partial(Partial&& other) = default;
+    Partial& operator =(const Partial&) = default;
+    Partial& operator =(Partial&&) = default;
     ~Partial() = default;
 
     CapricaFileLocation operator +(CapricaFileLocation loc) {
@@ -29,11 +32,14 @@ struct CapricaFileLocation final
   size_t line{ 0 };
   size_t column{ 0 };
 
-  explicit CapricaFileLocation(const std::string& fn, size_t ln, size_t col) : filename(fn), line(ln), column(col) { }
+  explicit CapricaFileLocation(const std::string& fn, size_t ln, size_t col) noexcept : filename(fn), line(ln), column(col) { }
   CapricaFileLocation(const CapricaFileLocation& other) = default;
+  CapricaFileLocation(CapricaFileLocation&& other) = default;
+  CapricaFileLocation& operator =(const CapricaFileLocation&) = default;
+  CapricaFileLocation& operator =(CapricaFileLocation&&) = default;
   ~CapricaFileLocation() = default;
 
-  void nextLine() {
+  void nextLine() noexcept {
     line++;
     column = 0;
   }
@@ -44,7 +50,7 @@ struct CapricaFileLocation final
     return str.str();
   }
 
-  void updatePartial(const Partial& part) {
+  void updatePartial(const Partial& part) noexcept {
     line = part.line;
     column = part.column;
   }

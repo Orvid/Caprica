@@ -71,6 +71,9 @@ struct PapyrusValue final
   PapyrusValue(const Integer& other) : type(PapyrusValueType::Integer), location(other.location), i(other.i) { }
   PapyrusValue(const Float& other) : type(PapyrusValueType::Float), location(other.location), f(other.f) { }
   PapyrusValue(const PapyrusValue& other) = default;
+  PapyrusValue(PapyrusValue&& other) = default;
+  PapyrusValue& operator =(const PapyrusValue&) = default;
+  PapyrusValue& operator =(PapyrusValue&&) = default;
   ~PapyrusValue() = default;
 
   pex::PexValue buildPex(pex::PexFile* file) const {

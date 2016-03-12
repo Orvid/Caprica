@@ -151,6 +151,9 @@ struct PapyrusIdentifier final
   PapyrusIdentifier(const Function& other);
   PapyrusIdentifier(const ArrayFunction& other);
   PapyrusIdentifier(const PapyrusIdentifier& other) = default;
+  PapyrusIdentifier(PapyrusIdentifier&& other) = default;
+  PapyrusIdentifier& operator =(const PapyrusIdentifier&) = default;
+  PapyrusIdentifier& operator =(PapyrusIdentifier&&) = default;
   ~PapyrusIdentifier() = default;
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
