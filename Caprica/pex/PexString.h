@@ -10,13 +10,16 @@ struct PexString final
 
   explicit PexString() = default;
   PexString(const PexString&) = default;
+  PexString(PexString&& other) = default;
+  PexString& operator =(const PexString&) = default;
+  PexString& operator =(PexString&&) = default;
   ~PexString() = default;
 
-  bool operator <(const PexString& other) const {
+  bool operator <(const PexString& other) const noexcept {
     return index < other.index;
   }
 
-  bool valid() const {
+  bool valid() const noexcept {
     return index != -1;
   }
 };
