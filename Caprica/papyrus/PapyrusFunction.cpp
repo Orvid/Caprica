@@ -159,4 +159,32 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
     s->visit(visitor);
 }
 
+bool PapyrusFunction::hasSameSignature(const PapyrusFunction* other) const {
+  if (!other)
+    return false;
+  if (parameters.size() != other->parameters.size())
+    return false;
+  if (returnType != other->returnType)
+    return false;
+  for (size_t i = 0; i < parameters.size(); i++) {
+    if (parameters[i]->type != other->parameters[i]->type)
+      return false;
+  }
+  return true;
+}
+
+std::string PapyrusFunction::prettySignature() const {
+  std::string str;
+  str += returnType.prettyString();
+  str += "(";
+  for (size_t i = 0; i < parameters.size(); i++) {
+    str += parameters[i]->type.prettyString();
+    if (i + 1 < parameters.size())
+      str += ", ";
+  }
+  str += ")";
+
+  return str;
+}
+
 }}

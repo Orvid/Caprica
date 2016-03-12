@@ -36,12 +36,7 @@ struct PapyrusState final
   }
 
   void semantic(PapyrusResolutionContext* ctx);
-  void semantic2(PapyrusResolutionContext* ctx) {
-    ctx->state = this;
-    for (auto f : functions)
-      f->semantic2(ctx);
-    ctx->state = nullptr;
-  }
+  void semantic2(PapyrusResolutionContext* ctx);
 };
 
 }}

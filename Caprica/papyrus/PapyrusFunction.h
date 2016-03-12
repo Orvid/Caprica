@@ -60,6 +60,9 @@ struct PapyrusFunction final
                              pex::PexString propName) const;
   void semantic(PapyrusResolutionContext* ctx);
   void semantic2(PapyrusResolutionContext* ctx);
+
+  bool hasSameSignature(const PapyrusFunction* other) const;
+  std::string prettySignature() const;
 };
 
 }}
