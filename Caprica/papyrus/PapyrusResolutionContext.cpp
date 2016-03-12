@@ -154,10 +154,8 @@ bool PapyrusResolutionContext::isObjectSomeParentOf(const PapyrusObject* child, 
     return true;
   if (!_stricmp(child->name.c_str(), parent->name.c_str()))
     return true;
-  if (child->parentClass.type != PapyrusType::Kind::None) {
-    assert(child->parentClass.type == PapyrusType::Kind::ResolvedObject);
-    return isObjectSomeParentOf(child->parentClass.resolvedObject, parent);
-  }
+  if (auto parentObject = child->tryGetParentClass())
+    return isObjectSomeParentOf(parentObject, parent);
   return false;
 }
 
@@ -243,23 +241,12 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
     case PapyrusType::Kind::String:
     case PapyrusType::Kind::Unresolved:
       break;
+
+    // Implicit conversion from None to each of these is allowed, but only for a literal None
     case PapyrusType::Kind::Var:
-      // Implicit conversion from None->Var is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
-        canCast = true;
-      break;
     case PapyrusType::Kind::Array:
-      // Implicit conversion from None->Array is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
-        canCast = true;
-      break;
     case PapyrusType::Kind::ResolvedObject:
-      // Implicit conversion from None->Object is allowed, but only for a literal None.
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
-        canCast = true;
-      break;
     case PapyrusType::Kind::ResolvedStruct:
-      // Implicit conversion from None->Struct is allowed, but only for a literal None.
       if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
         canCast = true;
       break;
@@ -326,11 +313,8 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name,
       return s;
   }
 
-  if (parentObj->parentClass.type != PapyrusType::Kind::None) {
-    if (parentObj->parentClass.type != PapyrusType::Kind::ResolvedObject)
-      CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
-    return tryResolveState(name, parentObj->parentClass.resolvedObject);
-  }
+  if (auto parentClass = parentObj->tryGetParentClass())
+    return tryResolveState(name, parentClass);
 
   return nullptr;
 }
@@ -455,11 +439,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
     }
   }
 
-  if (object->parentClass.type != PapyrusType::Kind::None) {
-    if (object->parentClass.type != PapyrusType::Kind::ResolvedObject)
-      CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+  if (auto parentClass = object->tryGetParentClass())
     return tryResolveMemberIdentifier(object->parentClass, ident);
-  }
 
   return ident;
 }
@@ -488,12 +469,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
       }
     }
 
-    if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::None) {
-      if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::ResolvedObject)
-        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
-
+    if (auto parentClass = baseType.resolvedObject->tryGetParentClass())
       return tryResolveMemberIdentifier(baseType.resolvedObject->parentClass, ident);
-    }
   }
 
   return ident;
@@ -564,12 +541,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       }
     }
 
-    if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::None) {
-      if (baseType.resolvedObject->parentClass.type != PapyrusType::Kind::ResolvedObject)
-        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
-      
+    if (auto parentClass = baseType.resolvedObject->tryGetParentClass())
       return resolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident);
-    }
   }
 
   return ident;

@@ -65,6 +65,15 @@ struct PapyrusObject final
     return rootState;
   }
 
+  const PapyrusObject* tryGetParentClass() const {
+    if (parentClass.type != PapyrusType::Kind::None) {
+      if (parentClass.type != PapyrusType::Kind::ResolvedObject)
+        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+      return parentClass.resolvedObject;
+    }
+    return nullptr;
+  }
+
   void buildPex(pex::PexFile* file) const {
     auto obj = new pex::PexObject();
     obj->name = file->getString(name);
