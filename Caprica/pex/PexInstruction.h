@@ -98,6 +98,20 @@ struct PexInstruction final
     CapricaError::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
   }
 
+  void setBranchTarget(int target) {
+    if (opCode == PexOpCode::Jmp) {
+      assert(args.size() == 1);
+      assert(args[0].type == PexValueType::Integer);
+      args[0].i = target;
+    } else if (opCode == PexOpCode::JmpT || opCode == PexOpCode::JmpF) {
+      assert(args.size() == 2);
+      assert(args[1].type == PexValueType::Integer);
+      args[1].i = target;
+    } else {
+      CapricaError::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
+    }
+  }
+
   void makeNop() {
     opCode = PexOpCode::Nop;
     args.clear();

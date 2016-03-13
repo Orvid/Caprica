@@ -131,14 +131,6 @@ PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
       CapricaError::fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
 
-  // Special case for dead assigns.
-  if (CapricaConfig::enableOptimizations && instr->opCode == PexOpCode::Assign) {
-    auto dst = instr->args[0];
-    auto src = instr->args[1];
-    if (dst.type == src.type && dst.type == PexValueType::Identifier && dst.s.index == src.s.index)
-      return *this;
-  }
-
   instructionLocations.push_back(currentLocation);
   instructions.push_back(instr);
   return *this;

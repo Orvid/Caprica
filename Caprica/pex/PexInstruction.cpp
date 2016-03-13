@@ -12,6 +12,7 @@ namespace caprica { namespace pex {
 // Use the opcodes descriptions from the function builder to manage this.
 static size_t getArgCountForOpCode(PexOpCode op) {
   switch (op) {
+    case PexOpCode::Nop: return 0;
 #define OP_ARG1(name, opcode, ...) case PexOpCode::opcode: return 1;
 #define OP_ARG2(name, opcode, ...) case PexOpCode::opcode: return 2;
 #define OP_ARG3(name, opcode, ...) case PexOpCode::opcode: return 3;

@@ -16,6 +16,7 @@
 #include <papyrus/parser/PapyrusParser.h>
 
 #include <pex/PexAsmWriter.h>
+#include <pex/PexOptimizer.h>
 #include <pex/PexReader.h>
 #include <pex/PexWriter.h>
 #include <pex/parser/PexAsmParser.h>
@@ -59,6 +60,10 @@ static void compileScript(const ScriptToCompile& script) {
     caprica::CapricaError::exitIfErrors();
     delete ctx;
     delete a;
+
+    if (caprica::CapricaConfig::enableOptimizations)
+      caprica::pex::PexOptimizer::optimize(pex);
+
     caprica::pex::PexWriter wtr{ };
     pex->write(wtr);
     wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
@@ -75,6 +80,10 @@ static void compileScript(const ScriptToCompile& script) {
     auto pex = parser->parseFile();
     caprica::CapricaError::exitIfErrors();
     delete parser;
+
+    if (caprica::CapricaConfig::enableOptimizations)
+      caprica::pex::PexOptimizer::optimize(pex);
+
     caprica::pex::PexWriter wtr{ };
     pex->write(wtr);
     wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
