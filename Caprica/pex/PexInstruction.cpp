@@ -29,6 +29,31 @@ static size_t getArgCountForOpCode(PexOpCode op) {
   }
 }
 
+int32_t PexInstruction::getDestArgIndex() const {
+  switch (opCode) {
+    case PexOpCode::Nop:
+      return -1;
+    case PexOpCode::CallMethod:
+    case PexOpCode::CallStatic:
+      return 2;
+    case PexOpCode::CallParent:
+      return 1;
+#define OP_ARG1(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG2(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG3(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG4(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+#define OP_ARG5(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+      OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#undef OP_ARG1
+#undef OP_ARG2
+#undef OP_ARG3
+#undef OP_ARG4
+#undef OP_ARG5
+    default:
+      CapricaError::logicalFatal("Unknown PexOpCode!");
+  }
+}
+
 PexInstruction* PexInstruction::read(PexReader& rdr) {
   auto inst = new PexInstruction();
   inst->opCode = (PexOpCode)rdr.read<uint8_t>();

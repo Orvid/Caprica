@@ -111,6 +111,7 @@ struct PexInstruction final
       CapricaError::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
     }
   }
+  int32_t getDestArgIndex() const;
 
   static PexInstruction* read(PexReader& rdr);
   void write(PexWriter& wtr) const;

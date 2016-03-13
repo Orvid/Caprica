@@ -39,31 +39,6 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   }
 }
 
-static int32_t getDestArgIndexForOpCode(PexOpCode op) {
-  switch (op) {
-    case PexOpCode::Nop:
-      return -1;
-    case PexOpCode::CallMethod:
-    case PexOpCode::CallStatic:
-      return 2;
-    case PexOpCode::CallParent:
-      return 1;
-#define OP_ARG1(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG2(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG3(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG4(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-#define OP_ARG5(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
-#undef OP_ARG1
-#undef OP_ARG2
-#undef OP_ARG3
-#undef OP_ARG4
-#undef OP_ARG5
-    default:
-      CapricaError::logicalFatal("Unknown PexOpCode!");
-  }
-}
-
 void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
   PexString varName;
   if (v.type == PexValueType::Identifier)
@@ -115,7 +90,7 @@ PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
     freeValueIfTemp(v);
   }
 
-  auto destIdx = getDestArgIndexForOpCode(instr->opCode);
+  auto destIdx = instr->getDestArgIndex();
   if (destIdx != -1 && instr->args[destIdx].type == PexValueType::TemporaryVar) {
     auto loc = internalAllocateTempVar(instr->args[destIdx].tmpVar->type);
     instr->args[destIdx].tmpVar->var = loc;
