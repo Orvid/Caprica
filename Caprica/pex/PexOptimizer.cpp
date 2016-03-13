@@ -1,7 +1,5 @@
 #include <pex/PexOptimizer.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 namespace caprica { namespace pex { 
 
 struct OptInstruction final
@@ -16,11 +14,21 @@ struct OptInstruction final
   explicit OptInstruction(size_t id, PexInstruction* instr) : id(id), instr(instr) { }
   ~OptInstruction() = default;
 
+  bool isDead() const {
+    return instr == nullptr || instr->opCode == PexOpCode::Nop;
+  }
+
   void killInstruction() {
+#if 1
+    instr->opCode = PexOpCode::Nop;
+    instr->args.clear();
+    instr->variadicArgs.clear();
+#else
     delete instr;
     instr = nullptr;
     branchTarget = nullptr;
     lineNumber = 0;
+#endif
   }
 
 private:
@@ -77,23 +85,54 @@ void PexOptimizer::optimize(PexFile* file,
   const auto isDeadBetween = [&optimizedInstructions](size_t startID, size_t endID) -> bool {
     for (size_t i = startID + 1; i <= endID; i++) {
       assert(i < optimizedInstructions.size());
-      if (optimizedInstructions[i]->instr && optimizedInstructions[i]->instr->opCode != PexOpCode::Nop)
+      if (!optimizedInstructions[i]->isDead())
         return false;
     }
     return true;
   };
+  const auto nextNonDead = [&optimizedInstructions](size_t startID) -> OptInstruction* {
+    for (size_t i = startID + 1; i < optimizedInstructions.size(); i++) {
+      if (!optimizedInstructions[i]->isDead())
+        return optimizedInstructions[i];
+    }
+    return nullptr;
+  };
 
-  for (auto& i : boost::adaptors::reverse(optimizedInstructions)) {
-    if (i->instr) {
-      switch (i->instr->opCode) {
+  for (int i = (int)optimizedInstructions.size() - 1; i >= 0; i--) {
+    auto opt = optimizedInstructions[i];
+    if (opt->instr) {
+      switch (opt->instr->opCode) {
         case PexOpCode::Assign:
-          if (i->instr->args[0] == i->instr->args[1])
-            i->killInstruction();
+          if (opt->instr->args[0] == opt->instr->args[1])
+            opt->killInstruction();
           break;
         case PexOpCode::Jmp:
-          if (i->id < i->branchTarget->id && isDeadBetween(i->id, i->branchTarget->id))
-            i->killInstruction();
+          if (opt->id < opt->branchTarget->id && isDeadBetween(opt->id, opt->branchTarget->id))
+            opt->killInstruction();
           break;
+        case PexOpCode::Not: {
+          if (i <= 1)
+            break;
+
+          auto n = nextNonDead(opt->id);
+          if (!n)
+            break;
+          if (n->instr->opCode != PexOpCode::JmpF && n->instr->opCode != PexOpCode::JmpT)
+            break;
+          // Ensure source of branch is dest of not.
+          if (opt->instr->args[0] != n->instr->args[0])
+            break;
+
+          if (n->instr->opCode == PexOpCode::JmpF)
+            n->instr->opCode = PexOpCode::JmpT;
+          else if (n->instr->opCode == PexOpCode::JmpT)
+            n->instr->opCode = PexOpCode::JmpF;
+          else
+            CapricaError::logicalFatal("Somehow got a weird op-code here.");
+          n->instr->args[0] = opt->instr->args[1];
+          opt->killInstruction();
+          break;
+        }
         default:
           break;
       }

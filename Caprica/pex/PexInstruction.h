@@ -112,12 +112,6 @@ struct PexInstruction final
     }
   }
 
-  void makeNop() {
-    opCode = PexOpCode::Nop;
-    args.clear();
-    variadicArgs.clear();
-  }
-
   static PexInstruction* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 
