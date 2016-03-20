@@ -231,8 +231,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
   }
 }
 
-bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target, bool& needsCast) {
-  needsCast = true;
+bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
   bool canCast = canImplicitlyCoerce(expr->resultType(), target);
   switch (target.type) {
     case PapyrusType::Kind::Bool:
@@ -258,8 +257,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
 
 expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
   if (expr->resultType() != target) {
-    bool needsCast = true;
-    bool canCast = canImplicitlyCoerceExpression(expr, target, needsCast);
+    bool canCast = canImplicitlyCoerceExpression(expr, target);
 
     if (canCast && expr->resultType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float) {
       if (auto le = expr->as<expressions::PapyrusLiteralExpression>()) {
@@ -273,8 +271,6 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
       CapricaError::error(expr->location, "No implicit conversion from '%s' to '%s' exists!", expr->resultType().prettyString().c_str(), target.prettyString().c_str());
       return expr;
     }
-    if (!needsCast)
-      return expr;
     auto ce = new expressions::PapyrusCastExpression(expr->location, target);
     ce->innerExpression = expr;
     return ce;

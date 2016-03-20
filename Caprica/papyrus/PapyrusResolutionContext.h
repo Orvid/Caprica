@@ -50,7 +50,7 @@ struct PapyrusResolutionContext final
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
   static bool canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest);
   static bool canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest);
-  static bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target, bool& needsCast);
+  static bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
   static expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
   static PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target);
 

@@ -20,12 +20,8 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
     CapricaError::Warning::W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
 
   if (!PapyrusResolutionContext::canExplicitlyCast(innerExpression->resultType(), targetType)) {
-    bool needsCast = true;
-    if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(innerExpression, targetType, needsCast))
+    if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(innerExpression, targetType))
       CapricaError::error(location, "Cannot convert from '%s' to '%s'!", innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
-
-    if (!needsCast)
-      CapricaError::Warning::W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
   }
 }
 
