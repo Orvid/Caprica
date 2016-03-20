@@ -19,7 +19,7 @@ struct OptInstruction final
   }
 
   void killInstruction() {
-#if 1
+#if 0
     instr->opCode = PexOpCode::Nop;
     instr->args.clear();
     instr->variadicArgs.clear();
