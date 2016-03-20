@@ -92,8 +92,8 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
-  PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
-  PapyrusIdentifier tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
+  PapyrusIdentifier resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal = false) const;
+  PapyrusIdentifier tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal = false) const;
 
   template<typename T>
   static void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {

@@ -68,7 +68,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
           auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject)
             CapricaError::fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.c_str());
-          fc->function = ctx->resolveFunctionIdentifier(tp, fc->function);
+          fc->function = ctx->resolveFunctionIdentifier(tp, fc->function, true);
           fc->semantic(ctx);
           return;
         }

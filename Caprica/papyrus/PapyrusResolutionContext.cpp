@@ -43,7 +43,7 @@ static thread_local caseless_unordered_map<const std::string, caseless_unordered
 PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
   auto baseDir = boost::filesystem::path(script->sourceFileName).parent_path().string();
 
-  auto sf2 = localPerDirIdentMap.find(baseDir);
+  auto& sf2 = localPerDirIdentMap.find(baseDir);
   if (sf2 != localPerDirIdentMap.end()) {
     auto sf3 = sf2->second.find(name);
     if (sf3 != sf2->second.end()) {
@@ -64,7 +64,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       CapricaError::exitIfErrors();
       delete parser;
       if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir,{ } });
+        localPerDirIdentMap.insert({ baseDir, { } });
       localPerDirIdentMap[baseDir].insert({ scriptName, a });
       loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
       auto ctx = new PapyrusResolutionContext();
@@ -87,7 +87,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       CapricaError::exitIfErrors();
       delete pex;
       if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir,{ } });
+        localPerDirIdentMap.insert({ baseDir, { } });
       localPerDirIdentMap[baseDir].insert({ scriptName, a });
       loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
       auto ctx = new PapyrusResolutionContext();
@@ -110,7 +110,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       CapricaError::exitIfErrors();
       delete pex;
       if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir,{ } });
+        localPerDirIdentMap.insert({ baseDir, { } });
       localPerDirIdentMap[baseDir].insert({ scriptName, a });
       loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
       auto ctx = new PapyrusResolutionContext();
@@ -474,14 +474,15 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
   return ident;
 }
 
-PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
-  auto id = tryResolveFunctionIdentifier(baseType, ident);
+PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal) const {
+  auto id = tryResolveFunctionIdentifier(baseType, ident, wantGlobal);
   if (id.type == PapyrusIdentifierType::Unresolved)
     CapricaError::fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
   return id;
 }
 
-PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
+PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal) const {
+  wantGlobal = wantGlobal || (function && function->isGlobal);
   if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
 
@@ -489,7 +490,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     if (auto state = object->tryGetRootState()) {
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
-          if (function && function->isGlobal && !func->isGlobal)
+          if (wantGlobal && !func->isGlobal)
             CapricaError::error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
         }
@@ -507,7 +508,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       }
     }
 
-    return resolveFunctionIdentifier(PapyrusType::ResolvedObject(ident.location, object), ident);
+    return resolveFunctionIdentifier(PapyrusType::ResolvedObject(ident.location, object), ident, wantGlobal);
   } else if (baseType.type == PapyrusType::Kind::Array) {
     auto fk = PapyrusBuiltinArrayFunctionKind::Unknown;
     if (!_stricmp(ident.name.c_str(), "find")) {
@@ -538,7 +539,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     if (auto state = baseType.resolvedObject->tryGetRootState()) {
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
-          if (func->isGlobal)
+          if (!wantGlobal && func->isGlobal)
             CapricaError::error(ident.location, "You cannot call the global function '%s' on an object.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
         }
@@ -546,7 +547,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     }
 
     if (auto parentClass = baseType.resolvedObject->tryGetParentClass())
-      return resolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident);
+      return resolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident, wantGlobal);
   }
 
   return ident;
