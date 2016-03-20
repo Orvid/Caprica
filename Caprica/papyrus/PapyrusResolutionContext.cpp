@@ -423,15 +423,17 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
     }
   }
 
-  for (auto v : object->variables) {
-    if (!_stricmp(v->name.c_str(), ident.name.c_str()))
-      return PapyrusIdentifier::Variable(ident.location, v);
-  }
+  if (!function || !function->isGlobal) {
+    for (auto v : object->variables) {
+      if (!_stricmp(v->name.c_str(), ident.name.c_str()))
+        return PapyrusIdentifier::Variable(ident.location, v);
+    }
 
-  for (auto pg : object->propertyGroups) {
-    for (auto p : pg->properties) {
-      if (!_stricmp(p->name.c_str(), ident.name.c_str()))
-        return PapyrusIdentifier::Property(ident.location, p);
+    for (auto pg : object->propertyGroups) {
+      for (auto p : pg->properties) {
+        if (!_stricmp(p->name.c_str(), ident.name.c_str()))
+          return PapyrusIdentifier::Property(ident.location, p);
+      }
     }
   }
 
@@ -484,17 +486,20 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     return ident;
 
   if (baseType.type == PapyrusType::Kind::None) {
-    for (auto& state : object->states) {
+    if (auto state = object->tryGetRootState()) {
       for (auto& func : state->functions) {
-        if (!_stricmp(func->name.c_str(), ident.name.c_str()))
+        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
+          if (function && function->isGlobal && !func->isGlobal)
+            CapricaError::error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
+        }
       }
     }
 
     for (auto sc : importedScripts) {
       for (auto obj : sc->objects) {
-        for (auto stat : obj->states) {
-          for (auto func : stat->functions) {
+        if (auto state = obj->tryGetRootState()) {
+          for (auto& func : state->functions) {
             if (func->isGlobal && !_stricmp(func->name.c_str(), ident.name.c_str()))
               return PapyrusIdentifier::Function(ident.location, func);
           }
@@ -530,10 +535,13 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
-    for (auto& state : baseType.resolvedObject->states) {
+    if (auto state = baseType.resolvedObject->tryGetRootState()) {
       for (auto& func : state->functions) {
-        if (!_stricmp(func->name.c_str(), ident.name.c_str()))
+        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
+          if (func->isGlobal)
+            CapricaError::error(ident.location, "You cannot call the global function '%s' on an object.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
+        }
       }
     }
 
