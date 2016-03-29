@@ -290,7 +290,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     filesToCompile.reserve(filesPassed.size());
     for (auto f : filesPassed) {
-      if (!boost::filesystem::exists(f)) {
+      if (!caprica::FSUtils::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
         return false;
       }

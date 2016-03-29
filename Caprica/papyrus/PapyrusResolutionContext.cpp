@@ -125,12 +125,12 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       return FSUtils::canonical(filename).string();
     };
 
-    if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".psc"))
+    if (FSUtils::exists(baseDir + "\\" + scriptName + ".psc"))
       return loadPsc(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".psc"));
-    else if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".pas"))
+    else if (FSUtils::exists(baseDir + "\\" + scriptName + ".pas"))
       return loadPas(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pas"));
-    else if (boost::filesystem::exists(baseDir + "\\" + scriptName + ".pex"))
-      return loadPex(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pex"));
+    else if (FSUtils::exists(baseDir + "\\" + scriptName + ".pex"))
+     return loadPex(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pex"));
 
     return nullptr;
   };

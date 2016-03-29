@@ -21,6 +21,8 @@ private:
 };
 
 void async_write(const std::string& filename, const std::string& value);
+bool exists(const std::string& path);
+void pushKnownExists(const std::string& path);
 boost::filesystem::path canonical(const boost::filesystem::path& path);
 boost::filesystem::path naive_uncomplete(const boost::filesystem::path p, const boost::filesystem::path base);
 

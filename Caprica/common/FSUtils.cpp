@@ -4,6 +4,7 @@
 #include <future>
 
 #include <common/CapricaConfig.h>
+#include <common/CapricaError.h>
 #include <common/CaselessStringComparer.h>
 
 namespace caprica { namespace FSUtils {
@@ -26,6 +27,7 @@ void Cache::waitForAll() {
 }
 
 void Cache::push_need(const std::string& filename) {
+  pushKnownExists(filename);
   if (CapricaConfig::asyncFileRead) {
     auto abs = canonical(filename).string();
     if (!futureFileReadMap.count(abs)) {
@@ -42,6 +44,11 @@ std::string Cache::cachedReadFull(const std::string& filename) {
   if (readFilesMap.count(abs))
     return readFilesMap[abs];
 
+  // If we're in performance test mode, all files should have been
+  // discovered before starting to compile anything.
+  if (CapricaConfig::performanceTestMode)
+    CapricaError::logicalFatal("Attempted to read a file at runtime in performance test mode.");
+
   if (!CapricaConfig::asyncFileRead)
     return readFile(abs);
 
@@ -56,7 +63,6 @@ std::string Cache::cachedReadFull(const std::string& filename) {
   }
 }
 
-static Concurrency::concurrent_unordered_map<std::string, std::future<void>, CaselessStringHasher, CaselessStringEqual> futureFileWriteMap{ };
 static void writeFile(const std::string& filename, const std::string& value) {
   if (!CapricaConfig::performanceTestMode) {
     std::ofstream destFile{ filename, std::ifstream::binary };
@@ -68,10 +74,28 @@ void async_write(const std::string& filename, const std::string& value) {
   if (!CapricaConfig::asyncFileWrite) {
     writeFile(filename, value);
   } else {
-    futureFileWriteMap[filename] = std::async([](const std::string& filename, const std::string& value) {
+    std::async([](const std::string& filename, const std::string& value) {
       writeFile(filename, value);
     }, filename, value);
   }
+}
+
+static Concurrency::concurrent_unordered_map<std::string, uint8_t> fileExistenceMap{ };
+void pushKnownExists(const std::string& path) {
+  fileExistenceMap.insert({ path, 2 });
+}
+
+bool exists(const std::string& path) {
+  const auto checkAndSetExists = [](const std::string& path) {
+    auto b = boost::filesystem::exists(path);
+    fileExistenceMap.insert({ path, b ? 2 : 1 });
+    return b;
+  };
+  // These concurrent maps are a pain, as it's possible to get a value
+  // in the process of being set.
+  if (fileExistenceMap.count(path))
+    return fileExistenceMap[path] == 2 ? true : checkAndSetExists(path);
+  return checkAndSetExists(path);
 }
 
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
