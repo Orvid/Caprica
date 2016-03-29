@@ -186,6 +186,8 @@ struct PapyrusForStatement final : public PapyrusStatement
         CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", declareStatement->type.prettyString().c_str());
     } else {
       *iteratorVariable = ctx->resolveIdentifier(*iteratorVariable);
+      iteratorVariable->ensureAssignable();
+      iteratorVariable->markWritten();
       if (iteratorVariable->resultType().type != PapyrusType::Kind::Int && iteratorVariable->resultType().type != PapyrusType::Kind::Float)
         CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", iteratorVariable->resultType().prettyString().c_str());
     }

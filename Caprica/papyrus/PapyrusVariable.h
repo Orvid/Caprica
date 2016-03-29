@@ -3,6 +3,8 @@
 #include <string>
 
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReferenceState.h>
+
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
@@ -24,6 +26,7 @@ struct PapyrusVariable final
 
   CapricaFileLocation location;
   const PapyrusObject* parent{ nullptr };
+  CapricaReferenceState referenceState{ };
 
   explicit PapyrusVariable(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
   PapyrusVariable(const PapyrusVariable&) = delete;

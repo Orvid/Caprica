@@ -80,6 +80,10 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
+    if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
+      id->isAssignmentContext = true;
+    }
+
     if (operation == PapyrusAssignOperatorType::Assign) {
       lValue->semantic(ctx);
       rValue->semantic(ctx);
@@ -115,6 +119,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
 
     if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
       id->identifier.ensureAssignable();
+      id->identifier.markWritten();
     } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
       // It's valid.
     } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {

@@ -415,6 +415,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
   var->name = expectConsumeIdent();
 
   if (maybeConsume(TokenType::Equal)) {
+    var->referenceState.isInitialized = true;
     var->defaultValue = expectConsumePapyrusValue();
   } else if (isConst) {
     CapricaError::error(cur.location, "A constant variable must have a value!");

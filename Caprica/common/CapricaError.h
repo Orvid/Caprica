@@ -36,6 +36,10 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
     DEFINE_WARNING_A2(4001, Unecessary_Cast, "Unecessary cast from '%s' to '%s'.", const char*, sourceType, const char*, targetType)
     DEFINE_WARNING_A1(4002, Duplicate_Import, "Duplicate import of '%s'.", const char*, importName)
     DEFINE_WARNING_A1(4003, State_Doesnt_Exist, "The state '%s' doesn't exist in this context.", const char*, stateName)
+    DEFINE_WARNING_A1(4004, Unreferenced_Script_Variable, "The script variable '%s' is declared but never used.", const char*, variableName)
+    DEFINE_WARNING_A1(4005, Unwritten_Script_Variable, "The script variable '%s' is not initialized, and is never written to.", const char*, variableName)
+    DEFINE_WARNING_A1(4006, Script_Variable_Only_Written, "The script variable '%s' is only ever written to.", const char*, variableName)
+    DEFINE_WARNING_A1(4007, Script_Variable_Initialized_Never_Used, "The script variable '%s' is initialized but is never used.", const char*, variableName)
 
 #undef DEFINE_WARNING_A1
 #undef DEFINE_WARNING_A2

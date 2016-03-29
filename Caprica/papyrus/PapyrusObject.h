@@ -140,6 +140,21 @@ struct PapyrusObject final
         g->semantic2(ctx);
       for (auto s : states)
         s->semantic2(ctx);
+
+      for (auto v : variables) {
+        if (!v->referenceState.isRead) {
+          if (!v->referenceState.isInitialized) {
+            if (v->referenceState.isWritten)
+              CapricaError::Warning::W4006_Script_Variable_Only_Written(v->location, v->name.c_str());
+            else
+              CapricaError::Warning::W4004_Unreferenced_Script_Variable(v->location, v->name.c_str());
+          } else {
+            CapricaError::Warning::W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.c_str());
+          }
+        } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
+          CapricaError::Warning::W4005_Unwritten_Script_Variable(v->location, v->name.c_str());
+        }
+      }
     }
     ctx->object = nullptr;
   }

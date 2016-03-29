@@ -142,6 +142,44 @@ void PapyrusIdentifier::ensureAssignable() const {
   }
 }
 
+void PapyrusIdentifier::markRead() {
+  switch (type) {
+    case PapyrusIdentifierType::Variable:
+      var->referenceState.isRead = true;
+      break;
+
+    case PapyrusIdentifierType::Property:
+    case PapyrusIdentifierType::Parameter:
+    case PapyrusIdentifierType::DeclareStatement:
+    case PapyrusIdentifierType::StructMember:
+      break;
+
+    case PapyrusIdentifierType::Unresolved:
+      CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  }
+}
+
+void PapyrusIdentifier::markWritten() {
+  switch (type) {
+    case PapyrusIdentifierType::Variable:
+      var->referenceState.isWritten = true;
+      break;
+
+    case PapyrusIdentifierType::Property:
+    case PapyrusIdentifierType::Parameter:
+    case PapyrusIdentifierType::DeclareStatement:
+    case PapyrusIdentifierType::StructMember:
+      break;
+
+    case PapyrusIdentifierType::Unresolved:
+      CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
+    default:
+      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  }
+}
+
 PapyrusType PapyrusIdentifier::resultType() const {
   switch (type) {
     case PapyrusIdentifierType::Property:

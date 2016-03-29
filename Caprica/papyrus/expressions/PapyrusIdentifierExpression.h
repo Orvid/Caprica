@@ -12,6 +12,7 @@ namespace caprica { namespace papyrus { namespace expressions {
 struct PapyrusIdentifierExpression final : public PapyrusExpression
 {
   PapyrusIdentifier identifier;
+  bool isAssignmentContext{ false };
 
   explicit PapyrusIdentifierExpression(const CapricaFileLocation& loc, const PapyrusIdentifier& id) : PapyrusExpression(loc), identifier(id) { }
   PapyrusIdentifierExpression(const PapyrusIdentifierExpression&) = delete;
@@ -24,6 +25,9 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     identifier = ctx->resolveIdentifier(identifier);
+
+    if (!isAssignmentContext)
+      identifier.markRead();
   }
 
   virtual PapyrusType resultType() const override {

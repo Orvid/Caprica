@@ -159,6 +159,8 @@ struct PapyrusIdentifier final
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
   void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;
   void ensureAssignable() const;
+  void markRead();
+  void markWritten();
   PapyrusType resultType() const;
 };
 
