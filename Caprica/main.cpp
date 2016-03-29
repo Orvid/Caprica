@@ -105,9 +105,9 @@ static std::pair<std::string, std::string> parseOddArguments(const std::string& 
   if (str == "-WE")
     return std::make_pair("all-warnings-as-errors", "");
   else if (str.find("-we") == 0)
-    return std::make_pair("warning-as-error", str.substr(2));
+    return std::make_pair("warning-as-error", str.substr(3));
   else if (str.find("-wd") == 0)
-    return std::make_pair("disable-warning", str.substr(2));
+    return std::make_pair("disable-warning", str.substr(3));
   else
     return std::make_pair(std::string(), std::string());
 }
