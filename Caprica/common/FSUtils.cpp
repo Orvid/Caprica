@@ -80,16 +80,32 @@ void async_write(const std::string& filename, const std::string& value) {
   }
 }
 
-static Concurrency::concurrent_unordered_map<std::string, uint8_t> fileExistenceMap{ };
+static caseless_unordered_map<std::string, caseless_unordered_set<std::string>> directoryContentsMap{ };
+void pushKnownInDirectory(const boost::filesystem::path& file) {
+  auto dir = file.parent_path().string();
+  if (!directoryContentsMap.count(dir)) {
+    directoryContentsMap[dir] = { };
+  }
+  directoryContentsMap[dir].insert(file.string());
+}
+
+static Concurrency::concurrent_unordered_map<std::string, uint8_t, CaselessStringHasher, CaselessStringEqual> fileExistenceMap{ };
 void pushKnownExists(const std::string& path) {
   fileExistenceMap.insert({ path, 2 });
 }
 
 bool exists(const std::string& path) {
   const auto checkAndSetExists = [](const std::string& path) {
-    auto b = boost::filesystem::exists(path);
-    fileExistenceMap.insert({ path, b ? 2 : 1 });
-    return b;
+    bool exists = false;
+    auto f = directoryContentsMap.find(boost::filesystem::path(path).parent_path().string());
+    if (f != directoryContentsMap.end()) {
+      auto e = f->second.count(path);
+      exists = e != 0;
+    } else {
+      exists = boost::filesystem::exists(path);
+    }
+    fileExistenceMap.insert({ path, exists ? 2 : 1 });
+    return exists;
   };
   // These concurrent maps are a pain, as it's possible to get a value
   // in the process of being set.

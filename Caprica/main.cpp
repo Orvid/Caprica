@@ -305,6 +305,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           auto absBaseDir = caprica::FSUtils::canonical(f);
           boost::system::error_code ec;
           for (auto e : boost::filesystem::recursive_directory_iterator(f, ec)) {
+            caprica::FSUtils::pushKnownInDirectory(caprica::FSUtils::canonical(e.path()));
             if (e.path().extension().string() == ".psc") {
               auto abs = caprica::FSUtils::canonical(e.path());
               auto rel = caprica::FSUtils::naive_uncomplete(abs, absBaseDir).make_preferred();
@@ -318,6 +319,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         } else {
           boost::system::error_code ec;
           for (auto e : boost::filesystem::directory_iterator(f, ec)) {
+            caprica::FSUtils::pushKnownInDirectory(caprica::FSUtils::canonical(e.path()));
             if (e.path().extension().string() == ".psc")
               filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, caprica::FSUtils::canonical(e.path()).string()));
           }
