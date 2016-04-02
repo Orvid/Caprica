@@ -147,7 +147,6 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     advancedDesc.add_options()
       ("async-read", po::value<bool>(&conf::asyncFileRead)->default_value(true), "Allow async file reading. This is primarily useful on SSDs.")
       ("async-write", po::value<bool>(&conf::asyncFileWrite)->default_value(true), "Allow writing output to disk on background threads.")
-      ("debug-control-flow-graph", po::value<bool>(&conf::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
       ("enable-ck-optimizations", po::value<bool>(&conf::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
       ("enable-debug-info", po::value<bool>(&conf::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
       ("enable-language-extensions", po::value<bool>(&conf::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
@@ -158,7 +157,14 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     po::options_description hiddenDesc("");
     hiddenDesc.add_options()
       ("input-file", po::value<std::vector<std::string>>(), "The input file.")
-      ("performance-test-mode", po::value<bool>(&conf::performanceTestMode)->default_value(false)->implicit_value(true), "Enable performance test mode.")
+
+      ("debug-control-flow-graph", po::value<bool>(&conf::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
+      ("ignore-engine-limits", po::bool_switch(&conf::EngineLimits::ignoreLimits)->default_value(false), "Warn when breaking a game engine limitation, but allow the compile to continue anyways.")
+      ("max-object-name-length", po::value<size_t>(&conf::EngineLimits::maxObjectNameLength)->default_value(128), "The maximum number of properties to allow in a single script.")
+      ("max-properties-per-object", po::value<size_t>(&conf::EngineLimits::maxPropertiesPerObject)->default_value(256), "The maximum number of properties to allow in a single script.")
+      ("max-states-per-object", po::value<size_t>(&conf::EngineLimits::maxStatesPerObject)->default_value(128), "The maximum number of states to allow in a single script.")
+      ("max-variables-per-object", po::value<size_t>(&conf::EngineLimits::maxVariablesPerObject)->default_value(16768), "The maximum number of script variables to allow in a single script.")
+      ("performance-test-mode", po::bool_switch(&conf::performanceTestMode)->default_value(false), "Enable performance test mode.")
     ;
 
     po::positional_options_description p;

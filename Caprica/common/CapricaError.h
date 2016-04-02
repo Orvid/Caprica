@@ -33,6 +33,13 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
 #define DEFINE_WARNING_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \
 NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name, arg2Type arg2Name) { CapricaError::warning(num, location, msg, arg1Name, arg2Name); }
 
+    // Warnings 2000-2200 are for engine imposed limitations.
+    DEFINE_WARNING_A2(2001, EngineLimits_PexObject_Name, "The script name is %zu characters, but the engine limit is %zu characters. Using more may cause the engine to crash.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2002, EngineLimits_PexObject_PropertyCount, "Using more than %zu properties in a script may cause the engine to crash. There are %zu properties in this script.", size_t, engineMax, size_t, count)
+    DEFINE_WARNING_A2(2003, EngineLimits_PexObject_StateCount, "Using more than %zu states in a script may cause the engine to crash. There are %zu states in this script.", size_t, engineMax, size_t, count)
+    DEFINE_WARNING_A2(2004, EngineLimits_PexObject_VariableCount, "Using more than %zu script variables in a script may cause the engine to crash. There are %zu script variables in this script.", size_t, engineMax, size_t, count)
+    
+    // Warnings 4000-6000 are for general Papyrus Script warnings.
     DEFINE_WARNING_A2(4001, Unecessary_Cast, "Unecessary cast from '%s' to '%s'.", const char*, sourceType, const char*, targetType)
     DEFINE_WARNING_A1(4002, Duplicate_Import, "Duplicate import of '%s'.", const char*, importName)
     DEFINE_WARNING_A1(4003, State_Doesnt_Exist, "The state '%s' doesn't exist in this context.", const char*, stateName)
@@ -47,6 +54,8 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
 
   NEVER_INLINE
   static void exitIfErrors();
+  NEVER_INLINE
+  static bool isWarningError(size_t warningNumber);
   NEVER_INLINE
   static bool isWarningEnabled(size_t warningNumber);
 
@@ -76,21 +85,21 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
     throw std::runtime_error("");
   }
 
-private:
   template<typename... Args>
   NEVER_INLINE
   static void warning(size_t warningNumber, const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
     if (isWarningEnabled(warningNumber)) {
       warningCount++;
-      if (CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber)) {
+      if (isWarningError(warningNumber)) {
         errorCount++;
-        std::cerr << formatString(location, "Error (Warning as Error) W" + std::to_string(warningNumber), msg, args...) << std::endl;
+        std::cerr << formatString(location, "Error W" + std::to_string(warningNumber), msg, args...) << std::endl;
       } else {
         std::cerr << formatString(location, "Warning W" + std::to_string(warningNumber), msg, args...) << std::endl;
       }
     }
   }
 
+private:
   template<typename... Args>
   NEVER_INLINE
   static std::string formatString(const CapricaFileLocation& location, const std::string& msgType, const std::string& msg, Args&&... args) {

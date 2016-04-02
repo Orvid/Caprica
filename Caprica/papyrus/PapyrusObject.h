@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
+#include <common/EngineLimits.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusPropertyGroup.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -100,6 +101,11 @@ struct PapyrusObject final
       g->buildPex(file, obj);
     for (auto s : states)
       s->buildPex(file, obj);
+
+    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_NameLength, name.size());
+    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_PropertyCount, obj->properties.size());
+    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_StateCount, obj->states.size());
+    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_VariableCount, obj->variables.size());
 
     file->objects.push_back(obj);
   }

@@ -68,4 +68,19 @@ extern std::unordered_set<size_t> warningsToHandleAsErrors;
 // The set of warnings to ignore.
 extern std::unordered_set<size_t> warningsToIgnore;
 
+// Limitations of the game engine, not of Caprica.
+struct EngineLimits final
+{
+  // If true, warn when the limits are exceeded, but allow compilation to continue anyways.
+  static bool ignoreLimits;
+  // The maximum number of characters in an object name.
+  static size_t maxObjectNameLength;
+  // The maximum number of properties in a single object. 0 means no limit.
+  static size_t maxPropertiesPerObject;
+  // The maximum number of states in a single object. 0 means no limit.
+  static size_t maxStatesPerObject;
+  // The maximum number of variables in a single object. 0 means no limit.
+  static size_t maxVariablesPerObject;
+};
+
 }}

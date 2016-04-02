@@ -26,4 +26,10 @@ CapricaUserFlagsDefinition userFlagsDefinition{ };
 std::unordered_set<size_t> warningsToHandleAsErrors{ };
 std::unordered_set<size_t> warningsToIgnore{ };
 
+bool EngineLimits::ignoreLimits{ false };
+size_t EngineLimits::maxObjectNameLength{ 0 };
+size_t EngineLimits::maxPropertiesPerObject{ 0 };
+size_t EngineLimits::maxStatesPerObject{ 0 };
+size_t EngineLimits::maxVariablesPerObject{ 0 };
+
 }}

@@ -14,6 +14,13 @@ void CapricaError::exitIfErrors() {
   }
 }
 
+bool CapricaError::isWarningError(size_t warningNumber) {
+  if (warningNumber >= 2000 && warningNumber <= 2200) {
+    return !CapricaConfig::EngineLimits::ignoreLimits && CapricaConfig::warningsToIgnore.count(warningNumber) == 0;
+  }
+  return CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber);
+}
+
 bool CapricaError::isWarningEnabled(size_t warningNumber) {
   return CapricaConfig::warningsToIgnore.count(warningNumber) == 0 && CapricaConfig::warningsToHandleAsErrors.count(warningNumber) == 0;
 }
