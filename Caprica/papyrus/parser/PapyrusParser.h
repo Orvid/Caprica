@@ -51,7 +51,7 @@ private:
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      CapricaError::fatal(cur.location, "Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
+      CapricaError::fatal(cur.location, "Syntax error! Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
     }
   }
 
