@@ -508,7 +508,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       }
     }
 
-    return resolveFunctionIdentifier(PapyrusType::ResolvedObject(ident.location, object), ident, wantGlobal);
+    return tryResolveFunctionIdentifier(PapyrusType::ResolvedObject(ident.location, object), ident, wantGlobal);
   } else if (baseType.type == PapyrusType::Kind::Array) {
     auto fk = PapyrusBuiltinArrayFunctionKind::Unknown;
     if (!_stricmp(ident.name.c_str(), "find")) {
@@ -547,7 +547,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     }
 
     if (auto parentClass = baseType.resolvedObject->tryGetParentClass())
-      return resolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident, wantGlobal);
+      return tryResolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident, wantGlobal);
   }
 
   return ident;

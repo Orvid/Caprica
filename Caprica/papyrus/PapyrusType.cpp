@@ -10,7 +10,7 @@ namespace caprica { namespace papyrus {
 std::string PapyrusType::prettyString() const {
   switch (type) {
     case Kind::None:
-      return "none";
+      return "None";
     case Kind::Bool:
       return "bool";
     case Kind::Float:
