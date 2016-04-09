@@ -73,12 +73,22 @@ struct EngineLimits final
 {
   // If true, warn when the limits are exceeded, but allow compilation to continue anyways.
   static bool ignoreLimits;
-  // The maximum number of characters in an object name.
-  static size_t maxObjectNameLength;
+  // The maximum length of an array. 0 means no limit.
+  static size_t maxArrayLength;
+  // The maximum number of functions in the empty state in a single object. 0 means no limit.
+  static size_t maxFunctionsInEmptyStatePerObject;
+  // The maximum number of functions in a single state. 0 means no limit.
+  static size_t maxFunctionsPerState;
+  // The maximum number of variables in a single object that can have initial values. 0 means no limit.
+  static size_t maxInitialValuesPerObject;
+  // The maximum number of named states in a single object. 0 means no limit.
+  static size_t maxNamedStatesPerObject;
+  // The maximum number of parameters to a single function. 0 means no limit.
+  static size_t maxParametersPerFunction;
   // The maximum number of properties in a single object. 0 means no limit.
   static size_t maxPropertiesPerObject;
-  // The maximum number of states in a single object. 0 means no limit.
-  static size_t maxStatesPerObject;
+  // The maximum number of distinct user flags allowed. Composite flags do not count toward this limit.
+  static size_t maxUserFlags;
   // The maximum number of variables in a single object. 0 means no limit.
   static size_t maxVariablesPerObject;
 };

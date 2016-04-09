@@ -27,9 +27,14 @@ std::unordered_set<size_t> warningsToHandleAsErrors{ };
 std::unordered_set<size_t> warningsToIgnore{ };
 
 bool EngineLimits::ignoreLimits{ false };
-size_t EngineLimits::maxObjectNameLength{ 0 };
+size_t EngineLimits::maxArrayLength{ 0 };
+size_t EngineLimits::maxFunctionsInEmptyStatePerObject{ 0 };
+size_t EngineLimits::maxFunctionsPerState{ 0 };
+size_t EngineLimits::maxInitialValuesPerObject{ 0 };
+size_t EngineLimits::maxNamedStatesPerObject{ 0 };
+size_t EngineLimits::maxParametersPerFunction{ 0 };
 size_t EngineLimits::maxPropertiesPerObject{ 0 };
-size_t EngineLimits::maxStatesPerObject{ 0 };
+size_t EngineLimits::maxUserFlags{ 0 };
 size_t EngineLimits::maxVariablesPerObject{ 0 };
 
 }}

@@ -32,13 +32,20 @@ struct CapricaError abstract
 NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name) { CapricaError::warning(num, location, msg, arg1Name); }
 #define DEFINE_WARNING_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \
 NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name, arg2Type arg2Name) { CapricaError::warning(num, location, msg, arg1Name, arg2Name); }
+#define DEFINE_WARNING_A3(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name, arg3Type, arg3Name) \
+NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, arg1Type arg1Name, arg2Type arg2Name, arg3Type arg3Name) { CapricaError::warning(num, location, msg, arg1Name, arg2Name, arg3Name); }
 
     // Warnings 2000-2200 are for engine imposed limitations.
-    DEFINE_WARNING_A2(2001, EngineLimits_PexObject_Name, "The script name is %zu characters, but the engine limit is %zu characters. Using more may cause the engine to crash.", size_t, count, size_t, engineMax)
-    DEFINE_WARNING_A2(2002, EngineLimits_PexObject_PropertyCount, "Using more than %zu properties in a script may cause the engine to crash. There are %zu properties in this script.", size_t, engineMax, size_t, count)
-    DEFINE_WARNING_A2(2003, EngineLimits_PexObject_StateCount, "Using more than %zu states in a script may cause the engine to crash. There are %zu states in this script.", size_t, engineMax, size_t, count)
-    DEFINE_WARNING_A2(2004, EngineLimits_PexObject_VariableCount, "Using more than %zu script variables in a script may cause the engine to crash. There are %zu script variables in this script.", size_t, engineMax, size_t, count)
-    
+    DEFINE_WARNING_A2(2001, EngineLimits_ArrayLength, "Attempting to create an array with %zu elements, but the engine limit is %zu elements.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2002, EngineLimits_PexFile_UserFlagCount, "There are %zu distinct user flags defined, but the engine limit is %zu flags.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A3(2003, EngineLimits_PexFunction_ParameterCount, "There are %zu parameters declared for the '%s' function, but the engine limit is %zu parameters.", size_t, count, const char*, functionName, size_t, engineMax)
+    DEFINE_WARNING_A2(2004, EngineLimits_PexObject_EmptyStateFunctionCount, "There are %zu functions in the empty state, but the engine limit is %zu functions.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2005, EngineLimits_PexObject_InitialValueCount, "There are %zu variables with initial values, but the engine limit is %zu intial values.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2006, EngineLimits_PexObject_NamedStateCount, "There are %zu named states in this object, but the engine limit is %zu named states.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2007, EngineLimits_PexObject_PropertyCount, "There are %zu properties in this object, but the engine limit is %zu properties.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2008, EngineLimits_PexObject_VariableCount, "There are %zu variables in this object, but the engine limit is %zu variables.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A3(2009, EngineLimits_PexState_FunctionCount, "There are %zu functions in the '%s' state, but the engine limit is %zu functions in a named state.", size_t, count, const char*, stateName, size_t, engineMax)
+
     // Warnings 4000-6000 are for general Papyrus Script warnings.
     DEFINE_WARNING_A2(4001, Unecessary_Cast, "Unecessary cast from '%s' to '%s'.", const char*, sourceType, const char*, targetType)
     DEFINE_WARNING_A1(4002, Duplicate_Import, "Duplicate import of '%s'.", const char*, importName)
@@ -50,6 +57,7 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
 
 #undef DEFINE_WARNING_A1
 #undef DEFINE_WARNING_A2
+#undef DEFINE_WARNING_A3
   };
 
   NEVER_INLINE

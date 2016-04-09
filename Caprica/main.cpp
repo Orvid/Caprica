@@ -158,13 +158,23 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     hiddenDesc.add_options()
       ("input-file", po::value<std::vector<std::string>>(), "The input file.")
 
+      // These are intended for debugging, not general use.
       ("debug-control-flow-graph", po::value<bool>(&conf::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
-      ("ignore-engine-limits", po::bool_switch(&conf::EngineLimits::ignoreLimits)->default_value(false), "Warn when breaking a game engine limitation, but allow the compile to continue anyways.")
-      ("max-object-name-length", po::value<size_t>(&conf::EngineLimits::maxObjectNameLength)->default_value(128), "The maximum number of properties to allow in a single script.")
-      ("max-properties-per-object", po::value<size_t>(&conf::EngineLimits::maxPropertiesPerObject)->default_value(256), "The maximum number of properties to allow in a single script.")
-      ("max-states-per-object", po::value<size_t>(&conf::EngineLimits::maxStatesPerObject)->default_value(128), "The maximum number of states to allow in a single script.")
-      ("max-variables-per-object", po::value<size_t>(&conf::EngineLimits::maxVariablesPerObject)->default_value(16768), "The maximum number of script variables to allow in a single script.")
       ("performance-test-mode", po::bool_switch(&conf::performanceTestMode)->default_value(false), "Enable performance test mode.")
+    ;
+
+    po::options_description engineLimitsDesc("");
+    engineLimitsDesc.add_options()
+      ("ignore-engine-limits", po::bool_switch(&conf::EngineLimits::ignoreLimits)->default_value(false), "Warn when breaking a game engine limitation, but allow the compile to continue anyways.")
+      ("engine-limits-max-array-length", po::value<size_t>(&conf::EngineLimits::maxArrayLength)->default_value(127), "The maximum length of an array. 0 means no limit.")
+      ("engine-limits-max-functions-in-empty-state-per-object", po::value<size_t>(&conf::EngineLimits::maxFunctionsInEmptyStatePerObject)->default_value(2047), "The maximum number of functions in the empty state in a single object. 0 means no limit.")
+      ("engine-limits-max-functions-per-state", po::value<size_t>(&conf::EngineLimits::maxFunctionsPerState)->default_value(511), "The maximum number of functions in a single state. 0 means no limit.")
+      ("engine-limits-max-initial-values-per-object", po::value<size_t>(&conf::EngineLimits::maxInitialValuesPerObject)->default_value(1023), "The maximum number of variables in a single object that can have initial values. 0 means no limit.")
+      ("engine-limits-max-named-states-per-object", po::value<size_t>(&conf::EngineLimits::maxNamedStatesPerObject)->default_value(127), "The maximum number of named states in a single object. 0 means no limit.")
+      ("engine-limits-max-parameters-per-function", po::value<size_t>(&conf::EngineLimits::maxParametersPerFunction)->default_value(511), "The maximum number of parameters to a single function. 0 means no limit.")
+      ("engine-limits-max-properties-per-object", po::value<size_t>(&conf::EngineLimits::maxPropertiesPerObject)->default_value(1023), "The maximum number of properties in a single object. 0 means no limit.")
+      ("engine-limits-max-user-flags", po::value<size_t>(&conf::EngineLimits::maxUserFlags)->default_value(31), "The maximum number of distinct user flags allowed. Composite flags do not count toward this limit.")
+      ("engine-limits-max-variables-per-object", po::value<size_t>(&conf::EngineLimits::maxVariablesPerObject)->default_value(1023), "The maximum number of variables in a single object. 0 means no limit.")
     ;
 
     po::positional_options_description p;
@@ -174,7 +184,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     visibleDesc.add(desc).add(champollionCompatDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
-    commandLineDesc.add(visibleDesc).add(hiddenDesc);
+    commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc);
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv)
