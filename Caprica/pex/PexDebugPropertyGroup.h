@@ -23,6 +23,7 @@ struct PexDebugPropertyGroup final
 
   static PexDebugPropertyGroup* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
+  void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 };
 
 }}

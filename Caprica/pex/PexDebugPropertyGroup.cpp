@@ -1,5 +1,7 @@
 #include <pex/PexDebugPropertyGroup.h>
 
+#include <pex/PexFile.h>
+
 namespace caprica { namespace pex {
 
 PexDebugPropertyGroup* PexDebugPropertyGroup::read(PexReader& rdr) {
@@ -23,6 +25,19 @@ void PexDebugPropertyGroup::write(PexWriter& wtr) const {
   wtr.boundWrite<uint16_t>(properties.size());
   for (auto p : properties)
     wtr.write<PexString>(p);
+}
+
+void PexDebugPropertyGroup::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
+  wtr.writeln(".propertyGroup %s", file->getStringValue(groupName).c_str());
+  wtr.ident++;
+
+  wtr.writeKV<PexUserFlags>("userFlags", userFlags);
+  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
+  for (auto p : properties)
+    wtr.writeln(".property %s", file->getStringValue(p).c_str());
+
+  wtr.ident--;
+  wtr.writeln(".endPropertyGroup");
 }
 
 }}

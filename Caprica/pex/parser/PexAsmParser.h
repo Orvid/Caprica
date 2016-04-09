@@ -43,6 +43,17 @@ private:
     return false;
   }
 
+  void maybeExpectConsumeConstFlag(bool* isConst) {
+    assert(isConst != nullptr);
+    if (cur.type != TokenType::EOL) {
+      expect(TokenType::Identifier);
+      if (!_stricmp(cur.sValue.c_str(), "const")) {
+        *isConst = true;
+        consume();
+      }
+    }
+  }
+
   bool maybeConsumeTokEOL(TokenType tp) {
     if (maybeConsume(tp)) {
       expectConsumeEOL();

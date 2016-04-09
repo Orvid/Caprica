@@ -64,10 +64,12 @@ void PexObject::write(PexWriter& wtr) const {
 }
 
 void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.writeln(".object %s %s", file->getStringValue(name).c_str(), file->getStringValue(parentClassName).c_str());
+  wtr.write(".object %s %s", file->getStringValue(name).c_str(), file->getStringValue(parentClassName).c_str());
+  if (isConst)
+    wtr.write(" const");
+  wtr.writeln();
   wtr.ident++;
 
-  wtr.writeln(".constFlag %i", isConst ? 1 : 0);
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
   wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
   wtr.writeln(".autoState %s", file->getStringValue(autoStateName).c_str());
@@ -92,6 +94,18 @@ void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
     p->writeAsm(file, this, wtr);
   wtr.ident--;
   wtr.writeln(".endPropertyTable");
+
+  wtr.writeln(".propertyGroupTable");
+  wtr.ident++;
+  if (file->debugInfo) {
+    for (auto g : file->debugInfo->propertyGroups) {
+      if (file->getStringValue(g->objectName) == file->getStringValue(name)) {
+        g->writeAsm(file, wtr);
+      }
+    }
+  }
+  wtr.ident--;
+  wtr.writeln(".endPropertyGroupTable");
 
   wtr.writeln(".stateTable");
   wtr.ident++;

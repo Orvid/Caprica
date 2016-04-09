@@ -23,9 +23,11 @@ void PexVariable::write(PexWriter& wtr) const {
 }
 
 void PexVariable::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.writeln(".variable %s %s", file->getStringValue(name).c_str(), file->getStringValue(typeName).c_str());
+  wtr.write(".variable %s %s", file->getStringValue(name).c_str(), file->getStringValue(typeName).c_str());
+  if (isConst)
+    wtr.write(" const");
+  wtr.writeln();
   wtr.ident++;
-  wtr.writeln(".constFlag %i", isConst ? 1 : 0);
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
   wtr.write(".initialValue ");
   defaultValue.writeAsm(file, wtr);
