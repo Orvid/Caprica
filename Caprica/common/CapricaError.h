@@ -43,8 +43,9 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
     DEFINE_WARNING_A2(2005, EngineLimits_PexObject_InitialValueCount, "There are %zu variables with initial values, but the engine limit is %zu intial values.", size_t, count, size_t, engineMax)
     DEFINE_WARNING_A2(2006, EngineLimits_PexObject_NamedStateCount, "There are %zu named states in this object, but the engine limit is %zu named states.", size_t, count, size_t, engineMax)
     DEFINE_WARNING_A2(2007, EngineLimits_PexObject_PropertyCount, "There are %zu properties in this object, but the engine limit is %zu properties.", size_t, count, size_t, engineMax)
-    DEFINE_WARNING_A2(2008, EngineLimits_PexObject_VariableCount, "There are %zu variables in this object, but the engine limit is %zu variables.", size_t, count, size_t, engineMax)
-    DEFINE_WARNING_A3(2009, EngineLimits_PexState_FunctionCount, "There are %zu functions in the '%s' state, but the engine limit is %zu functions in a named state.", size_t, count, const char*, stateName, size_t, engineMax)
+    DEFINE_WARNING_A2(2008, EngineLimits_PexObject_StaticFunctionCount, "There are %zu static functions in this object, but the engine limit is %zu static functions.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A2(2009, EngineLimits_PexObject_VariableCount, "There are %zu variables in this object, but the engine limit is %zu variables.", size_t, count, size_t, engineMax)
+    DEFINE_WARNING_A3(2010, EngineLimits_PexState_FunctionCount, "There are %zu functions in the '%s' state, but the engine limit is %zu functions in a named state.", size_t, count, const char*, stateName, size_t, engineMax)
 
     // Warnings 4000-6000 are for general Papyrus Script warnings.
     DEFINE_WARNING_A2(4001, Unecessary_Cast, "Unecessary cast from '%s' to '%s'.", const char*, sourceType, const char*, targetType)

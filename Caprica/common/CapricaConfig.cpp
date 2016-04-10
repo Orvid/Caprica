@@ -34,6 +34,7 @@ size_t EngineLimits::maxInitialValuesPerObject{ 0 };
 size_t EngineLimits::maxNamedStatesPerObject{ 0 };
 size_t EngineLimits::maxParametersPerFunction{ 0 };
 size_t EngineLimits::maxPropertiesPerObject{ 0 };
+size_t EngineLimits::maxStaticFunctionsPerObject{ 0 };
 size_t EngineLimits::maxUserFlags{ 0 };
 size_t EngineLimits::maxVariablesPerObject{ 0 };
 

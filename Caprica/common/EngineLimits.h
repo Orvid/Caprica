@@ -15,6 +15,7 @@ struct EngineLimits final
     PexObject_InitialValueCount,
     PexObject_NamedStateCount,
     PexObject_PropertyCount,
+    PexObject_StaticFunctionCount,
     PexObject_VariableCount,
     PexState_FunctionCount,
   };
@@ -53,13 +54,17 @@ struct EngineLimits final
         if (exceedsLimit(value, CapricaConfig::EngineLimits::maxPropertiesPerObject))
           CapricaError::Warning::W2007_EngineLimits_PexObject_PropertyCount(location, value, CapricaConfig::EngineLimits::maxVariablesPerObject);
         break;
+      case Type::PexObject_StaticFunctionCount:
+        if (exceedsLimit(value, CapricaConfig::EngineLimits::maxStaticFunctionsPerObject))
+          CapricaError::Warning::W2008_EngineLimits_PexObject_StaticFunctionCount(location, value, CapricaConfig::EngineLimits::maxStaticFunctionsPerObject);
+        break;
       case Type::PexObject_VariableCount:
         if (exceedsLimit(value, CapricaConfig::EngineLimits::maxVariablesPerObject))
-          CapricaError::Warning::W2008_EngineLimits_PexObject_VariableCount(location, value, CapricaConfig::EngineLimits::maxVariablesPerObject);
+          CapricaError::Warning::W2009_EngineLimits_PexObject_VariableCount(location, value, CapricaConfig::EngineLimits::maxVariablesPerObject);
         break;
       case Type::PexState_FunctionCount:
         if (exceedsLimit(value, CapricaConfig::EngineLimits::maxFunctionsPerState))
-          CapricaError::Warning::W2009_EngineLimits_PexState_FunctionCount(location, value, referenceName, CapricaConfig::EngineLimits::maxFunctionsPerState);
+          CapricaError::Warning::W2010_EngineLimits_PexState_FunctionCount(location, value, referenceName, CapricaConfig::EngineLimits::maxFunctionsPerState);
         break;
     }
   }

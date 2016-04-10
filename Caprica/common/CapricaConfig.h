@@ -87,6 +87,8 @@ struct EngineLimits final
   static size_t maxParametersPerFunction;
   // The maximum number of properties in a single object. 0 means no limit.
   static size_t maxPropertiesPerObject;
+  // The maximum number of global functions allowed in a single object. 0 means no limit.
+  static size_t maxStaticFunctionsPerObject;
   // The maximum number of distinct user flags allowed. Composite flags do not count toward this limit.
   static size_t maxUserFlags;
   // The maximum number of variables in a single object. 0 means no limit.
