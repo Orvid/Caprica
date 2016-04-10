@@ -25,7 +25,7 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
   if (expressionToIterate->resultType().type == PapyrusType::Kind::Array)
     bldr << op::arraylength{ cTemp, iterVal };
   else
-    bldr << op::callmethod{ file->getString("GetCount"), iterVal, cTemp, { } };
+    bldr << op::callmethod{ file->getString(getCountIdentifier->func->name), iterVal, cTemp, { } };
   auto bTemp = bldr.allocTemp(PapyrusType::Bool(location));
   bldr << op::cmplt{ bTemp, counter, cTemp };
   bldr << op::jmpf{ bTemp, afterAll };
@@ -35,7 +35,7 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
   if (expressionToIterate->resultType().type == PapyrusType::Kind::Array)
     bldr << op::arraygetelement{ loc, iterVal, counter };
   else
-    bldr << op::callmethod{ file->getString("GetAt"), iterVal, loc, { counter } };
+    bldr << op::callmethod{ file->getString(getAtIdentifier->func->name), iterVal, loc, { counter } };
 
   for (auto s : body)
     s->buildPex(file, bldr);
@@ -57,8 +57,10 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
       return tp.getElementType();
     } else if (tp.type == PapyrusType::Kind::ResolvedObject) {
       auto gCountId = ctx->tryResolveFunctionIdentifier(tp, PapyrusIdentifier::Unresolved(tp.location, "GetCount"));
+      if (gCountId.type != PapyrusIdentifierType::Function)
+        gCountId = ctx->tryResolveFunctionIdentifier(tp, PapyrusIdentifier::Unresolved(tp.location, "GetSize"));
       if (gCountId.type != PapyrusIdentifierType::Function) {
-        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetCount!", tp.prettyString().c_str());
+        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetCount or GetSize.", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       if (gCountId.func->returnType.type != PapyrusType::Kind::Int) {

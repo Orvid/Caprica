@@ -35,7 +35,7 @@ The statement whose absence has most annoyed Papyrus users working with arrays. 
           'EndFor'
 ```
 ### ForEach
-The ForEach statement may be used to iterate over arrays or collections. A collection is defined as any Object which implements a method named `GetCount` that accepts no parameters and returns an `Int`, and also implements a method named `GetAt` which accepts a single `Int` argument and returns the value at that index. `<expression>` is evaluated exactly once before the loop begins. `FormList` and `RefCollectionAlias` are two examples of objects in Fallout 4 that are considered collections.
+The ForEach statement may be used to iterate over arrays or collections. A collection is defined as any Object which implements a method named either `GetCount` or `GetSize` that accepts no parameters and returns an `Int`, and also implements a method named `GetAt` which accepts a single `Int` argument and returns the value at that index. `<expression>` is evaluated exactly once before the loop begins. `FormList` and `RefCollectionAlias` are two examples of objects in Fallout 4 that are considered collections.
 ```
 <foreach> ::= 'ForEach' (<type>|'Auto') <identifier> 'In' <expression>
                 <statement>*
