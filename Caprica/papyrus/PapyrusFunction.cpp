@@ -46,8 +46,8 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   func->documentationString = file->getString(documentationComment);
   func->returnTypeName = returnType.buildPex(file);
   func->userFlags = userFlags.buildPex(file);
-  func->isGlobal = isGlobal;
-  func->isNative = isNative;
+  func->isGlobal = isGlobal();
+  func->isNative = isNative();
   for (auto p : parameters)
     p->buildPex(file, obj, func);
 
@@ -109,7 +109,7 @@ void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
 }
 
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
-  if (isGlobal && ctx->state && ctx->state->name != "")
+  if (isGlobal() && ctx->state && ctx->state->name != "")
     CapricaError::error(location, "Global functions are only allowed in the empty state.");
 
   ctx->function = this;
@@ -120,7 +120,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   ctx->function = nullptr;
 
   // Don't build the CFG for the special functions.
-  if (!isNative && name != "GetState" && name != "GotoState") {
+  if (!isNative() && name != "GetState" && name != "GotoState") {
     PapyrusCFG cfg;
     cfg.processStatements(statements);
 

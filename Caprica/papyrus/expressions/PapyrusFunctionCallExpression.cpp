@@ -106,7 +106,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     for (auto param : arguments)
       args.push_back(param->value->generateLoad(file, bldr));
     bldr << location;
-    if (function.func->isGlobal) {
+    if (function.func->isGlobal()) {
       std::string objName = function.func->parentObject->name;
       boost::algorithm::to_lower(objName);
       bldr << op::callstatic{ file->getString(objName), file->getString(function.func->name), dest, args };

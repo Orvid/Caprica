@@ -35,7 +35,7 @@ struct PapyrusState final
 
     size_t staticFunctionCount = 0;
     for (auto f : functions) {
-      if (f->isGlobal)
+      if (f->isGlobal())
         staticFunctionCount++;
       state->functions.push_back(f->buildPex(file, obj, state, pex::PexString()));
     }

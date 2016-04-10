@@ -34,8 +34,8 @@ static PapyrusFunction* reflectFunction(const CapricaFileLocation& loc, PexFile*
   auto func = new PapyrusFunction(loc, reflectType(loc, pex, pFunc->returnTypeName));
   func->parentObject = obj;
   func->name = funcName;
-  func->isGlobal = pFunc->isGlobal;
-  func->isNative = pFunc->isNative;
+  func->userFlags.isGlobal = pFunc->isGlobal;
+  func->userFlags.isNative = pFunc->isNative;
 
   for (auto pp : pFunc->parameters) {
     auto param = new PapyrusFunctionParameter(loc, reflectType(loc, pex, pp->type));
@@ -65,7 +65,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       struc->name = pex->getStringValue(ps->name);
       for (auto pm : ps->members) {
         auto mem = new PapyrusStructMember(loc, reflectType(loc, pex, pm->typeName), struc);
-        mem->isConst = pm->isConst;
+        mem->userFlags.isConst = pm->isConst;
         mem->name = pex->getStringValue(pm->name);
         struc->members.push_back(mem);
       }
@@ -76,7 +76,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       auto prop = new PapyrusProperty(loc, reflectType(loc, pex, pp->typeName), obj);
       prop->name = pex->getStringValue(pp->name);
       if (pp->isAuto) {
-        prop->isAuto = true;
+        prop->userFlags.isAuto = true;
       } else {
         if (pp->isReadable) {
           prop->readFunction = reflectFunction(loc, pex, obj, pp->readFunction, "get");

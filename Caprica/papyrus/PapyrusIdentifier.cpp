@@ -51,7 +51,7 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (CapricaConfig::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
@@ -83,9 +83,9 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isReadOnly)
+      if (prop->isReadOnly())
         CapricaError::fatal(location, "Attempted to generate a store to a read-only property!");
-      if (CapricaConfig::enableCKOptimizations && prop->isAuto && !prop->isReadOnly && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (CapricaConfig::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
       } else {
@@ -115,19 +115,21 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
 void PapyrusIdentifier::ensureAssignable() const {
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isReadOnly)
+      if (prop->isReadOnly())
         return CapricaError::error(location, "You cannot assign to the read-only property '%s'.", prop->name.c_str());
-      if (prop->parent->isConst)
+      if (prop->isConst())
+        return CapricaError::error(location, "You cannot assign to the const property '%s'.", prop->name.c_str());
+      if (prop->parent->isConst())
         return CapricaError::error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.c_str(), prop->parent->name.c_str());
       break;
     case PapyrusIdentifierType::Variable:
-      if (var->isConst)
+      if (var->isConst())
         return CapricaError::error(location, "You cannot assign to the const variable '%s'.", var->name.c_str());
-      if (var->parent->isConst)
+      if (var->parent->isConst())
         return CapricaError::error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.c_str(), var->parent->name.c_str());
       break;
     case PapyrusIdentifierType::StructMember:
-      if (structMember->isConst)
+      if (structMember->isConst())
         return CapricaError::error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
       break;
 

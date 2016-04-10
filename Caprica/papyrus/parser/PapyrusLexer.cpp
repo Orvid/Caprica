@@ -52,6 +52,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kBool, "Bool" },
   { TokenType::kConst, "Const" },
   { TokenType::kCustomEvent, "CustomEvent" },
+  { TokenType::kCustomEventName, "CustomEventName" },
   { TokenType::kDebugOnly, "DebugOnly" },
   { TokenType::kElse, "Else" },
   { TokenType::kElseIf, "ElseIf" },
@@ -82,6 +83,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kProperty, "Property" },
   { TokenType::kReturn, "Return" },
   { TokenType::kScriptName, "ScriptName" },
+  { TokenType::kScriptEventName, "ScriptEventName" },
   { TokenType::kSelf, "Self" },
   { TokenType::kState, "State" },
   { TokenType::kString, "String" },
@@ -154,6 +156,7 @@ static const std::map<const char* const, TokenType, CaselessStringComparer> keyw
   { "bool", TokenType::kBool },
   { "const", TokenType::kConst },
   { "customevent", TokenType::kCustomEvent },
+  { "customeventname", TokenType::kCustomEventName },
   { "debugonly", TokenType::kDebugOnly },
   { "else", TokenType::kElse },
   { "elseif", TokenType::kElseIf },
@@ -184,6 +187,7 @@ static const std::map<const char* const, TokenType, CaselessStringComparer> keyw
   { "property", TokenType::kProperty },
   { "return", TokenType::kReturn },
   { "scriptname", TokenType::kScriptName },
+  { "scripteventname", TokenType::kScriptEventName },
   { "self", TokenType::kSelf },
   { "state", TokenType::kState },
   { "string", TokenType::kString },
@@ -219,7 +223,11 @@ StartOver:
   
   switch (c) {
     case -1:
-      return setTok(TokenType::END, baseLoc);
+      // Always pretend that there's an EOL at the end of the
+      // file.
+      if (cur.type == TokenType::EOL)
+        return setTok(TokenType::END, baseLoc);
+      return setTok(TokenType::EOL, baseLoc);
     case '(':
       return setTok(TokenType::LParen, baseLoc);
     case ')':

@@ -23,7 +23,6 @@ struct PapyrusObject final
 {
   std::string name{ "" };
   std::string documentationString{ "" };
-  bool isConst{ false };
   PapyrusUserFlags userFlags{ };
   PapyrusType parentClass;
   PapyrusState* autoState{ nullptr };
@@ -35,6 +34,8 @@ struct PapyrusObject final
   std::vector<PapyrusVariable*> variables{ };
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
   std::vector<PapyrusState*> states{ };
+
+  bool isConst() const { return userFlags.isConst; }
 
   explicit PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) {
     rootState = new PapyrusState(location);
@@ -80,7 +81,7 @@ struct PapyrusObject final
     else
       obj->parentClassName = file->getString("");
     obj->documentationString = file->getString(documentationString);
-    obj->isConst = isConst;
+    obj->isConst = isConst();
     if (autoState)
       obj->autoStateName = file->getString(autoState->name);
     else

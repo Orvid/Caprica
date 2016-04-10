@@ -61,10 +61,7 @@ static bool doesScriptNameMatchNextPartOfDir(const boost::filesystem::path curPa
 
 PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   auto loc = cur.location;
-  bool isConst = false;
   maybeConsumeEOLs();
-  if (maybeConsume(TokenType::kConst))
-    isConst = true;
 
   expectConsume(TokenType::kScriptName);
   auto name = expectConsumeIdent();
@@ -79,7 +76,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
     obj = new PapyrusObject(loc, PapyrusType::None(cur.location));
 
     // Otherwise we get to have some fun and generate GotoState and GetState.
-    auto getState = new PapyrusFunction(cur.location, PapyrusType::String(cur.location));
+   /* auto getState = new PapyrusFunction(cur.location, PapyrusType::String(cur.location));
     getState->functionType = PapyrusFunctionType::Function;
     getState->parentObject = obj;
     getState->name = "GetState";
@@ -92,16 +89,14 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
     auto param = new PapyrusFunctionParameter(cur.location, PapyrusType::String(cur.location));
     param->name = "asNewState";
     gotoState->parameters.push_back(param);
-    obj->getRootState()->functions.push_back(gotoState);
+    obj->getRootState()->functions.push_back(gotoState);*/
   }
-  obj->isConst = isConst;
   obj->name = name;
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocString();
 
   while (cur.type != TokenType::END) {
-    bool isConst = false;
     switch (cur.type) {
       case TokenType::kImport:
       {
@@ -141,12 +136,6 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction));
         break;
 
-      case TokenType::kConst:
-        consume();
-        isConst = true;
-        goto TypeValue;
-
-      TypeValue:
       case TokenType::kBool:
       case TokenType::kFloat:
       case TokenType::kInt:
@@ -156,17 +145,13 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       {
         auto tp = expectConsumePapyrusType();
         if (cur.type == TokenType::kFunction) {
-          if (isConst)
-            CapricaError::error(cur.location, "The return type of a function cannot be marked const!");
           consume();
           obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), tp, TokenType::kEndFunction));
         } else if (cur.type == TokenType::kProperty) {
-          if (isConst)
-            CapricaError::error(cur.location, "A property cannot be marked const!");
           consume();
           obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, tp));
         } else {
-          obj->variables.push_back(parseVariable(script, obj, isConst, tp));
+          obj->variables.push_back(parseVariable(script, obj, tp));
         }
         break;
       }
@@ -234,19 +219,12 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
   expectConsumeEOLs();
 
   while (true) {
-    bool isConst = false;
     switch (cur.type) {
       case TokenType::kEndStruct:
         consume();
         expectConsumeEOLs();
         goto Return;
 
-      case TokenType::kConst:
-        consume();
-        isConst = true;
-        goto TypeValue;
-
-      TypeValue:
       case TokenType::kBool:
       case TokenType::kFloat:
       case TokenType::kInt:
@@ -255,7 +233,7 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       case TokenType::Identifier:
       {
         auto tp = expectConsumePapyrusType();
-        auto m = parseStructMember(script, object, struc, isConst, tp);
+        auto m = parseStructMember(script, object, struc, tp);
         for (auto sm : struc->members) {
           if (!_stricmp(sm->name.c_str(), m->name.c_str()))
             CapricaError::error(m->location, "A member named '%s' was already defined in '%s'.", m->name.c_str(), struc->name.c_str());
@@ -273,18 +251,20 @@ Return:
   return struc;
 }
 
-PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, bool isConst, PapyrusType tp) {
+PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType tp) {
   auto mem = new PapyrusStructMember(cur.location, tp, struc);
-  mem->isConst = isConst;
   mem->name = expectConsumeIdent();
 
+  // Needed because None is a valid default value, and we shouldn't
+  // be erroring on it.
+  bool hadDefault = false;
   if (maybeConsume(TokenType::Equal)) {
+    hadDefault = true;
     mem->defaultValue = expectConsumePapyrusValue();
-  } else if (isConst) {
-    CapricaError::error(cur.location, "A constant member must have a value!");
   }
-
   mem->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::StructMember);
+  if (mem->isConst() && !hadDefault)
+    CapricaError::error(cur.location, "A constant member must have a value!");
   expectConsumeEOLs();
   mem->documentationString = maybeConsumeDocString();
   return mem;
@@ -338,20 +318,11 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     hadDefaultValue = true;
     prop->defaultValue = expectConsumePapyrusValue();
   }
-
-  if (cur.type == TokenType::kAuto) {
+  prop->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Property);
+  if (prop->isAuto() || prop->isReadOnly())
     isFullProp = false;
-    prop->isAuto = true;
-    consume();
-  } else if (cur.type == TokenType::kAutoReadOnly) {
-    isFullProp = false;
-    prop->isAuto = true;
-    prop->isReadOnly = true;
-    consume();
-    if (!hadDefaultValue)
-      CapricaError::error(cur.location, "An AutoReadOnly property must have a value!");
-  }
-  prop->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Property, prop->isAuto && !prop->isReadOnly);
+  if (prop->isReadOnly() && !hadDefaultValue)
+    CapricaError::error(cur.location, "An AutoReadOnly property must have a value!");
   expectConsumeEOLs();
   prop->documentationComment = maybeConsumeDocString();
 
@@ -409,19 +380,17 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
   return prop;
 }
 
-PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, bool isConst, PapyrusType type) {
+PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType type) {
   auto var = new PapyrusVariable(cur.location, type, object);
-  var->isConst = isConst;
   var->name = expectConsumeIdent();
 
   if (maybeConsume(TokenType::Equal)) {
     var->referenceState.isInitialized = true;
     var->defaultValue = expectConsumePapyrusValue();
-  } else if (isConst) {
-    CapricaError::error(cur.location, "A constant variable must have a value!");
   }
-
   var->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Variable);
+  if (var->isConst() && !var->referenceState.isInitialized)
+    CapricaError::error(cur.location, "A constant variable must have a value!");
   expectConsumeEOLs();
   return var;
 }
@@ -451,20 +420,10 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   }
   expectConsume(TokenType::RParen);
 
-  if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal))
-    func->isGlobal = true;
-  if (maybeConsume(TokenType::kNative))
-    func->isNative = true;
-  if (endToken == TokenType::kEndFunction && maybeConsume(TokenType::kGlobal)) {
-    if (func->isGlobal)
-      CapricaError::error(cur.location, "This function was already declared global!");
-    func->isGlobal = true;
-  }
-
   func->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Function);
   expectConsumeEOLs();
   func->documentationComment = maybeConsumeDocString();
-  if (!func->isNative) {
+  if (!func->isNative()) {
     while (cur.type != endToken && cur.type != TokenType::END) {
       func->statements.push_back(parseStatement(func));
     }
@@ -1055,6 +1014,8 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
     case TokenType::kInt:
       tp = PapyrusType::Int(consumeLocation());
       break;
+    case TokenType::kCustomEventName:
+    case TokenType::kScriptEventName:
     case TokenType::kString:
       tp = PapyrusType::String(consumeLocation());
       break;
@@ -1119,23 +1080,60 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
   }
 }
 
-PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location, bool isAutoProperty) {
+PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location) {
   PapyrusUserFlags flags;
-  while (cur.type == TokenType::Identifier || cur.type == TokenType::kDefault) {
-    auto loc = cur.location;
-    auto str = cur.sValue;
-    if (cur.type == TokenType::kDefault)
-      str = "default";
+  while (cur.type != TokenType::END) {
+    switch (cur.type) {
+      case TokenType::kAuto:
+        flags.isAuto = true;
+        consume();
+        break;
+      case TokenType::kAutoReadOnly:
+        flags.isAutoReadOnly = true;
+        consume();
+        break;
+      case TokenType::kBetaOnly:
+        flags.isBetaOnly = true;
+        consume();
+        break;
+      case TokenType::kConst:
+        flags.isConst = true;
+        consume();
+        break;
+      case TokenType::kDebugOnly:
+        flags.isDebugOnly = true;
+        consume();
+        break;
+      case TokenType::kGlobal:
+        flags.isGlobal = true;
+        consume();
+        break;
+      case TokenType::kNative:
+        flags.isNative = true;
+        consume();
+        break;
+      case TokenType::Identifier:
+      case TokenType::kDefault: {
+        auto loc = cur.location;
+        auto str = cur.sValue;
+        if (cur.type == TokenType::kDefault)
+          str = "default";
 
-    auto flg = CapricaConfig::userFlagsDefinition.findFlag(loc, str);
-    if ((flg.validLocations & location) != location && (!isAutoProperty || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
-      CapricaError::error(loc, "The flag '%s' is not valid in this location.", str.c_str());
+        auto flg = CapricaConfig::userFlagsDefinition.findFlag(loc, str);
+        if ((flg.validLocations & location) != location && (!(flags.isAuto && !flags.isAutoReadOnly) || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
+          CapricaError::error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
-    PapyrusUserFlags newFlag;
-    newFlag.data = 1ULL << flg.flagNum;
-    flags |= newFlag;
-    consume();
+        PapyrusUserFlags newFlag;
+        newFlag.data = 1ULL << flg.flagNum;
+        flags |= newFlag;
+        consume();
+        break;
+      }
+      default:
+        goto Return;
+    }
   }
+Return:
   return flags;
 }
 

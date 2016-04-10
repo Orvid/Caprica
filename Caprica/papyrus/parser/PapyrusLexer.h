@@ -66,6 +66,7 @@ enum class TokenType : int32_t
   kBool,
   kConst,
   kCustomEvent,
+  kCustomEventName,
   kDebugOnly,
   kElse,
   kElseIf,
@@ -95,6 +96,7 @@ enum class TokenType : int32_t
   kParent,
   kProperty,
   kReturn,
+  kScriptEventName,
   kScriptName,
   kSelf,
   kState,
@@ -214,7 +216,7 @@ private:
     return (unsigned)c;
   }
   int peekChar() {
-    if (strmI + 1 >= strmLen)
+    if (strmI + 1 > strmLen)
       return -1;
     return *strm;
   }

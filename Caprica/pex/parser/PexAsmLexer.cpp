@@ -145,7 +145,11 @@ StartOver:
   
   switch (c) {
     case -1:
-      return setTok(TokenType::END, baseLoc);
+      // Always pretend that there's an EOL at the end of the
+      // file.
+      if (cur.type == TokenType::EOL)
+        return setTok(TokenType::END, baseLoc);
+      return setTok(TokenType::EOL, baseLoc);
 
     case '.':
     {

@@ -30,7 +30,7 @@ void PapyrusState::semantic(PapyrusResolutionContext* ctx) {
 void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
   ctx->state = this;
   if (name != "") {
-    if (ctx->object->isConst)
+    if (ctx->object->isConst())
       CapricaError::error(location, "Named states aren't allowed on const objects.");
 
     for (auto f : functions) {

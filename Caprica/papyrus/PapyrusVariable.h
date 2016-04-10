@@ -22,11 +22,12 @@ struct PapyrusVariable final
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
-  bool isConst{ false };
 
   CapricaFileLocation location;
   const PapyrusObject* parent{ nullptr };
   CapricaReferenceState referenceState{ };
+
+  bool isConst() const { return userFlags.isConst; }
 
   explicit PapyrusVariable(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
   PapyrusVariable(const PapyrusVariable&) = delete;

@@ -24,8 +24,6 @@ struct PapyrusProperty final
   std::string name{ "" };
   std::string documentationComment{ "" };
   PapyrusType type;
-  bool isAuto{ false };
-  bool isReadOnly{ false };
   PapyrusUserFlags userFlags{ };
   PapyrusFunction* readFunction{ nullptr };
   PapyrusFunction* writeFunction{ nullptr };
@@ -33,6 +31,10 @@ struct PapyrusProperty final
 
   CapricaFileLocation location;
   const PapyrusObject* parent{ nullptr };
+
+  bool isAuto() const { return userFlags.isAuto; }
+  bool isReadOnly() const { return userFlags.isAutoReadOnly; }
+  bool isConst() const { return userFlags.isConst; }
 
   explicit PapyrusProperty(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
   PapyrusProperty(const PapyrusProperty&) = delete;
@@ -53,7 +55,7 @@ struct PapyrusProperty final
     prop->documentationString = file->getString(documentationComment);
     prop->typeName = type.buildPex(file);
     prop->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Property);
-    if (isAuto && isReadOnly) {
+    if (isAuto() && isReadOnly()) {
       prop->isReadable = true;
       auto func = new pex::PexFunction();
       func->returnTypeName = prop->typeName;
@@ -72,7 +74,7 @@ struct PapyrusProperty final
         fDebInfo->instructionLineMap.push_back((uint16_t)location.line);
         file->debugInfo->functions.push_back(fDebInfo);
       }
-    } else if (isAuto) {
+    } else if (isAuto()) {
       prop->isAuto = true;
       prop->isReadable = true;
       prop->isWritable = true;
@@ -81,12 +83,7 @@ struct PapyrusProperty final
       var->typeName = prop->typeName;
       var->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Variable);
       var->defaultValue = defaultValue.buildPex(file);
-      // TODO: Investigate how the official compiler distinguishes between a const
-      // underlying var and a non-const. Some props are const, others are not.
-      // In WorkshopParentScript, ::WorkshopCenterMarker_var is not marked const,
-      // but ::WorkshopProduceFertilizer_var is, even though both are auto properties
-      // and both initial values are none.
-      var->isConst = true;
+      var->isConst = isConst();
       prop->autoVar = var->name;
       obj->variables.push_back(var);
     } else {
@@ -113,12 +110,12 @@ struct PapyrusProperty final
 
   void semantic2(PapyrusResolutionContext* ctx) {
     if (readFunction) {
-      if (readFunction->isGlobal || readFunction->isNative)
+      if (readFunction->isGlobal() || readFunction->isNative())
         CapricaError::error(readFunction->location, "A property function is not allowed to be global or native.");
       readFunction->semantic2(ctx);
     }
     if (writeFunction) {
-      if (writeFunction->isGlobal || writeFunction->isNative)
+      if (writeFunction->isGlobal() || writeFunction->isNative())
         CapricaError::error(writeFunction->location, "A property function is not allowed to be global or native.");
       writeFunction->semantic2(ctx);
     }

@@ -36,14 +36,17 @@ struct PapyrusFunction final
   std::string documentationComment{ "" };
   PapyrusType returnType;
   PapyrusUserFlags userFlags{ };
-  bool isGlobal{ false };
-  bool isNative{ false };
   std::vector<PapyrusFunctionParameter*> parameters{ };
   std::vector<statements::PapyrusStatement*> statements{ };
   PapyrusObject* parentObject{ nullptr };
   PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
 
   CapricaFileLocation location;
+
+  bool isBetaOnly() const { return userFlags.isBetaOnly; }
+  bool isDebugOnly() const { return userFlags.isDebugOnly; }
+  bool isGlobal() const { return userFlags.isGlobal; }
+  bool isNative() const { return userFlags.isNative; }
 
   explicit PapyrusFunction(const CapricaFileLocation& loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
   PapyrusFunction(const PapyrusFunction&) = delete;

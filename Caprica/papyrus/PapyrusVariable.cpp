@@ -8,7 +8,7 @@ void PapyrusVariable::buildPex(pex::PexFile* file, pex::PexObject* obj) const {
   var->typeName = type.buildPex(file);
   var->userFlags = userFlags.buildPex(file);
   var->defaultValue = defaultValue.buildPex(file);
-  var->isConst = isConst || obj->isConst;
+  var->isConst = isConst() || obj->isConst;
   obj->variables.push_back(var);
 }
 

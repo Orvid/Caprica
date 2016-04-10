@@ -22,10 +22,11 @@ struct PapyrusStructMember final
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
-  bool isConst{ false };
 
   CapricaFileLocation location;
   const PapyrusStruct* parent{ nullptr };
+
+  bool isConst() const { return userFlags.isConst; }
 
   explicit PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusStruct* par) : location(loc), type(tp), parent(par) { }
   PapyrusStructMember(const PapyrusStructMember&) = delete;
@@ -38,7 +39,7 @@ struct PapyrusStructMember final
     member->typeName = type.buildPex(file);
     member->userFlags = userFlags.buildPex(file);
     member->defaultValue = defaultValue.buildPex(file);
-    member->isConst = isConst;
+    member->isConst = isConst();
     struc->members.push_back(member);
   }
 
