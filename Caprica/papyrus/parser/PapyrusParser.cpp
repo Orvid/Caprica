@@ -127,7 +127,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->structs.push_back(parseStruct(script, obj));
         break;
 
-      case TokenType::kPropertyGroup:
+      case TokenType::kGroup:
         consume();
         obj->propertyGroups.push_back(parsePropertyGroup(script, obj));
         break;
@@ -300,7 +300,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
   while (true) {
     bool isConst = false;
     switch (cur.type) {
-      case TokenType::kEndPropertyGroup:
+      case TokenType::kEndGroup:
         consume();
         expectConsumeEOLs();
         goto Return;

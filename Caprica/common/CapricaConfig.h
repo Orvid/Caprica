@@ -42,9 +42,6 @@ extern bool enableLanguageExtensions;
 // Enable optimizations normally enabled by the -optimize switch to the
 // CK compiler.
 extern bool enableOptimizations;
-// Enable the speculated form of the new functionality available
-// to Papyrus in FO4.
-extern bool enableSpeculativeSyntax;
 // If true, emit debug info for the papyrus script.
 extern bool emitDebugInfo;
 // The directories to search in for imported types and

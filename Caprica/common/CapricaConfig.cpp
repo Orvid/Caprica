@@ -15,7 +15,6 @@ bool dumpPexAsm{ false };
 bool enableCKOptimizations{ false };
 bool enableLanguageExtensions{ false };
 bool enableOptimizations{ false };
-bool enableSpeculativeSyntax{ false };
 bool emitDebugInfo{ false };
 std::vector<std::string> importDirectories{ };
 bool performanceTestMode{ false };

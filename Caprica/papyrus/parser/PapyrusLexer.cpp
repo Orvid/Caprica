@@ -48,14 +48,20 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kAs, "As" },
   { TokenType::kAuto, "Auto" },
   { TokenType::kAutoReadOnly, "AutoReadOnly" },
+  { TokenType::kBetaOnly, "BetaOnly" },
   { TokenType::kBool, "Bool" },
+  { TokenType::kConst, "Const" },
+  { TokenType::kCustomEvent, "CustomEvent" },
+  { TokenType::kDebugOnly, "DebugOnly" },
   { TokenType::kElse, "Else" },
   { TokenType::kElseIf, "ElseIf" },
   { TokenType::kEndEvent, "EndEvent" },
   { TokenType::kEndFunction, "EndFunction" },
+  { TokenType::kEndGroup, "EndGroup" },
   { TokenType::kEndIf, "EndIf" },
   { TokenType::kEndProperty, "EndProperty" },
   { TokenType::kEndState, "EndState" },
+  { TokenType::kEndStruct, "EndStruct" },
   { TokenType::kEndWhile, "EndWhile" },
   { TokenType::kEvent, "Event" },
   { TokenType::kExtends, "Extends" },
@@ -63,9 +69,11 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kFloat, "Float" },
   { TokenType::kFunction, "Function" },
   { TokenType::kGlobal, "Global" },
+  { TokenType::kGroup, "Group" },
   { TokenType::kIf, "If" },
   { TokenType::kImport, "Import" },
   { TokenType::kInt, "Int" },
+  { TokenType::kIs, "Is" },
   { TokenType::kLength, "Length" },
   { TokenType::kNative, "Native" },
   { TokenType::kNew, "New" },
@@ -77,16 +85,10 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kSelf, "Self" },
   { TokenType::kState, "State" },
   { TokenType::kString, "String" },
-  { TokenType::kTrue, "True" },
-  { TokenType::kWhile, "While" },
-
-  { TokenType::kConst, "Const" },
-  { TokenType::kEndPropertyGroup, "EndPropertyGroup" },
-  { TokenType::kEndStruct, "EndStruct" },
-  { TokenType::kIs, "Is" },
-  { TokenType::kPropertyGroup, "PropertyGroup" },
   { TokenType::kStruct, "Struct" },
+  { TokenType::kTrue, "True" },
   { TokenType::kVar, "Var" },
+  { TokenType::kWhile, "While" },
 
   { TokenType::kBreak, "Break" },
   { TokenType::kCase, "Case" },
@@ -148,14 +150,20 @@ static const std::map<const char* const, TokenType, CaselessStringComparer> keyw
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
+  { "betaonly", TokenType::kBetaOnly },
   { "bool", TokenType::kBool },
+  { "const", TokenType::kConst },
+  { "customevent", TokenType::kCustomEvent },
+  { "debugonly", TokenType::kDebugOnly },
   { "else", TokenType::kElse },
   { "elseif", TokenType::kElseIf },
   { "endevent", TokenType::kEndEvent },
   { "endfunction", TokenType::kEndFunction },
+  { "endgroup", TokenType::kEndGroup },
   { "endif", TokenType::kEndIf },
   { "endproperty", TokenType::kEndProperty },
   { "endstate", TokenType::kEndState },
+  { "endstruct", TokenType::kEndStruct },
   { "endwhile", TokenType::kEndWhile },
   { "event", TokenType::kEvent },
   { "extends", TokenType::kExtends },
@@ -163,9 +171,11 @@ static const std::map<const char* const, TokenType, CaselessStringComparer> keyw
   { "float", TokenType::kFloat },
   { "function", TokenType::kFunction },
   { "global", TokenType::kGlobal },
+  { "group", TokenType::kGroup },
   { "if", TokenType::kIf },
   { "import", TokenType::kImport },
   { "int", TokenType::kInt },
+  { "is", TokenType::kIs },
   { "length", TokenType::kLength },
   { "native", TokenType::kNative },
   { "new", TokenType::kNew },
@@ -177,19 +187,10 @@ static const std::map<const char* const, TokenType, CaselessStringComparer> keyw
   { "self", TokenType::kSelf },
   { "state", TokenType::kState },
   { "string", TokenType::kString },
-  { "true", TokenType::kTrue },
-  { "while", TokenType::kWhile },
-};
-
-// Additional speculative keywords for FO4
-static const std::map<const char* const, TokenType, CaselessStringComparer> speculativeKeywordMap {
-  { "const", TokenType::kConst },
-  { "endpropertygroup", TokenType::kEndPropertyGroup },
-  { "endstruct", TokenType::kEndStruct },
-  { "is", TokenType::kIs },
-  { "propertygroup", TokenType::kPropertyGroup },
   { "struct", TokenType::kStruct },
+  { "true", TokenType::kTrue },
   { "var", TokenType::kVar },
+  { "while", TokenType::kWhile },
 };
 
 // Language extension keywords
@@ -431,12 +432,6 @@ StartOver:
       auto f = keywordMap.find(str.c_str());
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
-
-      if (CapricaConfig::enableSpeculativeSyntax) {
-        auto f2 = speculativeKeywordMap.find(str.c_str());
-        if (f2 != speculativeKeywordMap.end())
-          return setTok(f2->second, baseLoc);
-      }
 
       if (CapricaConfig::enableLanguageExtensions) {
         auto f2 = languageExtensionsKeywordMap.find(str.c_str());
