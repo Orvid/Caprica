@@ -7,6 +7,7 @@ namespace caprica { namespace CapricaConfig {
 
 bool allowCompilerIdentifiers{ false };
 bool allowDecompiledStructNameRefs{ false };
+bool allowNegativeLiteralAsBinaryOp{ false };
 bool asyncFileRead{ false };
 bool asyncFileWrite{ false };
 bool compileInParallel{ false };

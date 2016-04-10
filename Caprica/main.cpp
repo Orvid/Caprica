@@ -145,6 +145,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     po::options_description advancedDesc("Advanced");
     advancedDesc.add_options()
+      ("allow-negative-literal-as-binary-op", po::value<bool>(&conf::allowNegativeLiteralAsBinaryOp)->default_value(true), "Allow a negative literal number to be parsed as a binary op.")
       ("async-read", po::value<bool>(&conf::asyncFileRead)->default_value(true), "Allow async file reading. This is primarily useful on SSDs.")
       ("async-write", po::value<bool>(&conf::asyncFileWrite)->default_value(true), "Allow writing output to disk on background threads.")
       ("enable-ck-optimizations", po::value<bool>(&conf::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")

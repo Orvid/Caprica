@@ -791,6 +791,14 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
       case TokenType::Plus:
         op = expressions::PapyrusBinaryOperatorType::Add;
         goto OperatorCommon;
+      case TokenType::Integer:
+        if (cur.iValue >= 0)
+          goto Return;
+        goto DumbNegativesCommon;
+      case TokenType::Float:
+        if (cur.fValue >= 0)
+          goto Return;
+        goto DumbNegativesCommon;
       case TokenType::Minus:
         op = expressions::PapyrusBinaryOperatorType::Subtract;
         goto OperatorCommon;
@@ -800,6 +808,18 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
         auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
+        binExpr->right = parseMultExpression(func);
+        expr = binExpr;
+        break;
+      }
+
+      DumbNegativesCommon:
+      {
+        if (!CapricaConfig::allowNegativeLiteralAsBinaryOp)
+          goto Return;
+        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+        binExpr->left = expr;
+        binExpr->operation = expressions::PapyrusBinaryOperatorType::Add;
         binExpr->right = parseMultExpression(func);
         expr = binExpr;
         break;

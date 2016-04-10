@@ -16,6 +16,8 @@ extern bool allowCompilerIdentifiers;
 // Champollion, where the script name is prepended to the struct
 // name and separated by a '#'.
 extern bool allowDecompiledStructNameRefs;
+// Allow a negative literal value to be interpreted as a binary operation.
+extern bool allowNegativeLiteralAsBinaryOp;
 // If true, read files asyncronously in an attempt to pre-emptively
 // read them from disk. This results in worse performance on HDDs,
 // but better performance on SSDs, as they are actually able to read
