@@ -5,12 +5,9 @@
 namespace caprica { namespace papyrus {
 
 static PapyrusFunction* searchRootStateForFunction(const std::string& name, const PapyrusObject* obj) {
-  auto rs = obj->tryGetRootState();
-  if (rs != nullptr) {
-    for (auto f : rs->functions) {
-      if (!_stricmp(f->name.c_str(), name.c_str()))
-        return f;
-    }
+  for (auto f : obj->getRootState()->functions) {
+    if (!_stricmp(f->name.c_str(), name.c_str()))
+      return f;
   }
 
   if (obj->parentClass.type != PapyrusType::Kind::None) {

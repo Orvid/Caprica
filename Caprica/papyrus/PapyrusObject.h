@@ -36,7 +36,10 @@ struct PapyrusObject final
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
   std::vector<PapyrusState*> states{ };
 
-  explicit PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) { }
+  explicit PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) {
+    rootState = new PapyrusState(location);
+    states.push_back(rootState);
+  }
   PapyrusObject(const PapyrusObject&) = delete;
   ~PapyrusObject() {
     for (auto s : structs)
@@ -57,14 +60,8 @@ struct PapyrusObject final
     return rootPropertyGroup;
   }
 
-  const PapyrusState* tryGetRootState() const { return rootState; }
-  PapyrusState* getRootState() {
-    if (!rootState) {
-      rootState = new PapyrusState(location);
-      states.push_back(rootState);
-    }
-    return rootState;
-  }
+  const PapyrusState* getRootState() const { return rootState; }
+  PapyrusState* getRootState() { return rootState; }
 
   const PapyrusObject* tryGetParentClass() const {
     if (parentClass.type != PapyrusType::Kind::None) {
@@ -78,13 +75,10 @@ struct PapyrusObject final
   void buildPex(pex::PexFile* file) const {
     auto obj = new pex::PexObject();
     obj->name = file->getString(name);
-    if (parentClass.type != PapyrusType::Kind::None) {
-      if (parentClass.type != PapyrusType::Kind::ResolvedObject)
-        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
-      obj->parentClassName = file->getString(parentClass.resolvedObject->name);
-    } else {
+    if (auto parClass = tryGetParentClass())
+      obj->parentClassName = file->getString(parClass->name);
+    else
       obj->parentClassName = file->getString("");
-    }
     obj->documentationString = file->getString(documentationString);
     obj->isConst = isConst;
     if (autoState)
@@ -99,9 +93,22 @@ struct PapyrusObject final
       v->buildPex(file, obj);
     for (auto g : propertyGroups)
       g->buildPex(file, obj);
-    for (auto s : states)
-      s->buildPex(file, obj);
 
+    size_t namedStateCount = 0;
+    for (auto s : states) {
+      if (s->name != "")
+        namedStateCount++;
+      s->buildPex(file, obj);
+    }
+
+    size_t initialValueCount = 0;
+    for (auto v : obj->variables) {
+      if (v->defaultValue.type != pex::PexValueType::None)
+        initialValueCount++;
+    }
+
+    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_InitialValueCount, initialValueCount);
+    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_NamedStateCount, namedStateCount);
     EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_PropertyCount, obj->properties.size());
     EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_VariableCount, obj->variables.size());
 

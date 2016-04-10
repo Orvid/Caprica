@@ -3,7 +3,10 @@
 #include <sstream>
 #include <unordered_set>
 
+#include <common/EngineLimits.h>
+
 #include <papyrus/PapyrusCFG.h>
+#include <papyrus/PapyrusState.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusStatementVisitor.h>
 
@@ -87,6 +90,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   else
     delete fDebInfo;
 
+  EngineLimits::checkLimit(location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name.c_str());
   return func;
 }
 
@@ -105,6 +109,9 @@ void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
 }
 
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
+  if (isGlobal && ctx->state && ctx->state->name != "")
+    CapricaError::error(location, "Global functions are only allowed in the empty state.");
+
   ctx->function = this;
   ctx->pushLocalVariableScope();
   for (auto s : statements)

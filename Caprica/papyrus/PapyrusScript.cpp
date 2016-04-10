@@ -6,6 +6,7 @@
 #include <lmcons.h>
 
 #include <common/CapricaConfig.h>
+#include <common/EngineLimits.h>
 
 namespace caprica { namespace papyrus {
 
@@ -40,6 +41,9 @@ pex::PexFile* PapyrusScript::buildPex() const {
 
   for (auto o : objects)
     o->buildPex(pex);
+
+  if (objects.size())
+    EngineLimits::checkLimit(objects[0]->location, EngineLimits::Type::PexFile_UserFlagCount, pex->getUserFlagCount());
   return pex;
 }
 

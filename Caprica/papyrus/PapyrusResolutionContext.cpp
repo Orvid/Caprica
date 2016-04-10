@@ -487,7 +487,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     return ident;
 
   if (baseType.type == PapyrusType::Kind::None) {
-    if (auto state = object->tryGetRootState()) {
+    if (auto state = object->getRootState()) {
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
           if (wantGlobal && !func->isGlobal)
@@ -499,7 +499,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
 
     for (auto sc : importedScripts) {
       for (auto obj : sc->objects) {
-        if (auto state = obj->tryGetRootState()) {
+        if (auto state = obj->getRootState()) {
           for (auto& func : state->functions) {
             if (func->isGlobal && !_stricmp(func->name.c_str(), ident.name.c_str()))
               return PapyrusIdentifier::Function(ident.location, func);
@@ -536,7 +536,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
-    if (auto state = baseType.resolvedObject->tryGetRootState()) {
+    if (auto state = baseType.resolvedObject->getRootState()) {
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
           if (!wantGlobal && func->isGlobal)

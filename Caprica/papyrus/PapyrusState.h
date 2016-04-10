@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <common/EngineLimits.h>
+
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusResolutionContext.h>
 
@@ -30,8 +32,21 @@ struct PapyrusState final
   void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
     auto state = new pex::PexState();
     state->name = file->getString(name);
-    for (auto f : functions)
+
+    size_t staticFunctionCount = 0;
+    for (auto f : functions) {
+      if (f->isGlobal)
+        staticFunctionCount++;
       state->functions.push_back(f->buildPex(file, obj, state, pex::PexString()));
+    }
+
+    if (name == "") {
+      EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_EmptyStateFunctionCount, functions.size(), name.c_str());
+      EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_StaticFunctionCount, staticFunctionCount);
+    } else {
+      EngineLimits::checkLimit(location, EngineLimits::Type::PexState_FunctionCount, functions.size(), name.c_str());
+    }
+
     obj->states.push_back(state);
   }
 

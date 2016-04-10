@@ -107,6 +107,10 @@ struct PexFile final
     return flag;
   }
 
+  size_t getUserFlagCount() {
+    return userFlagTable.size();
+  }
+
   static PexFile* read(PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(PexAsmWriter& wtr) const;
