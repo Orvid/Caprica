@@ -2,14 +2,24 @@
 
 #include <common/CapricaConfig.h>
 
+#include <Windows.h>
+
 namespace caprica {
 
 size_t CapricaError::warningCount{ 0 };
 size_t CapricaError::errorCount{ 0 };
 
+void CapricaError::breakIfDebugging() {
+  if (IsDebuggerPresent()) {
+    __debugbreak();
+  }
+}
+
 void CapricaError::exitIfErrors() {
   if (errorCount > 0) {
+    std::cout.flush();
     std::cerr << "Compilation failed, " << warningCount << " warnings and " << errorCount << " errors were encountered." << std::endl;
+    std::cerr.flush();
     throw std::runtime_error("");
   }
 }

@@ -62,6 +62,8 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
   };
 
   NEVER_INLINE
+  static void breakIfDebugging();
+  NEVER_INLINE
   static void exitIfErrors();
   NEVER_INLINE
   static bool isWarningError(size_t warningNumber);
@@ -71,6 +73,7 @@ NEVER_INLINE static void W##num##_##id##(const CapricaFileLocation& location, ar
   template<typename... Args>
   NEVER_INLINE
   static void error(const CapricaFileLocation& location, const std::string& msg, Args&&... args) {
+    breakIfDebugging();
     errorCount++;
     std::cerr << formatString(location, "Error", msg, args...) << std::endl;
   }

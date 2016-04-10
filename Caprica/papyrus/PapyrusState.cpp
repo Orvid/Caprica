@@ -30,6 +30,9 @@ void PapyrusState::semantic(PapyrusResolutionContext* ctx) {
 void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
   ctx->state = this;
   if (name != "") {
+    if (ctx->object->isConst)
+      CapricaError::error(location, "Named states aren't allowed on const objects.");
+
     for (auto f : functions) {
       auto baseFunc = searchRootStateForFunction(f->name, ctx->object);
       if (!baseFunc)
@@ -39,11 +42,9 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
     }
   }
 
-  if (ctx->object->parentClass.type != PapyrusType::Kind::None) {
-    if (ctx->object->parentClass.type != PapyrusType::Kind::ResolvedObject)
-      CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+  if (auto parentClass = ctx->object->tryGetParentClass()) {
     for (auto f : functions) {
-      auto baseFunc = searchRootStateForFunction(f->name, ctx->object->parentClass.resolvedObject);
+      auto baseFunc = searchRootStateForFunction(f->name, parentClass);
       if (baseFunc && !baseFunc->hasSameSignature(f))
         CapricaError::error(f->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f->name.c_str(), f->prettySignature().c_str(), baseFunc->parentObject->name.c_str(), baseFunc->prettySignature().c_str());
     }

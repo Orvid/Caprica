@@ -112,10 +112,16 @@ struct PapyrusProperty final
   }
 
   void semantic2(PapyrusResolutionContext* ctx) {
-    if (readFunction)
+    if (readFunction) {
+      if (readFunction->isGlobal || readFunction->isNative)
+        CapricaError::error(readFunction->location, "A property function is not allowed to be global or native.");
       readFunction->semantic2(ctx);
-    if (writeFunction)
+    }
+    if (writeFunction) {
+      if (writeFunction->isGlobal || writeFunction->isNative)
+        CapricaError::error(writeFunction->location, "A property function is not allowed to be global or native.");
       writeFunction->semantic2(ctx);
+    }
   }
 };
 

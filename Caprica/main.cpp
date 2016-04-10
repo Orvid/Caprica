@@ -354,17 +354,11 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
   return true;
 }
 
-static void breakIfDebugging() {
-  if (IsDebuggerPresent()) {
-    __debugbreak();
-  }
-}
-
 int main(int argc, char* argv[])
 {
   std::vector<ScriptToCompile> filesToCompile;
   if (!parseArgs(argc, argv, filesToCompile)) {
-    breakIfDebugging();
+    caprica::CapricaError::breakIfDebugging();
     return -1;
   }
 
@@ -384,7 +378,7 @@ int main(int argc, char* argv[])
   } catch (const std::runtime_error& ex) {
     if (ex.what() != "")
       std::cout << ex.what() << std::endl;
-    breakIfDebugging();
+    caprica::CapricaError::breakIfDebugging();
     return -1;
   }
 
