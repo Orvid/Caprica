@@ -150,7 +150,6 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("enable-ck-optimizations", po::value<bool>(&conf::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
       ("enable-debug-info", po::value<bool>(&conf::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
       ("enable-language-extensions", po::value<bool>(&conf::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
-      ("enable-speculative-syntax", po::value<bool>(&conf::enableSpeculativeSyntax)->default_value(true), "Enable the speculated syntax for the new Papyrus features in Fallout 4.")
       ("resolve-symlinks", po::value<bool>(&conf::resolveSymlinks)->default_value(false), "Fully resolve symlinks when determining file paths.")
     ;
 
