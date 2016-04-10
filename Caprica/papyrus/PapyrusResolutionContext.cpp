@@ -384,6 +384,27 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     }
   }
   
+  auto pos = tp.name.find_last_of(':');
+  if (pos != std::string::npos) {
+    auto scName = tp.name.substr(0, pos);
+    auto strucName = tp.name.substr(pos + 1);
+    auto sc = loadScript(scName);
+    if (!sc)
+      CapricaError::fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
+
+    for (auto obj : sc->objects) {
+      for (auto struc : obj->structs) {
+        if (!_stricmp(struc->name.c_str(), strucName.c_str())) {
+          tp.type = PapyrusType::Kind::ResolvedStruct;
+          tp.resolvedStruct = struc;
+          return tp;
+        }
+      }
+    }
+
+    CapricaError::fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
+  }
+
   CapricaError::fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 }
 
