@@ -512,15 +512,13 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
   } else if (baseType.type == PapyrusType::Kind::Array) {
     auto fk = PapyrusBuiltinArrayFunctionKind::Unknown;
     if (!_stricmp(ident.name.c_str(), "find")) {
-      if (baseType.getElementType().type == PapyrusType::Kind::ResolvedStruct)
-        fk = PapyrusBuiltinArrayFunctionKind::FindStruct;
-      else
-        fk = PapyrusBuiltinArrayFunctionKind::Find;
+      fk = PapyrusBuiltinArrayFunctionKind::Find;
+    } else if(!_stricmp(ident.name.c_str(), "findstruct")) {
+      fk = PapyrusBuiltinArrayFunctionKind::FindStruct;
     } else if (!_stricmp(ident.name.c_str(), "rfind")) {
-      if (baseType.getElementType().type == PapyrusType::Kind::ResolvedStruct)
-        fk = PapyrusBuiltinArrayFunctionKind::RFindStruct;
-      else
-        fk = PapyrusBuiltinArrayFunctionKind::RFind;
+      fk = PapyrusBuiltinArrayFunctionKind::RFind;
+    } else if (!_stricmp(ident.name.c_str(), "rfindstruct")) {
+      fk = PapyrusBuiltinArrayFunctionKind::RFindStruct;
     } else if (!_stricmp(ident.name.c_str(), "add")) {
       fk = PapyrusBuiltinArrayFunctionKind::Add;
     } else if (!_stricmp(ident.name.c_str(), "clear")) {
