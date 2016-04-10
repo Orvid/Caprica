@@ -127,6 +127,12 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->propertyGroups.push_back(parsePropertyGroup(script, obj));
         break;
 
+      case TokenType::kCustomEvent:
+        consume();
+        expectConsumeIdent();
+        expectConsumeEOLs();
+        break;
+
       case TokenType::kEvent:
         consume();
         obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndEvent));
@@ -405,6 +411,10 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     CapricaError::logicalFatal("Unknown end token for a parseFunction call!");
   func->parentObject = object;
   func->name = expectConsumeIdent();
+  if (endToken == TokenType::kEndEvent && maybeConsume(TokenType::Dot)) {
+    // TODO: Handle correctly
+    func->name += "." + expectConsumeIdent();
+  }
   expectConsume(TokenType::LParen);
 
   if (cur.type != TokenType::RParen) {
@@ -947,8 +957,6 @@ expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFuncti
         return nArrExpr;
       }
 
-      expectConsume(TokenType::LParen);
-      expectConsume(TokenType::RParen);
       return new expressions::PapyrusNewStructExpression(loc, tp);
     }
 
@@ -1119,8 +1127,16 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
         if (cur.type == TokenType::kDefault)
           str = "default";
 
+        if (!_stricmp(str.c_str(), "collapsed")) {
+          PapyrusUserFlags newFlag;
+          newFlag.data = (1ULL << 3) | (1ULL << 4);
+          flags |= newFlag;
+          consume();
+          break;
+        }
+
         auto flg = CapricaConfig::userFlagsDefinition.findFlag(loc, str);
-        if ((flg.validLocations & location) != location && (!(flags.isAuto && !flags.isAutoReadOnly) || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
+        if ((flg.validLocations & location) != location && (location != CapricaUserFlagsDefinition::ValidLocations::Property || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
           CapricaError::error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
         PapyrusUserFlags newFlag;
