@@ -16,6 +16,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   PapyrusType type;
   std::string name{ "" };
   bool isAuto{ false };
+  bool isConst{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
   explicit PapyrusDeclareStatement(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }

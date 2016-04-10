@@ -656,6 +656,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       ret->name = expectConsumeIdent();
       if (maybeConsume(TokenType::Equal))
         ret->initialValue = parseExpression(func);
+      if (maybeConsume(TokenType::kConst))
+        ret->isConst = true;
       expectConsumeEOLs();
       return ret;
     }
