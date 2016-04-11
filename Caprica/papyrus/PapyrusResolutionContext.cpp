@@ -387,7 +387,11 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   auto sc = loadScript(tp.name);
   if (sc != nullptr) {
     for (auto obj : sc->objects) {
-      if (!_stricmp(obj->name.c_str(), tp.name.c_str())) {
+      auto oName = obj->name;
+      auto pos = oName.find_last_of(':');
+      if (pos != std::string::npos)
+        oName = oName.substr(pos + 1);
+      if (!_stricmp(obj->name.c_str(), tp.name.c_str()) || !_stricmp(oName.c_str(), tp.name.c_str())) {
         tp.type = PapyrusType::Kind::ResolvedObject;
         tp.resolvedObject = obj;
         return tp;
