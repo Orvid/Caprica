@@ -315,6 +315,21 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name,
   return nullptr;
 }
 
+static PapyrusType tryResolveStruct(const PapyrusObject* object, PapyrusType tp) {
+  for (auto& s : object->structs) {
+    if (!_stricmp(s->name.c_str(), tp.name.c_str())) {
+      tp.type = PapyrusType::Kind::ResolvedStruct;
+      tp.resolvedStruct = s;
+      return tp;
+    }
+  }
+  
+  if (auto parentClass = object->tryGetParentClass())
+    return tryResolveStruct(parentClass, tp);
+
+  return tp;
+}
+
 PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
     if (tp.type == PapyrusType::Kind::Array)
@@ -346,13 +361,9 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   }
 
   if (object) {
-    for (auto& s : object->structs) {
-      if (!_stricmp(s->name.c_str(), tp.name.c_str())) {
-        tp.type = PapyrusType::Kind::ResolvedStruct;
-        tp.resolvedStruct = s;
-        return tp;
-      }
-    }
+    auto t2 = tryResolveStruct(object, tp);
+    if (t2.type != PapyrusType::Kind::Unresolved)
+      return t2;
 
     if (!_stricmp(object->name.c_str(), tp.name.c_str())) {
       tp.type = PapyrusType::Kind::ResolvedObject;
