@@ -32,6 +32,7 @@ enum class PapyrusIdentifierType
   StructMember,
   Function,
   BuiltinArrayFunction,
+  BuiltinStateField,
 };
 
 enum class PapyrusBuiltinArrayFunctionKind

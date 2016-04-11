@@ -71,7 +71,12 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
       bldr << op::structget{ ret, base, file->getString(structMember->name) };
       return ret;
     }
+    case PapyrusIdentifierType::BuiltinStateField:
+      return pex::PexValue::Identifier(file->getString("::State"));
 
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.c_str());
   }
@@ -103,7 +108,13 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     case PapyrusIdentifierType::StructMember:
       bldr << op::structset{ base, file->getString(structMember->name), val };
       return;
+    case PapyrusIdentifierType::BuiltinStateField:
+      bldr << op::assign{ pex::PexValue::Identifier(file->getString("::State")), val };
+      return;
 
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
   }
@@ -133,8 +144,12 @@ void PapyrusIdentifier::ensureAssignable() const {
 
     case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
+    case PapyrusIdentifierType::BuiltinStateField:
       return;
 
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
       return;
   }
@@ -151,8 +166,12 @@ void PapyrusIdentifier::markRead() {
     case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
     case PapyrusIdentifierType::StructMember:
+    case PapyrusIdentifierType::BuiltinStateField:
       return;
 
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
   }
@@ -169,8 +188,12 @@ void PapyrusIdentifier::markWritten() {
     case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
     case PapyrusIdentifierType::StructMember:
+    case PapyrusIdentifierType::BuiltinStateField:
       return;
 
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
   }
@@ -189,7 +212,12 @@ PapyrusType PapyrusIdentifier::resultType() const {
       return declStatement->type;
     case PapyrusIdentifierType::StructMember:
       return structMember->type;
+    case PapyrusIdentifierType::BuiltinStateField:
+      return PapyrusType::String(location);
 
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to get the result type of an unresolved identifier '%s'!", name.c_str());
   }

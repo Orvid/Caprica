@@ -453,6 +453,12 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   }
 
   if (function) {
+    if ((!_stricmp(function->name.c_str(), "getstate") || !_stricmp(function->name.c_str(), "gotostate")) && !_stricmp(ident.name.c_str(), "__state")) {
+      auto i = ident;
+      i.type = PapyrusIdentifierType::BuiltinStateField;
+      return i;
+    }
+
     for (auto p : function->parameters) {
       if (!_stricmp(p->name.c_str(), ident.name.c_str()))
         return PapyrusIdentifier::FunctionParameter(ident.location, p);
