@@ -74,9 +74,8 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
 
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.c_str());
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const {
@@ -91,25 +90,24 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
       } else {
         bldr << op::propset{ file->getString(prop->name), base, val };
       }
-      break;
+      return;
     case PapyrusIdentifierType::Variable:
       bldr << op::assign{ pex::PexValue::Identifier(file->getString(var->name)), val };
-      break;
+      return;
     case PapyrusIdentifierType::Parameter:
       bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->name)), val };
-      break;
+      return;
     case PapyrusIdentifierType::DeclareStatement:
       bldr << op::assign{ pex::PexValue::Identifier(file->getString(declStatement->name)), val };
-      break;
+      return;
     case PapyrusIdentifierType::StructMember:
       bldr << op::structset{ base, file->getString(structMember->name), val };
-      break;
+      return;
 
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::ensureAssignable() const {
@@ -121,65 +119,62 @@ void PapyrusIdentifier::ensureAssignable() const {
         return CapricaError::error(location, "You cannot assign to the const property '%s'.", prop->name.c_str());
       if (prop->parent->isConst())
         return CapricaError::error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.c_str(), prop->parent->name.c_str());
-      break;
+      return;
     case PapyrusIdentifierType::Variable:
       if (var->isConst())
         return CapricaError::error(location, "You cannot assign to the const variable '%s'.", var->name.c_str());
       if (var->parent->isConst())
         return CapricaError::error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.c_str(), var->parent->name.c_str());
-      break;
+      return;
     case PapyrusIdentifierType::StructMember:
       if (structMember->isConst())
         return CapricaError::error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
-      break;
+      return;
 
     case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
-      break;
+      return;
 
     case PapyrusIdentifierType::Unresolved:
-      break;
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+      return;
   }
+  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::markRead() {
   switch (type) {
     case PapyrusIdentifierType::Variable:
       var->referenceState.isRead = true;
-      break;
+      return;
 
     case PapyrusIdentifierType::Property:
     case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
     case PapyrusIdentifierType::StructMember:
-      break;
+      return;
 
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::markWritten() {
   switch (type) {
     case PapyrusIdentifierType::Variable:
       var->referenceState.isWritten = true;
-      break;
+      return;
 
     case PapyrusIdentifierType::Property:
     case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
     case PapyrusIdentifierType::StructMember:
-      break;
+      return;
 
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 PapyrusType PapyrusIdentifier::resultType() const {
@@ -197,9 +192,8 @@ PapyrusType PapyrusIdentifier::resultType() const {
 
     case PapyrusIdentifierType::Unresolved:
       CapricaError::fatal(location, "Attempted to get the result type of an unresolved identifier '%s'!", name.c_str());
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 }}
