@@ -74,22 +74,6 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
     obj = new PapyrusObject(loc, PapyrusType::Unresolved(eLoc, expectConsumeIdent()));
   } else {
     obj = new PapyrusObject(loc, PapyrusType::None(cur.location));
-
-    // Otherwise we get to have some fun and generate GotoState and GetState.
-   /* auto getState = new PapyrusFunction(cur.location, PapyrusType::String(cur.location));
-    getState->functionType = PapyrusFunctionType::Function;
-    getState->parentObject = obj;
-    getState->name = "GetState";
-    obj->getRootState()->functions.push_back(getState);
-
-    auto gotoState = new PapyrusFunction(cur.location, PapyrusType::None(cur.location));
-    gotoState->functionType = PapyrusFunctionType::Function;
-    gotoState->parentObject = obj;
-    gotoState->name = "GotoState";
-    auto param = new PapyrusFunctionParameter(cur.location, PapyrusType::String(cur.location));
-    param->name = "asNewState";
-    gotoState->parameters.push_back(param);
-    obj->getRootState()->functions.push_back(gotoState);*/
   }
   obj->name = name;
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
