@@ -221,7 +221,10 @@ private:
       left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Float(left->location));
       right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Float(right->location));
     } else {
-      right = PapyrusResolutionContext::coerceExpression(right, left->resultType());
+      if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(right, left->resultType()))
+        left = PapyrusResolutionContext::coerceExpression(left, right->resultType());
+      else
+        right = PapyrusResolutionContext::coerceExpression(right, left->resultType());
     }
   }
 };
