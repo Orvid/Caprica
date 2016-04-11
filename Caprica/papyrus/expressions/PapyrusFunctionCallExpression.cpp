@@ -285,7 +285,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
     }
   } else {
-    if (arguments.size() != function.func->parameters.size()) {
+    bool hasNamedArgs = [&]() {
+      for (auto a : arguments) {
+        if (a->name != "")
+          return true;
+      }
+      return false;
+    }();
+    if (hasNamedArgs || arguments.size() != function.func->parameters.size()) {
       // We may have default args to fill in.
       std::vector<Parameter*> newArgs;
       newArgs.resize(function.func->parameters.size());
