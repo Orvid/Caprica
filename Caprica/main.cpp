@@ -54,6 +54,7 @@ static void compileScript(const ScriptToCompile& script) {
     caprica::CapricaError::exitIfErrors();
     delete parser;
     auto ctx = new caprica::papyrus::PapyrusResolutionContext();
+    a->preSemantic(ctx);
     a->semantic(ctx);
     caprica::CapricaError::exitIfErrors();
     auto pex = a->buildPex();

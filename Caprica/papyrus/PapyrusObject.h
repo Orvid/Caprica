@@ -116,8 +116,11 @@ struct PapyrusObject final
     file->objects.push_back(obj);
   }
 
-  void semantic(PapyrusResolutionContext* ctx) {
+  void preSemantic(PapyrusResolutionContext* ctx) {
     parentClass = ctx->resolveType(parentClass);
+  }
+
+  void semantic(PapyrusResolutionContext* ctx) {
     ctx->object = this;
     for (auto i : imports)
       ctx->addImport(i.first, i.second);

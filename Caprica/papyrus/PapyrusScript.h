@@ -25,6 +25,13 @@ struct PapyrusScript final
 
   pex::PexFile* buildPex() const;
 
+  void preSemantic(PapyrusResolutionContext* ctx) {
+    ctx->script = this;
+    for (auto o : objects)
+      o->preSemantic(ctx);
+    ctx->script = nullptr;
+  }
+
   void semantic(PapyrusResolutionContext* ctx) {
     ctx->script = this;
     for (auto o : objects)

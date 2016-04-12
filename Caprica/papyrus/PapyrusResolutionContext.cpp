@@ -60,19 +60,22 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       // We should only ever be searching for things in the root import dir,
       // so this is safe.
       auto parser = new parser::PapyrusParser(filename);
-      auto a = parser->parseScript();
+      auto a = std::unique_ptr<PapyrusScript>(parser->parseScript());
       CapricaError::exitIfErrors();
       delete parser;
-      if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir, { } });
-      localPerDirIdentMap[baseDir].insert({ scriptName, a });
-      loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+
       auto ctx = new PapyrusResolutionContext();
       ctx->resolvingReferenceScript = true;
-      a->semantic(ctx);
+      a->preSemantic(ctx);
+
+      if (!localPerDirIdentMap.count(baseDir))
+        localPerDirIdentMap.insert({ baseDir,{ } });
+      localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
+      loadedScripts.insert({ filename, std::move(a) });
+      loadedScripts[filename]->semantic(ctx);
       CapricaError::exitIfErrors();
       delete ctx;
-      return a;
+      return loadedScripts[filename].get();
     };
     const auto loadPas = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
       auto f = loadedScripts.find(filename);
@@ -83,20 +86,24 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       auto pex = parser->parseFile();
       CapricaError::exitIfErrors();
       delete parser;
-      auto a = pex::PexReflector::reflectScript(pex);
+
+      auto a = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pex));
       CapricaError::exitIfErrors();
       delete pex;
-      if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir, { } });
-      localPerDirIdentMap[baseDir].insert({ scriptName, a });
-      loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+
       auto ctx = new PapyrusResolutionContext();
       ctx->resolvingReferenceScript = true;
       ctx->isPexResolution = true;
-      a->semantic(ctx);
+      a->preSemantic(ctx);
+      if (!localPerDirIdentMap.count(baseDir))
+        localPerDirIdentMap.insert({ baseDir,{ } });
+      localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
+      loadedScripts.insert({ filename, std::move(a) });
+      loadedScripts[filename]->semantic(ctx);
       CapricaError::exitIfErrors();
       delete ctx;
-      return a;
+
+      return loadedScripts[filename].get();
     };
     const auto loadPex = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
       auto f = loadedScripts.find(filename);
@@ -106,20 +113,23 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       pex::PexReader rdr(filename);
       auto pex = pex::PexFile::read(rdr);
       CapricaError::exitIfErrors();
-      auto a = pex::PexReflector::reflectScript(pex);
+      auto a = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pex));
       CapricaError::exitIfErrors();
       delete pex;
-      if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir, { } });
-      localPerDirIdentMap[baseDir].insert({ scriptName, a });
-      loadedScripts.insert({ filename, std::unique_ptr<PapyrusScript>(a) });
+
       auto ctx = new PapyrusResolutionContext();
       ctx->resolvingReferenceScript = true;
       ctx->isPexResolution = true;
-      a->semantic(ctx);
+      a->preSemantic(ctx);
+      if (!localPerDirIdentMap.count(baseDir))
+        localPerDirIdentMap.insert({ baseDir,{ } });
+      localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
+      loadedScripts.insert({ filename, std::move(a) });
+      loadedScripts[filename]->semantic(ctx);
       CapricaError::exitIfErrors();
       delete ctx;
-      return a;
+
+      return loadedScripts[filename].get();
     };
     const auto normalizeDir = [](const std::string& filename) -> std::string {
       return FSUtils::canonical(filename).string();
@@ -397,6 +407,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
         return tp;
       }
     }
+    CapricaError::fatal(tp.location, "Loaded a script named '%s' but was looking for '%s'!", sc->objects[0]->name.c_str(), tp.name.c_str());
   }
   
   auto pos = tp.name.find_last_of(':');
