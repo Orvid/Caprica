@@ -22,6 +22,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   switch (functionType) {
     case PapyrusFunctionType::Function:
     case PapyrusFunctionType::Event:
+    case PapyrusFunctionType::RemoteEvent:
       fDebInfo->functionType = pex::PexDebugFunctionType::Normal;
       break;
     case PapyrusFunctionType::Getter:
@@ -30,8 +31,6 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
     case PapyrusFunctionType::Setter:
       fDebInfo->functionType = pex::PexDebugFunctionType::Setter;
       break;
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusFunctionType!");
   }
   if (state) {
     assert(fDebInfo->functionType == pex::PexDebugFunctionType::Normal);

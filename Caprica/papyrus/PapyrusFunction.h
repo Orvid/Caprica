@@ -28,6 +28,7 @@ enum class PapyrusFunctionType
   Setter,
   Function,
   Event,
+  RemoteEvent,
 };
 
 struct PapyrusFunction final
@@ -40,6 +41,8 @@ struct PapyrusFunction final
   std::vector<statements::PapyrusStatement*> statements{ };
   PapyrusObject* parentObject{ nullptr };
   PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
+  std::string remoteEventParent{ "" };
+  std::string remoteEventName{ "" };
 
   CapricaFileLocation location;
 

@@ -111,11 +111,14 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->propertyGroups.push_back(parsePropertyGroup(script, obj));
         break;
 
-      case TokenType::kCustomEvent:
+      case TokenType::kCustomEvent: {
         consume();
-        expectConsumeIdent();
+        auto ce = new PapyrusCustomEvent(cur.location);
+        ce->name = expectConsumeIdent();
+        obj->customEvents.push_back(ce);
         expectConsumeEOLs();
         break;
+      }
 
       case TokenType::kEvent:
         consume();
@@ -396,8 +399,10 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   func->parentObject = object;
   func->name = expectConsumeIdent();
   if (endToken == TokenType::kEndEvent && maybeConsume(TokenType::Dot)) {
-    // TODO: Handle correctly
-    func->name += "." + expectConsumeIdent();
+    func->functionType = PapyrusFunctionType::RemoteEvent;
+    func->remoteEventParent = func->name;
+    func->remoteEventName = expectConsumeIdent();
+    func->name = "::remote_" + func->remoteEventParent + "_" + func->remoteEventName;
   }
   expectConsume(TokenType::LParen);
 

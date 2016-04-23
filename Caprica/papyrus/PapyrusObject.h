@@ -5,6 +5,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/EngineLimits.h>
+#include <papyrus/PapyrusCustomEvent.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusPropertyGroup.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -34,6 +35,7 @@ struct PapyrusObject final
   std::vector<PapyrusVariable*> variables{ };
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
   std::vector<PapyrusState*> states{ };
+  std::vector<PapyrusCustomEvent*> customEvents{ };
 
   bool isConst() const { return userFlags.isConst; }
 
@@ -142,6 +144,8 @@ struct PapyrusObject final
     PapyrusResolutionContext::ensureNamesAreUnique(states, "state");
     for (auto s : states)
       s->semantic(ctx);
+    // Custom events don't currently need a semantic pass.
+    PapyrusResolutionContext::ensureNamesAreUnique(customEvents, "custom event");
 
     if (!ctx->resolvingReferenceScript) {
       std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer> identMap{ };
@@ -209,6 +213,16 @@ private:
       else
         identMap.insert({ s->name, std::make_pair(checkInheritedOnly, "struct") });
     }
+
+    /* Custom events are currently allowed to have the same names as properties -_-...
+    for (auto e : customEvents) {
+      auto f = identMap.find(e->name);
+      if (f != identMap.end())
+        doError(e->location, f->second.first, f->second.second, e->name);
+      else
+        identMap.insert({ e->name, std::make_pair(checkInheritedOnly, "custom event") });
+    }
+    */
 
     if (!checkInheritedOnly) {
       for (auto v : variables) {
