@@ -86,6 +86,8 @@ struct PapyrusType final
     return *arrayElementType;
   }
 
+  std::string prettyString() const;
+
   bool operator ==(const PapyrusType& other) const {
     return !(*this != other);
   }
@@ -115,7 +117,6 @@ struct PapyrusType final
     return true;
   }
 
-  std::string prettyString() const;
 private:
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 
