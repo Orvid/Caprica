@@ -126,7 +126,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
   }
 }
 
-void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
+void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, PapyrusExpression* baseExpression) {
   function = ctx->resolveFunctionIdentifier(PapyrusType::None(location), function);
 
   if (function.type == PapyrusIdentifierType::BuiltinArrayFunction) {
@@ -319,32 +319,41 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
 
     for (size_t i = 0; i < arguments.size(); i++) {
       arguments[i]->value->semantic(ctx);
-      if (function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName) {
-        auto le = arguments[i]->value->as<expressions::PapyrusLiteralExpression>();
-        if (!le || le->value.type != PapyrusValueType::String) {
-          CapricaError::error(arguments[i]->value->location, "Argument %zu must be string literal.", i);
-          continue;
+      switch (function.func->parameters[i]->type.type) {
+        case PapyrusType::Kind::CustomEventName:
+        case PapyrusType::Kind::ScriptEventName:
+        {
+          bool isCustomEvent = function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName;
+
+          auto le = arguments[i]->value->as<expressions::PapyrusLiteralExpression>();
+          if (!le || le->value.type != PapyrusValueType::String) {
+            CapricaError::error(arguments[i]->value->location, "Argument %zu must be string literal.", i);
+            continue;
+          }
+
+          auto baseType = [&]() -> PapyrusType {
+            if (i != 0)
+              return arguments[i - 1]->value->resultType();
+            if (baseExpression == nullptr)
+              return PapyrusType::ResolvedObject(ctx->object->location, ctx->object);
+            return baseExpression->resultType();
+          }();
+          if (baseType.type != PapyrusType::Kind::ResolvedObject)
+            goto EventResolutionError;
+
+          if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolvedObject, le->value.s)) {
+            continue;
+          } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolvedObject, le->value.s)) {
+            le->value.s = ev->parentObject->name + "_" + le->value.s;
+            continue;
+          }
+
+        EventResolutionError:
+          CapricaError::error(arguments[i]->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.s.c_str(), baseType.prettyString().c_str());
+          break;
         }
-        auto baseType = i == 0 ? PapyrusType::ResolvedObject(ctx->object->location, ctx->object) : arguments[i - 1]->value->resultType();
-        if (baseType.type != PapyrusType::Kind::ResolvedObject) {
-          CapricaError::error(arguments[i]->value->location, "Unable to resolve a custom event named '%s' in '%s' or one of its parents.", le->value.s.c_str(), baseType.prettyString().c_str());
-          continue;
-        }
-        if (auto ev = ctx->tryResolveCustomEvent(baseType.resolvedObject, le->value.s)) {
-          le->value.s = ev->parentObject->name + "_" + le->value.s;
-          continue;
-        }
-        CapricaError::error(arguments[i]->value->location, "Unable to resolve a custom event named '%s' in '%s' or one of its parents.", le->value.s.c_str(), baseType.prettyString().c_str());
-      } else if (function.func->parameters[i]->type.type == PapyrusType::Kind::ScriptEventName) {
-        auto le = arguments[i]->value->as<expressions::PapyrusLiteralExpression>();
-        if (!le || le->value.type != PapyrusValueType::String) {
-          CapricaError::error(arguments[i]->value->location, "Argument %zu must be string literal.", i);
-          continue;
-        }
-        auto baseType = i == 0 ? PapyrusType::ResolvedObject(ctx->object->location, ctx->object) : arguments[i - 1]->value->resultType();
-        if (baseType.type != PapyrusType::Kind::ResolvedObject || !ctx->tryResolveEvent(baseType.resolvedObject, le->value.s)) {
-          CapricaError::error(arguments[i]->value->location, "Unable to resolve an event named '%s' in '%s' or one of its parents.", le->value.s.c_str(), baseType.prettyString().c_str());
-        }
+        default:
+          break;
       }
     }
 

@@ -75,7 +75,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
       }
       baseExpression->semantic(ctx);
       fc->function = ctx->resolveFunctionIdentifier(baseExpression->resultType(), fc->function);
-      fc->semantic(ctx);
+      fc->semantic(ctx, baseExpression);
     } else {
       baseExpression->semantic(ctx);
       if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {

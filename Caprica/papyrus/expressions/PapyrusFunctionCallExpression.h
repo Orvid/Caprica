@@ -37,12 +37,16 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
       delete a;
   }
 
+  pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, PapyrusExpression* base) const;
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     return generateLoad(file, bldr, nullptr);
   }
 
-  pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, PapyrusExpression* base) const;
-  virtual void semantic(PapyrusResolutionContext* ctx) override;
+  void semantic(PapyrusResolutionContext* ctx, PapyrusExpression* baseExpression);
+  virtual void semantic(PapyrusResolutionContext* ctx) override {
+    semantic(ctx, nullptr);
+  }
+
   virtual PapyrusType resultType() const override;
 };
 
