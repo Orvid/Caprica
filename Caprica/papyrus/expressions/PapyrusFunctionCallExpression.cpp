@@ -90,9 +90,10 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         bldr << op::arrayremovelast{ bVal };
         return pex::PexValue::Invalid();
       }
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
+      case PapyrusBuiltinArrayFunctionKind::Unknown:
+        break;
     }
+    CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
   } else {
     const auto getDest = [](pex::PexFunctionBuilder& bldr, const CapricaFileLocation& loc, const PapyrusType& tp) -> pex::PexValue::Identifier {
       if (tp.type == PapyrusType::Kind::None)
@@ -147,7 +148,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
           arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
-        break;
+        return;
       }
       case PapyrusBuiltinArrayFunctionKind::FindStruct:
       {
@@ -177,7 +178,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
             CapricaError::error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
           arguments[2]->value = PapyrusResolutionContext::coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
-        break;
+        return;
       }
       case PapyrusBuiltinArrayFunctionKind::RFind:
       {
@@ -193,7 +194,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
           arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
-        break;
+        return;
       }
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:
       {
@@ -223,7 +224,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
             CapricaError::error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
           arguments[2]->value = PapyrusResolutionContext::coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
-        break;
+        return;
       }
       case PapyrusBuiltinArrayFunctionKind::Add:
       {
@@ -239,18 +240,18 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
           arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
-        break;
+        return;
       }
       case PapyrusBuiltinArrayFunctionKind::Clear:
         if (arguments.size() != 0)
           CapricaError::fatal(location, "Expected 0 parameters to 'Clear'!");
-        break;
+        return;
       case PapyrusBuiltinArrayFunctionKind::Insert:
         if (arguments.size() != 2)
           CapricaError::fatal(location, "Expected 2 parameters to 'Insert'!");
         arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
-        break;
+        return;
       case PapyrusBuiltinArrayFunctionKind::Remove:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
@@ -265,15 +266,16 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
             CapricaError::error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
           arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
-        break;
+        return;
       }
       case PapyrusBuiltinArrayFunctionKind::RemoveLast:
         if (arguments.size() != 0)
           CapricaError::fatal(location, "Expected 0 parameters to 'RemoveLast'!");
+        return;
+      case PapyrusBuiltinArrayFunctionKind::Unknown:
         break;
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
     }
+    CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
   } else {
     bool hasNamedArgs = [&]() {
       for (auto a : arguments) {
