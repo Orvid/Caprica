@@ -133,11 +133,10 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       arguments[i]->value->semantic(ctx);
 
     switch (function.arrayFuncKind) {
-      NormalFind:
       case PapyrusBuiltinArrayFunctionKind::Find:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'find'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'Find'!");
         arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -152,12 +151,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       }
       case PapyrusBuiltinArrayFunctionKind::FindStruct:
       {
-        if (arguments.size() == 1 || !arguments[0]->value->is<PapyrusLiteralExpression>()) {
-          function.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::Find;
-          goto NormalFind;
-        }
         if (arguments.size() < 2 || arguments.size() > 3)
-          CapricaError::fatal(location, "Expected either 2 or 3 parameters to 'find'!");
+          CapricaError::fatal(location, "Expected either 2 or 3 parameters to 'FindStruct'!");
         if (arguments[0]->value->resultType().type != PapyrusType::Kind::String)
           CapricaError::fatal(location, "Expected the literal name of the struct member as a string to compare against!");
         
@@ -184,11 +179,10 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
         }
         break;
       }
-      NormalRFind:
       case PapyrusBuiltinArrayFunctionKind::RFind:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'rfind'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'RFind'!");
         arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -203,12 +197,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       }
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:
       {
-        if (arguments.size() == 1 || !arguments[0]->value->is<PapyrusLiteralExpression>()) {
-          function.arrayFuncKind = PapyrusBuiltinArrayFunctionKind::RFind;
-          goto NormalRFind;
-        }
         if (arguments.size() < 2 || arguments.size() > 3)
-          CapricaError::fatal(location, "Expected either 2 or 3 parameters to 'rfind'!");
+          CapricaError::fatal(location, "Expected either 2 or 3 parameters to 'RFindStruct'!");
         if (arguments[0]->value->resultType().type != PapyrusType::Kind::String)
           CapricaError::fatal(location, "Expected the literal name of the struct member as a string to compare against!");
 
@@ -238,7 +228,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       case PapyrusBuiltinArrayFunctionKind::Add:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'add'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'Add'!");
         arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -253,18 +243,18 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       }
       case PapyrusBuiltinArrayFunctionKind::Clear:
         if (arguments.size() != 0)
-          CapricaError::fatal(location, "Expected 0 parameters to 'clear'!");
+          CapricaError::fatal(location, "Expected 0 parameters to 'Clear'!");
         break;
       case PapyrusBuiltinArrayFunctionKind::Insert:
         if (arguments.size() != 2)
-          CapricaError::fatal(location, "Expected 2 parameters to 'insert'!");
+          CapricaError::fatal(location, "Expected 2 parameters to 'Insert'!");
         arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         arguments[1]->value = PapyrusResolutionContext::coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         break;
       case PapyrusBuiltinArrayFunctionKind::Remove:
       {
         if (arguments.size() < 1 || arguments.size() > 2)
-          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'remove'!");
+          CapricaError::fatal(location, "Expected either 1 or 2 parameters to 'Remove'!");
         arguments[0]->value = PapyrusResolutionContext::coerceExpression(arguments[0]->value, PapyrusType::Int(arguments[0]->value->location));
         if (arguments.size() == 1) {
           auto p = new Parameter();
@@ -279,7 +269,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
       }
       case PapyrusBuiltinArrayFunctionKind::RemoveLast:
         if (arguments.size() != 0)
-          CapricaError::fatal(location, "Expected 0 parameters to 'removelast'!");
+          CapricaError::fatal(location, "Expected 0 parameters to 'RemoveLast'!");
         break;
       default:
         CapricaError::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
