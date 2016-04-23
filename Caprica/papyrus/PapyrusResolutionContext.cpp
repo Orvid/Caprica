@@ -207,10 +207,8 @@ bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const P
     case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::ResolvedStruct:
       return false;
-
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest) {
@@ -236,33 +234,31 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
     case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::ResolvedStruct:
       return false;
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
   }
+  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
-  bool canCast = canImplicitlyCoerce(expr->resultType(), target);
   switch (target.type) {
+    case PapyrusType::Kind::Var:
+    case PapyrusType::Kind::Array:
+    case PapyrusType::Kind::ResolvedObject:
+    case PapyrusType::Kind::ResolvedStruct:
+      // Implicit conversion from None to each of these is allowed, but only for a literal None
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+        return true;
+      }
+      // Deliberate Fallthrough
+
     case PapyrusType::Kind::Bool:
     case PapyrusType::Kind::Int:
     case PapyrusType::Kind::Float:
     case PapyrusType::Kind::String:
     case PapyrusType::Kind::Unresolved:
-      break;
-
-    // Implicit conversion from None to each of these is allowed, but only for a literal None
-    case PapyrusType::Kind::Var:
-    case PapyrusType::Kind::Array:
-    case PapyrusType::Kind::ResolvedObject:
-    case PapyrusType::Kind::ResolvedStruct:
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>())
-        canCast = true;
-      break;
-    default:
-      CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+    case PapyrusType::Kind::None:
+      return canImplicitlyCoerce(expr->resultType(), target);
   }
-  return canCast;
+  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {

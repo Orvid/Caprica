@@ -110,9 +110,8 @@ struct PapyrusType final
           return resolvedStruct != other.resolvedStruct;
         case Kind::ResolvedObject:
           return resolvedObject != other.resolvedObject;
-        default:
-          CapricaError::logicalFatal("Unknown PapyrusTypeKind while comparing!");
       }
+      CapricaError::logicalFatal("Unknown PapyrusTypeKind while comparing!");
     }
     return true;
   }
