@@ -21,6 +21,10 @@ std::string PapyrusType::prettyString() const {
       return "string";
     case Kind::Var:
       return "var";
+    case Kind::CustomEventName:
+      return "CustomEventName";
+    case Kind::ScriptEventName:
+      return "ScriptEventName";
     case Kind::Array:
       return arrayElementType->prettyString() + "[]";
     case Kind::Unresolved:
@@ -44,6 +48,8 @@ std::string PapyrusType::getTypeString() const {
     case Kind::Int:
       return "Int";
     case Kind::String:
+    case Kind::CustomEventName: // These are both really strings.
+    case Kind::ScriptEventName:
       return "String";
     case Kind::Var:
       return "Var";

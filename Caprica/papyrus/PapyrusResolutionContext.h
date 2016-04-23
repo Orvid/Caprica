@@ -18,6 +18,7 @@ namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
 namespace caprica { namespace papyrus {
 
+struct PapyrusCustomEvent;
 struct PapyrusFunction;
 struct PapyrusObject;
 struct PapyrusScript;
@@ -86,6 +87,8 @@ struct PapyrusResolutionContext final
 
   void addLocalVariable(statements::PapyrusDeclareStatement* ident);
 
+  PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const;
+  PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, const std::string& name) const;
   PapyrusState* tryResolveState(const std::string& name, const PapyrusObject* parentObj = nullptr) const;
   PapyrusType resolveType(PapyrusType tp);
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const;

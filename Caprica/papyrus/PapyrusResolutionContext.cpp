@@ -11,6 +11,8 @@
 #include <common/CapricaError.h>
 #include <common/FSUtils.h>
 
+#include <papyrus/PapyrusCustomEvent.h>
+#include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/PapyrusStruct.h>
@@ -204,6 +206,8 @@ bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const P
     case PapyrusType::Kind::Bool:
     case PapyrusType::Kind::String:
     case PapyrusType::Kind::Var:
+    case PapyrusType::Kind::CustomEventName:
+    case PapyrusType::Kind::ScriptEventName:
     case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::ResolvedStruct:
       return false;
@@ -233,6 +237,8 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
     case PapyrusType::Kind::Array:
     case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::ResolvedStruct:
+    case PapyrusType::Kind::CustomEventName:
+    case PapyrusType::Kind::ScriptEventName:
       return false;
   }
   CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
@@ -254,6 +260,8 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
     case PapyrusType::Kind::Int:
     case PapyrusType::Kind::Float:
     case PapyrusType::Kind::String:
+    case PapyrusType::Kind::CustomEventName:
+    case PapyrusType::Kind::ScriptEventName:
     case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::None:
       return canImplicitlyCoerce(expr->resultType(), target);
@@ -304,6 +312,30 @@ PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& va
   }
   CapricaError::error(val.location, "Cannot initialize a '%s' value with a '%s'!", target.prettyString().c_str(), val.getPapyrusType().prettyString().c_str());
   return val;
+}
+
+PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const {
+  for (auto f : parentObj->getRootState()->functions) {
+    if (!_stricmp(f->name.c_str(), name.c_str()) && f->functionType == PapyrusFunctionType::Event)
+      return f;
+  }
+
+  if (auto parentClass = parentObj->tryGetParentClass())
+    return tryResolveEvent(parentClass, name);
+
+  return nullptr;
+}
+
+PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const PapyrusObject* parentObj, const std::string& name) const {
+  for (auto c : parentObj->customEvents) {
+    if (!_stricmp(c->name.c_str(), name.c_str()))
+      return c;
+  }
+
+  if (auto parentClass = parentObj->tryGetParentClass())
+    return tryResolveCustomEvent(parentClass, name);
+
+  return nullptr;
 }
 
 PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name, const PapyrusObject* parentObj) const {

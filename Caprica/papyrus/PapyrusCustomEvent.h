@@ -7,9 +7,12 @@
 
 namespace caprica { namespace papyrus {
 
+struct PapyrusObject;
+
 struct PapyrusCustomEvent final
 {
   std::string name{ };
+  PapyrusObject* parentObject{ nullptr };
   CapricaFileLocation location;
 
   explicit PapyrusCustomEvent(const CapricaFileLocation& loc) : location(loc) { }

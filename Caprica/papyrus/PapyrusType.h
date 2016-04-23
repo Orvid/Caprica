@@ -26,6 +26,9 @@ struct PapyrusType final
     String,
     Var,
 
+    CustomEventName,
+    ScriptEventName,
+
     Array,
     Unresolved,
     ResolvedStruct,
@@ -101,6 +104,8 @@ struct PapyrusType final
         case Kind::Int:
         case Kind::String:
         case Kind::Var:
+        case Kind::CustomEventName:
+        case Kind::ScriptEventName:
           return false;
         case Kind::Array:
           return *arrayElementType != *other.arrayElementType;

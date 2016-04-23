@@ -319,7 +319,45 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx) {
 
     for (size_t i = 0; i < arguments.size(); i++) {
       arguments[i]->value->semantic(ctx);
-      arguments[i]->value = PapyrusResolutionContext::coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
+      if (function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName) {
+        auto le = arguments[i]->value->as<expressions::PapyrusLiteralExpression>();
+        if (!le || le->value.type != PapyrusValueType::String) {
+          CapricaError::error(arguments[i]->value->location, "Argument %zu must be string literal.", i);
+          continue;
+        }
+        auto baseType = i == 0 ? PapyrusType::ResolvedObject(ctx->object->location, ctx->object) : arguments[i - 1]->value->resultType();
+        if (baseType.type != PapyrusType::Kind::ResolvedObject) {
+          CapricaError::error(arguments[i]->value->location, "Unable to resolve a custom event named '%s' in '%s' or one of its parents.", le->value.s.c_str(), baseType.prettyString().c_str());
+          continue;
+        }
+        if (auto ev = ctx->tryResolveCustomEvent(baseType.resolvedObject, le->value.s)) {
+          le->value.s = ev->parentObject->name + "_" + le->value.s;
+          continue;
+        }
+        CapricaError::error(arguments[i]->value->location, "Unable to resolve a custom event named '%s' in '%s' or one of its parents.", le->value.s.c_str(), baseType.prettyString().c_str());
+      } else if (function.func->parameters[i]->type.type == PapyrusType::Kind::ScriptEventName) {
+        auto le = arguments[i]->value->as<expressions::PapyrusLiteralExpression>();
+        if (!le || le->value.type != PapyrusValueType::String) {
+          CapricaError::error(arguments[i]->value->location, "Argument %zu must be string literal.", i);
+          continue;
+        }
+        auto baseType = i == 0 ? PapyrusType::ResolvedObject(ctx->object->location, ctx->object) : arguments[i - 1]->value->resultType();
+        if (baseType.type != PapyrusType::Kind::ResolvedObject || !ctx->tryResolveEvent(baseType.resolvedObject, le->value.s)) {
+          CapricaError::error(arguments[i]->value->location, "Unable to resolve an event named '%s' in '%s' or one of its parents.", le->value.s.c_str(), baseType.prettyString().c_str());
+        }
+      }
+    }
+
+    // We need the semantic pass to have run for the args, but we can't have them coerced until after
+    // we've transformed CustomEventName and ScriptEventName parameters.
+    for (size_t i = 0; i < arguments.size(); i++) {
+      if (function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName) {
+        arguments[i]->value = PapyrusResolutionContext::coerceExpression(arguments[i]->value, PapyrusType::String(function.func->parameters[i]->type.location));
+      } else if (function.func->parameters[i]->type.type == PapyrusType::Kind::ScriptEventName) {
+        arguments[i]->value = PapyrusResolutionContext::coerceExpression(arguments[i]->value, PapyrusType::String(function.func->parameters[i]->type.location));
+      } else {
+        arguments[i]->value = PapyrusResolutionContext::coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
+      }
     }
 
     if (function.func->name == "GotoState" && arguments.size() == 1) {

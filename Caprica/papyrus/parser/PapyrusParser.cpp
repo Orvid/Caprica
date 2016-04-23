@@ -114,6 +114,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       case TokenType::kCustomEvent: {
         consume();
         auto ce = new PapyrusCustomEvent(cur.location);
+        ce->parentObject = obj;
         ce->name = expectConsumeIdent();
         obj->customEvents.push_back(ce);
         expectConsumeEOLs();
@@ -1033,13 +1034,19 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
     case TokenType::kInt:
       tp = PapyrusType::Int(consumeLocation());
       break;
-    case TokenType::kCustomEventName:
-    case TokenType::kScriptEventName:
     case TokenType::kString:
       tp = PapyrusType::String(consumeLocation());
       break;
     case TokenType::kVar:
       tp = PapyrusType::Var(consumeLocation());
+      break;
+    case TokenType::kCustomEventName:
+      tp = PapyrusType::String(consumeLocation());
+      tp.type = PapyrusType::Kind::CustomEventName;
+      break;
+    case TokenType::kScriptEventName:
+      tp = PapyrusType::String(consumeLocation());
+      tp.type = PapyrusType::Kind::ScriptEventName;
       break;
     case TokenType::Identifier:
     {
