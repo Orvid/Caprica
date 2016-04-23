@@ -11,41 +11,48 @@
 
 namespace caprica { namespace papyrus {
 
-PapyrusIdentifier::PapyrusIdentifier(const Property& other)
-  : type(PapyrusIdentifierType::Property),
-    location(other.location),
-    prop(other.prop),
-    name(other.prop->name) { }
-PapyrusIdentifier::PapyrusIdentifier(const Variable& other)
-  : type(PapyrusIdentifierType::Variable),
-    location(other.location),
-    var(other.var),
-    name(other.var->name) { }
-PapyrusIdentifier::PapyrusIdentifier(const FunctionParameter& other)
-  : type(PapyrusIdentifierType::Parameter),
-    location(other.location),
-    param(other.param),
-    name(other.param->name) { }
-PapyrusIdentifier::PapyrusIdentifier(const DeclStatement& other)
-  : type(PapyrusIdentifierType::DeclareStatement),
-    location(other.location),
-    declStatement(other.declStatement),
-    name(other.declStatement->name) { }
-PapyrusIdentifier::PapyrusIdentifier(const StructMember& other)
-  : type(PapyrusIdentifierType::StructMember),
-    location(other.location),
-    structMember(other.member),
-    name(other.member->name) { }
-PapyrusIdentifier::PapyrusIdentifier(const Function& other)
-  : type(PapyrusIdentifierType::Function),
-    location(other.location),
-    func(other.function),
-    name(other.function->name) { }
-PapyrusIdentifier::PapyrusIdentifier(const ArrayFunction& other)
-  : type(PapyrusIdentifierType::BuiltinArrayFunction),
-    location(other.location),
-    arrayFuncKind(other.arrayFuncKind),
-    arrayFuncElementType(std::make_shared<PapyrusType>(other.arrayFuncElementType)) { }
+PapyrusIdentifier PapyrusIdentifier::Property(const CapricaFileLocation& loc, PapyrusProperty* p) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::Property, loc);
+  id.prop = p;
+  id.name = p->name;
+  return id;
+}
+PapyrusIdentifier PapyrusIdentifier::Variable(const CapricaFileLocation& loc, PapyrusVariable* v) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::Variable, loc);
+  id.var = v;
+  id.name = v->name;
+  return id;
+}
+PapyrusIdentifier PapyrusIdentifier::FunctionParameter(const CapricaFileLocation& loc, PapyrusFunctionParameter* p) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::Parameter, loc);
+  id.param = p;
+  id.name = p->name;
+  return id;
+}
+PapyrusIdentifier PapyrusIdentifier::DeclStatement(const CapricaFileLocation& loc, statements::PapyrusDeclareStatement* s) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::DeclareStatement, loc);
+  id.declStatement = s;
+  id.name = s->name;
+  return id;
+}
+PapyrusIdentifier PapyrusIdentifier::StructMember(const CapricaFileLocation& loc, PapyrusStructMember* m) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::StructMember, loc);
+  id.structMember = m;
+  id.name = m->name;
+  return id;
+}
+PapyrusIdentifier PapyrusIdentifier::Function(const CapricaFileLocation& loc, PapyrusFunction* f) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::Function, loc);
+  id.func = f;
+  id.name = f->name;
+  return id;
+}
+PapyrusIdentifier PapyrusIdentifier::ArrayFunction(const CapricaFileLocation& loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
+  id.arrayFuncKind = fk;
+  id.arrayFuncElementType = std::make_shared<PapyrusType>(elemType);
+  return id;
+}
 
 pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const {
   namespace op = caprica::pex::op;
