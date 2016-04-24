@@ -622,7 +622,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kAuto:
     {
-      if (!CapricaConfig::enableLanguageExtensions)
+      if (!conf::Papyrus::enableLanguageExtensions)
         goto DefaultCase;
 
       auto eLoc = consumeLocation();
@@ -807,7 +807,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
 
       DumbNegativesCommon:
       {
-        if (!CapricaConfig::allowNegativeLiteralAsBinaryOp)
+        if (!conf::Papyrus::allowNegativeLiteralAsBinaryOp)
           goto Return;
         auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
         binExpr->left = expr;
@@ -1153,7 +1153,7 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
           break;
         }
 
-        auto flg = CapricaConfig::userFlagsDefinition.findFlag(reportingContext, loc, str);
+        auto flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
         if ((flg.validLocations & location) != location && (location != CapricaUserFlagsDefinition::ValidLocations::Property || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
           reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 

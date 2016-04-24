@@ -58,7 +58,7 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (CapricaConfig::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
@@ -96,7 +96,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     case PapyrusIdentifierType::Property:
       if (prop->isReadOnly())
         bldr.reportingContext.fatal(location, "Attempted to generate a store to a read-only property!");
-      if (CapricaConfig::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
       } else {

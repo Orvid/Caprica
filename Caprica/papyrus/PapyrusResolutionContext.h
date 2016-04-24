@@ -6,8 +6,6 @@
 #include <vector>
 #include <unordered_set>
 
-#include <boost/algorithm/string/case_conv.hpp>
-
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
 #include <common/CapricaFileLocation.h>

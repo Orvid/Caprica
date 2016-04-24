@@ -25,6 +25,8 @@
 
 #include <Windows.h>
 
+namespace conf = caprica::conf;
+
 struct ScriptToCompile final
 {
   std::string sourceFileName;
@@ -45,7 +47,7 @@ struct ScriptToCompile final
 };
 
 static void compileScript(const ScriptToCompile& script) {
-  if (!caprica::CapricaConfig::quietCompile)
+  if (!conf::General::quietCompile)
     std::cout << "Compiling " << script.sourceFileName << std::endl;
   auto path = boost::filesystem::path(script.sourceFileName);
   auto baseName = boost::filesystem::basename(path.filename());
@@ -65,14 +67,14 @@ static void compileScript(const ScriptToCompile& script) {
     delete ctx;
     delete a;
 
-    if (caprica::CapricaConfig::enableOptimizations)
+    if (conf::CodeGeneration::enableOptimizations)
       caprica::pex::PexOptimizer::optimize(pex);
 
     caprica::pex::PexWriter wtr{ };
     pex->write(wtr);
     wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
 
-    if (caprica::CapricaConfig::dumpPexAsm) {
+    if (conf::Debug::dumpPexAsm) {
       std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       pex->writeAsm(asmWtr);
@@ -85,7 +87,7 @@ static void compileScript(const ScriptToCompile& script) {
     reportingContext.exitIfErrors();
     delete parser;
 
-    if (caprica::CapricaConfig::enableOptimizations)
+    if (conf::CodeGeneration::enableOptimizations)
       caprica::pex::PexOptimizer::optimize(pex);
 
     caprica::pex::PexWriter wtr{ };
@@ -118,7 +120,6 @@ static std::pair<std::string, std::string> parseOddArguments(const std::string& 
 
 static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& filesToCompile) {
   namespace po = boost::program_options;
-  namespace conf = caprica::CapricaConfig;
 
   try {
     bool iterateCompiledDirectoriesRecursively = false;
@@ -128,35 +129,35 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("help,h", "Print usage information.")
       ("import,i", po::value<std::vector<std::string>>()->composing(), "Set the compiler's import directories.")
       ("flags,f", po::value<std::string>(), "Set the file defining the user flags.")
-      ("optimize,O", po::bool_switch(&conf::enableOptimizations)->default_value(false), "Enable optimizations.")
+      ("optimize,O", po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false), "Enable optimizations.")
       ("output,o", po::value<std::string>()->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
-      ("parallel-compile,p", po::bool_switch(&conf::compileInParallel)->default_value(false), "Compile files in parallel.")
+      ("parallel-compile,p", po::bool_switch(&conf::General::compileInParallel)->default_value(false), "Compile files in parallel.")
       ("recurse,r", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false), "Recursively compile all scripts in the directories passed.")
-      ("dump-asm", po::bool_switch(&conf::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
       ("all-warnings-as-errors", po::bool_switch(&conf::Warnings::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
       ("disable-all-warnings", po::bool_switch(&conf::Warnings::disableAllWarnings)->default_value(false), "Disable all warnings by default.")
       ("warning-as-error", po::value<std::vector<size_t>>()->composing(), "Treat a specific warning as an error.")
       ("disable-warning", po::value<std::vector<size_t>>()->composing(), "Disable a specific warning.")
       ("config-file", po::value<std::string>()->default_value("caprica.cfg"), "Load additional options from a config file.")
-      ("quiet,q", po::bool_switch(&conf::quietCompile)->default_value(false), "Do not report progress, only failures.")
+      ("quiet,q", po::bool_switch(&conf::General::quietCompile)->default_value(false), "Do not report progress, only failures.")
     ;
 
     po::options_description champollionCompatDesc("Champollion Compatibility");
     champollionCompatDesc.add_options()
       ("champollion-compat", po::value<bool>()->default_value(true)->implicit_value(true), "Enable a few options that make it easier to compile Papyrus code decompiled by Champollion.")
-      ("allow-compiler-identifiers", po::bool_switch(&conf::allowCompilerIdentifiers)->default_value(false), "Allow identifiers to be prefixed with ::, which is normally reserved for compiler identifiers.")
-      ("allow-decompiled-struct-references", po::bool_switch(&conf::allowDecompiledStructNameRefs)->default_value(false), "Allow the name of structs to be prefixed with the containing object name, followed by a #, then the name of the struct.")
+      ("allow-compiler-identifiers", po::bool_switch(&conf::Papyrus::allowCompilerIdentifiers)->default_value(false), "Allow identifiers to be prefixed with ::, which is normally reserved for compiler identifiers.")
+      ("allow-decompiled-struct-references", po::bool_switch(&conf::Papyrus::allowDecompiledStructNameRefs)->default_value(false), "Allow the name of structs to be prefixed with the containing object name, followed by a #, then the name of the struct.")
     ;
 
     po::options_description advancedDesc("Advanced");
     advancedDesc.add_options()
-      ("allow-negative-literal-as-binary-op", po::value<bool>(&conf::allowNegativeLiteralAsBinaryOp)->default_value(true), "Allow a negative literal number to be parsed as a binary op.")
-      ("async-read", po::value<bool>(&conf::asyncFileRead)->default_value(true), "Allow async file reading. This is primarily useful on SSDs.")
-      ("async-write", po::value<bool>(&conf::asyncFileWrite)->default_value(true), "Allow writing output to disk on background threads.")
-      ("enable-ck-optimizations", po::value<bool>(&conf::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
-      ("enable-debug-info", po::value<bool>(&conf::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
-      ("enable-language-extensions", po::value<bool>(&conf::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
-      ("resolve-symlinks", po::value<bool>(&conf::resolveSymlinks)->default_value(false), "Fully resolve symlinks when determining file paths.")
+      ("allow-negative-literal-as-binary-op", po::value<bool>(&conf::Papyrus::allowNegativeLiteralAsBinaryOp)->default_value(true), "Allow a negative literal number to be parsed as a binary op.")
+      ("async-read", po::value<bool>(&conf::Performance::asyncFileRead)->default_value(true), "Allow async file reading. This is primarily useful on SSDs.")
+      ("async-write", po::value<bool>(&conf::Performance::asyncFileWrite)->default_value(true), "Allow writing output to disk on background threads.")
+      ("dump-asm", po::bool_switch(&conf::Debug::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
+      ("enable-ck-optimizations", po::value<bool>(&conf::CodeGeneration::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
+      ("enable-debug-info", po::value<bool>(&conf::CodeGeneration::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
+      ("enable-language-extensions", po::value<bool>(&conf::Papyrus::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
+      ("resolve-symlinks", po::value<bool>(&conf::Performance::resolveSymlinks)->default_value(false), "Fully resolve symlinks when determining file paths.")
     ;
 
     po::options_description hiddenDesc("");
@@ -164,8 +165,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("input-file", po::value<std::vector<std::string>>(), "The input file.")
 
       // These are intended for debugging, not general use.
-      ("debug-control-flow-graph", po::value<bool>(&conf::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
-      ("performance-test-mode", po::bool_switch(&conf::performanceTestMode)->default_value(false), "Enable performance test mode.")
+      ("debug-control-flow-graph", po::value<bool>(&conf::Debug::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
+      ("performance-test-mode", po::bool_switch(&conf::Performance::performanceTestMode)->default_value(false), "Enable performance test mode.")
     ;
 
     po::options_description engineLimitsDesc("");
@@ -229,13 +230,13 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     }
 
     if (vm["champollion-compat"].as<bool>()) {
-      conf::allowCompilerIdentifiers = true;
-      conf::allowDecompiledStructNameRefs = true;
+      conf::Papyrus::allowCompilerIdentifiers = true;
+      conf::Papyrus::allowDecompiledStructNameRefs = true;
     }
 
     if (vm["performance-test-mode"].as<bool>()) {
-      conf::asyncFileRead = true;
-      conf::asyncFileWrite = false;
+      conf::Performance::asyncFileRead = true;
+      conf::Performance::asyncFileWrite = false;
     }
 
     if (vm.count("warning-as-error")) {
@@ -264,13 +265,13 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     if (vm.count("import")) {
       auto dirs = vm["import"].as<std::vector<std::string>>();
-      conf::importDirectories.reserve(dirs.size());
+      conf::Papyrus::importDirectories.reserve(dirs.size());
       for (auto d : dirs) {
         if (!boost::filesystem::exists(d)) {
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
         }
-        conf::importDirectories.push_back(boost::filesystem::canonical(boost::filesystem::absolute(d)).make_preferred().string());
+        conf::Papyrus::importDirectories.push_back(boost::filesystem::canonical(boost::filesystem::absolute(d)).make_preferred().string());
       }
     }
 
@@ -284,7 +285,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         if (boost::filesystem::exists(flagsPath))
           return flagsPath;
 
-        for (auto& i : conf::importDirectories) {
+        for (auto& i : conf::Papyrus::importDirectories) {
           if (boost::filesystem::exists(i + "\\" + flagsPath))
             return i + "\\" + flagsPath;
         }
@@ -305,7 +306,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
       caprica::CapricaReportingContext reportingContext{ flagsPath };
       auto parser = new caprica::parser::CapricaUserFlagsParser(reportingContext, flagsPath);
-      parser->parseUserFlags(conf::userFlagsDefinition);
+      parser->parseUserFlags(conf::Papyrus::userFlagsDefinition);
       delete parser;
     }
 
@@ -368,13 +369,13 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  if (caprica::CapricaConfig::performanceTestMode) {
+  if (conf::Performance::performanceTestMode) {
     caprica::FSUtils::Cache::waitForAll();
   }
 
   try {
     auto startCompile = std::chrono::high_resolution_clock::now();
-    if (caprica::CapricaConfig::compileInParallel) {
+    if (conf::General::compileInParallel) {
       concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](const ScriptToCompile& fl) {
         compileScript(fl);
       });
@@ -383,7 +384,7 @@ int main(int argc, char* argv[])
         compileScript(file);
     }
     auto endCompile = std::chrono::high_resolution_clock::now();
-    if (caprica::CapricaConfig::performanceTestMode) {
+    if (conf::Performance::performanceTestMode) {
       std::cout << "Compiled " << filesToCompile.size() << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
       getc(stdin);
     }

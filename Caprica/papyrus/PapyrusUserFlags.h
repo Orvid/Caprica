@@ -38,7 +38,7 @@ struct PapyrusUserFlags final
     size_t f = 1;
     for (uint8_t i = 0; i < sizeof(size_t) * 8; i++) {
       if ((data & f) == f) {
-        auto uf = CapricaConfig::userFlagsDefinition.getFlag(i);
+        auto uf = conf::Papyrus::userFlagsDefinition.getFlag(i);
         if ((uf.validLocations & limitLocations) != CapricaUserFlagsDefinition::ValidLocations::None) {
           auto lowerName = uf.name;
           boost::algorithm::to_lower(lowerName);

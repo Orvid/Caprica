@@ -110,7 +110,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
         ctx->reportingContext.error(location, "Not all control paths of '%s' return a value.", name.c_str());
     }
 
-    if (CapricaConfig::debugControlFlowGraph) {
+    if (conf::Debug::debugControlFlowGraph) {
       std::cout << "CFG for " << name << ":" << std::endl;
       cfg.dumpGraph();
     }

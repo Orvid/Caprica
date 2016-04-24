@@ -30,7 +30,7 @@ void Cache::waitForAll() {
 
 void Cache::push_need(const std::string& filename) {
   pushKnownExists(filename);
-  if (CapricaConfig::asyncFileRead) {
+  if (conf::Performance::asyncFileRead) {
     auto abs = canonical(filename).string();
     if (!futureFileReadMap.count(abs)) {
       futureFileReadMap[abs] = std::async([abs]() {
@@ -48,10 +48,10 @@ std::string Cache::cachedReadFull(const std::string& filename) {
 
   // If we're in performance test mode, all files should have been
   // discovered before starting to compile anything.
-  if (CapricaConfig::performanceTestMode)
+  if (conf::Performance::performanceTestMode)
     CapricaReportingContext::logicalFatal("Attempted to read a file at runtime in performance test mode.");
 
-  if (!CapricaConfig::asyncFileRead)
+  if (!conf::Performance::asyncFileRead)
     return readFile(abs);
 
   // Doing wait is stupid expensive, and you can only call .get() once, so
@@ -66,14 +66,14 @@ std::string Cache::cachedReadFull(const std::string& filename) {
 }
 
 static void writeFile(const std::string& filename, const std::string& value) {
-  if (!CapricaConfig::performanceTestMode) {
+  if (!conf::Performance::performanceTestMode) {
     std::ofstream destFile{ filename, std::ifstream::binary };
     destFile << value;
   }
 }
 
 void async_write(const std::string& filename, const std::string& value) {
-  if (!CapricaConfig::asyncFileWrite) {
+  if (!conf::Performance::asyncFileWrite) {
     writeFile(filename, value);
   } else {
     std::async([](const std::string& filename, const std::string& value) {
@@ -119,7 +119,7 @@ bool exists(const std::string& path) {
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
 boost::filesystem::path canonical(const boost::filesystem::path& path) {
   auto absPath = boost::filesystem::absolute(path);
-  if (CapricaConfig::resolveSymlinks) {
+  if (conf::Performance::resolveSymlinks) {
     return boost::filesystem::canonical(absPath).make_preferred();
   } else {
     boost::filesystem::path result;

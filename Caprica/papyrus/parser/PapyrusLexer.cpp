@@ -330,7 +330,7 @@ StartOver:
           str.append(1, (char)getChar());
 
         // Allow e+ notation.
-        if (CapricaConfig::enableLanguageExtensions && peekChar() == 'e') {
+        if (conf::Papyrus::enableLanguageExtensions && peekChar() == 'e') {
           str.append(1, (char)getChar());
           if (getChar() != '+')
             reportingContext.fatal(location, "Unexpected character 'e'!");
@@ -421,7 +421,7 @@ StartOver:
       str.reserve(64);
       
       if (c == ':') {
-        if (!CapricaConfig::allowCompilerIdentifiers || peekChar() != ':')
+        if (!conf::Papyrus::allowCompilerIdentifiers || peekChar() != ':')
           reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
         getChar();
         str.append("::");
@@ -432,7 +432,7 @@ StartOver:
       while (isalnum(peekChar()) || peekChar() == '_' || peekChar() == ':')
         str.append(1, (char)getChar());
 
-      if (CapricaConfig::allowDecompiledStructNameRefs && peekChar() == '#') {
+      if (conf::Papyrus::allowDecompiledStructNameRefs && peekChar() == '#') {
         str.append(1, (char)getChar());
 
         while (isalnum(peekChar()) || peekChar() == '_')
@@ -443,7 +443,7 @@ StartOver:
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
 
-      if (CapricaConfig::enableLanguageExtensions) {
+      if (conf::Papyrus::enableLanguageExtensions) {
         auto f2 = languageExtensionsKeywordMap.find(str.c_str());
         if (f2 != languageExtensionsKeywordMap.end())
           return setTok(f2->second, baseLoc);

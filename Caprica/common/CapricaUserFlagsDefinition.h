@@ -35,13 +35,13 @@ struct CapricaUserFlagsDefinition final
     size_t flagNum{ };
     CapricaFileLocation location;
 
-    explicit UserFlag(const CapricaFileLocation& loc) : location(loc) { }
+    explicit UserFlag(CapricaFileLocation loc) : location(loc) { }
     UserFlag(const UserFlag&) = default;
     ~UserFlag() = default;
   };
 
   void registerUserFlag(CapricaReportingContext& repCtx, const UserFlag& flag);
-  const UserFlag& findFlag(CapricaReportingContext& repCtx, const CapricaFileLocation& loc, const std::string& name) const;
+  const UserFlag& findFlag(CapricaReportingContext& repCtx, CapricaFileLocation loc, const std::string& name) const;
   // Not that flag num is NOT the flag's bit index, it is instead
   // the flag's index in the user flags vector.
   const UserFlag& getFlag(size_t flagNum) const;

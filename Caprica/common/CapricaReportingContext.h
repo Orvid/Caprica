@@ -30,8 +30,8 @@ struct CapricaReportingContext final
   }
   ~CapricaReportingContext() = default;
 
-  void startIgnoringLinePushes() { ignoringLinePushes = true; }
-  void stopIgnoringLinePushes() { ignoringLinePushes = false; }
+  void startIgnoringLinePushes() noexcept { ignoringLinePushes = true; }
+  void stopIgnoringLinePushes() noexcept { ignoringLinePushes = false; }
   size_t getLocationLine(CapricaFileLocation location) const;
   void pushNextLineOffset(CapricaFileLocation location) {
     if (!ignoringLinePushes)
@@ -117,11 +117,11 @@ private:
   NEVER_INLINE
   void warning(CapricaFileLocation location, size_t warningNumber, const std::string& msg, Args&&... args) {
     if (isWarningEnabled(location, warningNumber)) {
-      warningCount++;
       if (isWarningError(location, warningNumber)) {
         errorCount++;
         pushToErrorStream(formatString(location, "Error W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
       } else {
+        warningCount++;
         pushToErrorStream(formatString(location, "Warning W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
       }
     }
@@ -130,14 +130,7 @@ private:
   template<typename... Args>
   NEVER_INLINE
   std::string formatString(CapricaFileLocation location, const std::string& msgType, const std::string& msg, Args&&... args) const {
-    if (sizeof...(args)) {
-      size_t size = std::snprintf(nullptr, 0, msg.c_str(), std::forward<Args>(args)...) + 1;
-      std::unique_ptr<char[]> buf(new char[size]);
-      std::snprintf(buf.get(), size, msg.c_str(), std::forward<Args>(args)...);
-      return formatLocation(location) + ": " + msgType + ": " + std::string(buf.get(), buf.get() + size - 1);
-    } else {
-      return formatLocation(location) + ": " + msgType + ": " + msg;
-    }
+    return formatLocation(location) + ": " + formatString(msgType, msg, std::forward<Args>(args)...);
   }
 
   template<typename... Args>

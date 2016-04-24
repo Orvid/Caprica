@@ -154,7 +154,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
   if (auto s = searchDir(baseDir, nm2))
     return s;
 
-  for (auto& dir : CapricaConfig::importDirectories) {
+  for (auto& dir : conf::Papyrus::importDirectories) {
     if (auto s = searchDir(dir, nm2))
       return s;
   }
@@ -376,7 +376,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     return tp;
   }
 
-  if (isPexResolution || CapricaConfig::allowDecompiledStructNameRefs) {
+  if (isPexResolution || conf::Papyrus::allowDecompiledStructNameRefs) {
     auto pos = tp.name.find_first_of('#');
     if (pos != std::string::npos) {
       auto scName = tp.name.substr(0, pos);

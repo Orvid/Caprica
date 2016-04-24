@@ -12,7 +12,7 @@ namespace caprica { namespace papyrus {
 
 pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
   auto pex = new pex::PexFile();
-  if (CapricaConfig::emitDebugInfo) {
+  if (conf::CodeGeneration::emitDebugInfo) {
     pex->debugInfo = new pex::PexDebugInfo();
     pex->debugInfo->modificationTime = boost::filesystem::last_write_time(sourceFileName);
   }

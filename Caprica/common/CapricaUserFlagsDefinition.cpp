@@ -14,7 +14,7 @@ void CapricaUserFlagsDefinition::registerUserFlag(CapricaReportingContext& repCt
   flagNameMap.insert({ flag.name, userFlags.size() - 1 });
 }
 
-const CapricaUserFlagsDefinition::UserFlag& CapricaUserFlagsDefinition::findFlag(CapricaReportingContext& repCtx, const CapricaFileLocation& loc, const std::string& name) const {
+const CapricaUserFlagsDefinition::UserFlag& CapricaUserFlagsDefinition::findFlag(CapricaReportingContext& repCtx, CapricaFileLocation loc, const std::string& name) const {
   auto a = flagNameMap.find(name);
   if (a == flagNameMap.end())
     repCtx.fatal(loc, "Unknown flag '%s'!", name.c_str());
