@@ -47,14 +47,14 @@ struct CapricaReportingContext final
   NEVER_INLINE
   void error(CapricaFileLocation location, const std::string& msg, Args&&... args) {
     errorCount++;
-    pushToErrorStream(formatString(location, "Error", msg, args...));
+    pushToErrorStream(formatString(location, "Error", msg, std::forward<Args>(args)...));
     breakIfDebugging();
   }
 
   template<typename... Args>
   [[noreturn]] NEVER_INLINE
   void fatal(CapricaFileLocation location, const std::string& msg, Args&&... args) {
-    pushToErrorStream(formatString(location, "Fatal Error", msg, args...));
+    pushToErrorStream(formatString(location, "Fatal Error", msg, std::forward<Args>(args)...));
     throw std::runtime_error("");
   }
 
@@ -64,7 +64,7 @@ struct CapricaReportingContext final
   template<typename... Args>
   [[noreturn]] NEVER_INLINE
   static void logicalFatal(const std::string& msg, Args&&... args) {
-    pushToErrorStream(formatString("Fatal Error", msg, args...));
+    pushToErrorStream(formatString("Fatal Error", msg, std::forward<Args>(args)...));
     throw std::runtime_error("");
   }
 
@@ -120,9 +120,9 @@ private:
       warningCount++;
       if (isWarningError(location, warningNumber)) {
         errorCount++;
-        pushToErrorStream(formatString(location, "Error W" + std::to_string(warningNumber), msg, args...));
+        pushToErrorStream(formatString(location, "Error W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
       } else {
-        pushToErrorStream(formatString(location, "Warning W" + std::to_string(warningNumber), msg, args...));
+        pushToErrorStream(formatString(location, "Warning W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
       }
     }
   }
@@ -131,9 +131,9 @@ private:
   NEVER_INLINE
   std::string formatString(CapricaFileLocation location, const std::string& msgType, const std::string& msg, Args&&... args) const {
     if (sizeof...(args)) {
-      size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
+      size_t size = std::snprintf(nullptr, 0, msg.c_str(), std::forward<Args>(args)...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);
-      std::snprintf(buf.get(), size, msg.c_str(), args...);
+      std::snprintf(buf.get(), size, msg.c_str(), std::forward<Args>(args)...);
       return formatLocation(location) + ": " + msgType + ": " + std::string(buf.get(), buf.get() + size - 1);
     } else {
       return formatLocation(location) + ": " + msgType + ": " + msg;
@@ -144,9 +144,9 @@ private:
   NEVER_INLINE
   static std::string formatString(const std::string& msgType, const std::string& msg, Args&&... args) {
     if (sizeof...(args)) {
-      size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
+      size_t size = std::snprintf(nullptr, 0, msg.c_str(), std::forward<Args>(args)...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);
-      std::snprintf(buf.get(), size, msg.c_str(), args...);
+      std::snprintf(buf.get(), size, msg.c_str(), std::forward<Args>(args)...);
       return msgType + ": " + std::string(buf.get(), buf.get() + size - 1);
     } else {
       return msgType + ": " + msg;
