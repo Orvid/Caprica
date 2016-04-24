@@ -58,14 +58,23 @@ extern bool quietCompile;
 // If true, resolve symlinks while building canonical
 // paths.
 extern bool resolveSymlinks;
-// If true, treat warnings as errors.
-extern bool treatWarningsAsErrors;
 // The user flags definition.
 extern CapricaUserFlagsDefinition userFlagsDefinition;
-// The set of warnings to treat as errors.
-extern std::unordered_set<size_t> warningsToHandleAsErrors;
-// The set of warnings to ignore.
-extern std::unordered_set<size_t> warningsToIgnore;
+
+// Options related to warnings.
+struct Warnings final
+{
+  // If true, disable warnings by default.
+  static bool disableAllWarnings;
+  // If true, treat warnings as errors.
+  static bool treatWarningsAsErrors;
+  // The set of warnings to treat as errors.
+  static std::unordered_set<size_t> warningsToHandleAsErrors;
+  // The set of warnings to ignore.
+  static std::unordered_set<size_t> warningsToIgnore;
+  // The set of warnings to enable.
+  static std::unordered_set<size_t> warningsToEnable;
+};
 
 // Limitations of the game engine, not of Caprica.
 struct EngineLimits final

@@ -31,16 +31,25 @@ void CapricaReportingContext::exitIfErrors() {
 
 bool CapricaReportingContext::isWarningError(CapricaFileLocation location, size_t warningNumber) const {
   if (warningNumber >= 2000 && warningNumber <= 2200) {
-    return !CapricaConfig::EngineLimits::ignoreLimits && CapricaConfig::warningsToIgnore.count(warningNumber) == 0;
+    return !CapricaConfig::EngineLimits::ignoreLimits && CapricaConfig::Warnings::warningsToIgnore.count(warningNumber) == 0;
   }
-  return CapricaConfig::treatWarningsAsErrors || CapricaConfig::warningsToHandleAsErrors.count(warningNumber);
+  return CapricaConfig::Warnings::treatWarningsAsErrors || CapricaConfig::Warnings::warningsToHandleAsErrors.count(warningNumber);
 }
 
 bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation location, size_t warningNumber) const {
-  return CapricaConfig::warningsToIgnore.count(warningNumber) == 0 && CapricaConfig::warningsToHandleAsErrors.count(warningNumber) == 0;
+  if (CapricaConfig::Warnings::warningsToHandleAsErrors.count(warningNumber))
+    return true;
+  if (CapricaConfig::Warnings::warningsToEnable.count(warningNumber))
+    return true;
+  if (CapricaConfig::Warnings::warningsToIgnore.count(warningNumber))
+    return false;
+  if (warningNumber >= 2000 && warningNumber <= 2200)
+    return !CapricaConfig::EngineLimits::ignoreLimits;
+  return !CapricaConfig::Warnings::disableAllWarnings;
 }
 
 size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location) const {
+  // TODO: B-Tree search.
   for (size_t i = lineOffsets.size() - 1; i >= 0; i--) {
     if (location.fileOffset >= lineOffsets[i]) {
       return i + 1;

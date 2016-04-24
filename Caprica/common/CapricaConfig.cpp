@@ -21,10 +21,13 @@ std::vector<std::string> importDirectories{ };
 bool performanceTestMode{ false };
 bool quietCompile{ false };
 bool resolveSymlinks{ false };
-bool treatWarningsAsErrors{ false };
 CapricaUserFlagsDefinition userFlagsDefinition{ };
-std::unordered_set<size_t> warningsToHandleAsErrors{ };
-std::unordered_set<size_t> warningsToIgnore{ };
+
+bool Warnings::disableAllWarnings{ false };
+bool Warnings::treatWarningsAsErrors{ false };
+std::unordered_set<size_t> Warnings::warningsToHandleAsErrors{ };
+std::unordered_set<size_t> Warnings::warningsToIgnore{ };
+std::unordered_set<size_t> Warnings::warningsToEnable{ };
 
 bool EngineLimits::ignoreLimits{ false };
 size_t EngineLimits::maxArrayLength{ 0 };

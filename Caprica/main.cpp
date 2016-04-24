@@ -133,7 +133,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("parallel-compile,p", po::bool_switch(&conf::compileInParallel)->default_value(false), "Compile files in parallel.")
       ("recurse,r", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false), "Recursively compile all scripts in the directories passed.")
       ("dump-asm", po::bool_switch(&conf::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
-      ("all-warnings-as-errors", po::bool_switch(&conf::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
+      ("all-warnings-as-errors", po::bool_switch(&conf::Warnings::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
+      ("disable-all-warnings", po::bool_switch(&conf::Warnings::disableAllWarnings)->default_value(false), "Disable all warnings by default.")
       ("warning-as-error", po::value<std::vector<size_t>>()->composing(), "Treat a specific warning as an error.")
       ("disable-warning", po::value<std::vector<size_t>>()->composing(), "Disable a specific warning.")
       ("config-file", po::value<std::string>()->default_value("caprica.cfg"), "Load additional options from a config file.")
@@ -239,25 +240,25 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     if (vm.count("warning-as-error")) {
       auto warnsAsErrs = vm["warning-as-error"].as<std::vector<size_t>>();
-      conf::warningsToHandleAsErrors.reserve(warnsAsErrs.size());
+      conf::Warnings::warningsToHandleAsErrors.reserve(warnsAsErrs.size());
       for (auto f : warnsAsErrs) {
-        if (conf::warningsToHandleAsErrors.count(f)) {
+        if (conf::Warnings::warningsToHandleAsErrors.count(f)) {
           std::cout << "Warning " << f << " was already marked as an error." << std::endl;
           return false;
         }
-        conf::warningsToHandleAsErrors.insert(f);
+        conf::Warnings::warningsToHandleAsErrors.insert(f);
       }
     }
 
     if (vm.count("disable-warning")) {
       auto warnsIgnored = vm["disable-warning"].as<std::vector<size_t>>();
-      conf::warningsToIgnore.reserve(warnsIgnored.size());
+      conf::Warnings::warningsToIgnore.reserve(warnsIgnored.size());
       for (auto f : warnsIgnored) {
-        if (conf::warningsToIgnore.count(f)) {
+        if (conf::Warnings::warningsToIgnore.count(f)) {
           std::cout << "Warning " << f << " was already disabled." << std::endl;
           return false;
         }
-        conf::warningsToIgnore.insert(f);
+        conf::Warnings::warningsToIgnore.insert(f);
       }
     }
 
