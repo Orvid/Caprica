@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include <common/CapricaError.h>
-
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReportingContext.h>
+
 #include <papyrus/PapyrusType.h>
 
 #include <pex/PexFile.h>
@@ -75,28 +75,28 @@ struct PapyrusIdentifier final
   PapyrusIdentifier& operator =(PapyrusIdentifier&&) = default;
   ~PapyrusIdentifier() = default;
 
-  static PapyrusIdentifier Unresolved(const CapricaFileLocation& loc, const std::string& nm) {
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const std::string& nm) {
     auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
     id.name = nm;
     return id;
   }
-  static PapyrusIdentifier Property(const CapricaFileLocation& loc, PapyrusProperty* p);
-  static PapyrusIdentifier Variable(const CapricaFileLocation& loc, PapyrusVariable* v);
-  static PapyrusIdentifier FunctionParameter(const CapricaFileLocation& loc, PapyrusFunctionParameter* p);
-  static PapyrusIdentifier DeclStatement(const CapricaFileLocation& loc, statements::PapyrusDeclareStatement* s);
-  static PapyrusIdentifier StructMember(const CapricaFileLocation& loc, PapyrusStructMember* m);
-  static PapyrusIdentifier Function(const CapricaFileLocation& loc, PapyrusFunction* f);
-  static PapyrusIdentifier ArrayFunction(const CapricaFileLocation& loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType);
+  static PapyrusIdentifier Property(CapricaFileLocation loc, PapyrusProperty* p);
+  static PapyrusIdentifier Variable(CapricaFileLocation loc, PapyrusVariable* v);
+  static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, PapyrusFunctionParameter* p);
+  static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, statements::PapyrusDeclareStatement* s);
+  static PapyrusIdentifier StructMember(CapricaFileLocation loc, PapyrusStructMember* m);
+  static PapyrusIdentifier Function(CapricaFileLocation loc, PapyrusFunction* f);
+  static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType);
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
   void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;
-  void ensureAssignable() const;
+  void ensureAssignable(CapricaReportingContext& repCtx) const;
   void markRead();
   void markWritten();
   PapyrusType resultType() const;
 
 private:
-  PapyrusIdentifier(PapyrusIdentifierType k, const CapricaFileLocation& loc) : type(k), location(loc) { }
+  PapyrusIdentifier(PapyrusIdentifierType k, CapricaFileLocation loc) : type(k), location(loc) { }
 };
 
 }}

@@ -12,7 +12,8 @@
 
 namespace caprica { namespace papyrus {
 
-pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
+pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx, 
+                                            pex::PexFile* file,
                                             pex::PexObject* obj,
                                             pex::PexState* state,
                                             pex::PexString propName) const {
@@ -32,7 +33,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
       fDebInfo->functionType = pex::PexDebugFunctionType::Setter;
       break;
     case PapyrusFunctionType::Unknown:
-      CapricaError::logicalFatal("Unknown PapyrusFunctionType!");
+      CapricaReportingContext::logicalFatal("Unknown PapyrusFunctionType!");
   }
   if (state) {
     assert(fDebInfo->functionType == pex::PexDebugFunctionType::Normal);
@@ -52,7 +53,7 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   for (auto p : parameters)
     p->buildPex(file, obj, func);
 
-  pex::PexFunctionBuilder bldr{ location, file };
+  pex::PexFunctionBuilder bldr{ repCtx, location, file };
   for (auto s : statements)
     s->buildPex(file, bldr);
   bldr.populateFunction(func, fDebInfo);
@@ -63,13 +64,13 @@ pex::PexFunction* PapyrusFunction::buildPex(pex::PexFile* file,
   else
     delete fDebInfo;
 
-  EngineLimits::checkLimit(location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name.c_str());
+  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name.c_str());
   return func;
 }
 
 void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
   returnType = ctx->resolveType(returnType);
-  PapyrusResolutionContext::ensureNamesAreUnique(parameters, "parameter");
+  ctx->ensureNamesAreUnique(parameters, "parameter");
   for (auto p : parameters)
     p->semantic(ctx);
 
@@ -83,7 +84,7 @@ void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
 
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   if (isGlobal() && ctx->state && ctx->state->name != "")
-    CapricaError::error(location, "Global functions are only allowed in the empty state.");
+    ctx->reportingContext.error(location, "Global functions are only allowed in the empty state.");
 
   ctx->function = this;
   ctx->pushLocalVariableScope();
@@ -94,7 +95,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
 
   // Don't build the CFG for the special functions.
   if (!isNative() && name != "GetState" && name != "GotoState") {
-    PapyrusCFG cfg;
+    PapyrusCFG cfg{ ctx->reportingContext };
     cfg.processStatements(statements);
 
     if (returnType.type != PapyrusType::Kind::None) {
@@ -106,7 +107,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
       }
 
       if (curNode == nullptr)
-        CapricaError::error(location, "Not all control paths of '%s' return a value.", name.c_str());
+        ctx->reportingContext.error(location, "Not all control paths of '%s' return a value.", name.c_str());
     }
 
     if (CapricaConfig::debugControlFlowGraph) {

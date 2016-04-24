@@ -1,6 +1,6 @@
 #include <pex/PexValue.h>
 
-#include <common/CapricaError.h>
+#include <common/CapricaReportingContext.h>
 
 #include <pex/PexFile.h>
 
@@ -10,28 +10,31 @@ void PexValue::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
   switch (type) {
     case PexValueType::None:
       wtr.write("None");
-      break;
+      return;
     case PexValueType::Identifier:
       wtr.write("%s", file->getStringValue(s).c_str());
-      break;
+      return;
     case PexValueType::String:
       wtr.write("\"%s\"", PexAsmWriter::escapeString(file->getStringValue(s)).c_str());
-      break;
+      return;
     case PexValueType::Integer:
       wtr.write("%i", (int)i);
-      break;
+      return;
     case PexValueType::Float:
       wtr.write("%f", f);
-      break;
+      return;
     case PexValueType::Bool:
       if (b)
         wtr.write("True");
       else
         wtr.write("False");
+      return;
+    case PexValueType::Label:
+    case PexValueType::TemporaryVar:
+    case PexValueType::Invalid:
       break;
-    default:
-      CapricaError::logicalFatal("Unknown PexValueType to write as asm!");
   }
+  CapricaReportingContext::logicalFatal("Unknown PexValueType to write as asm!");
 }
 
 bool PexValue::operator ==(const PexValue& other) const {
@@ -50,9 +53,12 @@ bool PexValue::operator ==(const PexValue& other) const {
       return f == other.f;
     case PexValueType::Bool:
       return b == other.b;
-    default:
-      CapricaError::logicalFatal("Unknown PexValueType to compare!");
+    case PexValueType::Label:
+    case PexValueType::TemporaryVar:
+    case PexValueType::Invalid:
+      break;
   }
+  CapricaReportingContext::logicalFatal("Unknown PexValueType to compare!");
 }
 
 }}

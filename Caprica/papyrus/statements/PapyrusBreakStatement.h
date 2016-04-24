@@ -9,7 +9,7 @@ namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusBreakStatement final : public PapyrusStatement
 {
-  explicit PapyrusBreakStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusBreakStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusBreakStatement(const PapyrusBreakStatement&) = delete;
   virtual ~PapyrusBreakStatement() = default;
 
@@ -26,7 +26,7 @@ struct PapyrusBreakStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     if (!ctx->canBreak())
-      CapricaError::error(location, "There's nothing to break out of!");
+      ctx->reportingContext.error(location, "There's nothing to break out of!");
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {

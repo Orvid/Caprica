@@ -29,11 +29,11 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
 const std::string CapricaUserFlagsLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
-    CapricaError::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
+    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
   return f->second;
 }
 
-void CapricaUserFlagsLexer::setTok(TokenType tp, const CapricaFileLocation& loc) {
+void CapricaUserFlagsLexer::setTok(TokenType tp, CapricaFileLocation loc) {
   cur = Token(tp, loc);
 }
 
@@ -167,7 +167,7 @@ StartOver:
             auto c2 = getChar();
             if (c2 == '\r' && peekChar() == '\n')
               getChar();
-            location.nextLine();
+            reportingContext.pushNextLineOffset(location);
           }
 
           if (getChar() == '*' && peekChar() == '/') {
@@ -176,9 +176,9 @@ StartOver:
           }
         }
 
-        CapricaError::fatal(location, "Unexpected EOF before the end of a multiline comment!");
+        reportingContext.fatal(location, "Unexpected EOF before the end of a multiline comment!");
       } else if (peekChar() != '/') {
-        CapricaError::fatal(location, "Unexpected character '/'!");
+        reportingContext.fatal(location, "Unexpected character '/'!");
       }
 
       // Single line comment.
@@ -192,7 +192,7 @@ StartOver:
     {
       if (c == '\r' && peekChar() == '\n')
         getChar();
-      location.nextLine();
+      reportingContext.pushNextLineOffset(location);
       goto StartOver;
     }
 
@@ -205,7 +205,7 @@ StartOver:
     }
 
     default:
-      CapricaError::fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+      reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
   }
 }
 

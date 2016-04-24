@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <common/CapricaReportingContext.h>
+
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusResolutionContext.h>
 
@@ -23,7 +25,7 @@ struct PapyrusScript final
       delete obj;
   }
 
-  pex::PexFile* buildPex() const;
+  pex::PexFile* buildPex(CapricaReportingContext& repCtx) const;
 
   void preSemantic(PapyrusResolutionContext* ctx) {
     ctx->script = this;

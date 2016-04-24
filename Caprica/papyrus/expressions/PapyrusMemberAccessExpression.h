@@ -16,7 +16,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   PapyrusExpression* baseExpression{ nullptr };
   PapyrusExpression* accessExpression{ nullptr };
 
-  explicit PapyrusMemberAccessExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  explicit PapyrusMemberAccessExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusMemberAccessExpression(const PapyrusMemberAccessExpression&) = delete;
   virtual ~PapyrusMemberAccessExpression() override {
     if (baseExpression)
@@ -40,7 +40,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
       dest = fc->generateLoad(file, bldr, baseExpression);
     } else {
-      CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
+      CapricaReportingContext::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
     }
     return dest;
   }
@@ -52,11 +52,11 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
     if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {
       id->identifier.generateStore(file, bldr, pex::PexValue::Identifier::fromVar(base), val);
     } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
-      CapricaError::fatal(al->location, "You cannot assign to the .Length property of an array!");
+      bldr.reportingContext.fatal(al->location, "You cannot assign to the .Length property of an array!");
     } else if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
-      CapricaError::fatal(fc->location, "You cannot assign to result of a function call!");
+      bldr.reportingContext.fatal(fc->location, "You cannot assign to result of a function call!");
     } else {
-      CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
+      CapricaReportingContext::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
     }
   }
 
@@ -67,7 +67,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
         if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
           auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject)
-            CapricaError::fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.c_str());
+            ctx->reportingContext.fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.c_str());
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function, true);
           fc->semantic(ctx);
           return;
@@ -83,9 +83,9 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
         id->semantic(ctx);
       } else if (auto al = accessExpression->as<PapyrusArrayLengthExpression>()) {
         if (baseExpression->resultType().type != PapyrusType::Kind::Array)
-          CapricaError::fatal(al->location, "Attempted to access the .Length property of a non-array value!");
+          ctx->reportingContext.fatal(al->location, "Attempted to access the .Length property of a non-array value!");
       } else {
-        CapricaError::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
+        CapricaReportingContext::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
       }
     }
   }

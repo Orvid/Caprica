@@ -17,7 +17,7 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
   std::vector<std::pair<PapyrusValue, std::vector<PapyrusStatement*>>> caseBodies{ };
   std::vector<PapyrusStatement*> defaultStatements{ };
 
-  explicit PapyrusSwitchStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusSwitchStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusSwitchStatement(const PapyrusSwitchStatement&) = delete;
   virtual ~PapyrusSwitchStatement() override {
     if (condition)
@@ -35,13 +35,13 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
     for (auto p : caseBodies) {
       cfg.addLeaf();
       if (!cfg.processStatements(p.second))
-        CapricaError::error(p.first.location, "Control is not allowed to fall through to the next case.");
+        cfg.reportingContext.error(p.first.location, "Control is not allowed to fall through to the next case.");
     }
 
     if (defaultStatements.size()) {
       cfg.addLeaf();
       if (!cfg.processStatements(defaultStatements))
-        CapricaError::error(defaultStatements[0]->location, "Control is not allowed to fall through to the next case.");
+        cfg.reportingContext.error(defaultStatements[0]->location, "Control is not allowed to fall through to the next case.");
     }
 
     bool isTerminal = !cfg.popBreakTerminal();
@@ -86,12 +86,12 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
     if (condition->resultType().type != PapyrusType::Kind::Int && condition->resultType().type != PapyrusType::Kind::String)
-      CapricaError::error(condition->location, "The condition of a switch statement can only be either an Int or a String, got '%s'!", condition->resultType().prettyString().c_str());
+      ctx->reportingContext.error(condition->location, "The condition of a switch statement can only be either an Int or a String, got '%s'!", condition->resultType().prettyString().c_str());
 
     ctx->pushBreakScope();
     for (auto& i : caseBodies) {
       if (i.first.getPapyrusType() != condition->resultType())
-        CapricaError::error(i.first.location, "The condition of a case statement must match the type of the expression being switched on! Expected '%s', got '%s'!", condition->resultType().prettyString().c_str(), i.first.getPapyrusType().prettyString().c_str());
+        ctx->reportingContext.error(i.first.location, "The condition of a case statement must match the type of the expression being switched on! Expected '%s', got '%s'!", condition->resultType().prettyString().c_str(), i.first.getPapyrusType().prettyString().c_str());
       ctx->pushLocalVariableScope();
       for (auto s : i.second)
         s->semantic(ctx);

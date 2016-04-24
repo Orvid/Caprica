@@ -6,6 +6,9 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 
+#include <common/CapricaConfig.h>
+#include <common/CapricaUserFlagsDefinition.h>
+
 #include <pex/PexFile.h>
 #include <pex/PexUserFlags.h>
 

@@ -4,7 +4,7 @@
 #include <numeric>
 #include <string>
 
-#include <common/CapricaError.h>
+#include <common/CapricaReportingContext.h>
 
 #include <pex/PexFile.h>
 #include <pex/parser/PexAsmLexer.h>
@@ -13,7 +13,7 @@ namespace caprica { namespace pex { namespace parser {
 
 struct PexAsmParser final : private PexAsmLexer
 {
-  explicit PexAsmParser(std::string file) : PexAsmLexer(file) { }
+  explicit PexAsmParser(CapricaReportingContext& repCtx, const std::string& file) : PexAsmLexer(repCtx, file) { }
   PexAsmParser(const PexAsmParser&) = delete;
   ~PexAsmParser() = default;
 
@@ -26,7 +26,7 @@ private:
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      CapricaError::fatal(cur.location, "Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
+      reportingContext.fatal(cur.location, "Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
     }
   }
 
@@ -122,7 +122,7 @@ private:
     expect(TokenType::Integer);
     auto val = cur.iValue;
     if (val >= std::numeric_limits<int32_t>::max() || val <= std::numeric_limits<int32_t>::min())
-      CapricaError::fatal(cur.location, "Integer value '%ll' outside of the range of 32-bits!", val);
+      reportingContext.fatal(cur.location, "Integer value '%ll' outside of the range of 32-bits!", val);
     consume();
     return (int32_t)val;
   }

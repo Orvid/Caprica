@@ -66,7 +66,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   expectConsume(TokenType::kScriptName);
   auto name = expectConsumeIdent();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
-    CapricaError::error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
+    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {
@@ -151,7 +151,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       }
 
       default:
-        CapricaError::fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
     }
   }
 
@@ -163,7 +163,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
   state->name = expectConsumeIdent();
   if (isAuto) {
     if (object->autoState != nullptr)
-      CapricaError::error(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.c_str());
+      reportingContext.error(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.c_str());
     object->autoState = state;
   }
   expectConsumeEOLs();
@@ -198,7 +198,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       }
 
       default:
-        CapricaError::fatal(cur.location, "Expected an event or function, got '%s'!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Expected an event or function, got '%s'!", cur.prettyString().c_str());
     }
   }
 
@@ -230,14 +230,14 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
         auto m = parseStructMember(script, object, struc, tp);
         for (auto sm : struc->members) {
           if (!_stricmp(sm->name.c_str(), m->name.c_str()))
-            CapricaError::error(m->location, "A member named '%s' was already defined in '%s'.", m->name.c_str(), struc->name.c_str());
+            reportingContext.error(m->location, "A member named '%s' was already defined in '%s'.", m->name.c_str(), struc->name.c_str());
         }
         struc->members.push_back(m);
         break;
       }
 
       default:
-        CapricaError::fatal(cur.location, "Unexpected token '%s' while parsing struct!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unexpected token '%s' while parsing struct!", cur.prettyString().c_str());
     }
   }
 
@@ -258,7 +258,7 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
   }
   mem->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::StructMember);
   if (mem->isConst() && !hadDefault)
-    CapricaError::error(cur.location, "A constant member must have a value!");
+    reportingContext.error(cur.location, "A constant member must have a value!");
   expectConsumeEOLs();
   mem->documentationString = maybeConsumeDocString();
   return mem;
@@ -293,7 +293,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       }
 
       default:
-        CapricaError::fatal(cur.location, "Unexpected token '%s' while parsing property group!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unexpected token '%s' while parsing property group!", cur.prettyString().c_str());
     }
   }
 
@@ -316,7 +316,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
   if (prop->isAuto() || prop->isReadOnly())
     isFullProp = false;
   if (prop->isReadOnly() && !hadDefaultValue)
-    CapricaError::error(cur.location, "An AutoReadOnly property must have a value!");
+    reportingContext.error(cur.location, "An AutoReadOnly property must have a value!");
   expectConsumeEOLs();
   prop->documentationComment = maybeConsumeDocString();
 
@@ -325,16 +325,16 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
       switch (cur.type) {
         case TokenType::kFunction:
           if (prop->writeFunction)
-            CapricaError::error(cur.location, "The set function for this property has already been defined!");
+            reportingContext.error(cur.location, "The set function for this property has already been defined!");
           consume();
           prop->writeFunction = parseFunction(script, object, nullptr, PapyrusType::None(cur.location), TokenType::kEndFunction);
           prop->writeFunction->functionType = PapyrusFunctionType::Setter;
           if (_stricmp(prop->writeFunction->name.c_str(), "set"))
-            CapricaError::error(cur.location, "The set function must be named \"Set\"!");
+            reportingContext.error(cur.location, "The set function must be named \"Set\"!");
           if (prop->writeFunction->parameters.size() != 1)
-            CapricaError::error(cur.location, "The set function must have a single parameter!");
+            reportingContext.error(cur.location, "The set function must have a single parameter!");
           if (prop->writeFunction->parameters[0]->type != prop->type)
-            CapricaError::error(cur.location, "The set function's parameter must be the same type as the property!");
+            reportingContext.error(cur.location, "The set function's parameter must be the same type as the property!");
           break;
 
         case TokenType::kBool:
@@ -345,17 +345,17 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
         case TokenType::Identifier:
         {
           if (prop->readFunction)
-            CapricaError::error(cur.location, "The get function for this property has already been defined!");
+            reportingContext.error(cur.location, "The get function for this property has already been defined!");
           auto tp = expectConsumePapyrusType();
           if (tp != prop->type)
-            CapricaError::error(cur.location, "The return type of the get function must be the same as the property!");
+            reportingContext.error(cur.location, "The return type of the get function must be the same as the property!");
           expectConsume(TokenType::kFunction);
           prop->readFunction = parseFunction(script, object, nullptr, tp, TokenType::kEndFunction);
           prop->readFunction->functionType = PapyrusFunctionType::Getter;
           if (_stricmp(prop->readFunction->name.c_str(), "get"))
-            CapricaError::error(cur.location, "The get function must be named \"Get\"!");
+            reportingContext.error(cur.location, "The get function must be named \"Get\"!");
           if (prop->readFunction->parameters.size() != 0)
-            CapricaError::error(cur.location, "The get function cannot have parameters!");
+            reportingContext.error(cur.location, "The get function cannot have parameters!");
           break;
         }
 
@@ -363,7 +363,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
           break;
 
         default:
-          CapricaError::fatal(cur.location, "Expected the get/set functions of a full property, got '%s'!", cur.prettyString().c_str());
+          reportingContext.fatal(cur.location, "Expected the get/set functions of a full property, got '%s'!", cur.prettyString().c_str());
       }
     }
 
@@ -384,7 +384,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
   }
   var->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Variable);
   if (var->isConst() && !var->referenceState.isInitialized)
-    CapricaError::error(cur.location, "A constant variable must have a value!");
+    reportingContext.error(cur.location, "A constant variable must have a value!");
   expectConsumeEOLs();
   return var;
 }
@@ -396,7 +396,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   else if (endToken == TokenType::kEndEvent)
     func->functionType = PapyrusFunctionType::Event;
   else
-    CapricaError::logicalFatal("Unknown end token for a parseFunction call!");
+    CapricaReportingContext::logicalFatal("Unknown end token for a parseFunction call!");
   func->parentObject = object;
   func->name = expectConsumeIdent();
   if (endToken == TokenType::kEndEvent && maybeConsume(TokenType::Dot)) {
@@ -429,7 +429,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     }
 
     if (cur.type == TokenType::END)
-      CapricaError::fatal(cur.location, "Unexpected EOF in state body!");
+      reportingContext.fatal(cur.location, "Unexpected EOF in state body!");
     consume();
     expectConsumeEOLs();
   }
@@ -588,7 +588,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           case TokenType::kDefault:
           {
             if (ret->defaultStatements.size() > 0)
-              CapricaError::error(cur.location, "The default case was already defined!");
+              reportingContext.error(cur.location, "The default case was already defined!");
             consume();
             expectConsumeEOLs();
 
@@ -603,7 +603,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
             return ret;
 
           default:
-            CapricaError::fatal(cur.location, "Unexpected token in switch body '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Unexpected token in switch body '%s'!", cur.prettyString().c_str());
         }
       }
     }
@@ -1018,7 +1018,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
       }
     }
     default:
-      CapricaError::fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
   }
 }
 
@@ -1056,7 +1056,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
     }
 
     default:
-      CapricaError::fatal(cur.location, "Expected a type, got '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Expected a type, got '%s'!", cur.prettyString().c_str());
   }
 
   if (cur.type == TokenType::LSquare && peekTokenType() == TokenType::RSquare) {
@@ -1102,7 +1102,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
       return val;
 
     default:
-      CapricaError::fatal(cur.location, "Expected a default value, got '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Expected a default value, got '%s'!", cur.prettyString().c_str());
   }
 }
 
@@ -1153,9 +1153,9 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
           break;
         }
 
-        auto flg = CapricaConfig::userFlagsDefinition.findFlag(loc, str);
+        auto flg = CapricaConfig::userFlagsDefinition.findFlag(reportingContext, loc, str);
         if ((flg.validLocations & location) != location && (location != CapricaUserFlagsDefinition::ValidLocations::Property || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
-          CapricaError::error(loc, "The flag '%s' is not valid in this location.", str.c_str());
+          reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
         PapyrusUserFlags newFlag;
         newFlag.data = 1ULL << flg.flagNum;

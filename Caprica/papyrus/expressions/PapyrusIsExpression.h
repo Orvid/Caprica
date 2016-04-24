@@ -14,7 +14,7 @@ struct PapyrusIsExpression final : public PapyrusExpression
   PapyrusExpression* innerExpression{ nullptr };
   PapyrusType targetType;
 
-  explicit PapyrusIsExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), targetType(tp) { }
+  explicit PapyrusIsExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), targetType(tp) { }
   PapyrusIsExpression(const PapyrusIsExpression&) = delete;
   virtual ~PapyrusIsExpression() override {
     if (innerExpression)

@@ -3,6 +3,7 @@
 #include <string>
 
 #include <common/CapricaFileLocation.h>
+
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
@@ -24,7 +25,7 @@ struct PapyrusFunctionParameter final
 
   const CapricaFileLocation location;
 
-  explicit PapyrusFunctionParameter(const CapricaFileLocation& loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusFunctionParameter(CapricaFileLocation loc, const PapyrusType& tp) : location(loc), type(tp) { }
   PapyrusFunctionParameter(const PapyrusFunctionParameter&) = delete;
   ~PapyrusFunctionParameter() = default;
 
@@ -37,7 +38,7 @@ struct PapyrusFunctionParameter final
   
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
-    defaultValue = PapyrusResolutionContext::coerceDefaultValue(defaultValue, type);
+    defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   }
 };
 

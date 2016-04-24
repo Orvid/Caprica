@@ -17,11 +17,11 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
   targetType = ctx->resolveType(targetType);
   
   if (innerExpression->resultType() == targetType)
-    CapricaError::Warning::W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
+    ctx->reportingContext.warning_W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
 
   if (!PapyrusResolutionContext::canExplicitlyCast(innerExpression->resultType(), targetType)) {
     if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(innerExpression, targetType))
-      CapricaError::error(location, "Cannot convert from '%s' to '%s'!", innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
+      ctx->reportingContext.error(location, "Cannot convert from '%s' to '%s'!", innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
   }
 }
 

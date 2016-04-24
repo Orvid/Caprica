@@ -123,7 +123,7 @@ struct PapyrusForStatement final : public PapyrusStatement
       else if ((sVal.type == pex::PexValueType::Integer && sVal.i < 0) || (sVal.type == pex::PexValueType::Float && sVal.f < 0))
         bldr << op::cmpgte{ bTemp, loadedCounter, tVal };
       else
-        CapricaError::fatal(location, "Attempted to step by a literal 0!");
+        bldr.reportingContext.fatal(location, "Attempted to step by a literal 0!");
     }
     bldr << op::jmpf{ bTemp, afterAll };
 
@@ -161,17 +161,17 @@ struct PapyrusForStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     initialValue->semantic(ctx);
     if (initialValue->resultType().type != PapyrusType::Kind::Int && initialValue->resultType().type != PapyrusType::Kind::Float)
-      CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got an initial value of type '%s'!", initialValue->resultType().prettyString().c_str());
+      ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got an initial value of type '%s'!", initialValue->resultType().prettyString().c_str());
     targetValue->semantic(ctx);
     if (targetValue->resultType().type != PapyrusType::Kind::Int && targetValue->resultType().type != PapyrusType::Kind::Float)
-      CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got a target value of type '%s'!", targetValue->resultType().prettyString().c_str());
+      ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a target value of type '%s'!", targetValue->resultType().prettyString().c_str());
     // TODO: Allow some implicit coercion and add checks about the declare/iterator/step expressions' types as well.
     if (targetValue->resultType() != initialValue->resultType())
-      CapricaError::error(initialValue->location, "The intial value, of type '%s', does not match the target value type '%s'!", initialValue->resultType().prettyString().c_str(), targetValue->resultType().prettyString().c_str());
+      ctx->reportingContext.error(initialValue->location, "The intial value, of type '%s', does not match the target value type '%s'!", initialValue->resultType().prettyString().c_str(), targetValue->resultType().prettyString().c_str());
     if (stepValue) {
       stepValue->semantic(ctx);
       if (stepValue->resultType().type != PapyrusType::Kind::Int && stepValue->resultType().type != PapyrusType::Kind::Float)
-        CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got a step value of type '%s'!", stepValue->resultType().prettyString().c_str());
+        ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a step value of type '%s'!", stepValue->resultType().prettyString().c_str());
     }
 
     ctx->pushBreakContinueScope();
@@ -183,13 +183,13 @@ struct PapyrusForStatement final : public PapyrusStatement
       }
       declareStatement->semantic(ctx);
       if (declareStatement->type.type != PapyrusType::Kind::Int && declareStatement->type.type != PapyrusType::Kind::Float)
-        CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", declareStatement->type.prettyString().c_str());
+        ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", declareStatement->type.prettyString().c_str());
     } else {
       *iteratorVariable = ctx->resolveIdentifier(*iteratorVariable);
-      iteratorVariable->ensureAssignable();
+      iteratorVariable->ensureAssignable(ctx->reportingContext);
       iteratorVariable->markWritten();
       if (iteratorVariable->resultType().type != PapyrusType::Kind::Int && iteratorVariable->resultType().type != PapyrusType::Kind::Float)
-        CapricaError::error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", iteratorVariable->resultType().prettyString().c_str());
+        ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", iteratorVariable->resultType().prettyString().c_str());
     }
 
     for (auto s : body)

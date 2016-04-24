@@ -5,6 +5,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
+
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
@@ -51,7 +52,7 @@ struct PapyrusFunction final
   bool isGlobal() const { return userFlags.isGlobal; }
   bool isNative() const { return userFlags.isNative; }
 
-  explicit PapyrusFunction(const CapricaFileLocation& loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
+  explicit PapyrusFunction(CapricaFileLocation loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
   PapyrusFunction(const PapyrusFunction&) = delete;
   ~PapyrusFunction() {
     for (auto p : parameters)
@@ -60,7 +61,8 @@ struct PapyrusFunction final
       delete s;
   }
 
-  pex::PexFunction* buildPex(pex::PexFile* file,
+  pex::PexFunction* buildPex(CapricaReportingContext& repCtx, 
+                             pex::PexFile* file,
                              pex::PexObject* obj,
                              pex::PexState* state,
                              pex::PexString propName) const;

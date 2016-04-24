@@ -22,14 +22,14 @@ struct PapyrusState final
 
   CapricaFileLocation location;
 
-  explicit PapyrusState(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusState(CapricaFileLocation loc) : location(loc) { }
   PapyrusState(const PapyrusState&) = delete;
   ~PapyrusState() {
     for (auto f : functions)
       delete f;
   }
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
+  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     auto state = new pex::PexState();
     state->name = file->getString(name);
 
@@ -37,14 +37,14 @@ struct PapyrusState final
     for (auto f : functions) {
       if (f->isGlobal())
         staticFunctionCount++;
-      state->functions.push_back(f->buildPex(file, obj, state, pex::PexString()));
+      state->functions.push_back(f->buildPex(repCtx, file, obj, state, pex::PexString()));
     }
 
     if (name == "") {
-      EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_EmptyStateFunctionCount, functions.size(), name.c_str());
-      EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_StaticFunctionCount, staticFunctionCount);
+      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_EmptyStateFunctionCount, functions.size(), name.c_str());
+      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_StaticFunctionCount, staticFunctionCount);
     } else {
-      EngineLimits::checkLimit(location, EngineLimits::Type::PexState_FunctionCount, functions.size(), name.c_str());
+      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexState_FunctionCount, functions.size(), name.c_str());
     }
 
     obj->states.push_back(state);

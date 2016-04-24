@@ -3,6 +3,7 @@
 #include <string>
 
 #include <common/CapricaFileLocation.h>
+
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusUserFlags.h>
@@ -28,11 +29,11 @@ struct PapyrusStructMember final
 
   bool isConst() const { return userFlags.isConst; }
 
-  explicit PapyrusStructMember(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusStruct* par) : location(loc), type(tp), parent(par) { }
+  explicit PapyrusStructMember(CapricaFileLocation loc, const PapyrusType& tp, const PapyrusStruct* par) : location(loc), type(tp), parent(par) { }
   PapyrusStructMember(const PapyrusStructMember&) = delete;
   ~PapyrusStructMember() = default;
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {
+  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {
     auto member = new pex::PexStructMember();
     member->name = file->getString(name);
     member->documentationString = file->getString(documentationString);
@@ -45,7 +46,7 @@ struct PapyrusStructMember final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type);
-    defaultValue = PapyrusResolutionContext::coerceDefaultValue(defaultValue, type);
+    defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   }
 };
 

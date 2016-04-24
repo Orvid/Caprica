@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 
-#include <common/CapricaError.h>
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReportingContext.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexString.h>
@@ -41,7 +41,7 @@ struct PapyrusType final
 
   Kind type{ Kind::None };
   std::string name{ };
-  CapricaFileLocation location;
+  CapricaFileLocation location{ };
   union
   {
     const PapyrusStruct* resolvedStruct{ nullptr };
@@ -49,32 +49,32 @@ struct PapyrusType final
   };
 
   PapyrusType() = delete;
-  PapyrusType(const Default& other) : type(Kind::Unresolved), location(CapricaFileLocation{ "", 0, 0 }) { }
+  PapyrusType(const Default& other) : type(Kind::Unresolved) { }
   PapyrusType(const PapyrusType& other) = default;
   PapyrusType(PapyrusType&& other) = default;
   PapyrusType& operator =(const PapyrusType&) = default;
   PapyrusType& operator =(PapyrusType&&) = default;
   ~PapyrusType() = default;
 
-  static PapyrusType Unresolved(const CapricaFileLocation& loc, const std::string& nm) {
+  static PapyrusType Unresolved(CapricaFileLocation loc, const std::string& nm) {
     auto pt = PapyrusType(Kind::Unresolved, loc);
     pt.name = nm;
     return pt;
   }
 
-  static PapyrusType Array(const CapricaFileLocation& loc, std::shared_ptr<PapyrusType> tp) {
+  static PapyrusType Array(CapricaFileLocation loc, std::shared_ptr<PapyrusType> tp) {
     auto pt = PapyrusType(Kind::Array, loc);
     pt.arrayElementType = tp;
     return pt;
   }
 
-  static PapyrusType None(const CapricaFileLocation& loc) { return PapyrusType(Kind::None, loc); }
-  static PapyrusType Bool(const CapricaFileLocation& loc) { return PapyrusType(Kind::Bool, loc); }
-  static PapyrusType Float(const CapricaFileLocation& loc) { return PapyrusType(Kind::Float, loc); }
-  static PapyrusType Int(const CapricaFileLocation& loc) { return PapyrusType(Kind::Int, loc); }
-  static PapyrusType String(const CapricaFileLocation& loc) { return PapyrusType(Kind::String, loc); }
-  static PapyrusType Var(const CapricaFileLocation& loc) { return PapyrusType(Kind::Var, loc); }
-  static PapyrusType ResolvedObject(const CapricaFileLocation& loc, const PapyrusObject* obj) {
+  static PapyrusType None(CapricaFileLocation loc) { return PapyrusType(Kind::None, loc); }
+  static PapyrusType Bool(CapricaFileLocation loc) { return PapyrusType(Kind::Bool, loc); }
+  static PapyrusType Float(CapricaFileLocation loc) { return PapyrusType(Kind::Float, loc); }
+  static PapyrusType Int(CapricaFileLocation loc) { return PapyrusType(Kind::Int, loc); }
+  static PapyrusType String(CapricaFileLocation loc) { return PapyrusType(Kind::String, loc); }
+  static PapyrusType Var(CapricaFileLocation loc) { return PapyrusType(Kind::Var, loc); }
+  static PapyrusType ResolvedObject(CapricaFileLocation loc, const PapyrusObject* obj) {
     auto pt = PapyrusType(Kind::ResolvedObject, loc);
     pt.resolvedObject = obj;
     return pt;
@@ -116,7 +116,7 @@ struct PapyrusType final
         case Kind::ResolvedObject:
           return resolvedObject != other.resolvedObject;
       }
-      CapricaError::logicalFatal("Unknown PapyrusTypeKind while comparing!");
+      CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind while comparing!");
     }
     return true;
   }
@@ -124,7 +124,7 @@ struct PapyrusType final
 private:
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 
-  PapyrusType(Kind k, const CapricaFileLocation& loc) : type(k), location(loc) { }
+  PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 
   std::string getTypeString() const;
 };

@@ -32,6 +32,7 @@ namespace statements { struct PapyrusDeclareStatement; }
 // semantic pass.
 struct PapyrusResolutionContext final
 {
+  CapricaReportingContext& reportingContext;
   const PapyrusScript* script{ nullptr };
   const PapyrusObject* object{ nullptr };
   const PapyrusState* state{ nullptr };
@@ -52,8 +53,8 @@ struct PapyrusResolutionContext final
   static bool canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest);
   static bool canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest);
   static bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
-  static expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
-  static PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target);
+  expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const;
+  PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) const;
 
   void pushLocalVariableScope() {
     localVariableScopeStack.push_back({ });
@@ -99,7 +100,7 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal = false) const;
 
   template<typename T>
-  static void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
+  void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
     // TODO: This has a short enough lifetime that an
     // std::set might actually outperform this.
     caseless_unordered_set<std::string> foundNames{ };
@@ -108,14 +109,14 @@ struct PapyrusResolutionContext final
       // TODO: Output location of first name.
       auto f = foundNames.find(member->name);
       if (f != foundNames.end()) {
-        CapricaError::error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName.c_str(), member->name.c_str());
+        reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName.c_str(), member->name.c_str());
       } else {
         foundNames.insert(member->name);
       }
     }
   }
 
-  explicit PapyrusResolutionContext() = default;
+  explicit PapyrusResolutionContext(CapricaReportingContext& repCtx) : reportingContext(repCtx) { }
   PapyrusResolutionContext(const PapyrusResolutionContext&) = delete;
   ~PapyrusResolutionContext() = default;
 private:

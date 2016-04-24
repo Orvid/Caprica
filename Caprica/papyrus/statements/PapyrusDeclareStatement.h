@@ -19,7 +19,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   bool isConst{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
-  explicit PapyrusDeclareStatement(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
+  explicit PapyrusDeclareStatement(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
   PapyrusDeclareStatement(const PapyrusDeclareStatement&) = delete;
   virtual ~PapyrusDeclareStatement() override {
     if (initialValue)
@@ -50,7 +50,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
 
       if (initialValue) {
         initialValue->semantic(ctx);
-        initialValue = PapyrusResolutionContext::coerceExpression(initialValue, type);
+        initialValue = ctx->coerceExpression(initialValue, type);
       }
     }
 

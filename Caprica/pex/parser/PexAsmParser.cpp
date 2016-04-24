@@ -40,7 +40,7 @@ PexFile* PexAsmParser::parseFile() {
               file->computerName = expectConsumeStringEOL();
               break;
             default:
-              CapricaError::fatal(cur.location, "Unknown child of .info '%s'!", cur.prettyString().c_str());
+              reportingContext.fatal(cur.location, "Unknown child of .info '%s'!", cur.prettyString().c_str());
           }
         }
         break;
@@ -52,13 +52,13 @@ PexFile* PexAsmParser::parseFile() {
 
         while (!maybeConsumeTokEOL(TokenType::kEndUserFlagsRef)) {
           if (cur.type != TokenType::kFlag)
-            CapricaError::fatal(cur.location, "Expected '.flag' got '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Expected '.flag' got '%s'!", cur.prettyString().c_str());
           consume();
 
           auto nam = expectConsumePexIdent(file);
           auto bit = expectConsumeIntegerEOL();
           if (bit < 0 || bit > std::numeric_limits<uint8_t>::max())
-            CapricaError::fatal(cur.location, "Bit index '%i' out of range!", (int)bit);
+            reportingContext.fatal(cur.location, "Bit index '%i' out of range!", (int)bit);
           file->getUserFlag(nam, (uint8_t)bit);
         }
         break;
@@ -69,7 +69,7 @@ PexFile* PexAsmParser::parseFile() {
         expectConsumeEOL();
         while (!maybeConsumeTokEOL(TokenType::kEndObjectTable)) {
           if (cur.type != TokenType::kObject)
-            CapricaError::fatal(cur.location, "Expected '.object' got '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Expected '.object' got '%s'!", cur.prettyString().c_str());
           consume();
 
           auto obj = new PexObject();
@@ -102,7 +102,7 @@ PexFile* PexAsmParser::parseFile() {
 
                 while (!maybeConsumeTokEOL(TokenType::kEndStructTable)) {
                   if (cur.type != TokenType::kStruct)
-                    CapricaError::fatal(cur.location, "Expected '.struct' got '%s'!", cur.prettyString().c_str());
+                    reportingContext.fatal(cur.location, "Expected '.struct' got '%s'!", cur.prettyString().c_str());
                   consume();
 
                   auto struc = new PexStruct();
@@ -110,7 +110,7 @@ PexFile* PexAsmParser::parseFile() {
 
                   while (!maybeConsumeTokEOL(TokenType::kEndStruct)) {
                     if (cur.type != TokenType::kVariable)
-                      CapricaError::fatal(cur.location, "Expected '.variable' got '%s'!", cur.prettyString().c_str());
+                      reportingContext.fatal(cur.location, "Expected '.variable' got '%s'!", cur.prettyString().c_str());
                     consume();
 
                     auto mem = new PexStructMember();
@@ -134,7 +134,7 @@ PexFile* PexAsmParser::parseFile() {
                           mem->defaultValue = expectConsumeValueEOL(file);
                           break;
                         default:
-                          CapricaError::fatal(cur.location, "Unknown child of .variable '%s'!", cur.prettyString().c_str());
+                          reportingContext.fatal(cur.location, "Unknown child of .variable '%s'!", cur.prettyString().c_str());
                       }
                     }
                     struc->members.push_back(mem);
@@ -150,7 +150,7 @@ PexFile* PexAsmParser::parseFile() {
 
                 while (!maybeConsumeTokEOL(TokenType::kEndVariableTable)) {
                   if (cur.type != TokenType::kVariable)
-                    CapricaError::fatal(cur.location, "Expected '.variable' got '%s'!", cur.prettyString().c_str());
+                    reportingContext.fatal(cur.location, "Expected '.variable' got '%s'!", cur.prettyString().c_str());
                   consume();
 
                   auto var = new PexVariable();
@@ -170,7 +170,7 @@ PexFile* PexAsmParser::parseFile() {
                         var->defaultValue = expectConsumeValueEOL(file);
                         break;
                       default:
-                        CapricaError::fatal(cur.location, "Unknown child of .variable '%s'!", cur.prettyString().c_str());
+                        reportingContext.fatal(cur.location, "Unknown child of .variable '%s'!", cur.prettyString().c_str());
                     }
                   }
                   obj->variables.push_back(var);
@@ -184,7 +184,7 @@ PexFile* PexAsmParser::parseFile() {
 
                 while (!maybeConsumeTokEOL(TokenType::kEndPropertyTable)) {
                   if (cur.type != TokenType::kProperty)
-                    CapricaError::fatal(cur.location, "Expected '.property' got '%s'!", cur.prettyString().c_str());
+                    reportingContext.fatal(cur.location, "Expected '.property' got '%s'!", cur.prettyString().c_str());
                   consume();
 
                   auto prop = new PexProperty();
@@ -193,7 +193,7 @@ PexFile* PexAsmParser::parseFile() {
                   if (cur.type != TokenType::EOL) {
                     auto str = expectConsumeIdent();
                     if (_stricmp(str.c_str(), "auto"))
-                      CapricaError::fatal(cur.location, "Expected 'auto' got '%s'!", str.c_str());
+                      reportingContext.fatal(cur.location, "Expected 'auto' got '%s'!", str.c_str());
                     prop->isAuto = true;
                     prop->isReadable = true;
                     prop->isWritable = true;
@@ -238,14 +238,14 @@ PexFile* PexAsmParser::parseFile() {
                           if (debInf)
                             debInf->functionType = PexDebugFunctionType::Setter;
                         } else {
-                          CapricaError::fatal(cur.location, "Unknown function definition in .property '%s'! Expected either 'get' or 'set'!", funcName.c_str());
+                          reportingContext.fatal(cur.location, "Unknown function definition in .property '%s'! Expected either 'get' or 'set'!", funcName.c_str());
                         }
                         if (debInf)
                           file->debugInfo->functions.push_back(debInf);
                         break;
                       }
                       default:
-                        CapricaError::fatal(cur.location, "Unknown child of .property '%s'!", cur.prettyString().c_str());
+                        reportingContext.fatal(cur.location, "Unknown child of .property '%s'!", cur.prettyString().c_str());
                     }
                   }
 
@@ -260,7 +260,7 @@ PexFile* PexAsmParser::parseFile() {
 
                 while (!maybeConsumeTokEOL(TokenType::kEndPropertyGroupTable)) {
                   if (cur.type != TokenType::kPropertyGroup)
-                    CapricaError::fatal(cur.location, "Expected '.propertyGroup' got '%s'!", cur.prettyString().c_str());
+                    reportingContext.fatal(cur.location, "Expected '.propertyGroup' got '%s'!", cur.prettyString().c_str());
                   consume();
 
                   auto group = new PexDebugPropertyGroup();
@@ -286,7 +286,7 @@ PexFile* PexAsmParser::parseFile() {
                         group->properties.push_back(expectConsumePexIdentEOL(file));
                         break;
                       default:
-                        CapricaError::fatal(cur.location, "Unknown child of .propertyGroup '%s'!", cur.prettyString().c_str());
+                        reportingContext.fatal(cur.location, "Unknown child of .propertyGroup '%s'!", cur.prettyString().c_str());
                     }
                   }
 
@@ -301,7 +301,7 @@ PexFile* PexAsmParser::parseFile() {
                 expectConsumeEOL();
                 while (!maybeConsumeTokEOL(TokenType::kEndStateTable)) {
                   if (cur.type != TokenType::kState)
-                    CapricaError::fatal(cur.location, "Expected '.state' got '%s'!", cur.prettyString().c_str());
+                    reportingContext.fatal(cur.location, "Expected '.state' got '%s'!", cur.prettyString().c_str());
                   consume();
 
                   auto state = new PexState();
@@ -313,7 +313,7 @@ PexFile* PexAsmParser::parseFile() {
 
                   while (!maybeConsumeTokEOL(TokenType::kEndState)) {
                     if (cur.type != TokenType::kFunction)
-                      CapricaError::fatal(cur.location, "Expected '.function' got '%s'!", cur.prettyString().c_str());
+                      reportingContext.fatal(cur.location, "Expected '.function' got '%s'!", cur.prettyString().c_str());
                     consume();
 
                     PexDebugFunctionInfo* debInf{ nullptr };
@@ -338,7 +338,7 @@ PexFile* PexAsmParser::parseFile() {
                 break;
               }
               default:
-                CapricaError::fatal(cur.location, "Unknown child of .object '%s'!", cur.prettyString().c_str());
+                reportingContext.fatal(cur.location, "Unknown child of .object '%s'!", cur.prettyString().c_str());
             }
           }
           file->objects.push_back(obj);
@@ -346,7 +346,7 @@ PexFile* PexAsmParser::parseFile() {
         break;
       }
       default:
-        CapricaError::fatal(cur.location, "Unknown root declaration '%s'!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unknown root declaration '%s'!", cur.prettyString().c_str());
     }
   }
 
@@ -387,7 +387,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
         expectConsumeEOL();
         while (!maybeConsumeTokEOL(TokenType::kEndParamTable)) {
           if (cur.type != TokenType::kParam)
-            CapricaError::fatal(cur.location, "Expected '.param' got '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Expected '.param' got '%s'!", cur.prettyString().c_str());
           consume();
 
           auto param = new PexFunctionParameter();
@@ -398,12 +398,12 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
         break;
       case TokenType::kLocalTable:
         if (func->isNative)
-          CapricaError::fatal(cur.location, "A native function cannot have locals!");
+          reportingContext.fatal(cur.location, "A native function cannot have locals!");
         consume();
         expectConsumeEOL();
         while (!maybeConsumeTokEOL(TokenType::kEndLocalTable)) {
           if (cur.type != TokenType::kLocal)
-            CapricaError::fatal(cur.location, "Expected '.local' got '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Expected '.local' got '%s'!", cur.prettyString().c_str());
           consume();
 
           auto loc = new PexLocalVariable();
@@ -415,7 +415,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
       case TokenType::kCode:
       {
         if (func->isNative)
-          CapricaError::fatal(cur.location, "A native function cannot have a body!");
+          reportingContext.fatal(cur.location, "A native function cannot have a body!");
         consume();
         expectConsumeEOL();
 
@@ -492,7 +492,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
             } else {
               auto op = PexInstruction::tryParseOpCode(id);
               if (op == PexOpCode::Invalid)
-                CapricaError::fatal(cur.location, "Unknown op-code '%s'!", id.c_str());
+                reportingContext.fatal(cur.location, "Unknown op-code '%s'!", id.c_str());
 
               std::vector<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
@@ -504,7 +504,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
             if (maybeConsume(TokenType::LineNumer)) {
               auto num = expectConsumeIntegerEOL();
               if (num < 0 || num > std::numeric_limits<uint16_t>::max())
-                CapricaError::fatal(cur.location, "Line number '%i' out of the range of a uint16_t!", (int)num);
+                reportingContext.fatal(cur.location, "Line number '%i' out of the range of a uint16_t!", (int)num);
               if (debInfo)
                 debInfo->instructionLineMap.push_back((uint16_t)num);
             } else {
@@ -520,7 +520,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
           for (auto& arg : func->instructions[i]->args) {
             if (arg.type == PexValueType::Label) {
               if (arg.l->targetIdx == (size_t)-1)
-                CapricaError::logicalFatal("Unresolved label!");
+                CapricaReportingContext::logicalFatal("Unresolved label!");
               auto newVal = arg.l->targetIdx - i;
               arg.type = PexValueType::Integer;
               arg.i = (int32_t)newVal;
@@ -530,13 +530,13 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
 
         for (auto l : labels) {
           if (l.second->targetIdx == (size_t)-1)
-            CapricaError::logicalFatal("Unused unresolved label!");
+            CapricaReportingContext::logicalFatal("Unused unresolved label!");
           delete l.second;
         }
         break;
       }
       default:
-        CapricaError::fatal(cur.location, "Unknown child of .function '%s'!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unknown child of .function '%s'!", cur.prettyString().c_str());
     }
   }
 
@@ -583,7 +583,7 @@ PexValue PexAsmParser::expectConsumeValue(PexFile* file) {
     }
 
     default:
-      CapricaError::fatal(cur.location, "Expected a default value, got '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Expected a default value, got '%s'!", cur.prettyString().c_str());
   }
 }
 

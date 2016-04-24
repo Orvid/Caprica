@@ -6,7 +6,7 @@ namespace caprica { namespace pex {
 
 using namespace caprica::papyrus;
 
-static PapyrusType reflectType(const CapricaFileLocation& loc, const std::string& name) {
+static PapyrusType reflectType(CapricaFileLocation loc, const std::string& name) {
   if (name.size() > 2 && name[name.size() - 2] == '[' && name[name.size() - 1] == ']')
     return PapyrusType::Array(loc, std::make_shared<PapyrusType>(reflectType(loc, name.substr(0, name.size() - 2))));
 
@@ -26,11 +26,11 @@ static PapyrusType reflectType(const CapricaFileLocation& loc, const std::string
   return PapyrusType::Unresolved(loc, name);
 }
 
-static PapyrusType reflectType(const CapricaFileLocation& loc, PexFile* pex, const PexString& pexName) {
+static PapyrusType reflectType(CapricaFileLocation loc, PexFile* pex, PexString pexName) {
   return reflectType(loc, pex->getStringValue(pexName));
 }
 
-static PapyrusFunction* reflectFunction(const CapricaFileLocation& loc, PexFile* pex, PapyrusObject* obj, PexFunction* pFunc, std::string funcName) {
+static PapyrusFunction* reflectFunction(CapricaFileLocation loc, PexFile* pex, PapyrusObject* obj, PexFunction* pFunc, std::string funcName) {
   auto func = new PapyrusFunction(loc, reflectType(loc, pex, pFunc->returnTypeName));
   func->parentObject = obj;
   func->name = funcName;
@@ -47,7 +47,7 @@ static PapyrusFunction* reflectFunction(const CapricaFileLocation& loc, PexFile*
 }
 
 PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
-  const CapricaFileLocation loc{ pex->sourceFileName, 0, 0 };
+  CapricaFileLocation loc{ 0 };
 
   auto script = new PapyrusScript();
   script->sourceFileName = pex->sourceFileName;

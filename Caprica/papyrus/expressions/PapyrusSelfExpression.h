@@ -16,7 +16,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  explicit PapyrusSelfExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusSelfExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   PapyrusSelfExpression(const PapyrusSelfExpression&) = delete;
   virtual ~PapyrusSelfExpression() override = default;
 
@@ -27,7 +27,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     type = ctx->resolveType(type);
     if (ctx->object != type.resolvedObject)
-      CapricaError::fatal(location, "An error occured while resolving the self type!");
+      ctx->reportingContext.fatal(location, "An error occured while resolving the self type!");
   }
 
   virtual PapyrusType resultType() const override {

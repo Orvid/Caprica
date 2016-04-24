@@ -33,7 +33,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   expressions::PapyrusExpression* rValue{ nullptr };
   expressions::PapyrusBinaryOpExpression* binOpExpression{ nullptr };
 
-  explicit PapyrusAssignStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusAssignStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusAssignStatement(const PapyrusAssignStatement&) = delete;
   virtual ~PapyrusAssignStatement() override {
     // This is a bit of a special case, because we still need the lValue, but
@@ -75,7 +75,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       bldr << location;
       ma->generateStore(file, bldr, rVal);
     } else {
-      CapricaError::logicalFatal("Invalid Lefthand Side for PapyrusAssignStatement!");
+      CapricaReportingContext::logicalFatal("Invalid Lefthand Side for PapyrusAssignStatement!");
     }
   }
 
@@ -87,46 +87,45 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     if (operation == PapyrusAssignOperatorType::Assign) {
       lValue->semantic(ctx);
       rValue->semantic(ctx);
-      rValue = PapyrusResolutionContext::coerceExpression(rValue, lValue->resultType());
+      rValue = ctx->coerceExpression(rValue, lValue->resultType());
     } else {
       binOpExpression = new expressions::PapyrusBinaryOpExpression(location);
       binOpExpression->left = lValue;
       binOpExpression->right = rValue;
-      switch (operation) {
-        case PapyrusAssignOperatorType::Add:
-          binOpExpression->operation = expressions::PapyrusBinaryOperatorType::Add;
-          break;
-        case PapyrusAssignOperatorType::Subtract:
-          binOpExpression->operation = expressions::PapyrusBinaryOperatorType::Subtract;
-          break;
-        case PapyrusAssignOperatorType::Multiply:
-          binOpExpression->operation = expressions::PapyrusBinaryOperatorType::Multiply;
-          break;
-        case PapyrusAssignOperatorType::Divide:
-          binOpExpression->operation = expressions::PapyrusBinaryOperatorType::Divide;
-          break;
-        case PapyrusAssignOperatorType::Modulus:
-          binOpExpression->operation = expressions::PapyrusBinaryOperatorType::Modulus;
-          break;
-        default:
-          CapricaError::logicalFatal("Unknown PapyrusAssignOperatorType!");
-      }
+      binOpExpression->operation = [](PapyrusAssignOperatorType op) {
+        switch (op) {
+          case PapyrusAssignOperatorType::Add:
+            return expressions::PapyrusBinaryOperatorType::Add;
+          case PapyrusAssignOperatorType::Subtract:
+            return expressions::PapyrusBinaryOperatorType::Subtract;
+          case PapyrusAssignOperatorType::Multiply:
+            return expressions::PapyrusBinaryOperatorType::Multiply;
+          case PapyrusAssignOperatorType::Divide:
+            return expressions::PapyrusBinaryOperatorType::Divide;
+          case PapyrusAssignOperatorType::Modulus:
+            return expressions::PapyrusBinaryOperatorType::Modulus;
+          case PapyrusAssignOperatorType::Assign:
+          case PapyrusAssignOperatorType::None:
+            break;
+        }
+        CapricaReportingContext::logicalFatal("Unknown PapyrusAssignOperatorType!");
+      }(operation);
       binOpExpression->semantic(ctx);
       if (lValue->resultType().type == PapyrusType::Kind::Array && !CapricaConfig::enableLanguageExtensions)
-        CapricaError::error(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
-      rValue = PapyrusResolutionContext::coerceExpression(binOpExpression, lValue->resultType());
+        ctx->reportingContext.error(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
+      rValue = ctx->coerceExpression(binOpExpression, lValue->resultType());
     }
 
     if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
-      id->identifier.ensureAssignable();
+      id->identifier.ensureAssignable(ctx->reportingContext);
       id->identifier.markWritten();
     } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
       // It's valid.
     } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
       if (auto id = ma->accessExpression->as<expressions::PapyrusIdentifierExpression>())
-        id->identifier.ensureAssignable();
+        id->identifier.ensureAssignable(ctx->reportingContext);
     } else {
-      CapricaError::fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
+      ctx->reportingContext.fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
     }
   }
 

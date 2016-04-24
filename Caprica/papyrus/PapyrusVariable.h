@@ -29,11 +29,11 @@ struct PapyrusVariable final
 
   bool isConst() const { return userFlags.isConst; }
 
-  explicit PapyrusVariable(const CapricaFileLocation& loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
+  explicit PapyrusVariable(CapricaFileLocation loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
   PapyrusVariable(const PapyrusVariable&) = delete;
   ~PapyrusVariable() = default;
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj) const;
+  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const;
   void semantic(PapyrusResolutionContext* ctx);
 };
 

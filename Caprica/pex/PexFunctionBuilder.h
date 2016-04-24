@@ -7,6 +7,8 @@
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReportingContext.h>
+
 #include <papyrus/PapyrusType.h>
 
 #include <pex/PexDebugFunctionInfo.h>
@@ -154,7 +156,7 @@ PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::
     return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
   }
 
-  PexFunctionBuilder& operator <<(const CapricaFileLocation& loc) {
+  PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
     currentLocation = loc;
     return *this;
   }
@@ -239,9 +241,13 @@ PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::
   void freeValueIfTemp(const PexValue& v);
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
 
-  explicit PexFunctionBuilder(const CapricaFileLocation& loc, PexFile* fl) : currentLocation(loc), file(fl) { }
+  explicit PexFunctionBuilder(CapricaReportingContext& repCtx, CapricaFileLocation loc, PexFile* fl) 
+    : reportingContext(repCtx), currentLocation(loc), file(fl) { }
   PexFunctionBuilder(const PexFunctionBuilder&) = delete;
   ~PexFunctionBuilder() = default;
+
+public:
+  CapricaReportingContext& reportingContext;
 
 private:
   PexFile* file;

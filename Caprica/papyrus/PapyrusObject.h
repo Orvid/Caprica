@@ -5,6 +5,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/EngineLimits.h>
+
 #include <papyrus/PapyrusCustomEvent.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusPropertyGroup.h>
@@ -69,13 +70,13 @@ struct PapyrusObject final
   const PapyrusObject* tryGetParentClass() const {
     if (parentClass.type != PapyrusType::Kind::None) {
       if (parentClass.type != PapyrusType::Kind::ResolvedObject)
-        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
+        CapricaReportingContext::logicalFatal("Something is wrong here, this should already have been resolved!");
       return parentClass.resolvedObject;
     }
     return nullptr;
   }
 
-  void buildPex(pex::PexFile* file) const {
+  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const {
     auto obj = new pex::PexObject();
     obj->name = file->getString(name);
     if (auto parClass = tryGetParentClass())
@@ -91,17 +92,17 @@ struct PapyrusObject final
     obj->userFlags = userFlags.buildPex(file);
 
     for (auto s : structs)
-      s->buildPex(file, obj);
+      s->buildPex(repCtx, file, obj);
     for (auto v : variables)
-      v->buildPex(file, obj);
+      v->buildPex(repCtx, file, obj);
     for (auto g : propertyGroups)
-      g->buildPex(file, obj);
+      g->buildPex(repCtx, file, obj);
 
     size_t namedStateCount = 0;
     for (auto s : states) {
       if (s->name != "")
         namedStateCount++;
-      s->buildPex(file, obj);
+      s->buildPex(repCtx, file, obj);
     }
 
     size_t initialValueCount = 0;
@@ -110,10 +111,10 @@ struct PapyrusObject final
         initialValueCount++;
     }
 
-    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_InitialValueCount, initialValueCount);
-    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_NamedStateCount, namedStateCount);
-    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_PropertyCount, obj->properties.size());
-    EngineLimits::checkLimit(location, EngineLimits::Type::PexObject_VariableCount, obj->variables.size());
+    EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_InitialValueCount, initialValueCount);
+    EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_NamedStateCount, namedStateCount);
+    EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_PropertyCount, obj->properties.size());
+    EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_VariableCount, obj->variables.size());
 
     file->objects.push_back(obj);
   }
@@ -126,7 +127,7 @@ struct PapyrusObject final
     ctx->object = this;
     for (auto i : imports)
       ctx->addImport(i.first, i.second);
-    PapyrusResolutionContext::ensureNamesAreUnique(structs, "struct");
+    ctx->ensureNamesAreUnique(structs, "struct");
     for (auto s : structs)
       s->semantic(ctx);
     if (ctx->resolvingReferenceScript) {
@@ -134,22 +135,22 @@ struct PapyrusObject final
         delete v;
       variables.clear();
     } else {
-      PapyrusResolutionContext::ensureNamesAreUnique(variables, "variable");
+      ctx->ensureNamesAreUnique(variables, "variable");
       for (auto v : variables)
         v->semantic(ctx);
     }
-    PapyrusResolutionContext::ensureNamesAreUnique(propertyGroups, "property group");
+    ctx->ensureNamesAreUnique(propertyGroups, "property group");
     for (auto g : propertyGroups)
       g->semantic(ctx);
-    PapyrusResolutionContext::ensureNamesAreUnique(states, "state");
+    ctx->ensureNamesAreUnique(states, "state");
     for (auto s : states)
       s->semantic(ctx);
     // Custom events don't currently need a semantic pass.
-    PapyrusResolutionContext::ensureNamesAreUnique(customEvents, "custom event");
+    ctx->ensureNamesAreUnique(customEvents, "custom event");
 
     if (!ctx->resolvingReferenceScript) {
       std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer> identMap{ };
-      checkForInheritedIdentifierConflicts(identMap, false);
+      checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
 
       // The first pass resolves the types on the public API,
       // property types, return types, and parameter types.
@@ -164,14 +165,14 @@ struct PapyrusObject final
         if (!v->referenceState.isRead) {
           if (!v->referenceState.isInitialized) {
             if (v->referenceState.isWritten)
-              CapricaError::Warning::W4006_Script_Variable_Only_Written(v->location, v->name.c_str());
+              ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name.c_str());
             else
-              CapricaError::Warning::W4004_Unreferenced_Script_Variable(v->location, v->name.c_str());
+              ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.c_str());
           } else {
-            CapricaError::Warning::W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.c_str());
+            ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.c_str());
           }
         } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
-          CapricaError::Warning::W4005_Unwritten_Script_Variable(v->location, v->name.c_str());
+          ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.c_str());
         }
       }
     }
@@ -182,25 +183,25 @@ private:
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
 
-  void checkForInheritedIdentifierConflicts(std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer>& identMap, bool checkInheritedOnly) const {
+  void checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, std::map<std::string, std::pair<bool, std::string>, CaselessStringComparer>& identMap, bool checkInheritedOnly) const {
     if (parentClass.type != PapyrusType::Kind::None) {
       if (parentClass.type != PapyrusType::Kind::ResolvedObject)
-        CapricaError::logicalFatal("Something is wrong here, this should already have been resolved!");
-      parentClass.resolvedObject->checkForInheritedIdentifierConflicts(identMap, true);
+        CapricaReportingContext::logicalFatal("Something is wrong here, this should already have been resolved!");
+      parentClass.resolvedObject->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
     }
 
-    const auto doError = [](const CapricaFileLocation& loc, bool isParent, const std::string& otherType, const std::string& identName) {
+    const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const std::string& otherType, const std::string& identName) {
       if (isParent)
-        CapricaError::error(loc, "A parent object already defines a %s named '%s'.", otherType.c_str(), identName.c_str());
+        repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType.c_str(), identName.c_str());
       else
-        CapricaError::error(loc, "A %s named '%s' was already defined in this object.", otherType.c_str(), identName.c_str());
+        repCtx.error(loc, "A %s named '%s' was already defined in this object.", otherType.c_str(), identName.c_str());
     };
 
     for (auto pg : propertyGroups) {
       for (auto p : pg->properties) {
         auto f = identMap.find(p->name);
         if (f != identMap.end())
-          doError(p->location, f->second.first, f->second.second, p->name);
+          doError(repCtx, p->location, f->second.first, f->second.second, p->name);
         else
           identMap.insert({ p->name, std::make_pair(checkInheritedOnly, "property") });
       }
@@ -209,7 +210,7 @@ private:
     for (auto s : structs) {
       auto f = identMap.find(s->name);
       if (f != identMap.end())
-        doError(s->location, f->second.first, f->second.second, s->name);
+        doError(repCtx, s->location, f->second.first, f->second.second, s->name);
       else
         identMap.insert({ s->name, std::make_pair(checkInheritedOnly, "struct") });
     }
@@ -218,7 +219,7 @@ private:
     for (auto e : customEvents) {
       auto f = identMap.find(e->name);
       if (f != identMap.end())
-        doError(e->location, f->second.first, f->second.second, e->name);
+        doError(repCtx, e->location, f->second.first, f->second.second, e->name);
       else
         identMap.insert({ e->name, std::make_pair(checkInheritedOnly, "custom event") });
     }
@@ -228,7 +229,7 @@ private:
       for (auto v : variables) {
         auto f = identMap.find(v->name);
         if (f != identMap.end())
-          doError(v->location, f->second.first, f->second.second, v->name);
+          doError(repCtx, v->location, f->second.first, f->second.second, v->name);
         else
           identMap.insert({ v->name, std::make_pair(checkInheritedOnly, "variable") });
       }

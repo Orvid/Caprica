@@ -34,7 +34,7 @@ std::string PapyrusType::prettyString() const {
     case Kind::ResolvedStruct:
       return "struct " + resolvedStruct->parentObject->name + "." + resolvedStruct->name;
   }
-  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 std::string PapyrusType::getTypeString() const {
@@ -70,7 +70,7 @@ std::string PapyrusType::getTypeString() const {
       return name;
     }
   }
-  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 }}

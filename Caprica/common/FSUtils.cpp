@@ -1,10 +1,12 @@
 #include <common/FSUtils.h>
 
 #include <concurrent_unordered_map.h>
+
 #include <future>
+#include <sstream>
 
 #include <common/CapricaConfig.h>
-#include <common/CapricaError.h>
+#include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
 
 namespace caprica { namespace FSUtils {
@@ -47,7 +49,7 @@ std::string Cache::cachedReadFull(const std::string& filename) {
   // If we're in performance test mode, all files should have been
   // discovered before starting to compile anything.
   if (CapricaConfig::performanceTestMode)
-    CapricaError::logicalFatal("Attempted to read a file at runtime in performance test mode.");
+    CapricaReportingContext::logicalFatal("Attempted to read a file at runtime in performance test mode.");
 
   if (!CapricaConfig::asyncFileRead)
     return readFile(abs);

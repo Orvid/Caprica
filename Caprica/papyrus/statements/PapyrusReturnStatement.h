@@ -13,7 +13,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
 {
   expressions::PapyrusExpression* returnValue{ nullptr };
 
-  explicit PapyrusReturnStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusReturnStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusReturnStatement(const PapyrusReturnStatement&) = delete;
   virtual ~PapyrusReturnStatement() override {
     if (returnValue)
@@ -40,7 +40,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     if (returnValue) {
       returnValue->semantic(ctx);
-      returnValue = PapyrusResolutionContext::coerceExpression(returnValue, ctx->function->returnType);
+      returnValue = ctx->coerceExpression(returnValue, ctx->function->returnType);
     }
   }
 

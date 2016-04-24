@@ -6,8 +6,8 @@
 #include <sstream>
 #include <string>
 
-#include <common/CapricaError.h>
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReportingContext.h>
 #include <common/FSUtils.h>
 
 namespace caprica { namespace papyrus { namespace parser {
@@ -129,12 +129,12 @@ struct PapyrusLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
-    CapricaFileLocation location;
+    CapricaFileLocation location{ };
     std::string sValue{ };
     int32_t iValue{ };
     float fValue{ };
 
-    explicit Token(TokenType tp, const CapricaFileLocation& loc) : type(tp), location(loc) { }
+    explicit Token(TokenType tp) : type(tp) { }
     // This is deleted deliberately. The assign operator of the std::string in the location
     // is not cheap, but that string value is never going to be different within the same file,
     // so there's no need to keep calling it. Instead we modify everything else about the
@@ -168,10 +168,10 @@ struct PapyrusLexer
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  explicit PapyrusLexer(const std::string& file)
+  explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file)
     : filename(file),
-      location(file, 1, 0),
-      cur(TokenType::Unknown, CapricaFileLocation{ file, 0, 0 })
+      cur(TokenType::Unknown),
+      reportingContext(repCtx)
   {
     auto s = FSUtils::Cache::cachedReadFull(file);
     strm = _strdup(s.c_str());
@@ -186,6 +186,7 @@ struct PapyrusLexer
   }
 
 protected:
+  CapricaReportingContext& reportingContext;
   std::string filename;
   Token cur;
 
@@ -204,12 +205,12 @@ private:
   const char* strm{ nullptr };
   size_t strmI{ 0 };
   size_t strmLen{ 0 };
-  CapricaFileLocation location;
+  CapricaFileLocation location{ };
 
   int getChar() {
     if (strmI >= strmLen)
       return -1;
-    location.column++;
+    location.fileOffset++;
     strmI++;
     auto c = *strm;
     strm++;
@@ -220,7 +221,7 @@ private:
       return -1;
     return *strm;
   }
-  void setTok(TokenType tp, const CapricaFileLocation::Partial& loc, int consumeChars = 0);
+  void setTok(TokenType tp, CapricaFileLocation loc, int consumeChars = 0);
 };
 
 }}}

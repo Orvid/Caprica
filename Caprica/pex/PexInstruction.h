@@ -95,7 +95,7 @@ struct PexInstruction final
       assert(args[1].type == PexValueType::Integer);
       return args[1].i;
     }
-    CapricaError::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
+    CapricaReportingContext::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
   }
 
   void setBranchTarget(int target) {
@@ -108,7 +108,7 @@ struct PexInstruction final
       assert(args[1].type == PexValueType::Integer);
       args[1].i = target;
     } else {
-      CapricaError::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
+      CapricaReportingContext::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
     }
   }
   int32_t getDestArgIndex() const;

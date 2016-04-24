@@ -112,37 +112,39 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
-    CapricaError::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
+    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
   return f->second;
 }
 
-void PapyrusLexer::setTok(TokenType tp, const CapricaFileLocation::Partial& loc, int consumeChars) {
+void PapyrusLexer::setTok(TokenType tp, CapricaFileLocation loc, int consumeChars) {
   cur.type = tp;
-  cur.location.updatePartial(loc);
+  cur.location = loc;
   for (int i = 0; i < consumeChars; i++)
     getChar();
 }
 
 TokenType PapyrusLexer::peekTokenType(int distance) {
   auto oldCurTp = cur.type;
-  auto oldCurPLoc = CapricaFileLocation::Partial(cur.location);
+  auto oldCurPLoc = cur.location;
   auto oldCurI = cur.iValue;
   auto oldCurF = cur.fValue;
   auto oldCurS = cur.sValue;
-  auto oldLoc = CapricaFileLocation::Partial(location);
+  auto oldLoc = location;
   auto oldPos = strmI;
   auto oldStrm = strm;
+  reportingContext.startIgnoringLinePushes();
 
   for (int i = 0; i <= distance; i++)
     consume();
 
+  reportingContext.stopIgnoringLinePushes();
   auto newTokTp = cur.type;
   cur.type = oldCurTp;
-  cur.location.updatePartial(oldCurPLoc);
+  cur.location = oldCurPLoc;
   cur.iValue = oldCurI;
   cur.fValue = oldCurF;
   cur.sValue = oldCurS;
-  location.updatePartial(oldLoc);
+  location = oldLoc;
   strm = oldStrm;
   strmI = oldPos;
   return newTokTp;
@@ -218,7 +220,7 @@ static const std::map<const char* const, TokenType, CaselessStringComparer> lang
 
 void PapyrusLexer::consume() {
 StartOver:
-  auto baseLoc = CapricaFileLocation::Partial(location);
+  auto baseLoc = location;
   auto c = getChar();
   
   switch (c) {
@@ -282,11 +284,11 @@ StartOver:
 
     case '|':
       if (peekChar() != '|')
-        CapricaError::fatal(baseLoc + location, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
+        reportingContext.fatal(baseLoc, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
       return setTok(TokenType::BooleanOr, baseLoc, 1);
     case '&':
       if (peekChar() != '&')
-        CapricaError::fatal(baseLoc + location, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
+        reportingContext.fatal(baseLoc, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
       return setTok(TokenType::BooleanAnd, baseLoc, 1);
 
     Number:
@@ -331,7 +333,7 @@ StartOver:
         if (CapricaConfig::enableLanguageExtensions && peekChar() == 'e') {
           str.append(1, (char)getChar());
           if (getChar() != '+')
-            CapricaError::fatal(location, "Unexpected character 'e'!");
+            reportingContext.fatal(location, "Unexpected character 'e'!");
           str.append(1, '+');
 
           while (isdigit(peekChar()))
@@ -420,7 +422,7 @@ StartOver:
       
       if (c == ':') {
         if (!CapricaConfig::allowCompilerIdentifiers || peekChar() != ':')
-          CapricaError::fatal(baseLoc + location, "Unexpected character '%c'!", (char)c);
+          reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
         getChar();
         str.append("::");
       } else {
@@ -476,9 +478,9 @@ StartOver:
               str.append(1, '"');
               break;
             case -1:
-              CapricaError::fatal(location, "Unexpected EOF before the end of the string.");
+              reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
             default:
-              CapricaError::fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
+              reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
           str.append(1, (char)getChar());
@@ -486,7 +488,7 @@ StartOver:
       }
 
       if (peekChar() != '"')
-        CapricaError::fatal(location, "Unclosed string!");
+        reportingContext.fatal(location, "Unclosed string!");
       getChar();
 
       setTok(TokenType::String, baseLoc);
@@ -506,7 +508,7 @@ StartOver:
             auto c2 = getChar();
             if (c2 == '\r' && peekChar() == '\n')
               getChar();
-            location.nextLine();
+            reportingContext.pushNextLineOffset(location);
           }
 
           if (getChar() == '/' && peekChar() == ';') {
@@ -515,7 +517,7 @@ StartOver:
           }
         }
 
-        CapricaError::fatal(location, "Unexpected EOF before the end of a multiline comment!");
+        reportingContext.fatal(location, "Unexpected EOF before the end of a multiline comment!");
       }
 
       // Single line comment.
@@ -540,10 +542,10 @@ StartOver:
         if (c2 == '\r' && peekChar() == '\n') {
           getChar();
           str.append(1, '\n');
-          location.nextLine();
+          reportingContext.pushNextLineOffset(location);
         } else {
           if (c2 == '\n')
-            location.nextLine();
+            reportingContext.pushNextLineOffset(location);
           // Whether this is a Unix newline, or a normal character,
           // we don't care, they both get written as-is.
           str.append(1, (char)c2);
@@ -551,7 +553,7 @@ StartOver:
       }
 
       if (peekChar() == -1)
-        CapricaError::fatal(location, "Unexpected EOF before the end of a documentation comment!");
+        reportingContext.fatal(location, "Unexpected EOF before the end of a documentation comment!");
       getChar();
 
       setTok(TokenType::DocComment, baseLoc);
@@ -567,7 +569,7 @@ StartOver:
     {
       consume();
       if (cur.type != TokenType::EOL)
-        CapricaError::fatal(baseLoc + location, "Unexpected '\\'! Division is done with a forward slash '/'.");
+        reportingContext.fatal(baseLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
       goto StartOver;
     }
 
@@ -576,7 +578,7 @@ StartOver:
     {
       if (c == '\r' && peekChar() == '\n')
         getChar();
-      location.nextLine();
+      reportingContext.pushNextLineOffset(location);
       return setTok(TokenType::EOL, baseLoc);
     }
 
@@ -589,7 +591,7 @@ StartOver:
     }
 
     default:
-      CapricaError::fatal(baseLoc + location, "Unexpected character '%c'!", (char)c);
+      reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
   }
 }
 

@@ -1,5 +1,8 @@
 #include <pex/PexOptimizer.h>
 
+#include <unordered_map>
+#include <vector>
+
 namespace caprica { namespace pex { 
 
 struct OptInstruction final
@@ -128,7 +131,7 @@ void PexOptimizer::optimize(PexFile* file,
           else if (n->instr->opCode == PexOpCode::JmpT)
             n->instr->opCode = PexOpCode::JmpF;
           else
-            CapricaError::logicalFatal("Somehow got a weird op-code here.");
+            CapricaReportingContext::logicalFatal("Somehow got a weird op-code here.");
           n->instr->args[0] = opt->instr->args[1];
           opt->killInstruction();
           break;

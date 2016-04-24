@@ -9,7 +9,7 @@ namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusContinueStatement final : public PapyrusStatement
 {
-  explicit PapyrusContinueStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
+  explicit PapyrusContinueStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusContinueStatement(const PapyrusContinueStatement&) = delete;
   virtual ~PapyrusContinueStatement() = default;
 
@@ -25,7 +25,7 @@ struct PapyrusContinueStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     if (!ctx->canContinue())
-      CapricaError::error(location, "There's nothing to continue!");
+      ctx->reportingContext.error(location, "There's nothing to continue!");
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {

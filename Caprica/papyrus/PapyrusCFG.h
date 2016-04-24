@@ -1,10 +1,10 @@
 #pragma once
 
 #include <iostream>
-
-#include <functional>
 #include <stack>
 #include <vector>
+
+#include <common/CapricaReportingContext.h>
 
 namespace caprica { namespace papyrus {
 
@@ -44,9 +44,10 @@ struct PapyrusControlFlowNode final
 
 struct PapyrusCFG final
 {
+  CapricaReportingContext& reportingContext;
   PapyrusControlFlowNode* root{ nullptr };
 
-  PapyrusCFG() {
+  PapyrusCFG(CapricaReportingContext& repCtx) : reportingContext(repCtx) {
     root = new PapyrusControlFlowNode(nextNodeID++);
     nodeStack.push(root);
   }

@@ -14,7 +14,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   PapyrusExpression* baseExpression{ nullptr };
   PapyrusExpression* indexExpression{ nullptr };
 
-  explicit PapyrusArrayIndexExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  explicit PapyrusArrayIndexExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusArrayIndexExpression(const PapyrusArrayIndexExpression&) = delete;
   virtual ~PapyrusArrayIndexExpression() override {
     if (baseExpression)
@@ -44,9 +44,9 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     baseExpression->semantic(ctx);
     if (baseExpression->resultType().type != PapyrusType::Kind::Array)
-      CapricaError::error(baseExpression->location, "You can only index arrays! Got '%s'!", baseExpression->resultType().prettyString().c_str());
+      ctx->reportingContext.error(baseExpression->location, "You can only index arrays! Got '%s'!", baseExpression->resultType().prettyString().c_str());
     indexExpression->semantic(ctx);
-    indexExpression = PapyrusResolutionContext::coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
+    indexExpression = ctx->coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
   }
 
   virtual PapyrusType resultType() const override {

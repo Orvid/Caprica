@@ -73,11 +73,11 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
 const std::string PexAsmLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
-    CapricaError::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
+    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
   return f->second;
 }
 
-void PexAsmLexer::setTok(TokenType tp, const CapricaFileLocation& loc) {
+void PexAsmLexer::setTok(TokenType tp, CapricaFileLocation loc) {
   cur = Token(tp, loc);
 }
 
@@ -159,7 +159,7 @@ StartOver:
       auto ident = str.str();
       auto f = dotIdentifierMap.find(ident);
       if (f == dotIdentifierMap.end())
-        CapricaError::fatal(baseLoc, "Unknown directive '.%s'!", ident.c_str());
+        reportingContext.fatal(baseLoc, "Unknown directive '.%s'!", ident.c_str());
       return setTok(f->second, baseLoc);
     }
 
@@ -204,7 +204,7 @@ StartOver:
         if (peekChar() == 'e') {
           str.put(getChar());
           if (getChar() != '+')
-            CapricaError::fatal(location, "Unexpected character 'e'!");
+            reportingContext.fatal(location, "Unexpected character 'e'!");
           str.put('+');
 
           while (isdigit(peekChar()))
@@ -313,9 +313,9 @@ StartOver:
               str.put('"');
               break;
             case -1:
-              CapricaError::fatal(location, "Unexpected EOF before the end of the string.");
+              reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
             default:
-              CapricaError::fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
+              reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
           str.put(getChar());
@@ -323,7 +323,7 @@ StartOver:
       }
 
       if (peekChar() != '"')
-        CapricaError::fatal(location, "Unclosed string!");
+        reportingContext.fatal(location, "Unclosed string!");
       getChar();
 
       auto tok = Token(TokenType::String, baseLoc);
@@ -339,7 +339,7 @@ StartOver:
         goto StartOver;
       }
       if (getChar() != 'l' || getChar() != 'i' || getChar() != 'n' || getChar() != 'e')
-        CapricaError::fatal(location, "Unexpected character sequence that looked line a ;@line directive!");
+        reportingContext.fatal(location, "Unexpected character sequence that looked line a ;@line directive!");
       return setTok(TokenType::LineNumer, baseLoc);
     }
 
@@ -348,7 +348,7 @@ StartOver:
     {
       if (c == '\r' && peekChar() == '\n')
         getChar();
-      location.nextLine();
+      reportingContext.pushNextLineOffset(location);
       return setTok(TokenType::EOL, baseLoc);
     }
 
@@ -361,7 +361,7 @@ StartOver:
     }
 
     default:
-      CapricaError::fatal(location, "Unexpected character '%c'!", (char)c);
+      reportingContext.fatal(location, "Unexpected character '%c'!", (char)c);
   }
 }
 

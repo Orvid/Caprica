@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include <common/CapricaError.h>
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReportingContext.h>
 
 namespace caprica { namespace papyrus {
 
@@ -15,7 +15,7 @@ struct PapyrusCustomEvent final
   PapyrusObject* parentObject{ nullptr };
   CapricaFileLocation location;
 
-  explicit PapyrusCustomEvent(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusCustomEvent(CapricaFileLocation loc) : location(loc) { }
   PapyrusCustomEvent(const PapyrusCustomEvent&) = delete;
   ~PapyrusCustomEvent() = default;
 

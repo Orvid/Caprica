@@ -24,9 +24,13 @@ static size_t getArgCountForOpCode(PexOpCode op) {
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
-    default:
-      CapricaError::logicalFatal("Unknown PexOpCode!");
+    case PexOpCode::Invalid:
+    case PexOpCode::CallMethod:
+    case PexOpCode::CallStatic:
+    case PexOpCode::CallParent:
+      break;
   }
+  CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
 }
 
 int32_t PexInstruction::getDestArgIndex() const {
@@ -49,9 +53,10 @@ int32_t PexInstruction::getDestArgIndex() const {
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
-    default:
-      CapricaError::logicalFatal("Unknown PexOpCode!");
+    case PexOpCode::Invalid:
+      break;
   }
+  CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
 }
 
 PexInstruction* PexInstruction::read(PexReader& rdr) {
@@ -79,7 +84,7 @@ PexInstruction* PexInstruction::read(PexReader& rdr) {
     {
       auto varVal = rdr.read<PexValue>();
       if (varVal.type != PexValueType::Integer)
-        CapricaError::logicalFatal("The var arg count for call instructions should be an integer!");
+        CapricaReportingContext::logicalFatal("The var arg count for call instructions should be an integer!");
       inst->variadicArgs.reserve(varVal.i);
       for (size_t i = 0; i < varVal.i; i++)
         inst->variadicArgs.push_back(rdr.read<PexValue>());
@@ -238,7 +243,7 @@ std::string PexInstruction::opCodeToPexAsm(PexOpCode op) {
   if (f != opCodeToPexAsmNameMap.end())
     return f->second;
   else
-    CapricaError::logicalFatal("Unknown PexOpCode '%u'!", (unsigned)op);
+    CapricaReportingContext::logicalFatal("Unknown PexOpCode '%u'!", (unsigned)op);
 }
 
 }}

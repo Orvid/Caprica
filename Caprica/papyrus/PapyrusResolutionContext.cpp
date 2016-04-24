@@ -8,7 +8,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <common/CapricaConfig.h>
-#include <common/CapricaError.h>
+#include <common/CapricaReportingContext.h>
 #include <common/FSUtils.h>
 
 #include <papyrus/PapyrusCustomEvent.h>
@@ -30,10 +30,10 @@ namespace caprica { namespace papyrus {
 void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
   auto sc = loadScript(import);
   if (!sc)
-    CapricaError::error(location, "Failed to find imported script '%s'!", import.c_str());
+    reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
   for (auto s : importedScripts) {
     if (s == sc)
-      CapricaError::Warning::W4002_Duplicate_Import(location, import.c_str());
+      reportingContext.warning_W4002_Duplicate_Import(location, import.c_str());
   }
   importedScripts.push_back(sc);
 }
@@ -61,12 +61,13 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
 
       // We should only ever be searching for things in the root import dir,
       // so this is safe.
-      auto parser = new parser::PapyrusParser(filename);
+      CapricaReportingContext repCtx{ filename };
+      auto parser = new parser::PapyrusParser(repCtx, filename);
       auto a = std::unique_ptr<PapyrusScript>(parser->parseScript());
-      CapricaError::exitIfErrors();
+      repCtx.exitIfErrors();
       delete parser;
 
-      auto ctx = new PapyrusResolutionContext();
+      auto ctx = new PapyrusResolutionContext(repCtx);
       ctx->resolvingReferenceScript = true;
       a->preSemantic(ctx);
 
@@ -75,7 +76,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
       loadedScripts.insert({ filename, std::move(a) });
       loadedScripts[filename]->semantic(ctx);
-      CapricaError::exitIfErrors();
+      repCtx.exitIfErrors();
       delete ctx;
       return loadedScripts[filename].get();
     };
@@ -84,16 +85,17 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       if (f != loadedScripts.end())
         return f->second.get();
 
-      auto parser = new pex::parser::PexAsmParser(filename);
+      CapricaReportingContext repCtx{ filename };
+      auto parser = new pex::parser::PexAsmParser(repCtx, filename);
       auto pex = parser->parseFile();
-      CapricaError::exitIfErrors();
+      repCtx.exitIfErrors();
       delete parser;
 
       auto a = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pex));
-      CapricaError::exitIfErrors();
+      repCtx.exitIfErrors();
       delete pex;
 
-      auto ctx = new PapyrusResolutionContext();
+      auto ctx = new PapyrusResolutionContext(repCtx);
       ctx->resolvingReferenceScript = true;
       ctx->isPexResolution = true;
       a->preSemantic(ctx);
@@ -102,7 +104,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
       loadedScripts.insert({ filename, std::move(a) });
       loadedScripts[filename]->semantic(ctx);
-      CapricaError::exitIfErrors();
+      repCtx.exitIfErrors();
       delete ctx;
 
       return loadedScripts[filename].get();
@@ -114,12 +116,11 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
 
       pex::PexReader rdr(filename);
       auto pex = pex::PexFile::read(rdr);
-      CapricaError::exitIfErrors();
       auto a = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pex));
-      CapricaError::exitIfErrors();
       delete pex;
 
-      auto ctx = new PapyrusResolutionContext();
+      CapricaReportingContext repCtx{ filename };
+      auto ctx = new PapyrusResolutionContext(repCtx);
       ctx->resolvingReferenceScript = true;
       ctx->isPexResolution = true;
       a->preSemantic(ctx);
@@ -128,7 +129,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
       loadedScripts.insert({ filename, std::move(a) });
       loadedScripts[filename]->semantic(ctx);
-      CapricaError::exitIfErrors();
+      repCtx.exitIfErrors();
       delete ctx;
 
       return loadedScripts[filename].get();
@@ -212,7 +213,7 @@ bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const P
     case PapyrusType::Kind::ResolvedStruct:
       return false;
   }
-  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest) {
@@ -241,7 +242,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
     case PapyrusType::Kind::ScriptEventName:
       return false;
   }
-  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
 bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
@@ -266,10 +267,10 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
     case PapyrusType::Kind::None:
       return canImplicitlyCoerce(expr->resultType(), target);
   }
-  CapricaError::logicalFatal("Unknown PapyrusTypeKind!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
-expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
+expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const {
   if (expr->resultType() != target) {
     bool canCast = canImplicitlyCoerceExpression(expr, target);
 
@@ -282,7 +283,7 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
     }
 
     if (!canCast) {
-      CapricaError::error(expr->location, "No implicit conversion from '%s' to '%s' exists!", expr->resultType().prettyString().c_str(), target.prettyString().c_str());
+      reportingContext.error(expr->location, "No implicit conversion from '%s' to '%s' exists!", expr->resultType().prettyString().c_str(), target.prettyString().c_str());
       return expr;
     }
     auto ce = new expressions::PapyrusCastExpression(expr->location, target);
@@ -292,7 +293,7 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
   return expr;
 }
 
-PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) {
+PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) const {
   if (val.type == PapyrusValueType::Invalid || val.getPapyrusType() == target)
     return val;
 
@@ -310,7 +311,7 @@ PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& va
     default:
       break;
   }
-  CapricaError::error(val.location, "Cannot initialize a '%s' value with a '%s'!", target.prettyString().c_str(), val.getPapyrusType().prettyString().c_str());
+  reportingContext.error(val.location, "Cannot initialize a '%s' value with a '%s'!", target.prettyString().c_str(), val.getPapyrusType().prettyString().c_str());
   return val;
 }
 
@@ -382,7 +383,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
       auto strucName = tp.name.substr(pos + 1);
       auto sc = loadScript(scName);
       if (!sc)
-        CapricaError::fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
+        reportingContext.fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
 
       for (auto obj : sc->objects) {
         for (auto struc : obj->structs) {
@@ -394,7 +395,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
         }
       }
 
-      CapricaError::fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
+      reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
     }
   }
 
@@ -435,7 +436,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
         return tp;
       }
     }
-    CapricaError::fatal(tp.location, "Loaded a script named '%s' but was looking for '%s'!", sc->objects[0]->name.c_str(), tp.name.c_str());
+    reportingContext.fatal(tp.location, "Loaded a script named '%s' but was looking for '%s'!", sc->objects[0]->name.c_str(), tp.name.c_str());
   }
   
   auto pos = tp.name.find_last_of(':');
@@ -444,7 +445,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     auto strucName = tp.name.substr(pos + 1);
     auto sc = loadScript(scName);
     if (!sc)
-      CapricaError::fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
+      reportingContext.fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
 
     for (auto obj : sc->objects) {
       for (auto struc : obj->structs) {
@@ -456,16 +457,16 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
       }
     }
 
-    CapricaError::fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
+    reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
   }
 
-  CapricaError::fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
+  reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 }
 
 void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
   for (auto is : localVariableScopeStack) {
     if (is.count(local->name)) {
-      CapricaError::error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.c_str());
+      reportingContext.error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.c_str());
       return;
     }
   }
@@ -475,7 +476,7 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
   auto id = tryResolveIdentifier(ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    CapricaError::fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
+    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
   return id;
 }
 
@@ -527,7 +528,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
   auto id = tryResolveMemberIdentifier(baseType, ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    CapricaError::fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
+    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
   return id;
 }
 
@@ -558,7 +559,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
 PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal) const {
   auto id = tryResolveFunctionIdentifier(baseType, ident, wantGlobal);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    CapricaError::fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
+    reportingContext.fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
   return id;
 }
 
@@ -572,7 +573,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
           if (wantGlobal && !func->isGlobal())
-            CapricaError::error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.c_str());
+            reportingContext.error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
         }
       }
@@ -611,7 +612,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     } else if (!_stricmp(ident.name.c_str(), "removelast")) {
       fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
     } else {
-      CapricaError::fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.c_str());
+      reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.c_str());
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
@@ -619,7 +620,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       for (auto& func : state->functions) {
         if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
           if (!wantGlobal && func->isGlobal())
-            CapricaError::error(ident.location, "You cannot call the global function '%s' on an object.", func->name.c_str());
+            reportingContext.error(ident.location, "You cannot call the global function '%s' on an object.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
         }
       }

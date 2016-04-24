@@ -2,7 +2,7 @@
 
 namespace caprica { namespace papyrus {
 
-void PapyrusVariable::buildPex(pex::PexFile* file, pex::PexObject* obj) const {
+void PapyrusVariable::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
   auto var = new pex::PexVariable();
   var->name = file->getString(name);
   var->typeName = type.buildPex(file);
@@ -14,7 +14,7 @@ void PapyrusVariable::buildPex(pex::PexFile* file, pex::PexObject* obj) const {
 
 void PapyrusVariable::semantic(PapyrusResolutionContext* ctx) {
   type = ctx->resolveType(type);
-  defaultValue = PapyrusResolutionContext::coerceDefaultValue(defaultValue, type);
+  defaultValue = ctx->coerceDefaultValue(defaultValue, type);
 }
 
 }}

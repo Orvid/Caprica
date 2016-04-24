@@ -21,7 +21,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   PapyrusUnaryOperatorType operation{ PapyrusUnaryOperatorType::None };
   PapyrusExpression* innerExpression{ nullptr };
 
-  explicit PapyrusUnaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
+  explicit PapyrusUnaryOpExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusUnaryOpExpression(const PapyrusUnaryOpExpression&) = delete;
   virtual ~PapyrusUnaryOpExpression() override {
     if (innerExpression)
@@ -40,15 +40,16 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
         else if (innerExpression->resultType().type == PapyrusType::Kind::Int)
           bldr << op::ineg{ dest, iVal };
         else
-          CapricaError::fatal(location, "You can only negate integers and floats!");
-        break;
+          bldr.reportingContext.fatal(location, "You can only negate integers and floats!");
+        return dest;
       case PapyrusUnaryOperatorType::Not:
         bldr << op::not{ dest, iVal };
+        return dest;
+      
+      case PapyrusUnaryOperatorType::None:
         break;
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
     }
-    return dest;
+    CapricaReportingContext::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {

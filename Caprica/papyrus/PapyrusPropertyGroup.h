@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
+
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusUserFlags.h>
 
@@ -22,14 +23,14 @@ struct PapyrusPropertyGroup final
 
   CapricaFileLocation location;
 
-  explicit PapyrusPropertyGroup(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusPropertyGroup(CapricaFileLocation loc) : location(loc) { }
   PapyrusPropertyGroup(const PapyrusPropertyGroup&) = delete;
   ~PapyrusPropertyGroup() {
     for (auto p : properties)
       delete p;
   }
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
+  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     if (file->debugInfo) {
       auto pg = new pex::PexDebugPropertyGroup();
       pg->objectName = obj->name;
@@ -42,11 +43,11 @@ struct PapyrusPropertyGroup final
     }
 
     for (auto p : properties)
-      p->buildPex(file, obj);
+      p->buildPex(repCtx, file, obj);
   }
 
   void semantic(PapyrusResolutionContext* ctx) {
-    PapyrusResolutionContext::ensureNamesAreUnique(properties, "property");
+    ctx->ensureNamesAreUnique(properties, "property");
     for (auto p : properties)
       p->semantic(ctx);
   }

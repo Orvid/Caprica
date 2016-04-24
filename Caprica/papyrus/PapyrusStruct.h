@@ -23,14 +23,14 @@ struct PapyrusStruct final
 
   CapricaFileLocation location;
 
-  explicit PapyrusStruct(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusStruct(CapricaFileLocation loc) : location(loc) { }
   PapyrusStruct(const PapyrusStruct&) = delete;
   ~PapyrusStruct() {
     for (auto m : members)
       delete m;
   }
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj) const {
+  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     auto struc = new pex::PexStruct();
     struc->name = file->getString(name);
 
@@ -39,7 +39,7 @@ struct PapyrusStruct final
     debInf->structName = struc->name;
 
     for (auto m : members) {
-      m->buildPex(file, obj, struc);
+      m->buildPex(repCtx, file, obj, struc);
       debInf->members.push_back(file->getString(m->name));
     }
     obj->structs.push_back(struc);
@@ -51,7 +51,7 @@ struct PapyrusStruct final
   }
 
   void semantic(PapyrusResolutionContext* ctx) {
-    PapyrusResolutionContext::ensureNamesAreUnique(members, "member");
+    ctx->ensureNamesAreUnique(members, "member");
     for (auto m : members)
       m->semantic(ctx);
   }

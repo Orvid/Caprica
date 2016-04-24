@@ -9,6 +9,8 @@
 #include <sstream>
 
 #include <common/CapricaBinaryWriter.h>
+#include <common/CapricaReportingContext.h>
+
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
@@ -42,25 +44,27 @@ struct PexWriter final : public CapricaBinaryWriter
     write<uint8_t>((uint8_t)val.type);
     switch (val.type) {
       case PexValueType::None:
-        break;
+        return;
       case PexValueType::Identifier:
       case PexValueType::String:
         write<PexString>(val.s);
-        break;
+        return;
       case PexValueType::Integer:
         write<uint32_t>((uint32_t)val.i);
-        break;
+        return;
       case PexValueType::Float:
         write<float>(val.f);
-        break;
+        return;
       case PexValueType::Bool:
         write<uint8_t>(val.b ? 0x01 : 0x00);
-        break;
+        return;
 
-      default:
-        assert(0);
+      case PexValueType::Label:
+      case PexValueType::TemporaryVar:
+      case PexValueType::Invalid:
         break;
     }
+    CapricaReportingContext::logicalFatal("Unknown PexValueType!");
   }
 
   // This is intended specifically for use when

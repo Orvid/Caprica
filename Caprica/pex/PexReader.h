@@ -6,7 +6,7 @@
 #include <string>
 
 #include <common/CapricaBinaryReader.h>
-#include <common/CapricaError.h>
+#include <common/CapricaReportingContext.h>
 
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
@@ -47,24 +47,27 @@ struct PexReader final : public CapricaBinaryReader
     val.type = (PexValueType)read<uint8_t>();
     switch (val.type) {
       case PexValueType::None:
-        break;
+        return val;
       case PexValueType::Identifier:
       case PexValueType::String:
         val.s = read<PexString>();
-        break;
+        return val;
       case PexValueType::Integer:
         val.i = (int32_t)read<uint32_t>();
-        break;
+        return val;
       case PexValueType::Float:
         val.f = read<float>();
-        break;
+        return val;
       case PexValueType::Bool:
         val.b = read<uint8_t>() ? true : false;
+        return val;
+
+      case PexValueType::Label:
+      case PexValueType::TemporaryVar:
+      case PexValueType::Invalid:
         break;
-      default:
-        CapricaError::logicalFatal("Unknown PexValueType!");
     }
-    return val;
+    CapricaReportingContext::logicalFatal("Unknown PexValueType!");
   }
 };
 

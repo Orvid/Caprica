@@ -3,7 +3,9 @@
 #include <sstream>
 #include <string>
 
+#include <common/CapricaReportingContext.h>
 #include <common/CapricaUserFlagsDefinition.h>
+
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/parser/PapyrusLexer.h>
@@ -13,7 +15,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 struct PapyrusParser final : private PapyrusLexer
 {
-  explicit PapyrusParser(const std::string& file) : PapyrusLexer(file) { }
+  explicit PapyrusParser(CapricaReportingContext& repCtx, const std::string& file) : PapyrusLexer(repCtx, file) { }
   PapyrusParser(const PapyrusParser&) = delete;
   ~PapyrusParser() = default;
 
@@ -51,7 +53,7 @@ private:
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      CapricaError::fatal(cur.location, "Syntax error! Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
+      reportingContext.fatal(cur.location, "Syntax error! Expected '%s' got '%s'.", Token::prettyTokenType(tp).c_str(), cur.prettyString().c_str());
     }
   }
 

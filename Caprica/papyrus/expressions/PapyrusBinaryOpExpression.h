@@ -75,23 +75,23 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       switch (operation) {
         case PapyrusBinaryOperatorType::CmpEq:
           bldr << op::cmpeq{ dest, lVal, rVal };
-          break;
+          return dest;
         case PapyrusBinaryOperatorType::CmpNeq:
           bldr << op::cmpeq{ dest, lVal, rVal };
           bldr << op::not{ dest, dest };
-          break;
+          return dest;
         case PapyrusBinaryOperatorType::CmpLt:
           bldr << op::cmplt{ dest, lVal, rVal };
-          break;
+          return dest;
         case PapyrusBinaryOperatorType::CmpLte:
           bldr << op::cmplte{ dest, lVal, rVal };
-          break;
+          return dest;
         case PapyrusBinaryOperatorType::CmpGt:
           bldr << op::cmpgt{ dest, lVal, rVal };
-          break;
+          return dest;
         case PapyrusBinaryOperatorType::CmpGte:
           bldr << op::cmpgte{ dest, lVal, rVal };
-          break;
+          return dest;
 
         case PapyrusBinaryOperatorType::Add:
           if (left->resultType().type == PapyrusType::Kind::Int)
@@ -101,8 +101,8 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::String)
             bldr << op::strcat{ dest, lVal, rVal };
           else
-            CapricaError::fatal(location, "Unknown argument type to an add operation!");
-          break;
+            bldr.reportingContext.fatal(location, "Unknown argument type to an add operation!");
+          return dest;
 
         case PapyrusBinaryOperatorType::Subtract:
           if (left->resultType().type == PapyrusType::Kind::Int)
@@ -110,8 +110,8 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fsub{ dest, lVal, rVal };
           else
-            CapricaError::fatal(location, "Unknown argument type to a subtraction operation!");
-          break;
+            bldr.reportingContext.fatal(location, "Unknown argument type to a subtraction operation!");
+          return dest;
 
         case PapyrusBinaryOperatorType::Multiply:
           if (left->resultType().type == PapyrusType::Kind::Int)
@@ -119,8 +119,8 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fmul{ dest, lVal, rVal };
           else
-            CapricaError::fatal(location, "Unknown argument type to a multiplication operation!");
-          break;
+            bldr.reportingContext.fatal(location, "Unknown argument type to a multiplication operation!");
+          return dest;
 
         case PapyrusBinaryOperatorType::Divide:
           if (left->resultType().type == PapyrusType::Kind::Int)
@@ -128,18 +128,21 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           else if (left->resultType().type == PapyrusType::Kind::Float)
             bldr << op::fdiv{ dest, lVal, rVal };
           else
-            CapricaError::fatal(location, "Unknown argument type to a division operation!");
-          break;
+            bldr.reportingContext.fatal(location, "Unknown argument type to a division operation!");
+          return dest;
 
         case PapyrusBinaryOperatorType::Modulus:
           if (left->resultType().type != PapyrusType::Kind::Int)
-            CapricaError::fatal(location, "Unknown argument type to a modulus operation!");
+            bldr.reportingContext.fatal(location, "Unknown argument type to a modulus operation!");
           bldr << op::imod{ dest, lVal, rVal };
-          break;
+          return dest;
 
-        default:
-          CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
+        case PapyrusBinaryOperatorType::BooleanOr:
+        case PapyrusBinaryOperatorType::BooleanAnd:
+        case PapyrusBinaryOperatorType::None:
+          break;
       }
+      CapricaReportingContext::logicalFatal("Unknown PapyrusBinaryOperatorType while generating the pex opcodes!");
     }
     return dest;
   }
@@ -151,15 +154,15 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
     switch (operation) {
       case PapyrusBinaryOperatorType::BooleanOr:
       case PapyrusBinaryOperatorType::BooleanAnd:
-        left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Bool(left->location));
-        right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Bool(right->location));
-        break;
+        left = ctx->coerceExpression(left, PapyrusType::Bool(left->location));
+        right = ctx->coerceExpression(right, PapyrusType::Bool(right->location));
+        return;
 
       case PapyrusBinaryOperatorType::CmpEq:
       case PapyrusBinaryOperatorType::CmpNeq:
       case PapyrusBinaryOperatorType::Add:
-        coerceToSameType();
-        break;
+        coerceToSameType(ctx);
+        return;
 
       case PapyrusBinaryOperatorType::CmpLt:
       case PapyrusBinaryOperatorType::CmpLte:
@@ -168,20 +171,21 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       case PapyrusBinaryOperatorType::Subtract:
       case PapyrusBinaryOperatorType::Multiply:
       case PapyrusBinaryOperatorType::Divide:
-        coerceToSameType();
+        coerceToSameType(ctx);
         if (left->resultType().type != PapyrusType::Kind::Int && left->resultType().type != PapyrusType::Kind::Float)
-          CapricaError::fatal(location, "The <, <=, >, >=, -, *, /, and % operators are only valid on integers and floats!");
-        break;
+          ctx->reportingContext.fatal(location, "The <, <=, >, >=, -, *, /, and % operators are only valid on integers and floats!");
+        return;
 
       case PapyrusBinaryOperatorType::Modulus:
-        coerceToSameType();
+        coerceToSameType(ctx);
         if (left->resultType().type != PapyrusType::Kind::Int)
-          CapricaError::fatal(location, "The modulus operator can only be used on integers!");
-        break;
+          ctx->reportingContext.fatal(location, "The modulus operator can only be used on integers!");
+        return;
 
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType in semantic pass!");
+      case PapyrusBinaryOperatorType::None:
+        break;
     }
+    CapricaReportingContext::logicalFatal("Unknown PapyrusBinaryOperatorType in semantic pass!");
   }
 
   virtual PapyrusType resultType() const override {
@@ -204,27 +208,28 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
       case PapyrusBinaryOperatorType::Modulus:
         return left->resultType();
 
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusBinaryOperatorType!");
+      case PapyrusBinaryOperatorType::None:
+        break;
     }
+    CapricaReportingContext::logicalFatal("Unknown PapyrusBinaryOperatorType!");
   }
 
 private:
-  void coerceToSameType() {
+  void coerceToSameType(PapyrusResolutionContext* ctx) {
     if (left->resultType().type == PapyrusType::Kind::String || right->resultType().type == PapyrusType::Kind::String) {
-      left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::String(left->location));
-      right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::String(right->location));
+      left = ctx->coerceExpression(left, PapyrusType::String(left->location));
+      right = ctx->coerceExpression(right, PapyrusType::String(right->location));
     } else if (left->resultType().type == PapyrusType::Kind::Bool || right->resultType().type == PapyrusType::Kind::Bool) {
-      left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Bool(left->location));
-      right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Bool(right->location));
+      left = ctx->coerceExpression(left, PapyrusType::Bool(left->location));
+      right = ctx->coerceExpression(right, PapyrusType::Bool(right->location));
     } else if (left->resultType().type == PapyrusType::Kind::Float || right->resultType().type == PapyrusType::Kind::Float) {
-      left = PapyrusResolutionContext::coerceExpression(left, PapyrusType::Float(left->location));
-      right = PapyrusResolutionContext::coerceExpression(right, PapyrusType::Float(right->location));
+      left = ctx->coerceExpression(left, PapyrusType::Float(left->location));
+      right = ctx->coerceExpression(right, PapyrusType::Float(right->location));
     } else {
       if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(right, left->resultType()))
-        left = PapyrusResolutionContext::coerceExpression(left, right->resultType());
+        left = ctx->coerceExpression(left, right->resultType());
       else
-        right = PapyrusResolutionContext::coerceExpression(right, left->resultType());
+        right = ctx->coerceExpression(right, left->resultType());
     }
   }
 };

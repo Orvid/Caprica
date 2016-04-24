@@ -1,5 +1,7 @@
 #include <papyrus/PapyrusCFG.h>
 
+#include <common/CapricaReportingContext.h>
+
 #include <papyrus/statements/PapyrusStatementVisitor.h>
 
 #include <papyrus/expressions/PapyrusArrayIndexExpression.h>
@@ -92,27 +94,21 @@ void PapyrusControlFlowNode::dumpNode(int currentDepth) {
 
   if (edgeType != PapyrusControlFlowNodeEdgeType::None) {
     writeIndent(currentDepth + 1);
-    std::cout << "Edge: ";
-    switch (edgeType) {
-      case PapyrusControlFlowNodeEdgeType::None:
-        std::cout << "None";
-        break;
-      case PapyrusControlFlowNodeEdgeType::Break:
-        std::cout << "Break";
-        break;
-      case PapyrusControlFlowNodeEdgeType::Continue:
-        std::cout << "Continue";
-        break;
-      case PapyrusControlFlowNodeEdgeType::Return:
-        std::cout << "Return";
-        break;
-      case PapyrusControlFlowNodeEdgeType::Children:
-        std::cout << "Children";
-        break;
-      default:
-        CapricaError::logicalFatal("Unknown PapyrusControlFlowNodeEdgeType!");
-    }
-    std::cout << std::endl;
+    std::cout << "Edge: " << [](PapyrusControlFlowNodeEdgeType edgeType) {
+      switch (edgeType) {
+        case PapyrusControlFlowNodeEdgeType::None:
+          return "None";
+        case PapyrusControlFlowNodeEdgeType::Break:
+          return "Break";
+        case PapyrusControlFlowNodeEdgeType::Continue:
+          return "Continue";
+        case PapyrusControlFlowNodeEdgeType::Return:
+          return "Return";
+        case PapyrusControlFlowNodeEdgeType::Children:
+          return "Children";
+      }
+      CapricaReportingContext::logicalFatal("Unknown PapyrusControlFlowNodeEdgeType!");
+    }(edgeType) << std::endl;
   }
 
   for (auto c : children) {

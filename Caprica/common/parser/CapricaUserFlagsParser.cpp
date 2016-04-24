@@ -41,14 +41,14 @@ void CapricaUserFlagsParser::parseUserFlags(CapricaUserFlagsDefinition& def) {
             consume();
             break;
           default:
-            CapricaError::fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
         }
       }
     } else {
       flag.validLocations = CapricaUserFlagsDefinition::ValidLocations::AllLocations;
     }
 
-    def.registerUserFlag(flag);
+    def.registerUserFlag(reportingContext, flag);
   }
 }
 

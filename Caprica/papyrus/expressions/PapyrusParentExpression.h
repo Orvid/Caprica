@@ -16,7 +16,7 @@ struct PapyrusParentExpression final : public PapyrusExpression
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  explicit PapyrusParentExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusParentExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   PapyrusParentExpression(const PapyrusParentExpression&) = delete;
   virtual ~PapyrusParentExpression() override = default;
 
@@ -27,9 +27,9 @@ struct PapyrusParentExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     type = ctx->resolveType(type);
     if (ctx->object->parentClass != type)
-      CapricaError::fatal(location, "An error occured while resolving the parent type!");
+      ctx->reportingContext.fatal(location, "An error occured while resolving the parent type!");
     if (ctx->object->parentClass.type == PapyrusType::Kind::None)
-      CapricaError::fatal(location, "Parent is invalid in a script with no parent!");
+      ctx->reportingContext.fatal(location, "Parent is invalid in a script with no parent!");
   }
 
   virtual PapyrusType resultType() const override {

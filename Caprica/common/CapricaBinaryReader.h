@@ -3,9 +3,8 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
-
-#include <common/CapricaError.h>
 
 namespace caprica {
 

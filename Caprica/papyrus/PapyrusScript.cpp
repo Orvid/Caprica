@@ -10,7 +10,7 @@
 
 namespace caprica { namespace papyrus {
 
-pex::PexFile* PapyrusScript::buildPex() const {
+pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
   auto pex = new pex::PexFile();
   if (CapricaConfig::emitDebugInfo) {
     pex->debugInfo = new pex::PexDebugInfo();
@@ -23,7 +23,7 @@ pex::PexFile* PapyrusScript::buildPex() const {
     char compNameBuf[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD compNameBufLength = sizeof(compNameBuf);
     if (!GetComputerNameA(compNameBuf, &compNameBufLength))
-      CapricaError::logicalFatal("Failed to get the computer name!");
+      CapricaReportingContext::logicalFatal("Failed to get the computer name!");
     return std::string(compNameBuf, compNameBufLength);
   }();
   pex->computerName = computerName;
@@ -32,7 +32,7 @@ pex::PexFile* PapyrusScript::buildPex() const {
     char userNameBuf[UNLEN + 1];
     DWORD userNameBufLength = sizeof(userNameBuf);
     if (!GetUserNameA(userNameBuf, &userNameBufLength))
-      CapricaError::logicalFatal("Failed to get the user name!");
+      CapricaReportingContext::logicalFatal("Failed to get the user name!");
     if (userNameBufLength > 0)
       userNameBufLength--;
     return std::string(userNameBuf, userNameBufLength);
@@ -40,10 +40,10 @@ pex::PexFile* PapyrusScript::buildPex() const {
   pex->userName = userName;
 
   for (auto o : objects)
-    o->buildPex(pex);
+    o->buildPex(repCtx, pex);
 
   if (objects.size())
-    EngineLimits::checkLimit(objects[0]->location, EngineLimits::Type::PexFile_UserFlagCount, pex->getUserFlagCount());
+    EngineLimits::checkLimit(repCtx, objects[0]->location, EngineLimits::Type::PexFile_UserFlagCount, pex->getUserFlagCount());
   return pex;
 }
 

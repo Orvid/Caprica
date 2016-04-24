@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
+#include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
 
 namespace caprica {
@@ -39,8 +40,8 @@ struct CapricaUserFlagsDefinition final
     ~UserFlag() = default;
   };
 
-  void registerUserFlag(const UserFlag& flag);
-  const UserFlag& findFlag(const CapricaFileLocation& loc, const std::string& name) const;
+  void registerUserFlag(CapricaReportingContext& repCtx, const UserFlag& flag);
+  const UserFlag& findFlag(CapricaReportingContext& repCtx, const CapricaFileLocation& loc, const std::string& name) const;
   // Not that flag num is NOT the flag's bit index, it is instead
   // the flag's index in the user flags vector.
   const UserFlag& getFlag(size_t flagNum) const;

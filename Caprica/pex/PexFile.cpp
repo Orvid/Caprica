@@ -3,16 +3,18 @@
 #include <fstream>
 #include <iostream>
 
+#include <common/CapricaReportingContext.h>
+
 namespace caprica { namespace pex {
 
 PexFile* PexFile::read(PexReader& rdr) {
   auto file = new PexFile();
   if (rdr.read<uint32_t>() != 0xFA57C0DE)
-    CapricaError::logicalFatal("Unrecognized magic number!");
+    CapricaReportingContext::logicalFatal("Unrecognized magic number!");
   if ((file->majorVersion = rdr.read<uint8_t>()) != 3)
-    CapricaError::logicalFatal("We currently only support major version 3!");
+    CapricaReportingContext::logicalFatal("We currently only support major version 3!");
   if ((file->minorVersion = rdr.read<uint8_t>()) != 9)
-    CapricaError::logicalFatal("We currently only support minor version 9!");
+    CapricaReportingContext::logicalFatal("We currently only support minor version 9!");
   file->gameID = rdr.read<uint16_t>();
   file->compilationTime = rdr.read<time_t>();
   file->sourceFileName = rdr.read<std::string>();

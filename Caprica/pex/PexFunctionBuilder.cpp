@@ -1,5 +1,7 @@
 #include <pex/PexFunctionBuilder.h>
 
+#include <common/CapricaReportingContext.h>
+
 namespace caprica { namespace pex {
 
 void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
@@ -7,7 +9,7 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
     for (auto& arg : instructions[i]->args) {
       if (arg.type == PexValueType::Label) {
         if (arg.l->targetIdx == (size_t)-1)
-          CapricaError::logicalFatal("Unresolved label!");
+          CapricaReportingContext::logicalFatal("Unresolved label!");
         auto newVal = arg.l->targetIdx - i;
         arg.type = PexValueType::Integer;
         arg.i = (int32_t)newVal;
@@ -17,14 +19,14 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
 
   for (auto l : labels) {
     if (l->targetIdx == (size_t)-1)
-      CapricaError::logicalFatal("Unused unresolved label!");
+      CapricaReportingContext::logicalFatal("Unused unresolved label!");
     delete l;
   }
   labels.clear();
 
   for (auto tmp : tempVarRefs) {
     if (tmp->var == nullptr)
-      CapricaError::logicalFatal("Unresolved tmp var!");
+      CapricaReportingContext::logicalFatal("Unresolved tmp var!");
     delete tmp;
   }
   tempVarRefs.clear();
@@ -32,10 +34,11 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   func->instructions = instructions;
   func->locals = locals;
   debInfo->instructionLineMap.reserve(instructionLocations.size());
-  for (auto& l : instructionLocations) {
-    if (l.line > std::numeric_limits<uint16_t>::max())
-      CapricaError::fatal(l, "The file has too many lines for the debug info to be able to map correctly!");
-    debInfo->instructionLineMap.push_back((uint16_t)l.line);
+  for (auto l : instructionLocations) {
+    auto line = reportingContext.getLocationLine(l);
+    if (line > std::numeric_limits<uint16_t>::max())
+      reportingContext.fatal(l, "The file has too many lines for the debug info to be able to map correctly!");
+    debInfo->instructionLineMap.push_back((uint16_t)line);
   }
 }
 
@@ -77,14 +80,14 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
 PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
   for (auto& v : instr->args) {
     if (v.type == PexValueType::Invalid)
-      CapricaError::fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+      reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
       v = PexValue::Identifier(v.tmpVar->var);
     freeValueIfTemp(v);
   }
   for (auto& v : instr->variadicArgs) {
     if (v.type == PexValueType::Invalid)
-      CapricaError::fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+      reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
       v = PexValue::Identifier(v.tmpVar->var);
     freeValueIfTemp(v);
@@ -99,11 +102,11 @@ PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
 
   for (auto& v : instr->args) {
     if (v.type == PexValueType::TemporaryVar)
-      CapricaError::fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
+      reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
   for (auto& v : instr->variadicArgs) {
     if (v.type == PexValueType::TemporaryVar)
-      CapricaError::fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
+      reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
 
   instructionLocations.push_back(currentLocation);

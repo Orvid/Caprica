@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <ostream>
 #include <string>
@@ -8,6 +9,7 @@
 #include <boost/program_options.hpp>
 
 #include <common/CapricaConfig.h>
+#include <common/CapricaReportingContext.h>
 #include <common/FSUtils.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
@@ -48,17 +50,18 @@ static void compileScript(const ScriptToCompile& script) {
   auto path = boost::filesystem::path(script.sourceFileName);
   auto baseName = boost::filesystem::basename(path.filename());
   auto ext = boost::filesystem::extension(script.sourceFileName);
+  caprica::CapricaReportingContext reportingContext{ script.sourceFileName };
   if (!_stricmp(ext.c_str(), ".psc")) {
-    auto parser = new caprica::papyrus::parser::PapyrusParser(script.sourceFileName);
+    auto parser = new caprica::papyrus::parser::PapyrusParser(reportingContext, script.sourceFileName);
     auto a = parser->parseScript();
-    caprica::CapricaError::exitIfErrors();
+    reportingContext.exitIfErrors();
     delete parser;
-    auto ctx = new caprica::papyrus::PapyrusResolutionContext();
+    auto ctx = new caprica::papyrus::PapyrusResolutionContext(reportingContext);
     a->preSemantic(ctx);
     a->semantic(ctx);
-    caprica::CapricaError::exitIfErrors();
-    auto pex = a->buildPex();
-    caprica::CapricaError::exitIfErrors();
+    reportingContext.exitIfErrors();
+    auto pex = a->buildPex(reportingContext);
+    reportingContext.exitIfErrors();
     delete ctx;
     delete a;
 
@@ -77,9 +80,9 @@ static void compileScript(const ScriptToCompile& script) {
 
     delete pex;
   } else if (!_stricmp(ext.c_str(), ".pas")) {
-    auto parser = new caprica::pex::parser::PexAsmParser(script.sourceFileName);
+    auto parser = new caprica::pex::parser::PexAsmParser(reportingContext, script.sourceFileName);
     auto pex = parser->parseFile();
-    caprica::CapricaError::exitIfErrors();
+    reportingContext.exitIfErrors();
     delete parser;
 
     if (caprica::CapricaConfig::enableOptimizations)
@@ -92,7 +95,7 @@ static void compileScript(const ScriptToCompile& script) {
   } else if (!_stricmp(ext.c_str(), ".pex")) {
     caprica::pex::PexReader rdr(script.sourceFileName);
     auto pex = caprica::pex::PexFile::read(rdr);
-    caprica::CapricaError::exitIfErrors();
+    reportingContext.exitIfErrors();
     std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
     caprica::pex::PexAsmWriter asmWtr(asmStrm);
     pex->writeAsm(asmWtr);
@@ -299,7 +302,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         return false;
       }
 
-      auto parser = new caprica::parser::CapricaUserFlagsParser(flagsPath);
+      caprica::CapricaReportingContext reportingContext{ flagsPath };
+      auto parser = new caprica::parser::CapricaUserFlagsParser(reportingContext, flagsPath);
       parser->parseUserFlags(conf::userFlagsDefinition);
       delete parser;
     }
@@ -359,7 +363,7 @@ int main(int argc, char* argv[])
 {
   std::vector<ScriptToCompile> filesToCompile;
   if (!parseArgs(argc, argv, filesToCompile)) {
-    caprica::CapricaError::breakIfDebugging();
+    caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
   }
 
@@ -368,6 +372,7 @@ int main(int argc, char* argv[])
   }
 
   try {
+    auto startCompile = std::chrono::high_resolution_clock::now();
     if (caprica::CapricaConfig::compileInParallel) {
       concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](const ScriptToCompile& fl) {
         compileScript(fl);
@@ -376,10 +381,15 @@ int main(int argc, char* argv[])
       for (auto& file : filesToCompile)
         compileScript(file);
     }
+    auto endCompile = std::chrono::high_resolution_clock::now();
+    if (caprica::CapricaConfig::performanceTestMode) {
+      std::cout << "Compiled " << filesToCompile.size() << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
+      getc(stdin);
+    }
   } catch (const std::runtime_error& ex) {
     if (ex.what() != "")
       std::cout << ex.what() << std::endl;
-    caprica::CapricaError::breakIfDebugging();
+    caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
   }
 

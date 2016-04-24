@@ -15,7 +15,7 @@ struct PapyrusStatement abstract
 {
   const CapricaFileLocation location;
 
-  explicit PapyrusStatement(const CapricaFileLocation& loc) : location(loc) { }
+  explicit PapyrusStatement(CapricaFileLocation loc) : location(loc) { }
   PapyrusStatement(const PapyrusStatement&) = delete;
   virtual ~PapyrusStatement() = default;
 

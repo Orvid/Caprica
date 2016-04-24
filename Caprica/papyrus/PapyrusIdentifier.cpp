@@ -11,43 +11,43 @@
 
 namespace caprica { namespace papyrus {
 
-PapyrusIdentifier PapyrusIdentifier::Property(const CapricaFileLocation& loc, PapyrusProperty* p) {
+PapyrusIdentifier PapyrusIdentifier::Property(CapricaFileLocation loc, PapyrusProperty* p) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Property, loc);
   id.prop = p;
   id.name = p->name;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::Variable(const CapricaFileLocation& loc, PapyrusVariable* v) {
+PapyrusIdentifier PapyrusIdentifier::Variable(CapricaFileLocation loc, PapyrusVariable* v) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Variable, loc);
   id.var = v;
   id.name = v->name;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::FunctionParameter(const CapricaFileLocation& loc, PapyrusFunctionParameter* p) {
+PapyrusIdentifier PapyrusIdentifier::FunctionParameter(CapricaFileLocation loc, PapyrusFunctionParameter* p) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Parameter, loc);
   id.param = p;
   id.name = p->name;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::DeclStatement(const CapricaFileLocation& loc, statements::PapyrusDeclareStatement* s) {
+PapyrusIdentifier PapyrusIdentifier::DeclStatement(CapricaFileLocation loc, statements::PapyrusDeclareStatement* s) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::DeclareStatement, loc);
   id.declStatement = s;
   id.name = s->name;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::StructMember(const CapricaFileLocation& loc, PapyrusStructMember* m) {
+PapyrusIdentifier PapyrusIdentifier::StructMember(CapricaFileLocation loc, PapyrusStructMember* m) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::StructMember, loc);
   id.structMember = m;
   id.name = m->name;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::Function(const CapricaFileLocation& loc, PapyrusFunction* f) {
+PapyrusIdentifier PapyrusIdentifier::Function(CapricaFileLocation loc, PapyrusFunction* f) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Function, loc);
   id.func = f;
   id.name = f->name;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::ArrayFunction(const CapricaFileLocation& loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) {
+PapyrusIdentifier PapyrusIdentifier::ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::BuiltinArrayFunction, loc);
   id.arrayFuncKind = fk;
   id.arrayFuncElementType = std::make_shared<PapyrusType>(elemType);
@@ -83,11 +83,11 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
 
     case PapyrusIdentifierType::Function:
     case PapyrusIdentifierType::BuiltinArrayFunction:
-      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
+      CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
-      CapricaError::fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.c_str());
+      bldr.reportingContext.fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.c_str());
   }
-  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const {
@@ -95,7 +95,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
   switch (type) {
     case PapyrusIdentifierType::Property:
       if (prop->isReadOnly())
-        CapricaError::fatal(location, "Attempted to generate a store to a read-only property!");
+        bldr.reportingContext.fatal(location, "Attempted to generate a store to a read-only property!");
       if (CapricaConfig::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
@@ -121,32 +121,32 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
 
     case PapyrusIdentifierType::Function:
     case PapyrusIdentifierType::BuiltinArrayFunction:
-      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
+      CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
-      CapricaError::fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
+      bldr.reportingContext.fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
   }
-  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
-void PapyrusIdentifier::ensureAssignable() const {
+void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const {
   switch (type) {
     case PapyrusIdentifierType::Property:
       if (prop->isReadOnly())
-        return CapricaError::error(location, "You cannot assign to the read-only property '%s'.", prop->name.c_str());
+        return repCtx.error(location, "You cannot assign to the read-only property '%s'.", prop->name.c_str());
       if (prop->isConst())
-        return CapricaError::error(location, "You cannot assign to the const property '%s'.", prop->name.c_str());
+        return repCtx.error(location, "You cannot assign to the const property '%s'.", prop->name.c_str());
       if (prop->parent->isConst())
-        return CapricaError::error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.c_str(), prop->parent->name.c_str());
+        return repCtx.error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.c_str(), prop->parent->name.c_str());
       return;
     case PapyrusIdentifierType::Variable:
       if (var->isConst())
-        return CapricaError::error(location, "You cannot assign to the const variable '%s'.", var->name.c_str());
+        return repCtx.error(location, "You cannot assign to the const variable '%s'.", var->name.c_str());
       if (var->parent->isConst())
-        return CapricaError::error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.c_str(), var->parent->name.c_str());
+        return repCtx.error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.c_str(), var->parent->name.c_str());
       return;
     case PapyrusIdentifierType::StructMember:
       if (structMember->isConst())
-        return CapricaError::error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
+        return repCtx.error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
       return;
 
     case PapyrusIdentifierType::Parameter:
@@ -154,13 +154,16 @@ void PapyrusIdentifier::ensureAssignable() const {
     case PapyrusIdentifierType::BuiltinStateField:
       return;
 
-    case PapyrusIdentifierType::Function:
-    case PapyrusIdentifierType::BuiltinArrayFunction:
-      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
+    // This being unresolved has already been reported,
+    // so don't give more errors.
     case PapyrusIdentifierType::Unresolved:
       return;
+
+    case PapyrusIdentifierType::Function:
+    case PapyrusIdentifierType::BuiltinArrayFunction:
+      CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
   }
-  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::markRead() {
@@ -176,13 +179,15 @@ void PapyrusIdentifier::markRead() {
     case PapyrusIdentifierType::BuiltinStateField:
       return;
 
+    // This being unresolved has already been reported,
+    // so don't give more errors.
+    case PapyrusIdentifierType::Unresolved:
+      return;
     case PapyrusIdentifierType::Function:
     case PapyrusIdentifierType::BuiltinArrayFunction:
-      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
-    case PapyrusIdentifierType::Unresolved:
-      CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
+      CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
   }
-  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 void PapyrusIdentifier::markWritten() {
@@ -198,13 +203,16 @@ void PapyrusIdentifier::markWritten() {
     case PapyrusIdentifierType::BuiltinStateField:
       return;
 
+    // This being unresolved has already been reported,
+    // so don't give more errors.
+    case PapyrusIdentifierType::Unresolved:
+      return;
+
     case PapyrusIdentifierType::Function:
     case PapyrusIdentifierType::BuiltinArrayFunction:
-      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
-    case PapyrusIdentifierType::Unresolved:
-      CapricaError::fatal(location, "Attempted to assign to an unresolved identifier '%s'!", name.c_str());
+      CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
   }
-  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 PapyrusType PapyrusIdentifier::resultType() const {
@@ -222,13 +230,16 @@ PapyrusType PapyrusIdentifier::resultType() const {
     case PapyrusIdentifierType::BuiltinStateField:
       return PapyrusType::String(location);
 
+    // This being unresolved has already been reported,
+    // so let errors chain off of the result being None.
+    case PapyrusIdentifierType::Unresolved:
+      return PapyrusType::None(location);
+
     case PapyrusIdentifierType::Function:
     case PapyrusIdentifierType::BuiltinArrayFunction:
-      CapricaError::logicalFatal("Invalid PapyrusIdentifierType!");
-    case PapyrusIdentifierType::Unresolved:
-      CapricaError::fatal(location, "Attempted to get the result type of an unresolved identifier '%s'!", name.c_str());
+      CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
   }
-  CapricaError::logicalFatal("Unknown PapyrusIdentifierType!");
+  CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
 
 }}

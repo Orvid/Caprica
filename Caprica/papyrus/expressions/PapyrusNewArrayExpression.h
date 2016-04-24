@@ -17,7 +17,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
   PapyrusType type;
   PapyrusExpression* lengthExpression{ nullptr };
 
-  explicit PapyrusNewArrayExpression(const CapricaFileLocation& loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusNewArrayExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
   PapyrusNewArrayExpression(const PapyrusNewArrayExpression&) = delete;
   virtual ~PapyrusNewArrayExpression() override {
     if (lengthExpression)
@@ -39,12 +39,12 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
     lengthExpression->semantic(ctx);
 
     if (lengthExpression->resultType().type != PapyrusType::Kind::Int)
-      CapricaError::error(lengthExpression->location, "The length expression of a new array expression must be an integral type, but got '%s'.", lengthExpression->resultType().prettyString().c_str());
+      ctx->reportingContext.error(lengthExpression->location, "The length expression of a new array expression must be an integral type, but got '%s'.", lengthExpression->resultType().prettyString().c_str());
     else if (auto len = lengthExpression->as<PapyrusLiteralExpression>()) {
       if (len->value.i < 0)
-        CapricaError::error(len->value.location, "The length expression of a new array expression must be greater than or equal to zero. Got '%lli'.", (int64_t)len->value.i);
+        ctx->reportingContext.error(len->value.location, "The length expression of a new array expression must be greater than or equal to zero. Got '%lli'.", (int64_t)len->value.i);
       else
-        EngineLimits::checkLimit(len->value.location, EngineLimits::Type::ArrayLength, len->value.i);
+        EngineLimits::checkLimit(ctx->reportingContext, len->value.location, EngineLimits::Type::ArrayLength, len->value.i);
     }
   }
 

@@ -60,33 +60,33 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
       if (gCountId.type != PapyrusIdentifierType::Function)
         gCountId = ctx->tryResolveFunctionIdentifier(tp, PapyrusIdentifier::Unresolved(tp.location, "GetSize"));
       if (gCountId.type != PapyrusIdentifierType::Function) {
-        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetCount or GetSize.", tp.prettyString().c_str());
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetCount or GetSize.", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       if (gCountId.func->returnType.type != PapyrusType::Kind::Int) {
-        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' because GetCount has a return type of '%s', expected 'Int'!", tp.prettyString().c_str(), gCountId.func->returnType.prettyString().c_str());
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' because GetCount has a return type of '%s', expected 'Int'!", tp.prettyString().c_str(), gCountId.func->returnType.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       this->getCountIdentifier = new PapyrusIdentifier(gCountId);
 
       auto gAtId = ctx->tryResolveFunctionIdentifier(tp, PapyrusIdentifier::Unresolved(tp.location, "GetAt"));
       if (gAtId.type != PapyrusIdentifierType::Function) {
-        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetAt!", tp.prettyString().c_str());
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetAt!", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       if (gAtId.func->parameters.size() != 1) {
-        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function does not accept exactly one parameter!", tp.prettyString().c_str());
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function does not accept exactly one parameter!", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       if (gAtId.func->parameters[0]->type != gCountId.func->returnType) {
-        CapricaError::error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function has one parameter, but it is of type '%s', not 'Int'!", tp.prettyString().c_str(), gAtId.func->parameters[0]->type.prettyString().c_str());
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function has one parameter, but it is of type '%s', not 'Int'!", tp.prettyString().c_str(), gAtId.func->parameters[0]->type.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       this->getAtIdentifier = new PapyrusIdentifier(gAtId);
 
       return gAtId.func->returnType;
     } else {
-      CapricaError::error(tp.location, "Cannot iterate over a value of type '%s'!", tp.prettyString().c_str());
+      ctx->reportingContext.error(tp.location, "Cannot iterate over a value of type '%s'!", tp.prettyString().c_str());
       return PapyrusType::None(tp.location);
     }
   }(expressionToIterate->resultType());
@@ -100,7 +100,7 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
   declareStatement->semantic(ctx);
   // TODO: Perhaps allow declaring it as a parent object of the element type?
   if (declareStatement->type != elementType)
-    CapricaError::error(declareStatement->type.location, "Cannot declare the loop variable as '%s', expected '%s'!", declareStatement->type.prettyString().c_str(), elementType.prettyString().c_str());
+    ctx->reportingContext.error(declareStatement->type.location, "Cannot declare the loop variable as '%s', expected '%s'!", declareStatement->type.prettyString().c_str(), elementType.prettyString().c_str());
   for (auto s : body)
     s->semantic(ctx);
   ctx->popLocalVariableScope();
