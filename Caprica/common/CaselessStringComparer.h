@@ -42,7 +42,7 @@ struct CaselessStringHasher final : public std::function<size_t(std::string)>
   }
 
 private:
-  alignas(64) static const uint8_t charMap[];
+  alignas(64) static const uint64_t charMap[];
 };
 
 struct CaselessStringEqual final : public std::function<bool(std::string, std::string)>
