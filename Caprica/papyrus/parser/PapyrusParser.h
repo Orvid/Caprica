@@ -81,14 +81,14 @@ private:
 
   std::string expectConsumeIdent() {
     expect(TokenType::Identifier);
-    auto str = cur.sValue;
+    auto str = std::move(cur.sValue);
     consume();
     return str;
   }
 
   std::string maybeConsumeDocString() {
     if (cur.type == TokenType::DocComment) {
-      auto str = cur.sValue;
+      auto str = std::move(cur.sValue);
       consume();
       expectConsumeEOLs();
       return str;

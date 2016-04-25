@@ -2,6 +2,7 @@
 
 #include <concurrent_unordered_map.h>
 
+#include <cstring>
 #include <future>
 #include <sstream>
 
@@ -124,15 +125,15 @@ boost::filesystem::path canonical(const boost::filesystem::path& path) {
   } else {
     boost::filesystem::path result;
     for (auto it = absPath.begin(); it != absPath.end(); ++it) {
-      if (*it == "..") {
+      if (!wcscmp(it->c_str(), L"..")) {
         // /a/b/../.. is not /a/b/.. under most circumstances
         // We can end up with ..s in our result because of symbolic links
-        if (result.filename() == "..")
+        if (!wcscmp(result.filename().c_str(), L".."))
           result /= *it;
         // Otherwise it should be safe to resolve the parent
         else
           result = result.parent_path();
-      } else if (*it == ".") {
+      } else if (!wcscmp(it->c_str(), L".")) {
         // Ignore
       } else {
         // Just cat other path entries
@@ -148,17 +149,19 @@ boost::filesystem::path naive_uncomplete(const boost::filesystem::path p, const 
   using boost::filesystem::path;
 
   if (p == base)
-    return "./";
+    return L"./";
+
   /*!! this breaks stuff if path is a filename rather than a directory,
   which it most likely is... but then base shouldn't be a filename so... */
-
   boost::filesystem::path from_path, from_base, output;
 
-  boost::filesystem::path::iterator path_it = p.begin(), path_end = p.end();
-  boost::filesystem::path::iterator base_it = base.begin(), base_end = base.end();
+  auto path_it = p.begin();
+  const auto path_end = p.end();
+  auto base_it = base.begin();
+  const auto base_end = base.end();
 
   // check for emptiness
-  if ((path_it == path_end) || (base_it == base_end))
+  if (path_it == path_end || base_it == base_end)
     throw std::runtime_error("path or base was empty; couldn't generate relative path");
 
 #ifdef WIN32
@@ -171,40 +174,33 @@ boost::filesystem::path naive_uncomplete(const boost::filesystem::path p, const 
   ++path_it, ++base_it;
 #endif
 
-  // Cache system-dependent dot, double-dot and slash strings
-  const std::string _dot = ".";
-  const std::string _dots = "..";
-  const std::string _sep = "\\";
-
   // iterate over path and base
   while (true) {
-
     // compare all elements so far of path and base to find greatest common root;
     // when elements of path and base differ, or run out:
-    if ((path_it == path_end) || (base_it == base_end) || (*path_it != *base_it)) {
-
+    if (path_it == path_end || base_it == base_end || *path_it != *base_it) {
       // write to output, ../ times the number of remaining elements in base;
       // this is how far we've had to come down the tree from base to get to the common root
       for (; base_it != base_end; ++base_it) {
-        if (*base_it == _dot)
+        if (!wcscmp(base_it->c_str(), L"."))
           continue;
-        else if (*base_it == _sep)
+        else if (!wcscmp(base_it->c_str(), L"\\"))
           continue;
 
-        output /= "../";
+        output /= L"../";
       }
 
       // write to output, the remaining elements in path;
       // this is the path relative from the common root
-      boost::filesystem::path::iterator path_it_start = path_it;
+      const auto path_it_start = path_it;
       for (; path_it != path_end; ++path_it) {
 
         if (path_it != path_it_start)
-          output /= "/";
+          output /= L"/";
 
-        if (*path_it == _dot)
+        if (!wcscmp(base_it->c_str(), L"."))
           continue;
-        if (*path_it == _sep)
+        if (!wcscmp(base_it->c_str(), L"\\"))
           continue;
 
         output /= *path_it;

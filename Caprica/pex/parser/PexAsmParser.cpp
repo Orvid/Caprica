@@ -471,7 +471,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, params));
+              func->instructions.push_back(new PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, std::move(params)));
             } else if (!_stricmp(id.c_str(), "callparent")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -479,7 +479,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(PexOpCode::CallParent, { valA, valB }, params));
+              func->instructions.push_back(new PexInstruction(PexOpCode::CallParent, { valA, valB }, std::move(params)));
             } else if (!_stricmp(id.c_str(), "callstatic")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -488,7 +488,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(PexOpCode::CallStatic, { valA, valB, valC }, params));
+              func->instructions.push_back(new PexInstruction(PexOpCode::CallStatic, { valA, valB, valC }, std::move(params)));
             } else {
               auto op = PexInstruction::tryParseOpCode(id);
               if (op == PexOpCode::Invalid)
@@ -498,7 +498,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(op, params));
+              func->instructions.push_back(new PexInstruction(op, std::move(params)));
             }
 
             if (maybeConsume(TokenType::LineNumer)) {

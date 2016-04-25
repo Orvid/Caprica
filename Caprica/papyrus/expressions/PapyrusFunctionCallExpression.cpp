@@ -110,14 +110,14 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     if (function.func->isGlobal()) {
       std::string objName = function.func->parentObject->name;
       boost::algorithm::to_lower(objName);
-      bldr << op::callstatic{ file->getString(objName), file->getString(function.func->name), dest, args };
+      bldr << op::callstatic{ file->getString(objName), file->getString(function.func->name), dest, std::move(args) };
     } else if (base && base->is<PapyrusParentExpression>()) {
-      bldr << op::callparent{ file->getString(function.func->name), dest, args };
+      bldr << op::callparent{ file->getString(function.func->name), dest, std::move(args) };
     } else if (base) {
       auto bVal = base->generateLoad(file, bldr);
-      bldr << op::callmethod{ file->getString(function.func->name), bVal, dest, args };
+      bldr << op::callmethod{ file->getString(function.func->name), bVal, dest, std::move(args) };
     } else {
-      bldr << op::callmethod{ file->getString(function.func->name), pex::PexValue::Identifier(file->getString("self")), dest, args };
+      bldr << op::callmethod{ file->getString(function.func->name), pex::PexValue::Identifier(file->getString("self")), dest, std::move(args) };
     }
 
     if (function.func->returnType.type == PapyrusType::Kind::None)

@@ -78,7 +78,7 @@ struct CapricaBinaryWriter
   }
 
   template<>
-  void write(std::string val) {
+  void write(const std::string& val) {
     boundWrite<uint16_t>(val.size());
     if (val.size())
       strm.write(val.c_str(), val.size());

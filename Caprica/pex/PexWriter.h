@@ -25,7 +25,7 @@ struct PexWriter final : public CapricaBinaryWriter
 
   template<typename T>
   void write(T val) {
-    CapricaBinaryWriter::write<T>(val);
+    CapricaBinaryWriter::write<T>(std::forward<T>(val));
   }
 
   template<>

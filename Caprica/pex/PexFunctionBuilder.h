@@ -106,39 +106,39 @@ struct callmethod final
 {
   PexValue a1, a2, a3;
   std::vector<PexValue> variadicArgs;
-  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, std::vector<PexValue> varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(varArgs) { }
+  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, std::vector<PexValue>&& varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
 
 struct callparent final
 {
   PexValue a1, a2;
   std::vector<PexValue> variadicArgs;
-  callparent(PexString function, PexValue::Identifier dest, std::vector<PexValue> varArgs) : a1(function), a2(dest), variadicArgs(varArgs) { }
+  callparent(PexString function, PexValue::Identifier dest, std::vector<PexValue>&& varArgs) : a1(function), a2(dest), variadicArgs(std::move(varArgs)) { }
 };
 
 struct callstatic final
 {
   PexValue a1, a2, a3;
   std::vector<PexValue> variadicArgs;
-  callstatic(PexString type, PexString function, PexValue::Identifier dest, std::vector<PexValue> varArgs) : a1(type), a2(function), a3(dest), variadicArgs(varArgs) { }
+  callstatic(PexString type, PexString function, PexValue::Identifier dest, std::vector<PexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
   
 }
 
 struct PexFunctionBuilder final
 {
-  PexFunctionBuilder& operator <<(const op::nop& instr) { return push(PexOpCode::Nop); }
+  PexFunctionBuilder& operator <<(op::nop&& instr) { return push(PexOpCode::Nop); }
 
 #define OP_ARG1(name, opcode, ...) \
-PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return push(PexOpCode::opcode, instr.a1); }
 #define OP_ARG2(name, opcode, ...) \
-PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2); }
 #define OP_ARG3(name, opcode, ...) \
-PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
 #define OP_ARG4(name, opcode, ...) \
-PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
 #define OP_ARG5(name, opcode, ...) \
-PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return push(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
   OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
@@ -146,14 +146,14 @@ PexFunctionBuilder& operator <<(const op::name& instr) { return push(PexOpCode::
 #undef OP_ARG4
 #undef OP_ARG5
 
-  PexFunctionBuilder& operator <<(const op::callmethod& instr) {
-    return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
+  PexFunctionBuilder& operator <<(op::callmethod&& instr) {
+    return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
   }
-  PexFunctionBuilder& operator <<(const op::callparent& instr) {
-    return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, instr.variadicArgs));
+  PexFunctionBuilder& operator <<(op::callparent&& instr) {
+    return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, std::move(instr.variadicArgs)));
   }
-  PexFunctionBuilder& operator <<(const op::callstatic& instr) {
-    return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, instr.variadicArgs));
+  PexFunctionBuilder& operator <<(op::callstatic&& instr) {
+    return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
   }
 
   PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
@@ -266,7 +266,7 @@ private:
 
   template<typename... Args>
   PexFunctionBuilder& push(PexOpCode op, Args&&... args) {
-    return push(new PexInstruction(op, std::vector<PexValue>{ args... }));
+    return push(new PexInstruction(op, std::vector<PexValue>{ std::forward<Args>(args)... }));
   }
   
   PexFunctionBuilder& push(PexInstruction* instr);

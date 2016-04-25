@@ -38,7 +38,7 @@ PexFile* PexFile::read(PexReader& rdr) {
     auto str = rdr.read<PexString>();
     auto v = rdr.read<uint8_t>();
     file->userFlagTable.push_back(std::make_pair(str, v));
-    file->userFlagTableLookup[str] = i;
+    file->userFlagTableLookup[str.index] = i;
   }
 
   auto objTableSize = rdr.read<uint16_t>();
@@ -55,13 +55,13 @@ void PexFile::write(PexWriter& wtr) const {
   wtr.write<uint8_t>(minorVersion);
   wtr.write<uint16_t>(gameID);
   wtr.write<time_t>(compilationTime);
-  wtr.write<std::string>(sourceFileName);
-  wtr.write<std::string>(userName);
-  wtr.write<std::string>(computerName);
+  wtr.write<const std::string&>(sourceFileName);
+  wtr.write<const std::string&>(userName);
+  wtr.write<const std::string&>(computerName);
 
   wtr.boundWrite<uint16_t>(stringTable.size());
   for (auto& str : stringTable)
-    wtr.write<std::string>(str);
+    wtr.write<const std::string&>(str);
 
   if (debugInfo) {
     wtr.write<uint8_t>(0x01);

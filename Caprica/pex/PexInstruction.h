@@ -71,8 +71,8 @@ struct PexInstruction final
 
   explicit PexInstruction() = default;
   explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
-  explicit PexInstruction(PexOpCode op, std::vector<PexValue> arguments) : opCode(op), args(arguments) { }
-  explicit PexInstruction(PexOpCode op, std::vector<PexValue> arguments, std::vector<PexValue> varArguments) : opCode(op), args(arguments), variadicArgs(varArguments) { }
+  explicit PexInstruction(PexOpCode op, std::vector<PexValue>&& arguments) : opCode(op), args(std::move(arguments)) { }
+  explicit PexInstruction(PexOpCode op, std::vector<PexValue>&& arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
   PexInstruction(const PexInstruction&) = delete;
   ~PexInstruction() = default;
 

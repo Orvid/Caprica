@@ -10,7 +10,7 @@
 
 namespace caprica { namespace papyrus { namespace parser {
 
-static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNameMap{
+static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::Unknown, "Unknown" },
   { TokenType::EOL, "EOL" },
   { TokenType::END, "EOF" },
@@ -304,7 +304,6 @@ StartOver:
     case '9':
     {
       std::string str;
-      str.reserve(64);
       str.append(1, (char)c);
 
       // It's hex.
@@ -418,7 +417,6 @@ StartOver:
     case 'Z':
     {
       std::string str;
-      str.reserve(64);
       
       if (c == ':') {
         if (!conf::Papyrus::allowCompilerIdentifiers || peekChar() != ':')
@@ -451,14 +449,13 @@ StartOver:
 
       setTok(TokenType::Identifier, baseLoc);
       str.shrink_to_fit();
-      cur.sValue = str;
+      cur.sValue = std::move(str);
       return;
     }
 
     case '"':
     {
       std::string str;
-      str.reserve(64);
 
       while (peekChar() != '"' && peekChar() != '\r' && peekChar() != '\n' && peekChar() != -1) {
         if (peekChar() == '\\') {
@@ -493,7 +490,7 @@ StartOver:
 
       setTok(TokenType::String, baseLoc);
       str.shrink_to_fit();
-      cur.sValue = str;
+      cur.sValue = std::move(str);
       return;
     }
 
@@ -529,7 +526,6 @@ StartOver:
     case '{':
     {
       std::string str;
-      str.reserve(64);
 
       // Trim all leading whitespace.
       while (isspace(peekChar()))
@@ -557,11 +553,12 @@ StartOver:
       getChar();
 
       setTok(TokenType::DocComment, baseLoc);
-      str.shrink_to_fit();
-      cur.sValue = str;
+      cur.sValue = std::move(str);
       // Trim trailing whitespace.
-      if (cur.sValue.length())
+      if (cur.sValue.length()) {
         cur.sValue = cur.sValue.substr(0, cur.sValue.find_last_not_of(" \t\n\v\f\r") + 1);
+        cur.sValue.shrink_to_fit();
+      }
       return;
     }
 
