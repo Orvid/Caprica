@@ -29,17 +29,20 @@ struct CaselessStringHasher final : public std::function<size_t(std::string)>
     static_assert(sizeof(size_t) == 8, "This is 64-bit only!");
     constexpr size_t offsetBasis = 0xcbf29ce484222325ULL;
     constexpr size_t prime = 0x100000001B3ULL;
+    const char* cStr = k.c_str();
+    const char* eStr = k.c_str() + k.size();
+    
 
     size_t val = offsetBasis;
-    for (size_t i = 0; i < k.size(); i++) {
-      val ^= (size_t)charMap[k.c_str()[i] - 0x20];
+    for (; cStr < eStr; cStr++) {
+      val ^= (size_t)(charMap - 0x20)[*cStr];
       val *= prime;
     }
     return val;
   }
 
 private:
-  static const uint8_t charMap[];
+  alignas(64) static const uint8_t charMap[];
 };
 
 struct CaselessStringEqual final : public std::function<bool(std::string, std::string)>
