@@ -34,16 +34,44 @@ struct CaselessStringHasher final : public std::function<size_t(std::string)>
     
 
     size_t val = offsetBasis;
+#if 0
+    for (; cStr < eStr; cStr++) {
+      // This is safe only because we are hashing
+      // identifiers with a known set of characters.
+      val ^= (size_t)(*cStr | 32);
+      val *= prime;
+    }
+#else
     for (; cStr < eStr; cStr++) {
       val ^= (size_t)(charMap - 0x20)[*cStr];
       val *= prime;
     }
+#endif
     return val;
   }
-
 private:
   alignas(64) static const uint64_t charMap[];
 };
+
+struct CaselessIdentifierHasher final : public std::function<size_t(std::string)>
+{
+  size_t operator()(const std::string& k) const {
+    const char* cStr = k.c_str();
+
+    // We know the string is null-terminated, so we can align to 2.
+    size_t lenLeft = k.size() & 0xFFFFFFFFFFFFFFFEULL;
+    size_t iterCount = lenLeft >> 2;
+    uint32_t val = 0x84222325U;
+    size_t i = iterCount;
+    while (i)
+      val = _mm_crc32_u32(val, ((uint32_t*)cStr)[--i] | 0x20202020);
+    if (lenLeft & 2)
+      val = _mm_crc32_u16(val, *(uint16_t*)(cStr + (iterCount * 4)) | (uint16_t)0x2020);
+    return ((size_t)val << 32) | val;
+  }
+};
+
+//using CaselessStringHasher = CaselessIdentifierHasher;
 
 struct CaselessStringEqual final : public std::function<bool(std::string, std::string)>
 {
@@ -58,5 +86,12 @@ template<typename K, typename V>
 using caseless_unordered_map = typename std::unordered_map<K, V, CaselessStringHasher, CaselessStringEqual>;
 template<typename K, typename V>
 using caseless_map = typename std::map<K, V, CaselessStringComparer>;
+
+template<typename T>
+using caseless_unordered_identifier_set = typename std::unordered_set<T, CaselessIdentifierHasher, CaselessStringEqual>;
+template<typename K, typename V>
+using caseless_unordered_identifier_map = typename std::unordered_map<K, V, CaselessIdentifierHasher, CaselessStringEqual>;
+template<typename K, typename V>
+using caseless_identifier_map = typename std::map<K, V, CaselessStringComparer>;
 
 }
