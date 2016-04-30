@@ -106,34 +106,9 @@ struct PapyrusType final
   void poison(PoisonKind kind);
   bool isPoisoned(PoisonKind kind) const;
 
+  bool operator !=(const PapyrusType& other) const;
   bool operator ==(const PapyrusType& other) const {
     return !(*this != other);
-  }
-
-  bool operator !=(const PapyrusType& other) const {
-    if (type == other.type) {
-      switch (type) {
-        case Kind::None:
-        case Kind::Bool:
-        case Kind::Float:
-        case Kind::Int:
-        case Kind::String:
-        case Kind::Var:
-        case Kind::CustomEventName:
-        case Kind::ScriptEventName:
-          return false;
-        case Kind::Array:
-          return *arrayElementType != *other.arrayElementType;
-        case Kind::Unresolved:
-          return _stricmp(name.c_str(), other.name.c_str()) != 0;
-        case Kind::ResolvedStruct:
-          return resolvedStruct != other.resolvedStruct;
-        case Kind::ResolvedObject:
-          return resolvedObject != other.resolvedObject;
-      }
-      CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind while comparing!");
-    }
-    return true;
   }
 
 private:

@@ -81,4 +81,40 @@ std::string PapyrusType::getTypeString() const {
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
+bool PapyrusType::operator !=(const PapyrusType& other) const {
+  if (type == other.type) {
+    switch (type) {
+      case Kind::None:
+      case Kind::Bool:
+      case Kind::Float:
+      case Kind::Int:
+      case Kind::String:
+      case Kind::Var:
+      case Kind::CustomEventName:
+      case Kind::ScriptEventName:
+        return false;
+      case Kind::Array:
+        return *arrayElementType != *other.arrayElementType;
+      case Kind::Unresolved:
+        return _stricmp(name.c_str(), other.name.c_str()) != 0;
+      case Kind::ResolvedStruct:
+        if (resolvedStruct == other.resolvedStruct)
+          return false;
+        if (!_stricmp(resolvedStruct->name.c_str(), other.resolvedStruct->name.c_str())) {
+          // Parent objects will never be the same in this case.
+          assert(resolvedStruct->parentObject);
+          assert(other.resolvedStruct->parentObject);
+          return _stricmp(resolvedStruct->parentObject->name.c_str(), other.resolvedStruct->parentObject->name.c_str()) != 0;
+        }
+        return true;
+      case Kind::ResolvedObject:
+        if (resolvedObject == other.resolvedObject)
+          return false;
+        return _stricmp(resolvedObject->name.c_str(), other.resolvedObject->name.c_str()) != 0;
+    }
+    CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind while comparing!");
+  }
+  return true;
+}
+
 }}
