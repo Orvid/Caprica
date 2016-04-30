@@ -16,6 +16,7 @@ static Concurrency::concurrent_unordered_map<std::string, std::future<std::strin
 static Concurrency::concurrent_unordered_map<std::string, std::string, CaselessStringHasher, CaselessStringEqual> readFilesMap{ };
 std::string Cache::readFile(const std::string& filename) {
   std::ifstream inFile{ filename, std::ifstream::binary };
+  inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
   std::stringstream strStream;
   strStream << inFile.rdbuf();
   auto str = strStream.str();
@@ -68,7 +69,11 @@ std::string Cache::cachedReadFull(const std::string& filename) {
 
 static void writeFile(const std::string& filename, const std::string& value) {
   if (!conf::Performance::performanceTestMode) {
+    auto containingDir = boost::filesystem::path(filename).parent_path();
+    if (!boost::filesystem::exists(containingDir))
+      boost::filesystem::create_directories(containingDir);
     std::ofstream destFile{ filename, std::ifstream::binary };
+    destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     destFile << value;
   }
 }
