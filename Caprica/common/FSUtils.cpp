@@ -34,9 +34,9 @@ void Cache::push_need(const std::string& filename) {
   if (conf::Performance::asyncFileRead) {
     auto abs = canonical(filename).string();
     if (!futureFileReadMap.count(abs)) {
-      futureFileReadMap[abs] = std::async([abs]() {
+      futureFileReadMap.insert({ abs, std::async([abs]() {
         return readFile(abs);
-      });
+      }) });
     }
   }
 }
@@ -89,7 +89,7 @@ void pushKnownInDirectory(const boost::filesystem::path& file) {
   if (!directoryContentsMap.count(dir)) {
     directoryContentsMap[dir] = { };
   }
-  directoryContentsMap[dir].insert(file.string());
+  directoryContentsMap[std::move(dir)].insert(file.string());
 }
 
 static Concurrency::concurrent_unordered_map<std::string, uint8_t, CaselessStringHasher, CaselessStringEqual> fileExistenceMap{ };
@@ -145,7 +145,7 @@ boost::filesystem::path canonical(const boost::filesystem::path& path) {
 }
 
 // Borrowed and slightly modified from http://stackoverflow.com/a/5773008/776797
-boost::filesystem::path naive_uncomplete(const boost::filesystem::path p, const boost::filesystem::path base) {
+boost::filesystem::path naive_uncomplete(const boost::filesystem::path& p, const boost::filesystem::path& base) {
   using boost::filesystem::path;
 
   if (p == base)

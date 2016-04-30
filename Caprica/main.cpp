@@ -29,19 +29,24 @@ namespace conf = caprica::conf;
 
 struct ScriptToCompile final
 {
-  std::string sourceFileName;
+  boost::filesystem::path sourceFileName;
   std::string outputDirectory;
 
   ScriptToCompile() = delete;
-  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const std::string& absolutePath, const boost::filesystem::path& relOutputDir) {
-    sourceFileName = sourcePath.string();
+  ScriptToCompile(boost::filesystem::path&& sourcePath,
+                  const std::string& baseOutputDir,
+                  boost::filesystem::path&& absolutePath,
+                  boost::filesystem::path&& relOutputDir)
+    : sourceFileName(std::move(sourcePath))
+  {
     outputDirectory = baseOutputDir + "\\" + relOutputDir.string();
-    caprica::FSUtils::Cache::push_need(absolutePath);
+    caprica::FSUtils::Cache::push_need(absolutePath.string());
   }
-  ScriptToCompile(const boost::filesystem::path& sourcePath, const std::string& baseOutputDir, const std::string& absolutePath) {
-    sourceFileName = sourcePath.string();
-    outputDirectory = baseOutputDir;
-    caprica::FSUtils::Cache::push_need(absolutePath);
+  ScriptToCompile(boost::filesystem::path&& sourcePath, const std::string& baseOutputDir, boost::filesystem::path&& absolutePath)
+    : sourceFileName(std::move(sourcePath)),
+      outputDirectory(baseOutputDir)
+  {
+    caprica::FSUtils::Cache::push_need(absolutePath.string());
   }
   ~ScriptToCompile() = default;
 };
@@ -52,9 +57,9 @@ static void compileScript(const ScriptToCompile& script) {
   auto path = boost::filesystem::path(script.sourceFileName);
   auto baseName = boost::filesystem::basename(path.filename());
   auto ext = boost::filesystem::extension(script.sourceFileName);
-  caprica::CapricaReportingContext reportingContext{ script.sourceFileName };
+  caprica::CapricaReportingContext reportingContext{ script.sourceFileName.string() };
   if (!_stricmp(ext.c_str(), ".psc")) {
-    auto parser = new caprica::papyrus::parser::PapyrusParser(reportingContext, script.sourceFileName);
+    auto parser = new caprica::papyrus::parser::PapyrusParser(reportingContext, script.sourceFileName.string());
     auto a = parser->parseScript();
     reportingContext.exitIfErrors();
     delete parser;
@@ -82,7 +87,7 @@ static void compileScript(const ScriptToCompile& script) {
 
     delete pex;
   } else if (!_stricmp(ext.c_str(), ".pas")) {
-    auto parser = new caprica::pex::parser::PexAsmParser(reportingContext, script.sourceFileName);
+    auto parser = new caprica::pex::parser::PexAsmParser(reportingContext, script.sourceFileName.string());
     auto pex = parser->parseFile();
     reportingContext.exitIfErrors();
     delete parser;
@@ -95,7 +100,7 @@ static void compileScript(const ScriptToCompile& script) {
     wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
     delete pex;
   } else if (!_stricmp(ext.c_str(), ".pex")) {
-    caprica::pex::PexReader rdr(script.sourceFileName);
+    caprica::pex::PexReader rdr(script.sourceFileName.string());
     auto pex = caprica::pex::PexFile::read(rdr);
     reportingContext.exitIfErrors();
     std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
@@ -271,14 +276,14 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
         }
-        conf::Papyrus::importDirectories.push_back(boost::filesystem::canonical(boost::filesystem::absolute(d)).make_preferred().string());
+        conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(d).string());
       }
     }
 
     auto baseOutputDir = vm["output"].as<std::string>();
     if (!boost::filesystem::exists(baseOutputDir))
       boost::filesystem::create_directories(baseOutputDir);
-    baseOutputDir = boost::filesystem::canonical(boost::filesystem::absolute(baseOutputDir)).make_preferred().string();
+    baseOutputDir = caprica::FSUtils::canonical(baseOutputDir).string();
 
     if (vm.count("flags")) {
       const auto findFlags = [progamBasePath, baseOutputDir](const std::string& flagsPath) -> std::string {
@@ -322,16 +327,17 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         if (iterateCompiledDirectoriesRecursively) {
           auto absBaseDir = caprica::FSUtils::canonical(f);
           boost::system::error_code ec;
-          for (auto e : boost::filesystem::recursive_directory_iterator(f, ec)) {
-            caprica::FSUtils::pushKnownInDirectory(caprica::FSUtils::canonical(e.path()));
-            if (e.path().extension().string() == ".psc") {
-              auto abs = caprica::FSUtils::canonical(e.path());
+          for (const auto& e : boost::filesystem::recursive_directory_iterator(f, ec)) {
+            const auto& ep = e.path();
+            auto abs = caprica::FSUtils::canonical(ep);
+            caprica::FSUtils::pushKnownInDirectory(abs);
+            if (!wcscmp(e.path().extension().c_str(), L".psc")) {
               auto rel = caprica::FSUtils::naive_uncomplete(abs, absBaseDir).make_preferred();
               
-              if (rel.string() != e.path().filename())
-                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, abs.string(), rel.parent_path()));
+              if (rel != ep.filename())
+                filesToCompile.push_back(ScriptToCompile(ep.string(), baseOutputDir, std::move(abs), rel.parent_path()));
               else
-                filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, abs.string()));
+                filesToCompile.push_back(ScriptToCompile(ep.string(), baseOutputDir, std::move(abs)));
             }
           }
         } else {
@@ -339,7 +345,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           for (auto e : boost::filesystem::directory_iterator(f, ec)) {
             caprica::FSUtils::pushKnownInDirectory(caprica::FSUtils::canonical(e.path()));
             if (e.path().extension().string() == ".psc")
-              filesToCompile.push_back(ScriptToCompile(e.path(), baseOutputDir, caprica::FSUtils::canonical(e.path()).string()));
+              filesToCompile.push_back(ScriptToCompile(e.path().string(), baseOutputDir, caprica::FSUtils::canonical(e.path())));
           }
         }
       } else {
@@ -349,7 +355,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        filesToCompile.push_back(ScriptToCompile(f, baseOutputDir, caprica::FSUtils::canonical(f).string()));
+        filesToCompile.push_back(ScriptToCompile(std::move(f), baseOutputDir, caprica::FSUtils::canonical(f).string()));
       }
     }
   } catch (const std::exception& ex) {
@@ -363,15 +369,19 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
 int main(int argc, char* argv[])
 {
+  auto startParse = std::chrono::high_resolution_clock::now();
   std::vector<ScriptToCompile> filesToCompile;
   if (!parseArgs(argc, argv, filesToCompile)) {
     caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
   }
+  auto endParse = std::chrono::high_resolution_clock::now();
 
+  auto startRead = std::chrono::high_resolution_clock::now();
   if (conf::Performance::performanceTestMode) {
     caprica::FSUtils::Cache::waitForAll();
   }
+  auto endRead = std::chrono::high_resolution_clock::now();
 
   try {
     auto startCompile = std::chrono::high_resolution_clock::now();
@@ -385,8 +395,10 @@ int main(int argc, char* argv[])
     }
     auto endCompile = std::chrono::high_resolution_clock::now();
     if (conf::Performance::performanceTestMode) {
+      std::cout << "Parse: " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms" << std::endl;
+      std::cout << "Read: "  << std::chrono::duration_cast<std::chrono::milliseconds>(endRead - startRead).count() << "ms" << std::endl;
       std::cout << "Compiled " << filesToCompile.size() << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
-      getc(stdin);
+      //getc(stdin);
     }
   } catch (const std::runtime_error& ex) {
     if (ex.what() != "")
