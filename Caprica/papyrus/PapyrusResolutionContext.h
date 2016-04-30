@@ -54,23 +54,12 @@ struct PapyrusResolutionContext final
   expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const;
   PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) const;
 
-  void pushLocalVariableScope() {
-    localVariableScopeStack.push_back({ });
-  }
+  void pushLocalVariableScope() { localVariableScopeStack.push_back({ }); }
+  void popLocalVariableScope() { localVariableScopeStack.pop_back(); }
 
-  void popLocalVariableScope() {
-    localVariableScopeStack.pop_back();
-  }
-
-  bool canBreak() const {
-    return currentBreakScopeDepth > 0;
-  }
-  void pushBreakScope() {
-    currentBreakScopeDepth++;
-  }
-  void popBreakScope() {
-    currentBreakScopeDepth--;
-  }
+  bool canBreak() const { return currentBreakScopeDepth > 0; }
+  void pushBreakScope() { currentBreakScopeDepth++; }
+  void popBreakScope() { currentBreakScopeDepth--; }
 
   bool canContinue() const {
     return currentContinueScopeDepth > 0;
