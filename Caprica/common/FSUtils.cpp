@@ -34,9 +34,9 @@ void Cache::push_need(const std::string& filename) {
   if (conf::Performance::asyncFileRead) {
     auto abs = canonical(filename).string();
     if (!futureFileReadMap.count(abs)) {
-      futureFileReadMap.insert({ abs, std::async([abs]() {
+      futureFileReadMap.insert(std::make_pair(abs, std::async([abs]() {
         return readFile(abs);
-      }) });
+      })));
     }
   }
 }
