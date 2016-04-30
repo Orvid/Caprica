@@ -51,6 +51,7 @@ struct PapyrusDoWhileStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
+    ctx->checkForPoison(condition);
     condition = ctx->coerceExpression(condition, PapyrusType::Bool(condition->location));
     ctx->pushBreakContinueScope();
     ctx->pushLocalVariableScope();

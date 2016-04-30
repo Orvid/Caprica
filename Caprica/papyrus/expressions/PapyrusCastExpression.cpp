@@ -14,6 +14,7 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
 
 void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
   innerExpression->semantic(ctx);
+  ctx->checkForPoison(innerExpression);
   targetType = ctx->resolveType(targetType);
   
   if (innerExpression->resultType() == targetType)

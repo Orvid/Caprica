@@ -44,12 +44,14 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     if (isAuto) {
       initialValue->semantic(ctx);
+      ctx->checkForPoison(initialValue);
       type = initialValue->resultType();
     } else {
       type = ctx->resolveType(type);
 
       if (initialValue) {
         initialValue->semantic(ctx);
+        ctx->checkForPoison(initialValue);
         initialValue = ctx->coerceExpression(initialValue, type);
       }
     }

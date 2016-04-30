@@ -85,6 +85,7 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
+    ctx->checkForPoison(condition);
     if (condition->resultType().type != PapyrusType::Kind::Int && condition->resultType().type != PapyrusType::Kind::String)
       ctx->reportingContext.error(condition->location, "The condition of a switch statement can only be either an Int or a String, got '%s'!", condition->resultType().prettyString().c_str());
 

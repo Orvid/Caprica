@@ -40,6 +40,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     if (returnValue) {
       returnValue->semantic(ctx);
+      ctx->checkForPoison(returnValue);
       returnValue = ctx->coerceExpression(returnValue, ctx->function->returnType);
     }
   }

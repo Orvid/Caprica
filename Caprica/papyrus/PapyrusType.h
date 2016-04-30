@@ -17,6 +17,13 @@ struct PapyrusStruct;
 
 struct PapyrusType final
 {
+  enum class PoisonKind
+  {
+    None  = 0b00000000,
+    Beta  = 0b00000001,
+    Debug = 0b00000010,
+  };
+
   enum class Kind
   {
     None,
@@ -69,6 +76,11 @@ struct PapyrusType final
   }
 
   static PapyrusType None(CapricaFileLocation loc) { return PapyrusType(Kind::None, loc); }
+  static PapyrusType PoisonedNone(CapricaFileLocation loc, const PapyrusType& poisonSource) {
+    auto pt = PapyrusType(Kind::None, loc);
+    pt.poisonState = poisonSource.poisonState;
+    return pt;
+  }
   static PapyrusType Bool(CapricaFileLocation loc) { return PapyrusType(Kind::Bool, loc); }
   static PapyrusType Float(CapricaFileLocation loc) { return PapyrusType(Kind::Float, loc); }
   static PapyrusType Int(CapricaFileLocation loc) { return PapyrusType(Kind::Int, loc); }
@@ -90,6 +102,9 @@ struct PapyrusType final
   }
 
   std::string prettyString() const;
+
+  void poison(PoisonKind kind);
+  bool isPoisoned(PoisonKind kind) const;
 
   bool operator ==(const PapyrusType& other) const {
     return !(*this != other);
@@ -122,11 +137,28 @@ struct PapyrusType final
   }
 
 private:
+  PoisonKind poisonState{ PoisonKind::None };
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 
   PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 
   std::string getTypeString() const;
 };
+
+inline auto operator ~(PapyrusType::PoisonKind a) {
+  return (decltype(a))(~(std::underlying_type<decltype(a)>::type)a);
+}
+inline auto operator &(PapyrusType::PoisonKind a, PapyrusType::PoisonKind b) {
+  return (decltype(a))((std::underlying_type<decltype(a)>::type)a & (std::underlying_type<decltype(b)>::type)b);
+}
+inline auto operator |(PapyrusType::PoisonKind a, PapyrusType::PoisonKind b) {
+  return (decltype(a))((std::underlying_type<decltype(a)>::type)a | (std::underlying_type<decltype(b)>::type)b);
+}
+inline auto& operator &=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
+  return a = a & b;
+}
+inline auto& operator |=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
+  return a = a | b;
+}
 
 }}

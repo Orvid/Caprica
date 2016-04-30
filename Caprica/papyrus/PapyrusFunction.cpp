@@ -6,11 +6,19 @@
 #include <common/EngineLimits.h>
 
 #include <papyrus/PapyrusCFG.h>
+#include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusState.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusStatementVisitor.h>
 
 namespace caprica { namespace papyrus {
+
+bool PapyrusFunction::isBetaOnly() const {
+  return userFlags.isBetaOnly || parentObject->isBetaOnly();
+}
+bool PapyrusFunction::isDebugOnly() const {
+  return userFlags.isDebugOnly || parentObject->isDebugOnly();
+}
 
 pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx, 
                                             pex::PexFile* file,
@@ -70,6 +78,11 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
 
 void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
   returnType = ctx->resolveType(returnType);
+  if (isBetaOnly())
+    returnType.poison(PapyrusType::PoisonKind::Beta);
+  if (isDebugOnly())
+    returnType.poison(PapyrusType::PoisonKind::Debug);
+
   ctx->ensureNamesAreUnique(parameters, "parameter");
   for (auto p : parameters)
     p->semantic(ctx);

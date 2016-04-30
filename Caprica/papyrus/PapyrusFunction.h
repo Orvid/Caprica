@@ -47,10 +47,10 @@ struct PapyrusFunction final
 
   CapricaFileLocation location;
 
-  bool isBetaOnly() const { return userFlags.isBetaOnly; }
-  bool isDebugOnly() const { return userFlags.isDebugOnly; }
-  bool isGlobal() const { return userFlags.isGlobal; }
-  bool isNative() const { return userFlags.isNative; }
+  bool isBetaOnly() const;
+  bool isDebugOnly() const;
+  bool isGlobal() const noexcept { return userFlags.isGlobal; }
+  bool isNative() const noexcept { return userFlags.isNative; }
 
   explicit PapyrusFunction(CapricaFileLocation loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
   PapyrusFunction(const PapyrusFunction&) = delete;

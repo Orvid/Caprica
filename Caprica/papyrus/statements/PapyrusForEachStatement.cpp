@@ -52,6 +52,7 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
 
 void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
   expressionToIterate->semantic(ctx);
+  ctx->checkForPoison(expressionToIterate);
   auto elementType = [this, ctx](const PapyrusType& tp) -> PapyrusType {
     if (tp.type == PapyrusType::Kind::Array) {
       return tp.getElementType();

@@ -38,7 +38,10 @@ struct PapyrusObject final
   std::vector<PapyrusState*> states{ };
   std::vector<PapyrusCustomEvent*> customEvents{ };
 
+  bool isBetaOnly() const { return userFlags.isBetaOnly; }
   bool isConst() const { return userFlags.isConst; }
+  bool isDebugOnly() const { return userFlags.isDebugOnly; }
+  bool isNative() const { return userFlags.isNative; }
 
   explicit PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) {
     rootState = new PapyrusState(location);

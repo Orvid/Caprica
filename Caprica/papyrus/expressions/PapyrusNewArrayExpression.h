@@ -37,6 +37,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
     type = ctx->resolveType(type);
     type = PapyrusType::Array(type.location, std::make_shared<PapyrusType>(type));
     lengthExpression->semantic(ctx);
+    ctx->checkForPoison(lengthExpression);
 
     if (lengthExpression->resultType().type != PapyrusType::Kind::Int)
       ctx->reportingContext.error(lengthExpression->location, "The length expression of a new array expression must be an integral type, but got '%s'.", lengthExpression->resultType().prettyString().c_str());

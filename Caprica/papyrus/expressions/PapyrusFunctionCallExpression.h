@@ -48,6 +48,9 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   }
 
   virtual PapyrusType resultType() const override;
+
+private:
+  bool isPoisonedReturn{ false };
 };
 
 }}}

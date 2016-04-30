@@ -160,9 +160,11 @@ struct PapyrusForStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     initialValue->semantic(ctx);
+    ctx->checkForPoison(initialValue);
     if (initialValue->resultType().type != PapyrusType::Kind::Int && initialValue->resultType().type != PapyrusType::Kind::Float)
       ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got an initial value of type '%s'!", initialValue->resultType().prettyString().c_str());
     targetValue->semantic(ctx);
+    ctx->checkForPoison(targetValue);
     if (targetValue->resultType().type != PapyrusType::Kind::Int && targetValue->resultType().type != PapyrusType::Kind::Float)
       ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a target value of type '%s'!", targetValue->resultType().prettyString().c_str());
     // TODO: Allow some implicit coercion and add checks about the declare/iterator/step expressions' types as well.
@@ -170,6 +172,7 @@ struct PapyrusForStatement final : public PapyrusStatement
       ctx->reportingContext.error(initialValue->location, "The intial value, of type '%s', does not match the target value type '%s'!", initialValue->resultType().prettyString().c_str(), targetValue->resultType().prettyString().c_str());
     if (stepValue) {
       stepValue->semantic(ctx);
+      ctx->checkForPoison(stepValue);
       if (stepValue->resultType().type != PapyrusType::Kind::Int && stepValue->resultType().type != PapyrusType::Kind::Float)
         ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a step value of type '%s'!", stepValue->resultType().prettyString().c_str());
     }

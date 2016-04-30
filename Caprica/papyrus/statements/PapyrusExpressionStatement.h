@@ -29,6 +29,8 @@ struct PapyrusExpressionStatement final : public PapyrusStatement
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
+    // We don't explicitly use the result of the expression, so we don't
+    // check it for poison.
     expression->semantic(ctx);
   }
 

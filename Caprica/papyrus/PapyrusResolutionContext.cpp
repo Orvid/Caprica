@@ -315,6 +315,30 @@ PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& va
   return val;
 }
 
+void PapyrusResolutionContext::checkForPoison(const expressions::PapyrusExpression* expr) const {
+  checkForPoison(expr->resultType());
+}
+
+void PapyrusResolutionContext::checkForPoison(const PapyrusType& type) const {
+  if (type.isPoisoned(PapyrusType::PoisonKind::Beta)) {
+    if (function != nullptr && function->isBetaOnly())
+      goto CheckDebug;
+    if (object != nullptr && object->isBetaOnly())
+      goto CheckDebug;
+    reportingContext.error(type.location, "You cannot use the return value of a BetaOnly function in a non-BetaOnly context!");
+    return;
+  }
+CheckDebug:
+  if (type.isPoisoned(PapyrusType::PoisonKind::Debug)) {
+    if (function != nullptr && function->isDebugOnly())
+      return;
+    if (object != nullptr && object->isDebugOnly())
+      return;
+    reportingContext.error(type.location, "You cannot use the return value of a DebugOnly function in a non-DebugOnly context!");
+    return;
+  }
+}
+
 PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const {
   for (auto f : parentObj->getRootState()->functions) {
     if (!_stricmp(f->name.c_str(), name.c_str()) && f->functionType == PapyrusFunctionType::Event)

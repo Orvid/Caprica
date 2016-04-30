@@ -54,6 +54,9 @@ struct PapyrusResolutionContext final
   expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const;
   PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) const;
 
+  void checkForPoison(const expressions::PapyrusExpression* expr) const;
+  void checkForPoison(const PapyrusType& type) const;
+
   void pushLocalVariableScope() { localVariableScopeStack.push_back({ }); }
   void popLocalVariableScope() { localVariableScopeStack.pop_back(); }
 

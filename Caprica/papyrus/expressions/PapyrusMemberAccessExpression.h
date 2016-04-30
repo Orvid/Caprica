@@ -61,6 +61,8 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
+    // We don't explicitly use the access expression, so we don't
+    // check it for poison.
     if (auto fc = accessExpression->as<PapyrusFunctionCallExpression>()) {
       if (auto id = baseExpression->as<PapyrusIdentifierExpression>()) {
         id->identifier = ctx->tryResolveIdentifier(id->identifier);
@@ -74,10 +76,12 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
         }
       }
       baseExpression->semantic(ctx);
+      ctx->checkForPoison(baseExpression);
       fc->function = ctx->resolveFunctionIdentifier(baseExpression->resultType(), fc->function);
       fc->semantic(ctx, baseExpression);
     } else {
       baseExpression->semantic(ctx);
+      ctx->checkForPoison(baseExpression);
       if (auto id = accessExpression->as<PapyrusIdentifierExpression>()) {
         id->identifier = ctx->resolveMemberIdentifier(baseExpression->resultType(), id->identifier);
         id->semantic(ctx);

@@ -33,6 +33,7 @@ struct PapyrusIsExpression final : public PapyrusExpression
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     innerExpression->semantic(ctx);
+    ctx->checkForPoison(innerExpression);
     targetType = ctx->resolveType(targetType);
   }
 

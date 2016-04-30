@@ -86,7 +86,9 @@ struct PapyrusAssignStatement final : public PapyrusStatement
 
     if (operation == PapyrusAssignOperatorType::Assign) {
       lValue->semantic(ctx);
+      ctx->checkForPoison(lValue);
       rValue->semantic(ctx);
+      ctx->checkForPoison(rValue);
       rValue = ctx->coerceExpression(rValue, lValue->resultType());
     } else {
       binOpExpression = new expressions::PapyrusBinaryOpExpression(location);
@@ -111,6 +113,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
         CapricaReportingContext::logicalFatal("Unknown PapyrusAssignOperatorType!");
       }(operation);
       binOpExpression->semantic(ctx);
+      ctx->checkForPoison(binOpExpression);
       if (lValue->resultType().type == PapyrusType::Kind::Array && !conf::Papyrus::enableLanguageExtensions)
         ctx->reportingContext.error(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
       rValue = ctx->coerceExpression(binOpExpression, lValue->resultType());

@@ -150,7 +150,9 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     assert(operation != PapyrusBinaryOperatorType::None);
     left->semantic(ctx);
+    ctx->checkForPoison(left);
     right->semantic(ctx);
+    ctx->checkForPoison(right);
     switch (operation) {
       case PapyrusBinaryOperatorType::BooleanOr:
       case PapyrusBinaryOperatorType::BooleanAnd:

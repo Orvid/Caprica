@@ -7,6 +7,14 @@
 
 namespace caprica { namespace papyrus {
 
+void PapyrusType::poison(PapyrusType::PoisonKind kind) {
+  this->poisonState |= kind;
+}
+
+bool PapyrusType::isPoisoned(PoisonKind kind) const {
+  return (this->poisonState & kind) == kind;
+}
+
 std::string PapyrusType::prettyString() const {
   switch (type) {
     case Kind::None:

@@ -55,6 +55,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     assert(operation != PapyrusUnaryOperatorType::None);
     innerExpression->semantic(ctx);
+    ctx->checkForPoison(innerExpression);
   }
 
   virtual PapyrusType resultType() const override {

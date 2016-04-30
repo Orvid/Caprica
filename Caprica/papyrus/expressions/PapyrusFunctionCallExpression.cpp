@@ -127,11 +127,16 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
 }
 
 void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, PapyrusExpression* baseExpression) {
+  if (baseExpression)
+    ctx->checkForPoison(baseExpression);
+  // TODO: Maybe pass baseExpression now that it's being passed to us?
   function = ctx->resolveFunctionIdentifier(PapyrusType::None(location), function);
 
   if (function.type == PapyrusIdentifierType::BuiltinArrayFunction) {
-    for (size_t i = 0; i < arguments.size(); i++)
+    for (size_t i = 0; i < arguments.size(); i++) {
       arguments[i]->value->semantic(ctx);
+      ctx->checkForPoison(arguments[i]->value);
+    }
 
     switch (function.arrayFuncKind) {
       case PapyrusBuiltinArrayFunctionKind::Find:
@@ -277,6 +282,17 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     }
     ctx->reportingContext.logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
   } else {
+    assert(function.func != nullptr);
+
+    if (function.func->returnType.isPoisoned(PapyrusType::PoisonKind::Beta)) {
+      if (ctx->function == nullptr || !ctx->function->isBetaOnly())
+        isPoisonedReturn = true;
+    }
+    if (function.func->returnType.isPoisoned(PapyrusType::PoisonKind::Debug)) {
+      if (ctx->function == nullptr || !ctx->function->isDebugOnly())
+        isPoisonedReturn = true;
+    }
+
     bool hasNamedArgs = [&]() {
       for (auto a : arguments) {
         if (a->name != "")
@@ -319,6 +335,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
 
     for (size_t i = 0; i < arguments.size(); i++) {
       arguments[i]->value->semantic(ctx);
+      ctx->checkForPoison(arguments[i]->value);
       switch (function.func->parameters[i]->type.type) {
         case PapyrusType::Kind::CustomEventName:
         case PapyrusType::Kind::ScriptEventName:
@@ -392,6 +409,8 @@ PapyrusType PapyrusFunctionCallExpression::resultType() const {
         return PapyrusType::None(location);
     }
   } else {
+    if (isPoisonedReturn)
+      return PapyrusType::PoisonedNone(location, function.func->returnType);
     return function.func->returnType;
   }
 }
