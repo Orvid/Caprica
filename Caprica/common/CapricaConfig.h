@@ -20,6 +20,10 @@ namespace General {
 
 // Options related to code generation.
 namespace CodeGeneration {
+  // If true, don't generate calls to BetaOnly functions.
+  extern bool disableBetaCode;
+  // If true, don't generate calls to DebugOnly functions.
+  extern bool disableDebugCode;
   // Enable optimizations that are done regardless of if the -optimize
   // switch is passed to the CK compiler.
   extern bool enableCKOptimizations;

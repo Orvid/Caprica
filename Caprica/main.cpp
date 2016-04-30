@@ -138,6 +138,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
       ("output,o", po::value<std::string>()->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::General::compileInParallel)->default_value(false), "Compile files in parallel.")
       ("recurse,r", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false), "Recursively compile all scripts in the directories passed.")
+      ("release", po::bool_switch(&conf::CodeGeneration::disableDebugCode)->default_value(false), "Don't generate DebugOnly code.")
+      ("final", po::bool_switch(&conf::CodeGeneration::disableBetaCode)->default_value(false), "Don't generate BetaOnly code.")
       ("all-warnings-as-errors", po::bool_switch(&conf::Warnings::treatWarningsAsErrors)->default_value(false), "Treat all warnings as if they were errors.")
       ("disable-all-warnings", po::bool_switch(&conf::Warnings::disableAllWarnings)->default_value(false), "Disable all warnings by default.")
       ("warning-as-error", po::value<std::vector<size_t>>()->composing(), "Treat a specific warning as an error.")

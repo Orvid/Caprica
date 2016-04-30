@@ -12,6 +12,9 @@
 namespace caprica { namespace papyrus { namespace expressions {
 
 pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, PapyrusExpression* base) const {
+  if (!shouldEmit)
+    return pex::PexValue::Invalid();
+
   namespace op = caprica::pex::op;
   if (function.type == PapyrusIdentifierType::BuiltinArrayFunction) {
     auto bVal = pex::PexValue::Identifier::fromVar(base->generateLoad(file, bldr));
@@ -285,12 +288,16 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     assert(function.func != nullptr);
 
     if (function.func->returnType.isPoisoned(PapyrusType::PoisonKind::Beta)) {
-      if (ctx->function == nullptr || !ctx->function->isBetaOnly())
+      if (ctx->function == nullptr || !ctx->function->isBetaOnly()) {
         isPoisonedReturn = true;
+        shouldEmit = !conf::CodeGeneration::disableBetaCode;
+      }
     }
     if (function.func->returnType.isPoisoned(PapyrusType::PoisonKind::Debug)) {
-      if (ctx->function == nullptr || !ctx->function->isDebugOnly())
+      if (ctx->function == nullptr || !ctx->function->isDebugOnly()) {
         isPoisonedReturn = true;
+        shouldEmit = !conf::CodeGeneration::disableDebugCode;
+      }
     }
 
     bool hasNamedArgs = [&]() {

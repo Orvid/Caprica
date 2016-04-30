@@ -11,6 +11,8 @@ namespace General {
 }
 
 namespace CodeGeneration {
+  bool disableBetaCode{ false };
+  bool disableDebugCode{ false };
   bool enableCKOptimizations{ false };
   bool enableOptimizations{ false };
   bool emitDebugInfo{ false };

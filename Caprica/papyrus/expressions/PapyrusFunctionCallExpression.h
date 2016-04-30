@@ -51,6 +51,7 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
 
 private:
   bool isPoisonedReturn{ false };
+  bool shouldEmit{ true };
 };
 
 }}}
