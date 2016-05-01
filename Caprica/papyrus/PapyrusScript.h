@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctime>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusScript final
 {
+  time_t lastModificationTime{ };
   std::string sourceFileName{ "" };
   std::vector<PapyrusObject*> objects{ };
 

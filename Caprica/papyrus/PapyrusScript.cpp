@@ -1,7 +1,5 @@
 #include <papyrus/PapyrusScript.h>
 
-#include <boost/filesystem.hpp>
-
 #include <Windows.h>
 #include <lmcons.h>
 
@@ -14,7 +12,7 @@ pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
   auto pex = new pex::PexFile();
   if (conf::CodeGeneration::emitDebugInfo) {
     pex->debugInfo = new pex::PexDebugInfo();
-    pex->debugInfo->modificationTime = boost::filesystem::last_write_time(sourceFileName);
+    pex->debugInfo->modificationTime = lastModificationTime;
   }
   pex->compilationTime = time(nullptr);
   pex->sourceFileName = sourceFileName;

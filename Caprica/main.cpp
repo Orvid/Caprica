@@ -29,30 +29,17 @@ namespace conf = caprica::conf;
 
 struct ScriptToCompile final
 {
+  time_t lastModTime;
   std::string sourceFileName;
   std::string outputDirectory;
   std::string sourceFilePath;
 
   ScriptToCompile() = delete;
-  ScriptToCompile(boost::filesystem::path&& sourcePath,
-                  const std::string& baseOutputDir,
-                  boost::filesystem::path&& absolutePath,
-                  boost::filesystem::path&& relOutputDir)
-    : sourceFileName(std::move(sourcePath.string()))
-  {
-    outputDirectory = baseOutputDir + "\\" + relOutputDir.string();
-    caprica::FSUtils::Cache::push_need(absolutePath.string());
-  }
-  ScriptToCompile(boost::filesystem::path&& sourcePath, const std::string& baseOutputDir, boost::filesystem::path&& absolutePath)
-    : sourceFileName(std::move(sourcePath.string())),
-      outputDirectory(baseOutputDir)
-  {
-    caprica::FSUtils::Cache::push_need(absolutePath.string());
-  }
-  ScriptToCompile(std::string&& sourcePath, std::string&& baseOutputDir, std::string&& absolutePath)
+  ScriptToCompile(std::string&& sourcePath, std::string&& baseOutputDir, std::string&& absolutePath, time_t lastMod)
     : sourceFileName(std::move(sourcePath)),
     outputDirectory(std::move(baseOutputDir)),
-    sourceFilePath(std::move(absolutePath)) {
+    sourceFilePath(std::move(absolutePath)),
+    lastModTime(lastMod) {
     caprica::FSUtils::Cache::push_need(sourceFilePath);
   }
   ScriptToCompile(const ScriptToCompile& other) = default;
@@ -165,6 +152,12 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
           knownFileSet.emplace(data.cFileName);
           auto ext = strrchr(data.cFileName, '.');
           if (ext != nullptr && !strcmp(ext, ".psc")) {
+            const auto calcLastModTime = [](FILETIME ft) -> time_t {
+              ULARGE_INTEGER ull;
+              ull.LowPart = ft.dwLowDateTime;
+              ull.HighPart = ft.dwHighDateTime;
+              return ull.QuadPart / 10000000ULL - 11644473600ULL;
+            };
             std::string sourceFilePath = curDirFull + "\\" + data.cFileName;
             std::string filenameToDisplay;
             std::string outputDir;
@@ -175,7 +168,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               filenameToDisplay = curDir.substr(1) + "\\" + data.cFileName;
               outputDir = baseOutputDir + curDir;
             }
-            filesToCompile.push_back(ScriptToCompile(std::move(filenameToDisplay), std::move(outputDir), std::move(sourceFilePath)));
+            filesToCompile.push_back(ScriptToCompile(std::move(filenameToDisplay), std::move(outputDir), std::move(sourceFilePath), calcLastModTime(data.ftLastWriteTime)));
           }
         }
       }
@@ -411,7 +404,9 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        filesToCompile.push_back(ScriptToCompile(std::move(f), baseOutputDir, caprica::FSUtils::canonical(f).string()));
+        auto canon = caprica::FSUtils::canonical(f).string();
+        auto oDir = baseOutputDir;
+        filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f)));
       }
     }
   } catch (const std::exception& ex) {
