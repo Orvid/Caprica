@@ -68,6 +68,11 @@ struct PapyrusType final
     pt.name = nm;
     return pt;
   }
+  static PapyrusType Unresolved(CapricaFileLocation loc, std::string&& nm) {
+    auto pt = PapyrusType(Kind::Unresolved, loc);
+    pt.name = std::move(nm);
+    return pt;
+  }
 
   static PapyrusType Array(CapricaFileLocation loc, std::shared_ptr<PapyrusType> tp) {
     auto pt = PapyrusType(Kind::Array, loc);

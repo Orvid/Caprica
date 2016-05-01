@@ -19,7 +19,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
   bool isConst{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };
 
-  explicit PapyrusDeclareStatement(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusStatement(loc), type(tp) { }
+  explicit PapyrusDeclareStatement(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusStatement(loc), type(std::move(tp)) { }
   PapyrusDeclareStatement(const PapyrusDeclareStatement&) = delete;
   virtual ~PapyrusDeclareStatement() override {
     if (initialValue)

@@ -80,6 +80,11 @@ struct PapyrusIdentifier final
     id.name = nm;
     return id;
   }
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, std::string&& nm) {
+    auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
+    id.name = std::move(nm);
+    return id;
+  }
   static PapyrusIdentifier Property(CapricaFileLocation loc, PapyrusProperty* p);
   static PapyrusIdentifier Variable(CapricaFileLocation loc, PapyrusVariable* v);
   static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, PapyrusFunctionParameter* p);

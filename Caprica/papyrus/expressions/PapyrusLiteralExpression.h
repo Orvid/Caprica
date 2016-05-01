@@ -14,6 +14,7 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
   PapyrusValue value;
 
   explicit PapyrusLiteralExpression(CapricaFileLocation loc, const PapyrusValue& val) : PapyrusExpression(loc), value(val) { }
+  explicit PapyrusLiteralExpression(CapricaFileLocation loc, PapyrusValue&& val) : PapyrusExpression(loc), value(std::move(val)) { }
   PapyrusLiteralExpression(const PapyrusLiteralExpression&) = delete;
   virtual ~PapyrusLiteralExpression() override = default;
 

@@ -13,7 +13,7 @@ struct PapyrusNewStructExpression final : public PapyrusExpression
 {
   PapyrusType type;
 
-  explicit PapyrusNewStructExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusNewStructExpression(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusExpression(loc), type(std::move(tp)) { }
   PapyrusNewStructExpression(const PapyrusNewStructExpression&) = delete;
   virtual ~PapyrusNewStructExpression() override = default;
 

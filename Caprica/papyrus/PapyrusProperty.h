@@ -37,7 +37,7 @@ struct PapyrusProperty final
   bool isReadOnly() const { return userFlags.isAutoReadOnly; }
   bool isConst() const { return userFlags.isConst; }
 
-  explicit PapyrusProperty(CapricaFileLocation loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
+  explicit PapyrusProperty(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par) : location(loc), type(std::move(tp)), parent(par) { }
   PapyrusProperty(const PapyrusProperty&) = delete;
   ~PapyrusProperty() {
     if (readFunction)

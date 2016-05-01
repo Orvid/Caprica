@@ -25,7 +25,7 @@ struct PapyrusFunctionParameter final
 
   const CapricaFileLocation location;
 
-  explicit PapyrusFunctionParameter(CapricaFileLocation loc, const PapyrusType& tp) : location(loc), type(tp) { }
+  explicit PapyrusFunctionParameter(CapricaFileLocation loc, PapyrusType&& tp) : location(loc), type(std::move(tp)) { }
   PapyrusFunctionParameter(const PapyrusFunctionParameter&) = delete;
   ~PapyrusFunctionParameter() = default;
 

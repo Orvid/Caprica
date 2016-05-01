@@ -52,7 +52,7 @@ struct PapyrusFunction final
   bool isGlobal() const noexcept { return userFlags.isGlobal; }
   bool isNative() const noexcept { return userFlags.isNative; }
 
-  explicit PapyrusFunction(CapricaFileLocation loc, const PapyrusType& ret) : location(loc), returnType(ret) { }
+  explicit PapyrusFunction(CapricaFileLocation loc, PapyrusType&& ret) : location(loc), returnType(std::move(ret)) { }
   PapyrusFunction(const PapyrusFunction&) = delete;
   ~PapyrusFunction() {
     for (auto p : parameters)

@@ -14,7 +14,7 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
   PapyrusIdentifier identifier;
   bool isAssignmentContext{ false };
 
-  explicit PapyrusIdentifierExpression(CapricaFileLocation loc, const PapyrusIdentifier& id) : PapyrusExpression(loc), identifier(id) { }
+  explicit PapyrusIdentifierExpression(CapricaFileLocation loc, PapyrusIdentifier&& id) : PapyrusExpression(loc), identifier(std::move(id)) { }
   PapyrusIdentifierExpression(const PapyrusIdentifierExpression&) = delete;
   virtual ~PapyrusIdentifierExpression() override = default;
 

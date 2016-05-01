@@ -29,7 +29,7 @@ struct PapyrusVariable final
 
   bool isConst() const { return userFlags.isConst; }
 
-  explicit PapyrusVariable(CapricaFileLocation loc, const PapyrusType& tp, const PapyrusObject* par) : location(loc), type(tp), parent(par) { }
+  explicit PapyrusVariable(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par) : location(loc), type(std::move(tp)), parent(par) { }
   PapyrusVariable(const PapyrusVariable&) = delete;
   ~PapyrusVariable() = default;
 

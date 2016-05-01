@@ -16,7 +16,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  explicit PapyrusSelfExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusSelfExpression(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusExpression(loc), type(std::move(tp)) { }
   PapyrusSelfExpression(const PapyrusSelfExpression&) = delete;
   virtual ~PapyrusSelfExpression() override = default;
 

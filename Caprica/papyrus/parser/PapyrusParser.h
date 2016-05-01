@@ -25,11 +25,11 @@ private:
   PapyrusObject* parseObject(PapyrusScript* script);
   PapyrusState* parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto);
   PapyrusStruct* parseStruct(PapyrusScript* script, PapyrusObject* object);
-  PapyrusStructMember* parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType tp);
+  PapyrusStructMember* parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType&& tp);
   PapyrusPropertyGroup* parsePropertyGroup(PapyrusScript* script, PapyrusObject* object);
-  PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType type);
-  PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType type);
-  PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType returnType, TokenType endToken);
+  PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type);
+  PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type);
+  PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType&& returnType, TokenType endToken);
 
   statements::PapyrusStatement* parseStatement(PapyrusFunction* func);
 

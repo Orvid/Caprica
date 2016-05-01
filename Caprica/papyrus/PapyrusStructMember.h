@@ -29,7 +29,7 @@ struct PapyrusStructMember final
 
   bool isConst() const { return userFlags.isConst; }
 
-  explicit PapyrusStructMember(CapricaFileLocation loc, const PapyrusType& tp, const PapyrusStruct* par) : location(loc), type(tp), parent(par) { }
+  explicit PapyrusStructMember(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusStruct* par) : location(loc), type(std::move(tp)), parent(par) { }
   PapyrusStructMember(const PapyrusStructMember&) = delete;
   ~PapyrusStructMember() = default;
 

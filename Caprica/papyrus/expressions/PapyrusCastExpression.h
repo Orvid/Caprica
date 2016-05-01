@@ -15,6 +15,7 @@ struct PapyrusCastExpression final : public PapyrusExpression
   PapyrusType targetType;
 
   explicit PapyrusCastExpression(CapricaFileLocation loc, const PapyrusType& targ) : PapyrusExpression(loc), targetType(targ) { }
+  explicit PapyrusCastExpression(CapricaFileLocation loc, PapyrusType&& targ) : PapyrusExpression(loc), targetType(std::move(targ)) { }
   PapyrusCastExpression(const PapyrusCastExpression&) = delete;
   virtual ~PapyrusCastExpression() override {
     if (innerExpression)
