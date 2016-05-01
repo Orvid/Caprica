@@ -34,8 +34,9 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   func->instructions = instructions;
   func->locals = locals;
   debInfo->instructionLineMap.reserve(instructionLocations.size());
+  size_t line = 0;
   for (auto l : instructionLocations) {
-    auto line = reportingContext.getLocationLine(l);
+    line = reportingContext.getLocationLine(l, line);
     if (line > std::numeric_limits<uint16_t>::max())
       reportingContext.fatal(l, "The file has too many lines for the debug info to be able to map correctly!");
     debInfo->instructionLineMap.push_back((uint16_t)line);

@@ -48,7 +48,17 @@ bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation location, siz
   return !conf::Warnings::disableAllWarnings;
 }
 
-size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location) const {
+size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) const {
+  if (lastLineHint != 0) {
+    if (location.fileOffset >= lineOffsets[lastLineHint - 1]) {
+      return lastLineHint + 1;
+    }
+    if (lastLineHint + 1 < lineOffsets.size()) {
+      if (location.fileOffset >= lineOffsets[lastLineHint - 1]) {
+        return lastLineHint + 1;
+      }
+    }
+  }
   // TODO: B-Tree search.
   for (size_t i = lineOffsets.size() - 1; i >= 0; i--) {
     if (location.fileOffset >= lineOffsets[i]) {

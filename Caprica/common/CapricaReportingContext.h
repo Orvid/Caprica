@@ -32,7 +32,7 @@ struct CapricaReportingContext final
 
   void startIgnoringLinePushes() noexcept { ignoringLinePushes = true; }
   void stopIgnoringLinePushes() noexcept { ignoringLinePushes = false; }
-  size_t getLocationLine(CapricaFileLocation location) const;
+  size_t getLocationLine(CapricaFileLocation location, size_t lastLineHint = 0) const;
   void pushNextLineOffset(CapricaFileLocation location) {
     if (!ignoringLinePushes)
       lineOffsets.push_back(location.fileOffset);
