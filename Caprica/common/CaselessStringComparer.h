@@ -24,61 +24,43 @@ struct CaselessStringComparer final : public std::function<bool(std::string, std
 
 struct CaselessStringHasher final : public std::function<size_t(std::string)>
 {
-  size_t operator()(const std::string& k) const {
-    // Using FNV-1a hash, the same as the MSVC std lib hash of strings.
-    static_assert(sizeof(size_t) == 8, "This is 64-bit only!");
-    constexpr size_t offsetBasis = 0xcbf29ce484222325ULL;
-    constexpr size_t prime = 0x100000001B3ULL;
-    const char* cStr = k.c_str();
-    const char* eStr = k.c_str() + k.size();
-    
-
-    size_t val = offsetBasis;
-#if 0
-    for (; cStr < eStr; cStr++) {
-      // This is safe only because we are hashing
-      // identifiers with a known set of characters.
-      val ^= (size_t)(*cStr | 32);
-      val *= prime;
-    }
-#else
-    for (; cStr < eStr; cStr++) {
-      val ^= (size_t)(charMap - 0x20)[*cStr];
-      val *= prime;
-    }
-#endif
-    return val;
+  size_t operator()(const char* k) const {
+    return doCaselessHash(k, strlen(k));
   }
+  size_t operator()(const std::string& k) const {
+    return doCaselessHash(k.c_str(), k.size());
+  }
+
 private:
-  alignas(64) static const uint64_t charMap[];
+  static size_t doCaselessHash(const char* k, size_t len);
 };
 
 struct CaselessIdentifierHasher final : public std::function<size_t(std::string)>
 {
-  size_t operator()(const std::string& k) const {
-    const char* cStr = k.c_str();
-
-    // We know the string is null-terminated, so we can align to 2.
-    size_t lenLeft = k.size() & 0xFFFFFFFFFFFFFFFEULL;
-    size_t iterCount = lenLeft >> 2;
-    uint32_t val = 0x84222325U;
-    size_t i = iterCount;
-    while (i)
-      val = _mm_crc32_u32(val, ((uint32_t*)cStr)[--i] | 0x20202020);
-    if (lenLeft & 2)
-      val = _mm_crc32_u16(val, *(uint16_t*)(cStr + (iterCount * 4)) | (uint16_t)0x2020);
-    return ((size_t)val << 32) | val;
+  size_t operator()(const char* k) const {
+    return doIdentifierHash(k, strlen(k));
   }
+  size_t operator()(const std::string& k) const {
+    return doIdentifierHash(k.c_str(), k.size());
+  }
+private:
+  static size_t doIdentifierHash(const char* k, size_t len);
 };
 
 //using CaselessStringHasher = CaselessIdentifierHasher;
 
 struct CaselessStringEqual final : public std::function<bool(std::string, std::string)>
 {
-  bool operator()(const std::string &lhs, const std::string &rhs) const {
+  bool operator()(const char* lhs, const char* rhs) const {
+    return _stricmp(lhs, rhs) == 0;
+  }
+
+  bool operator()(const std::string& lhs, const std::string& rhs) const {
     return _stricmp(lhs.c_str(), rhs.c_str()) == 0;
   }
 };
+
+void identifierToLower(std::string& str);
 
 template<typename T>
 using caseless_unordered_set = typename std::unordered_set<T, CaselessStringHasher, CaselessStringEqual>;

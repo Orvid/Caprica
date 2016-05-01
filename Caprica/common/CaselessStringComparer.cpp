@@ -2,7 +2,7 @@
 
 namespace caprica {
 
-alignas(64) const uint64_t CaselessStringHasher::charMap[] = {
+alignas(64) const uint64_t charToLowerMap[] = {
   0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
   0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
   0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
@@ -16,5 +16,54 @@ alignas(64) const uint64_t CaselessStringHasher::charMap[] = {
   0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,
   0x78, 0x79, 0x7A
 };
+
+void identifierToLower(std::string& str) {
+  char* data = (char*)str.c_str();
+  auto end = str.size();
+  for (size_t i = 0; i < end; i++) {
+    *data = (char)(charToLowerMap - 0x20)[*data];
+  }
+}
+
+size_t CaselessStringHasher::doCaselessHash(const char* k, size_t len) {
+  // Using FNV-1a hash, the same as the MSVC std lib hash of strings.
+  static_assert(sizeof(size_t) == 8, "This is 64-bit only!");
+  constexpr size_t offsetBasis = 0xcbf29ce484222325ULL;
+  constexpr size_t prime = 0x100000001B3ULL;
+  const char* cStr = k;
+  const char* eStr = k + len;
+
+
+  size_t val = offsetBasis;
+#if 0
+  for (; cStr < eStr; cStr++) {
+    // This is safe only because we are hashing
+    // identifiers with a known set of characters.
+    val ^= (size_t)(*cStr | 32);
+    val *= prime;
+  }
+#else
+  for (; cStr < eStr; cStr++) {
+    val ^= (size_t)(charToLowerMap - 0x20)[*cStr];
+    val *= prime;
+  }
+#endif
+  return val;
+}
+
+size_t CaselessIdentifierHasher::doIdentifierHash(const char* s, size_t len) {
+  const char* cStr = s;
+
+  // We know the string is null-terminated, so we can align to 2.
+  size_t lenLeft = len & 0xFFFFFFFFFFFFFFFEULL;
+  size_t iterCount = lenLeft >> 2;
+  uint32_t val = 0x84222325U;
+  size_t i = iterCount;
+  while (i)
+    val = _mm_crc32_u32(val, ((uint32_t*)cStr)[--i] | 0x20202020);
+  if (lenLeft & 2)
+    val = _mm_crc32_u16(val, *(uint16_t*)(cStr + (iterCount * 4)) | (uint16_t)0x2020);
+  return ((size_t)val << 32) | val;
+}
 
 }

@@ -1,7 +1,5 @@
 #include <papyrus/PapyrusType.h>
 
-#include <boost/algorithm/string/case_conv.hpp>
-
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusStruct.h>
 
@@ -68,7 +66,7 @@ std::string PapyrusType::getTypeString() const {
     case Kind::ResolvedObject:
     {
       auto lowerType = resolvedObject->name;
-      boost::algorithm::to_lower(lowerType);
+      identifierToLower(lowerType);
       return lowerType;
     }
     case Kind::ResolvedStruct:
