@@ -193,7 +193,8 @@ bool exists(const std::string& path) {
 
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
 boost::filesystem::path canonical(const boost::filesystem::path& path) {
-  auto absPath = boost::filesystem::absolute(path);
+  static boost::filesystem::path currentDirectory = boost::filesystem::current_path();
+  auto absPath = boost::filesystem::absolute(path, currentDirectory);
   if (conf::Performance::resolveSymlinks) {
     return boost::filesystem::canonical(absPath).make_preferred();
   } else {
