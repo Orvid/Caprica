@@ -132,14 +132,6 @@ void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<s
   directoryContentsMap.insert({ directory, std::move(files) });
 }
 
-void pushKnownInDirectory(const boost::filesystem::path& file) {
-  auto dir = file.parent_path().string();
-  if (!directoryContentsMap.count(dir)) {
-    directoryContentsMap[dir] = { };
-  }
-  directoryContentsMap[std::move(dir)].insert(file.string());
-}
-
 static Concurrency::concurrent_unordered_map<std::string, uint8_t, CaselessStringHasher, CaselessStringEqual> fileExistenceMap{ };
 void pushKnownExists(const std::string& path) {
   fileExistenceMap.insert({ path, 2 });
@@ -217,81 +209,6 @@ boost::filesystem::path canonical(const boost::filesystem::path& path) {
     }
     return result.make_preferred();
   }
-}
-
-// Borrowed and slightly modified from http://stackoverflow.com/a/5773008/776797
-boost::filesystem::path naive_uncomplete(const boost::filesystem::path& p, const boost::filesystem::path& base) {
-  using boost::filesystem::path;
-
-  if (p == base)
-    return L"./";
-
-  /*!! this breaks stuff if path is a filename rather than a directory,
-  which it most likely is... but then base shouldn't be a filename so... */
-  boost::filesystem::path from_path, from_base, output;
-
-  auto path_it = p.begin();
-  const auto path_end = p.end();
-  auto base_it = base.begin();
-  const auto base_end = base.end();
-
-  // check for emptiness
-  if (path_it == path_end || base_it == base_end)
-    throw std::runtime_error("path or base was empty; couldn't generate relative path");
-
-#ifdef WIN32
-  // drive letters are different; don't generate a relative path
-  if (*path_it != *base_it)
-    return p;
-
-  // now advance past drive letters; relative paths should only go up
-  // to the root of the drive and not past it
-  ++path_it, ++base_it;
-#endif
-
-  // iterate over path and base
-  while (true) {
-    // compare all elements so far of path and base to find greatest common root;
-    // when elements of path and base differ, or run out:
-    if (path_it == path_end || base_it == base_end || *path_it != *base_it) {
-      // write to output, ../ times the number of remaining elements in base;
-      // this is how far we've had to come down the tree from base to get to the common root
-      for (; base_it != base_end; ++base_it) {
-        if (!wcscmp(base_it->c_str(), L"."))
-          continue;
-        else if (!wcscmp(base_it->c_str(), L"\\"))
-          continue;
-
-        output /= L"../";
-      }
-
-      // write to output, the remaining elements in path;
-      // this is the path relative from the common root
-      const auto path_it_start = path_it;
-      for (; path_it != path_end; ++path_it) {
-
-        if (path_it != path_it_start)
-          output /= L"/";
-
-        if (!wcscmp(base_it->c_str(), L"."))
-          continue;
-        if (!wcscmp(base_it->c_str(), L"\\"))
-          continue;
-
-        output /= *path_it;
-      }
-
-      break;
-    }
-
-    // add directory level to both paths and continue iteration
-    from_path /= path(*path_it);
-    from_base /= path(*base_it);
-
-    ++path_it, ++base_it;
-  }
-
-  return output;
 }
 
 }}

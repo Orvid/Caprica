@@ -25,9 +25,7 @@ const char* filenameAsRef(const std::string& file);
 bool exists(const std::string& path);
 std::array<bool, 3> multiExistsInDir(const std::string& dir, std::array<std::string, 3>&& filenames);
 void pushKnownExists(const std::string& path);
-void pushKnownInDirectory(const boost::filesystem::path& file);
 void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<std::string>&& files);
 boost::filesystem::path canonical(const boost::filesystem::path& path);
-boost::filesystem::path naive_uncomplete(const boost::filesystem::path& p, const boost::filesystem::path& base);
 
 }}
