@@ -49,6 +49,7 @@ namespace Papyrus {
 namespace Performance {
   bool asyncFileRead{ false };
   bool asyncFileWrite{ false };
+  bool dumpTiming{ false };
   bool performanceTestMode{ false };
   bool resolveSymlinks{ false };
 }

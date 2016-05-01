@@ -101,6 +101,8 @@ namespace Performance {
   // the main compile threads to keep working while waiting for the
   // disk to catch up.
   extern bool asyncFileWrite;
+  // If true, output timing stats.
+  extern bool dumpTiming;
   // If true, we pause and wait for all files to be read in before
   // compiling them, and we also don't write them out to disk.
   // This is done to increase the consistency of the test runs.

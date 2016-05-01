@@ -138,11 +138,12 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       return FSUtils::canonical(filename).string();
     };
 
-    if (FSUtils::exists(baseDir + "\\" + scriptName + ".psc"))
+    auto sr = FSUtils::multiExistsInDir(baseDir, { scriptName + ".psc", scriptName + ".pas", scriptName + ".pex" });
+    if (sr[0])
       return loadPsc(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".psc"));
-    else if (FSUtils::exists(baseDir + "\\" + scriptName + ".pas"))
+    else if (sr[1])
       return loadPas(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pas"));
-    else if (FSUtils::exists(baseDir + "\\" + scriptName + ".pex"))
+    else if (sr[2])
      return loadPex(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pex"));
 
     return nullptr;
@@ -150,12 +151,17 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
 
   // Allow references to subdirs.
   auto nm2 = name;
-  std::replace(nm2.begin(), nm2.end(), ':', '\\');
-  if (auto s = searchDir(baseDir, nm2))
+  std::string extraBase = "";
+  if (auto bPos = strrchr(nm2.c_str(), ':')) {
+    extraBase = "\\" + nm2.substr(0, bPos - nm2.c_str());
+    std::replace(extraBase.begin(), extraBase.end(), ':', '\\');
+    nm2 = nm2.substr(bPos - nm2.c_str() + 1);
+  }
+  if (auto s = searchDir(baseDir + extraBase, nm2))
     return s;
 
   for (auto& dir : conf::Papyrus::importDirectories) {
-    if (auto s = searchDir(dir, nm2))
+    if (auto s = searchDir(dir + extraBase, nm2))
       return s;
   }
 
