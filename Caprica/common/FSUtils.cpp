@@ -73,7 +73,7 @@ struct FileReadCacheEntry final
       std::unique_lock<std::mutex> lock{ *taskMutex };
       if (readTask.valid())
         readTask.get();
-      assert(read.load());
+      assert(read);
     }
   }
 
