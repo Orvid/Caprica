@@ -149,6 +149,7 @@ struct PapyrusObject final
     for (auto s : states)
       s->semantic(ctx);
     // Custom events don't currently need a semantic pass.
+    // They do however, get a semantic2 pass.
     ctx->ensureNamesAreUnique(customEvents, "custom event");
 
     if (!ctx->resolvingReferenceScript) {
@@ -163,6 +164,8 @@ struct PapyrusObject final
         g->semantic2(ctx);
       for (auto s : states)
         s->semantic2(ctx);
+      for (auto c : customEvents)
+        c->semantic2(ctx);
 
       for (auto v : variables) {
         if (!v->referenceState.isRead) {
