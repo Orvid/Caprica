@@ -98,6 +98,8 @@ void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   if (isGlobal() && ctx->state && ctx->state->name != "")
     ctx->reportingContext.error(location, "Global functions are only allowed in the empty state.");
+  if (isNative() && !ctx->object->isNative())
+    ctx->reportingContext.error(location, "You can only define Native functions in a script marked Native.");
 
   ctx->function = this;
   ctx->pushLocalVariableScope();
@@ -107,7 +109,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   ctx->function = nullptr;
 
   // Don't build the CFG for the special functions.
-  if (!isNative() && name != "GetState" && name != "GotoState") {
+  if (!isNative()) {
     PapyrusCFG cfg{ ctx->reportingContext };
     cfg.processStatements(statements);
 
