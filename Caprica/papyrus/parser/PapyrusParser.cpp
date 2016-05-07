@@ -1146,20 +1146,12 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
         if (cur.type == TokenType::kDefault)
           str = "default";
 
-        if (!_stricmp(str.c_str(), "collapsed")) {
-          PapyrusUserFlags newFlag;
-          newFlag.data = (1ULL << 3) | (1ULL << 4);
-          flags |= newFlag;
-          consume();
-          break;
-        }
-
-        auto flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
-        if ((flg.validLocations & location) != location && (location != CapricaUserFlagsDefinition::ValidLocations::Property || (flg.validLocations & CapricaUserFlagsDefinition::ValidLocations::Variable) != CapricaUserFlagsDefinition::ValidLocations::Variable))
+        auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
+        if (!flg.isValidOn(location))
           reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
         PapyrusUserFlags newFlag;
-        newFlag.data = 1ULL << flg.flagNum;
+        newFlag.data = flg.getData();
         flags |= newFlag;
         consume();
         break;

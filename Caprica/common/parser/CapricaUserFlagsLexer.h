@@ -22,13 +22,14 @@ enum class TokenType : int32_t
   Integer,
   LCurly,
   RCurly,
+  And,
 
   kFlag,
   kFunction,
+  kGroup,
   kProperty,
-  kPropertyGroup,
   kScript,
-  kStructMember,
+  kStructVar,
   kVariable,
 };
 

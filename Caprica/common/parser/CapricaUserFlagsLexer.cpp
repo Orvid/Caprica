@@ -16,13 +16,14 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::Integer, "Integer" },
   { TokenType::LCurly, "{" },
   { TokenType::RCurly, "}" },
+  { TokenType::And, "&" },
 
   { TokenType::kFlag, "Flag" },
   { TokenType::kFunction, "Function" },
+  { TokenType::kGroup, "Group" },
   { TokenType::kProperty, "Property" },
-  { TokenType::kPropertyGroup, "PropertyGroup" },
   { TokenType::kScript, "Script" },
-  { TokenType::kStructMember, "StructMember" },
+  { TokenType::kStructVar, "StructVar" },
   { TokenType::kVariable, "Variable" },
 };
 
@@ -41,13 +42,13 @@ void CapricaUserFlagsLexer::setTok(Token& tok) {
   cur = tok;
 }
 
-static const std::map<std::string, TokenType, CaselessStringComparer> keywordMap {
+static const caseless_unordered_identifier_map<std::string, TokenType> keywordMap {
   { "flag", TokenType::kFlag },
   { "function", TokenType::kFunction },
+  { "group", TokenType::kGroup },
   { "property", TokenType::kProperty },
-  { "propertygroup", TokenType::kPropertyGroup },
   { "script", TokenType::kScript },
-  { "structmember", TokenType::kStructMember },
+  { "structvar", TokenType::kStructVar },
   { "variable", TokenType::kVariable },
 };
 
@@ -63,6 +64,8 @@ StartOver:
       return setTok(TokenType::LCurly, baseLoc);
     case '}':
       return setTok(TokenType::RCurly, baseLoc);
+    case '&':
+      return setTok(TokenType::And, baseLoc);
 
     case '0':
     case '1':
@@ -75,13 +78,13 @@ StartOver:
     case '8':
     case '9':
     {
-      std::ostringstream str;
-      str.put(c);
+      std::string str;
+      str.append(1, c);
 
       while (isdigit(peekChar()))
-        str.put(getChar());
+        str.append(1, getChar());
 
-      auto i = std::stoul(str.str());
+      auto i = std::stoul(str);
       auto tok = Token(TokenType::Integer, baseLoc);
       tok.iValue = (int32_t)i;
       return setTok(tok);
@@ -140,19 +143,18 @@ StartOver:
     case 'Y':
     case 'Z':
     {
-      std::ostringstream str;
-      str.put(c);
+      std::string str;
+      str.append(1, c);
 
       while (isalpha(peekChar()))
-        str.put(getChar());
+        str.append(1, getChar());
 
-      auto ident = str.str();
-      auto f = keywordMap.find(ident);
+      auto f = keywordMap.find(str);
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
 
       auto tok = Token(TokenType::Identifier, baseLoc);
-      tok.sValue = ident;
+      tok.sValue = std::move(str);
       return setTok(tok);
     }
 

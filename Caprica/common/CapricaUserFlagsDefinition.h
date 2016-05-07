@@ -33,11 +33,15 @@ struct CapricaUserFlagsDefinition final
     std::string name{ "" };
     uint8_t bitIndex{ };
     size_t flagNum{ };
+    size_t flagData{ 0 };
     CapricaFileLocation location;
 
     explicit UserFlag(CapricaFileLocation loc) : location(loc) { }
     UserFlag(const UserFlag&) = default;
     ~UserFlag() = default;
+
+    size_t getData() const;
+    bool isValidOn(ValidLocations loc) const;
   };
 
   void registerUserFlag(CapricaReportingContext& repCtx, const UserFlag& flag);
@@ -51,7 +55,7 @@ struct CapricaUserFlagsDefinition final
   ~CapricaUserFlagsDefinition() = default;
 
 private:
-  std::map<std::string, size_t, CaselessStringComparer> flagNameMap{ };
+  caseless_unordered_identifier_map<std::string, size_t> flagNameMap{ };
   std::vector<UserFlag> userFlags{ };
 };
 
