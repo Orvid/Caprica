@@ -27,7 +27,7 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
   ctx->state = this;
   if (name != "") {
     if (ctx->object->isConst())
-      ctx->reportingContext.error(location, "Named states aren't allowed on const objects.");
+      ctx->reportingContext.error(location, "Named states aren't allowed on const scripts.");
     if (ctx->object->isNative())
       ctx->reportingContext.error(location, "Named states aren't allowed on Native scripts.");
 

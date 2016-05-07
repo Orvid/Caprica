@@ -70,8 +70,10 @@ void PapyrusProperty::semantic(PapyrusResolutionContext* ctx) {
 }
 
 void PapyrusProperty::semantic2(PapyrusResolutionContext* ctx) {
-  if (ctx->object->isNative() && !isAutoReadOnly() && !readFunction && !writeFunction)
+  if (ctx->object->isNative() && !isFunctionBacked())
     ctx->reportingContext.error(location, "You cannot define auto properties on a Native script.");
+  if (ctx->object->isConst() && !isConst() && !isFunctionBacked())
+    ctx->reportingContext.error(location, "You cannot define non-const auto properties on a const script.");
   if (readFunction) {
     if (readFunction->isGlobal() || readFunction->isNative())
       ctx->reportingContext.error(readFunction->location, "A property function is not allowed to be global or native.");

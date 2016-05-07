@@ -10,14 +10,18 @@ void PapyrusVariable::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
   var->typeName = type.buildPex(file);
   var->userFlags = userFlags.buildPex(file);
   var->defaultValue = defaultValue.buildPex(file);
-  var->isConst = isConst() || obj->isConst;
+  var->isConst = isConst();
   obj->variables.push_back(var);
 }
 
 void PapyrusVariable::semantic(PapyrusResolutionContext* ctx) {
   if (ctx->object->isNative())
     ctx->reportingContext.error(location, "You cannot define variables in a Native script.");
+  if (ctx->object->isConst() && !isConst())
+    ctx->reportingContext.error(location, "You cannot define a non-const variable in a const script.");
   type = ctx->resolveType(type);
+  if (type.type == PapyrusType::Kind::ResolvedObject && type.resolvedObject->isConst())
+    ctx->reportingContext.error(location, "You cannot define a variable with the type of a Const script.");
   defaultValue = ctx->coerceDefaultValue(defaultValue, type);
 }
 
