@@ -55,7 +55,7 @@ size_t CaselessIdentifierHasher::doIdentifierHash(const char* s, size_t len) {
   const char* cStr = s;
 
   // We know the string is null-terminated, so we can align to 2.
-  size_t lenLeft = len & 0xFFFFFFFFFFFFFFFEULL;
+  size_t lenLeft = ((len + 1) & 0xFFFFFFFFFFFFFFFEULL);
   size_t iterCount = lenLeft >> 2;
   uint32_t val = 0x84222325U;
   size_t i = iterCount;
@@ -64,6 +64,45 @@ size_t CaselessIdentifierHasher::doIdentifierHash(const char* s, size_t len) {
   if (lenLeft & 2)
     val = _mm_crc32_u16(val, *(uint16_t*)(cStr + (iterCount * 4)) | (uint16_t)0x2020);
   return ((size_t)val << 32) | val;
+}
+
+bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
+  // This returns via goto's because of how MSVC does codegen.
+  if (aLen != bLen)
+    goto ReturnFalse;
+  if (a == b)
+    goto ReturnTrue;
+  const char* __restrict strA = a;
+  int64_t strBOff = b - a;
+  // We know the string is null-terminated, so we can align to 2.
+  size_t lenLeft = ((aLen + 1) & 0xFFFFFFFFFFFFFFFEULL);
+  while (lenLeft >= 16) {
+    auto vA = _mm_or_si128(_mm_lddqu_si128((__m128i*)strA), _mm_set1_epi8(0x20));
+    auto vB = _mm_or_si128(_mm_lddqu_si128((__m128i*)(strA + strBOff)), _mm_set1_epi8(0x20));
+    if (!_mm_cmpistra(vA, vB, 0b011000))
+      goto ReturnFalse;
+    strA += 16;
+    lenLeft -= 16;
+  }
+  // We don't need to adjust the lenLeft for each of these.
+  if (lenLeft & 8) {
+    if ((*(uint64_t*)strA | 0x2020202020202020ULL) != (*(uint64_t*)(strA + strBOff) | 0x2020202020202020ULL))
+      goto ReturnFalse;
+    strA += 8;
+  }
+  if (lenLeft & 4) {
+    if ((*(uint32_t*)strA | 0x20202020U) != (*(uint32_t*)(strA + strBOff) | 0x20202020U))
+      goto ReturnFalse;
+    strA += 4;
+  }
+  if (lenLeft & 2) {
+    if ((*(uint16_t*)strA | 0x2020) != (*(uint16_t*)(strA + strBOff) | 0x2020))
+      goto ReturnFalse;
+  }
+ReturnTrue:
+  return true;
+ReturnFalse:
+  return false;
 }
 
 }
