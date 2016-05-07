@@ -60,6 +60,18 @@ struct CaselessStringEqual final : public std::function<bool(std::string, std::s
   }
 };
 
+inline bool idEq(const char* a, const char* b) {
+  return !_stricmp(a, b);
+}
+inline bool idEq(const char* a, const std::string& b) {
+  return idEq(a, b.c_str());
+}
+inline bool idEq(const std::string& a, const char* b) {
+  return idEq(a.c_str(), b);
+}
+inline bool idEq(const std::string& a, const std::string& b) {
+  return idEq(a.c_str(), b.c_str());
+}
 void identifierToLower(std::string& str);
 
 template<typename T>
