@@ -72,8 +72,10 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   if (maybeConsume(TokenType::kExtends)) {
     auto eLoc = cur.location;
     obj = new PapyrusObject(loc, PapyrusType::Unresolved(eLoc, expectConsumeIdent()));
-  } else {
+  } else if (idEq(name, "ScriptObject")) {
     obj = new PapyrusObject(loc, PapyrusType::None(cur.location));
+  } else {
+    obj = new PapyrusObject(loc, PapyrusType::Unresolved(loc, "ScriptObject"));
   }
   obj->name = std::move(name);
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
