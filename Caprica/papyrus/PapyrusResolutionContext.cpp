@@ -171,7 +171,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
 bool PapyrusResolutionContext::isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent) {
   if (child == parent)
     return true;
-  if (!_stricmp(child->name.c_str(), parent->name.c_str()))
+  if (idEq(child->name, parent->name))
     return true;
   if (auto parentObject = child->tryGetParentClass())
     return isObjectSomeParentOf(parentObject, parent);
@@ -347,7 +347,7 @@ CheckDebug:
 
 PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const {
   for (auto f : parentObj->getRootState()->functions) {
-    if (!_stricmp(f->name.c_str(), name.c_str()) && f->functionType == PapyrusFunctionType::Event)
+    if (idEq(f->name, name) && f->functionType == PapyrusFunctionType::Event)
       return f;
   }
 
@@ -359,7 +359,7 @@ PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* 
 
 PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const PapyrusObject* parentObj, const std::string& name) const {
   for (auto c : parentObj->customEvents) {
-    if (!_stricmp(c->name.c_str(), name.c_str()))
+    if (idEq(c->name, name))
       return c;
   }
 
@@ -374,7 +374,7 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name,
     parentObj = object;
 
   for (auto s : parentObj->states) {
-    if (!_stricmp(s->name.c_str(), name.c_str()))
+    if (idEq(s->name, name))
       return s;
   }
 
@@ -386,7 +386,7 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name,
 
 static PapyrusType tryResolveStruct(const PapyrusObject* object, PapyrusType tp) {
   for (auto& s : object->structs) {
-    if (!_stricmp(s->name.c_str(), tp.name.c_str())) {
+    if (idEq(s->name, tp.name)) {
       tp.type = PapyrusType::Kind::ResolvedStruct;
       tp.resolvedStruct = s;
       return tp;
@@ -417,7 +417,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
 
       for (auto obj : sc->objects) {
         for (auto struc : obj->structs) {
-          if (!_stricmp(struc->name.c_str(), strucName.c_str())) {
+          if (idEq(struc->name, strucName)) {
             tp.type = PapyrusType::Kind::ResolvedStruct;
             tp.resolvedStruct = struc;
             return tp;
@@ -434,7 +434,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     if (t2.type != PapyrusType::Kind::Unresolved)
       return t2;
 
-    if (!_stricmp(object->name.c_str(), tp.name.c_str())) {
+    if (idEq(object->name, tp.name)) {
       tp.type = PapyrusType::Kind::ResolvedObject;
       tp.resolvedObject = object;
       return tp;
@@ -444,7 +444,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   for (auto sc : importedScripts) {
     for (auto obj : sc->objects) {
       for (auto struc : obj->structs) {
-        if (!_stricmp(struc->name.c_str(), tp.name.c_str())) {
+        if (idEq(struc->name, tp.name)) {
           tp.type = PapyrusType::Kind::ResolvedStruct;
           tp.resolvedStruct = struc;
           return tp;
@@ -460,7 +460,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
       auto pos = oName.find_last_of(':');
       if (pos != std::string::npos)
         oName = oName.substr(pos + 1);
-      if (!_stricmp(obj->name.c_str(), tp.name.c_str()) || !_stricmp(oName.c_str(), tp.name.c_str())) {
+      if (idEq(obj->name, tp.name) || idEq(oName, tp.name)) {
         tp.type = PapyrusType::Kind::ResolvedObject;
         tp.resolvedObject = obj;
         return tp;
@@ -479,7 +479,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
 
     for (auto obj : sc->objects) {
       for (auto struc : obj->structs) {
-        if (!_stricmp(struc->name.c_str(), strucName.c_str())) {
+        if (idEq(struc->name, strucName)) {
           tp.type = PapyrusType::Kind::ResolvedStruct;
           tp.resolvedStruct = struc;
           return tp;
@@ -523,27 +523,27 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   }
 
   if (function) {
-    if ((!_stricmp(function->name.c_str(), "getstate") || !_stricmp(function->name.c_str(), "gotostate")) && !_stricmp(ident.name.c_str(), "__state")) {
+    if ((idEq(function->name, "getstate") || idEq(function->name, "gotostate")) && idEq(ident.name, "__state")) {
       auto i = ident;
       i.type = PapyrusIdentifierType::BuiltinStateField;
       return i;
     }
 
     for (auto p : function->parameters) {
-      if (!_stricmp(p->name.c_str(), ident.name.c_str()))
+      if (idEq(p->name, ident.name))
         return PapyrusIdentifier::FunctionParameter(ident.location, p);
     }
   }
 
   if (!function || !function->isGlobal()) {
     for (auto v : object->variables) {
-      if (!_stricmp(v->name.c_str(), ident.name.c_str()))
+      if (idEq(v->name, ident.name))
         return PapyrusIdentifier::Variable(ident.location, v);
     }
 
     for (auto pg : object->propertyGroups) {
       for (auto p : pg->properties) {
-        if (!_stricmp(p->name.c_str(), ident.name.c_str()))
+        if (idEq(p->name, ident.name))
           return PapyrusIdentifier::Property(ident.location, p);
       }
     }
@@ -568,13 +568,13 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
 
   if (baseType.type == PapyrusType::Kind::ResolvedStruct) {
     for (auto& sm : baseType.resolvedStruct->members) {
-      if (!_stricmp(sm->name.c_str(), ident.name.c_str()))
+      if (idEq(sm->name, ident.name))
         return PapyrusIdentifier::StructMember(ident.location, sm);
     }
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     for (auto& propGroup : baseType.resolvedObject->propertyGroups) {
       for (auto& prop : propGroup->properties) {
-        if (!_stricmp(prop->name.c_str(), ident.name.c_str()))
+        if (idEq(prop->name, ident.name))
           return PapyrusIdentifier::Property(ident.location, prop);
       }
     }
@@ -601,7 +601,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
   if (baseType.type == PapyrusType::Kind::None) {
     if (auto state = object->getRootState()) {
       for (auto& func : state->functions) {
-        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
+        if (idEq(func->name, ident.name)) {
           if (wantGlobal && !func->isGlobal())
             reportingContext.error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);
@@ -613,7 +613,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       for (auto obj : sc->objects) {
         if (auto state = obj->getRootState()) {
           for (auto& func : state->functions) {
-            if (func->isGlobal() && !_stricmp(func->name.c_str(), ident.name.c_str()))
+            if (func->isGlobal() && idEq(func->name, ident.name))
               return PapyrusIdentifier::Function(ident.location, func);
           }
         }
@@ -623,23 +623,23 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     return tryResolveFunctionIdentifier(PapyrusType::ResolvedObject(ident.location, object), ident, wantGlobal);
   } else if (baseType.type == PapyrusType::Kind::Array) {
     auto fk = PapyrusBuiltinArrayFunctionKind::Unknown;
-    if (!_stricmp(ident.name.c_str(), "find")) {
+    if (idEq(ident.name, "find")) {
       fk = PapyrusBuiltinArrayFunctionKind::Find;
-    } else if(!_stricmp(ident.name.c_str(), "findstruct")) {
+    } else if(idEq(ident.name, "findstruct")) {
       fk = PapyrusBuiltinArrayFunctionKind::FindStruct;
-    } else if (!_stricmp(ident.name.c_str(), "rfind")) {
+    } else if (idEq(ident.name, "rfind")) {
       fk = PapyrusBuiltinArrayFunctionKind::RFind;
-    } else if (!_stricmp(ident.name.c_str(), "rfindstruct")) {
+    } else if (idEq(ident.name, "rfindstruct")) {
       fk = PapyrusBuiltinArrayFunctionKind::RFindStruct;
-    } else if (!_stricmp(ident.name.c_str(), "add")) {
+    } else if (idEq(ident.name, "add")) {
       fk = PapyrusBuiltinArrayFunctionKind::Add;
-    } else if (!_stricmp(ident.name.c_str(), "clear")) {
+    } else if (idEq(ident.name, "clear")) {
       fk = PapyrusBuiltinArrayFunctionKind::Clear;
-    } else if (!_stricmp(ident.name.c_str(), "insert")) {
+    } else if (idEq(ident.name, "insert")) {
       fk = PapyrusBuiltinArrayFunctionKind::Insert;
-    } else if (!_stricmp(ident.name.c_str(), "remove")) {
+    } else if (idEq(ident.name, "remove")) {
       fk = PapyrusBuiltinArrayFunctionKind::Remove;
-    } else if (!_stricmp(ident.name.c_str(), "removelast")) {
+    } else if (idEq(ident.name, "removelast")) {
       fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.c_str());
@@ -648,7 +648,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     if (auto state = baseType.resolvedObject->getRootState()) {
       for (auto& func : state->functions) {
-        if (!_stricmp(func->name.c_str(), ident.name.c_str())) {
+        if (idEq(func->name, ident.name)) {
           if (!wantGlobal && func->isGlobal())
             reportingContext.error(ident.location, "You cannot call the global function '%s' on an object.", func->name.c_str());
           return PapyrusIdentifier::Function(ident.location, func);

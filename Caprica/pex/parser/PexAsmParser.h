@@ -47,7 +47,7 @@ private:
     assert(isConst != nullptr);
     if (cur.type != TokenType::EOL) {
       expect(TokenType::Identifier);
-      if (!_stricmp(cur.sValue.c_str(), "const")) {
+      if (idEq(cur.sValue, "const")) {
         *isConst = true;
         consume();
       }

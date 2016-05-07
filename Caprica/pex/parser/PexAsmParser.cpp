@@ -192,7 +192,7 @@ PexFile* PexAsmParser::parseFile() {
                   prop->typeName = expectConsumePexIdent(file);
                   if (cur.type != TokenType::EOL) {
                     auto str = expectConsumeIdent();
-                    if (_stricmp(str.c_str(), "auto"))
+                    if (!idEq(str, "auto"))
                       reportingContext.fatal(cur.location, "Expected 'auto' got '%s'!", str.c_str());
                     prop->isAuto = true;
                     prop->isReadable = true;
@@ -227,12 +227,12 @@ PexFile* PexAsmParser::parseFile() {
                         }
                         std::string funcName;
                         auto func = parseFunction(file, debInf, funcName);
-                        if (!_stricmp(funcName.c_str(), "get")) {
+                        if (idEq(funcName, "get")) {
                           prop->isReadable = true;
                           prop->readFunction = func;
                           if (debInf)
                             debInf->functionType = PexDebugFunctionType::Getter;
-                        } else if (!_stricmp(funcName.c_str(), "set")) {
+                        } else if (idEq(funcName, "set")) {
                           prop->isWritable = true;
                           prop->writeFunction = func;
                           if (debInf)
@@ -434,7 +434,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
             }
             expectConsumeEOL();
           } else {
-            if (!_stricmp(id.c_str(), "jump")) {
+            if (idEq(id, "jump")) {
               PexLabel* target{ nullptr };
               auto labName = expectConsumeIdent();
               auto f = labels.find(labName);
@@ -443,7 +443,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               else
                 labels.insert({ labName, target = new PexLabel() });
               func->instructions.push_back(new PexInstruction(PexOpCode::Jmp, { target }));
-            } else if (!_stricmp(id.c_str(), "jumpf")) {
+            } else if (idEq(id, "jumpf")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
               auto labName = expectConsumeIdent();
@@ -453,7 +453,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               else
                 labels.insert({ labName, target = new PexLabel() });
               func->instructions.push_back(new PexInstruction(PexOpCode::JmpF, { val, target }));
-            } else if (!_stricmp(id.c_str(), "jumpt")) {
+            } else if (idEq(id, "jumpt")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
               auto labName = expectConsumeIdent();
@@ -463,7 +463,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               else
                 labels.insert({ labName, target = new PexLabel() });
               func->instructions.push_back(new PexInstruction(PexOpCode::JmpT, { val, target }));
-            } else if (!_stricmp(id.c_str(), "callmethod")) {
+            } else if (idEq(id, "callmethod")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               auto valC = expectConsumeValue(file);
@@ -472,7 +472,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 params.push_back(expectConsumeValue(file));
               }
               func->instructions.push_back(new PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, std::move(params)));
-            } else if (!_stricmp(id.c_str(), "callparent")) {
+            } else if (idEq(id, "callparent")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               std::vector<PexValue> params;
@@ -480,7 +480,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 params.push_back(expectConsumeValue(file));
               }
               func->instructions.push_back(new PexInstruction(PexOpCode::CallParent, { valA, valB }, std::move(params)));
-            } else if (!_stricmp(id.c_str(), "callstatic")) {
+            } else if (idEq(id, "callstatic")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               auto valC = expectConsumeValue(file);
@@ -564,14 +564,14 @@ PexValue PexAsmParser::expectConsumeValue(PexFile* file) {
     case TokenType::Identifier:
     {
       auto str = expectConsumeIdent();
-      if (!_stricmp(str.c_str(), "none")) {
+      if (idEq(str, "none")) {
         val.type = PexValueType::None;
         return val;
-      } else if (!_stricmp(str.c_str(), "true")) {
+      } else if (idEq(str, "true")) {
         val.type = PexValueType::Bool;
         val.b = true;
         return val;
-      } else if (!_stricmp(str.c_str(), "false")) {
+      } else if (idEq(str, "false")) {
         val.type = PexValueType::Bool;
         val.b = false;
         return val;

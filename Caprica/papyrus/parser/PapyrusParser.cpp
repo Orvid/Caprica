@@ -52,7 +52,7 @@ static bool doesScriptNameMatchNextPartOfDir(const boost::filesystem::path curPa
   if (idx != std::string::npos) {
     auto namePiece = curName.substr(idx + 1);
     auto basePath = boost::filesystem::basename(curPath);
-    if (_stricmp(namePiece.c_str(), basePath.c_str()))
+    if (!idEq(namePiece, basePath))
       return false;
     return doesScriptNameMatchNextPartOfDir(curPath.parent_path(), curName.substr(0, idx));
   }
@@ -227,15 +227,8 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       case TokenType::kString:
       case TokenType::kVar:
       case TokenType::Identifier:
-      {
-        auto m = parseStructMember(script, object, struc, std::move(expectConsumePapyrusType()));
-        for (auto sm : struc->members) {
-          if (!_stricmp(sm->name.c_str(), m->name.c_str()))
-            reportingContext.error(m->location, "A member named '%s' was already defined in '%s'.", m->name.c_str(), struc->name.c_str());
-        }
-        struc->members.push_back(m);
+        struc->members.push_back(parseStructMember(script, object, struc, std::move(expectConsumePapyrusType())));
         break;
-      }
 
       default:
         reportingContext.fatal(cur.location, "Unexpected token '%s' while parsing struct!", cur.prettyString().c_str());
@@ -330,7 +323,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
           consume();
           prop->writeFunction = parseFunction(script, object, nullptr, PapyrusType::None(cur.location), TokenType::kEndFunction);
           prop->writeFunction->functionType = PapyrusFunctionType::Setter;
-          if (_stricmp(prop->writeFunction->name.c_str(), "set"))
+          if (!idEq(prop->writeFunction->name, "set"))
             reportingContext.error(cur.location, "The set function must be named \"Set\"!");
           if (prop->writeFunction->parameters.size() != 1)
             reportingContext.error(cur.location, "The set function must have a single parameter!");
@@ -353,7 +346,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
           expectConsume(TokenType::kFunction);
           prop->readFunction = parseFunction(script, object, nullptr, std::move(tp), TokenType::kEndFunction);
           prop->readFunction->functionType = PapyrusFunctionType::Getter;
-          if (_stricmp(prop->readFunction->name.c_str(), "get"))
+          if (!idEq(prop->readFunction->name, "get"))
             reportingContext.error(cur.location, "The get function must be named \"Get\"!");
           if (prop->readFunction->parameters.size() != 0)
             reportingContext.error(cur.location, "The get function cannot have parameters!");

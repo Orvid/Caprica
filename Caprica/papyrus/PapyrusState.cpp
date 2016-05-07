@@ -6,7 +6,7 @@ namespace caprica { namespace papyrus {
 
 static PapyrusFunction* searchRootStateForFunction(const std::string& name, const PapyrusObject* obj) {
   for (auto f : obj->getRootState()->functions) {
-    if (!_stricmp(f->name.c_str(), name.c_str()))
+    if (idEq(f->name, name))
       return f;
   }
 

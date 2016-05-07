@@ -10,17 +10,17 @@ static PapyrusType reflectType(CapricaFileLocation loc, const std::string& name)
   if (name.size() > 2 && name[name.size() - 2] == '[' && name[name.size() - 1] == ']')
     return PapyrusType::Array(loc, std::make_shared<PapyrusType>(reflectType(loc, name.substr(0, name.size() - 2))));
 
-  if (!_stricmp(name.c_str(), "bool"))
+  if (idEq(name, "bool"))
     return PapyrusType::Bool(loc);
-  if (!_stricmp(name.c_str(), "none"))
+  if (idEq(name, "none"))
     return PapyrusType::None(loc);
-  if (!_stricmp(name.c_str(), "int"))
+  if (idEq(name, "int"))
     return PapyrusType::Int(loc);
-  if (!_stricmp(name.c_str(), "float"))
+  if (idEq(name, "float"))
     return PapyrusType::Float(loc);
-  if (!_stricmp(name.c_str(), "string"))
+  if (idEq(name, "string"))
     return PapyrusType::String(loc);
-  if (!_stricmp(name.c_str(), "var"))
+  if (idEq(name, "var"))
     return PapyrusType::Var(loc);
 
   return PapyrusType::Unresolved(loc, name);
@@ -103,7 +103,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       for (auto pf : ps->functions) {
         auto f = reflectFunction(loc, pex, obj, pf, pex->getStringValue(pf->name));
         f->functionType = PapyrusFunctionType::Function;
-        if (f->name.size() > 2 && !_stricmp(f->name.substr(0, 2).c_str(), "on"))
+        if (f->name.size() > 2 && idEq(f->name.substr(0, 2), "on"))
           f->functionType = PapyrusFunctionType::Event;
         state->functions.push_back(f);
       }
