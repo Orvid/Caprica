@@ -35,20 +35,6 @@ private:
   static size_t doCaselessHash(const char* k, size_t len);
 };
 
-struct CaselessIdentifierHasher final : public std::function<size_t(std::string)>
-{
-  size_t operator()(const char* k) const {
-    return doIdentifierHash(k, strlen(k));
-  }
-  size_t operator()(const std::string& k) const {
-    return doIdentifierHash(k.c_str(), k.size());
-  }
-private:
-  static size_t doIdentifierHash(const char* k, size_t len);
-};
-
-//using CaselessStringHasher = CaselessIdentifierHasher;
-
 struct CaselessStringEqual final : public std::function<bool(std::string, std::string)>
 {
   bool operator()(const char* lhs, const char* rhs) const {
@@ -72,6 +58,32 @@ inline bool idEq(const std::string& a, const char* b) {
 inline bool idEq(const std::string& a, const std::string& b) {
   return idEq(a.c_str(), b.c_str());
 }
+
+struct CaselessIdentifierHasher final : public std::function<size_t(std::string)>
+{
+  size_t operator()(const char* k) const {
+    return doIdentifierHash(k, strlen(k));
+  }
+  size_t operator()(const std::string& k) const {
+    return doIdentifierHash(k.c_str(), k.size());
+  }
+private:
+  static size_t doIdentifierHash(const char* k, size_t len);
+};
+
+//using CaselessStringHasher = CaselessIdentifierHasher;
+
+struct CaselessIdentifierEqual final : public std::function<bool(std::string, std::string)>
+{
+  bool operator()(const char* lhs, const char* rhs) const {
+    return idEq(lhs, rhs);
+  }
+
+  bool operator()(const std::string& lhs, const std::string& rhs) const {
+    return idEq(lhs.c_str(), rhs.c_str());
+  }
+};
+
 void identifierToLower(std::string& str);
 
 template<typename T>
@@ -82,10 +94,8 @@ template<typename K, typename V>
 using caseless_map = typename std::map<K, V, CaselessStringComparer>;
 
 template<typename T>
-using caseless_unordered_identifier_set = typename std::unordered_set<T, CaselessIdentifierHasher, CaselessStringEqual>;
+using caseless_unordered_identifier_set = typename std::unordered_set<T, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 template<typename K, typename V>
-using caseless_unordered_identifier_map = typename std::unordered_map<K, V, CaselessIdentifierHasher, CaselessStringEqual>;
-template<typename K, typename V>
-using caseless_identifier_map = typename std::map<K, V, CaselessStringComparer>;
+using caseless_unordered_identifier_map = typename std::unordered_map<K, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 
 }
