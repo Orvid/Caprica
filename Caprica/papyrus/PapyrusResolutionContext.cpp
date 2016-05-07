@@ -238,7 +238,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
         return isObjectSomeParentOf(src.resolvedObject, dest.resolvedObject);
       return false;
     case PapyrusType::Kind::Var:
-      return src.type != PapyrusType::Kind::None;
+      return src.type != PapyrusType::Kind::None && src.type != PapyrusType::Kind::Array;
     case PapyrusType::Kind::None:
     case PapyrusType::Kind::Int:
     case PapyrusType::Kind::Array:
