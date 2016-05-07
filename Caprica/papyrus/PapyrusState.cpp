@@ -43,6 +43,8 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
   if (auto parentClass = ctx->object->tryGetParentClass()) {
     for (auto f : functions) {
       auto baseFunc = searchRootStateForFunction(f->name, parentClass);
+      if (f->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative())
+        ctx->reportingContext.error(f->location, "Non-native scripts cannot define new events.");
       if (baseFunc && !baseFunc->hasSameSignature(f))
         ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f->name.c_str(), f->prettySignature().c_str(), baseFunc->parentObject->name.c_str(), baseFunc->prettySignature().c_str());
     }
