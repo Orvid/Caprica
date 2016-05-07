@@ -149,8 +149,12 @@ void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const 
         return repCtx.error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
       return;
 
-    case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::DeclareStatement:
+      if (declStatement->isConst)
+        return repCtx.error(location, "You cannot assign to the const local variable '%s'.", declStatement->name.c_str());
+      return;
+
+    case PapyrusIdentifierType::Parameter:
     case PapyrusIdentifierType::BuiltinStateField:
       return;
 
