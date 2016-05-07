@@ -314,9 +314,9 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
     prop->defaultValue = std::move(expectConsumePapyrusValue());
   }
   prop->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Property);
-  if (prop->isAuto() || prop->isReadOnly())
+  if (prop->isAuto() || prop->isAutoReadOnly())
     isFullProp = false;
-  if (prop->isReadOnly() && !hadDefaultValue)
+  if (prop->isAutoReadOnly() && !hadDefaultValue)
     reportingContext.error(cur.location, "An AutoReadOnly property must have a value!");
   expectConsumeEOLs();
   prop->documentationComment = std::move(maybeConsumeDocString());

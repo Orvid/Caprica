@@ -15,7 +15,7 @@ void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
   prop->documentationString = file->getString(documentationComment);
   prop->typeName = type.buildPex(file);
   prop->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Property);
-  if (isAuto() && isReadOnly()) {
+  if (isAuto() && isAutoReadOnly()) {
     prop->isReadable = true;
     auto func = new pex::PexFunction();
     func->returnTypeName = prop->typeName;
@@ -70,8 +70,8 @@ void PapyrusProperty::semantic(PapyrusResolutionContext* ctx) {
 }
 
 void PapyrusProperty::semantic2(PapyrusResolutionContext* ctx) {
-  if (ctx->object->isNative())
-    ctx->reportingContext.error(location, "You cannot define properties on a Native script.");
+  if (ctx->object->isNative() && !isAutoReadOnly() && !readFunction && !writeFunction)
+    ctx->reportingContext.error(location, "You cannot define auto properties on a Native script.");
   if (readFunction) {
     if (readFunction->isGlobal() || readFunction->isNative())
       ctx->reportingContext.error(readFunction->location, "A property function is not allowed to be global or native.");

@@ -58,7 +58,7 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isAutoReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
       } else {
@@ -94,9 +94,9 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isReadOnly())
+      if (prop->isAutoReadOnly())
         bldr.reportingContext.fatal(location, "Attempted to generate a store to a read-only property!");
-      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isAutoReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
         bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
       } else {
@@ -131,7 +131,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
 void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const {
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isReadOnly())
+      if (prop->isAutoReadOnly())
         return repCtx.error(location, "You cannot assign to the read-only property '%s'.", prop->name.c_str());
       if (prop->isConst())
         return repCtx.error(location, "You cannot assign to the const property '%s'.", prop->name.c_str());

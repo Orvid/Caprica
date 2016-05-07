@@ -30,7 +30,7 @@ struct PapyrusProperty final
   const PapyrusObject* parent{ nullptr };
 
   bool isAuto() const { return userFlags.isAuto; }
-  bool isReadOnly() const { return userFlags.isAutoReadOnly; }
+  bool isAutoReadOnly() const { return userFlags.isAutoReadOnly; }
   bool isConst() const { return userFlags.isConst; }
 
   explicit PapyrusProperty(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par) : location(loc), type(std::move(tp)), parent(par) { }
