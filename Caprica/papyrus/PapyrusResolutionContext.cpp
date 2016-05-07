@@ -33,7 +33,7 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
     reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
   for (auto s : importedScripts) {
     if (s == sc)
-      reportingContext.warning_W4002_Duplicate_Import(location, import.c_str());
+      reportingContext.error(location, "Duplicate import of '%s'.", import.c_str());
   }
   importedScripts.push_back(sc);
 }
