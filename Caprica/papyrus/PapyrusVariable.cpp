@@ -1,5 +1,7 @@
 #include <papyrus/PapyrusVariable.h>
 
+#include <papyrus/PapyrusObject.h>
+
 namespace caprica { namespace papyrus {
 
 void PapyrusVariable::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
@@ -13,6 +15,8 @@ void PapyrusVariable::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
 }
 
 void PapyrusVariable::semantic(PapyrusResolutionContext* ctx) {
+  if (ctx->object->isNative())
+    ctx->reportingContext.error(location, "You cannot define variables in a Native script.");
   type = ctx->resolveType(type);
   defaultValue = ctx->coerceDefaultValue(defaultValue, type);
 }
