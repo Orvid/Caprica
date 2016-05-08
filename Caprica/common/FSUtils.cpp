@@ -15,6 +15,7 @@ namespace caprica { namespace FSUtils {
 struct FileReadCacheEntry final
 {
   FileReadCacheEntry() :
+    read(std::make_unique<std::atomic<bool>>(false)),
     dataMutex(std::make_unique<std::mutex>()),
     taskMutex(std::make_unique<std::mutex>())
   {
@@ -27,9 +28,9 @@ struct FileReadCacheEntry final
 
   void wantFile(const std::string& filename) {
     if (conf::Performance::asyncFileRead) {
-      if (!read && !readTask.valid()) {
+      if (!read->load() && !readTask.valid()) {
         std::unique_lock<std::mutex> lock{ *taskMutex };
-        if (!read && !readTask.valid()) {
+        if (!read->load() && !readTask.valid()) {
           readTask = std::move(std::async(std::launch::async, [this, filename]() {
             this->readFile(filename);
           }));
@@ -41,30 +42,31 @@ struct FileReadCacheEntry final
   void readFile(const std::string& filename) {
     std::ifstream inFile{ filename, std::ifstream::binary };
     inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-    std::stringstream strStream;
+    std::stringstream strStream{ };
+    strStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     strStream << inFile.rdbuf();
     auto str = strStream.str();
     {
       std::unique_lock<std::mutex> lock{ *dataMutex };
       readFileData = std::move(str);
-      read = true;
+      read->store(true);
     }
   }
 
   std::string getData(const std::string& filename) {
-    if (read)
+    if (read->load())
       return readFileData;
 
     if (readTask.valid()) {
       std::unique_lock<std::mutex> lock{ *taskMutex };
       if (readTask.valid())
         readTask.get();
-      assert(read);
+      assert(read->load());
       return readFileData;
     }
 
     readFile(filename);
-    assert(read);
+    assert(read->load());
     return readFileData;
   }
 
@@ -73,12 +75,12 @@ struct FileReadCacheEntry final
       std::unique_lock<std::mutex> lock{ *taskMutex };
       if (readTask.valid())
         readTask.get();
-      assert(read);
+      assert(read->load());
     }
   }
 
 private:
-  bool read{ false };
+  std::unique_ptr<std::atomic<bool>> read;
   std::unique_ptr<std::mutex> dataMutex;
   std::string readFileData{ "" };
   std::unique_ptr<std::mutex> taskMutex;
