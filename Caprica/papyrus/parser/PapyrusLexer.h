@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cstring>
-#include <fstream>
 #include <functional>
-#include <sstream>
 #include <string>
 
 #include <common/CapricaFileLocation.h>
@@ -135,10 +133,6 @@ struct PapyrusLexer
     float fValue{ };
 
     explicit Token(TokenType tp) : type(tp) { }
-    // This is deleted deliberately. The assign operator of the std::string in the location
-    // is not cheap, but that string value is never going to be different within the same file,
-    // so there's no need to keep calling it. Instead we modify everything else about the
-    // token and location.
     Token(const Token&) = delete;
     ~Token() = default;
 
@@ -149,17 +143,9 @@ struct PapyrusLexer
         case TokenType::String:
           return "String(\"" + sValue + "\")";
         case TokenType::Integer:
-        {
-          std::ostringstream str;
-          str << "Integer(" << iValue << ")";
-          return str.str();
-        }
+          return "Integer(" + std::to_string(iValue) + ")";
         case TokenType::Float:
-        {
-          std::ostringstream str;
-          str << "Float(" << fValue << ")";
-          return str.str();
-        }
+          return "Float(" + std::to_string(fValue) + ")";
         default:
           return prettyTokenType(type);
       }

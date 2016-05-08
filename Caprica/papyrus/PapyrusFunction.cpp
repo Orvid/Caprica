@@ -141,12 +141,8 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
     virtual void visit(statements::PapyrusDeclareStatement* s) override {
       int i = 0;
       auto baseName = s->name;
-      while (allLocalNames.count(s->name)) {
-        std::ostringstream strm;
-        strm << "::mangled_" << baseName << "_" << i;
-        s->name = strm.str();
-        i++;
-      }
+      while (allLocalNames.count(s->name))
+        s->name = "::mangled_" + baseName + "_" + std::to_string(i++);
       allLocalNames.insert(s->name);
     }
   } visitor;

@@ -69,9 +69,7 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
   }
 
   auto loc = new PexLocalVariable();
-  std::stringstream ss;
-  ss << "::temp" << currentTempI++;
-  loc->name = file->getString(ss.str());
+  loc->name = file->getString("::temp" + std::to_string(currentTempI++));
   loc->type = typeName;
   tempVarNameTypeMap.insert({ loc->name, loc });
   locals.push_back(loc);
