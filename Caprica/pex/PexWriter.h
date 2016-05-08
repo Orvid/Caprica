@@ -72,7 +72,7 @@ struct PexWriter final : public CapricaBinaryWriter
   // the full length of its data before writing
   // the actual data.
   void writeStream(const std::string& str) {
-    strm.write(str.c_str(), str.size());
+    strm.append(str.c_str(), str.size());
   }
 };
 
