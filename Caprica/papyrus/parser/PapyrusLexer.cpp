@@ -218,6 +218,12 @@ static const caseless_unordered_identifier_map<std::string, TokenType> languageE
   { "to", TokenType::kTo },
 };
 
+static bool isAsciiAlphaNumeric(int c) {
+  return (c >= 'a' && c <= 'z') ||
+         (c >= 'A' && c <= 'Z') ||
+         (c >= '0' && c <= '9');
+}
+
 void PapyrusLexer::consume() {
 StartOver:
   auto baseLoc = location;
@@ -427,13 +433,13 @@ StartOver:
         str.append(1, (char)c);
       }
 
-      while (isalnum(peekChar()) || peekChar() == '_' || peekChar() == ':')
+      while (isAsciiAlphaNumeric(peekChar()) || peekChar() == '_' || peekChar() == ':')
         str.append(1, (char)getChar());
 
       if (conf::Papyrus::allowDecompiledStructNameRefs && peekChar() == '#') {
         str.append(1, (char)getChar());
 
-        while (isalnum(peekChar()) || peekChar() == '_')
+        while (isAsciiAlphaNumeric(peekChar()) || peekChar() == '_')
           str.append(1, (char)getChar());
       }
 
