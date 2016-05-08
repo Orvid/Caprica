@@ -136,7 +136,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   // the ones that are the same.
   struct CheckLocalNamesStatementVisitor final : statements::PapyrusSelectiveStatementVisitor
   {
-    std::unordered_set<std::string, CaselessStringHasher, CaselessStringEqual> allLocalNames{ };
+    caseless_unordered_identifier_set<std::string> allLocalNames{ };
 
     virtual void visit(statements::PapyrusDeclareStatement* s) override {
       int i = 0;

@@ -129,7 +129,7 @@ void PexInstruction::write(PexWriter& wtr) const {
   }
 }
 
-static const caseless_map<const char*, PexOpCode> opCodeNameMap{
+static const caseless_unordered_identifier_map<const char*, PexOpCode> opCodeNameMap{
   { "noop", PexOpCode::Nop },
   { "iadd", PexOpCode::IAdd },
   { "fadd", PexOpCode::FAdd },

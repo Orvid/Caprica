@@ -93,7 +93,7 @@ struct PapyrusResolutionContext final
   void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
     // TODO: This has a short enough lifetime that an
     // std::set might actually outperform this.
-    caseless_unordered_set<std::string> foundNames{ };
+    caseless_unordered_identifier_set<std::string> foundNames{ };
     foundNames.reserve(nameset.size());
     for (auto member : nameset) {
       // TODO: Output location of first name.
@@ -110,7 +110,7 @@ struct PapyrusResolutionContext final
   PapyrusResolutionContext(const PapyrusResolutionContext&) = delete;
   ~PapyrusResolutionContext() = default;
 private:
-  std::vector<std::map<std::string, statements::PapyrusDeclareStatement*, CaselessStringComparer>> localVariableScopeStack{ };
+  std::vector<caseless_unordered_identifier_map<std::string, statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
   std::vector<PapyrusScript*> importedScripts{ };
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };

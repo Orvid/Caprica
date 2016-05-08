@@ -11,17 +11,6 @@
 
 namespace caprica {
 
-struct CaselessStringComparer final : public std::function<bool(std::string, std::string)>
-{
-  bool operator()(const char* const lhs, const char* const rhs) const {
-    return _stricmp(lhs, rhs) < 0;
-  }
-
-  bool operator()(const std::string &lhs, const std::string &rhs) const {
-    return _stricmp(lhs.c_str(), rhs.c_str()) < 0;
-  }
-};
-
 struct CaselessStringHasher final : public std::function<size_t(std::string)>
 {
   size_t operator()(const char* k) const {
@@ -72,8 +61,6 @@ private:
   static size_t doIdentifierHash(const char* k, size_t len);
 };
 
-//using CaselessStringHasher = CaselessIdentifierHasher;
-
 struct CaselessIdentifierEqual final : public std::function<bool(std::string, std::string)>
 {
   bool operator()(const char* lhs, const char* rhs) const {
@@ -91,8 +78,6 @@ template<typename T>
 using caseless_unordered_set = typename std::unordered_set<T, CaselessStringHasher, CaselessStringEqual>;
 template<typename K, typename V>
 using caseless_unordered_map = typename std::unordered_map<K, V, CaselessStringHasher, CaselessStringEqual>;
-template<typename K, typename V>
-using caseless_map = typename std::map<K, V, CaselessStringComparer>;
 
 template<typename T>
 using caseless_unordered_identifier_set = typename std::unordered_set<T, CaselessIdentifierHasher, CaselessIdentifierEqual>;

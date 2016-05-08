@@ -150,7 +150,7 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
   return newTokTp;
 }
 
-static const caseless_unordered_map<const char* const, TokenType> keywordMap {
+static const caseless_unordered_identifier_map<const char* const, TokenType> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
@@ -200,7 +200,7 @@ static const caseless_unordered_map<const char* const, TokenType> keywordMap {
 };
 
 // Language extension keywords
-static const caseless_unordered_map<const char* const, TokenType> languageExtensionsKeywordMap{
+static const caseless_unordered_identifier_map<const char* const, TokenType> languageExtensionsKeywordMap{
   { "break", TokenType::kBreak },
   { "case", TokenType::kCase },
   { "continue", TokenType::kContinue },

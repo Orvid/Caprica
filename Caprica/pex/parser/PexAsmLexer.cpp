@@ -85,7 +85,7 @@ void PexAsmLexer::setTok(Token& tok) {
   cur = tok;
 }
 
-static const std::map<const std::string, TokenType, CaselessStringComparer> dotIdentifierMap{
+static const caseless_unordered_identifier_map<const std::string, TokenType> dotIdentifierMap{
   { "autostate", TokenType::kAutoState },
   { "autovar", TokenType::kAutoVar },
   { "code", TokenType::kCode },

@@ -41,7 +41,7 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
 static thread_local caseless_unordered_map<const std::string, std::unique_ptr<PapyrusScript>> loadedScripts{ };
-static thread_local caseless_unordered_map<const std::string, caseless_unordered_map<const std::string, PapyrusScript*>> localPerDirIdentMap{ };
+static thread_local caseless_unordered_map<const std::string, caseless_unordered_identifier_map<const std::string, PapyrusScript*>> localPerDirIdentMap{ };
 PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
   auto baseDir = boost::filesystem::path(script->sourceFileName).parent_path().string();
 
@@ -72,7 +72,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       a->preSemantic(ctx);
 
       if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir,{ } });
+        localPerDirIdentMap.insert({ baseDir, { } });
       localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
       loadedScripts.insert({ filename, std::move(a) });
       loadedScripts[filename]->semantic(ctx);
@@ -100,7 +100,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       ctx->isPexResolution = true;
       a->preSemantic(ctx);
       if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir,{ } });
+        localPerDirIdentMap.insert({ baseDir, { } });
       localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
       loadedScripts.insert({ filename, std::move(a) });
       loadedScripts[filename]->semantic(ctx);
@@ -125,7 +125,7 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
       ctx->isPexResolution = true;
       a->preSemantic(ctx);
       if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir,{ } });
+        localPerDirIdentMap.insert({ baseDir, { } });
       localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
       loadedScripts.insert({ filename, std::move(a) });
       loadedScripts[filename]->semantic(ctx);
