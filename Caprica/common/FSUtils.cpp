@@ -125,7 +125,7 @@ void async_write(const std::string& filename, const std::string& value) {
   }
 }
 
-static caseless_unordered_map<std::string, caseless_unordered_set<std::string>> directoryContentsMap{ };
+static caseless_unordered_path_map<std::string, caseless_unordered_set<std::string>> directoryContentsMap{ };
 void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<std::string>&& files) {
   if (directoryContentsMap.count(directory))
     CapricaReportingContext::logicalFatal("Attempted to push the known directory state of '%s' multiple times!", directory.c_str());

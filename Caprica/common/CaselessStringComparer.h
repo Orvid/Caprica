@@ -11,6 +11,16 @@
 
 namespace caprica {
 
+void identifierToLower(std::string& str);
+
+bool caselessEq(const std::string& a, const std::string& b);
+bool pathEq(const std::string& a, const std::string& b);
+
+bool idEq(const char* a, const char* b);
+bool idEq(const char* a, const std::string& b);
+bool idEq(const std::string& a, const char* b);
+bool idEq(const std::string& a, const std::string& b);
+
 struct CaselessStringHasher final : public std::function<size_t(std::string)>
 {
   size_t operator()(const char* k) const {
@@ -21,6 +31,7 @@ struct CaselessStringHasher final : public std::function<size_t(std::string)>
   }
 
 private:
+  friend struct CaselessPathHasher;
   static size_t doCaselessHash(const char* k, size_t len);
 };
 
@@ -31,14 +42,26 @@ struct CaselessStringEqual final : public std::function<bool(std::string, std::s
   }
 
   bool operator()(const std::string& lhs, const std::string& rhs) const {
-    return _stricmp(lhs.c_str(), rhs.c_str()) == 0;
+    return caselessEq(lhs, rhs);
   }
 };
 
-bool idEq(const char* a, const char* b);
-bool idEq(const char* a, const std::string& b);
-bool idEq(const std::string& a, const char* b);
-bool idEq(const std::string& a, const std::string& b);
+struct CaselessPathHasher final : public std::function<size_t(std::string)>
+{
+  size_t operator()(const std::string& k) const {
+    return doPathHash(k.c_str(), k.size());
+  }
+
+private:
+  static size_t doPathHash(const char* k, size_t len);
+};
+
+struct CaselessPathEqual final : public std::function<bool(std::string, std::string)>
+{
+  bool operator()(const std::string& lhs, const std::string& rhs) const {
+    return pathEq(lhs, rhs);
+  }
+};
 
 struct CaselessIdentifierHasher final : public std::function<size_t(std::string)>
 {
@@ -63,12 +86,17 @@ struct CaselessIdentifierEqual final : public std::function<bool(std::string, st
   }
 };
 
-void identifierToLower(std::string& str);
-
+// These aren't as restricted as identifiers, but must be in the base-ascii
+// range, and must not contain control characters.
 template<typename T>
 using caseless_unordered_set = typename std::unordered_set<T, CaselessStringHasher, CaselessStringEqual>;
+
+// The path collections are for UTF-8 encoded strings, and when comparing two,
+// they are likely to have a long prefix in common.
+template<typename T>
+using caseless_unordered_path_set = typename std::unordered_set<T, CaselessStringHasher, CaselessStringEqual>;
 template<typename K, typename V>
-using caseless_unordered_map = typename std::unordered_map<K, V, CaselessStringHasher, CaselessStringEqual>;
+using caseless_unordered_path_map = typename std::unordered_map<K, V, CaselessStringHasher, CaselessStringEqual>;
 
 template<typename T>
 using caseless_unordered_identifier_set = typename std::unordered_set<T, CaselessIdentifierHasher, CaselessIdentifierEqual>;
