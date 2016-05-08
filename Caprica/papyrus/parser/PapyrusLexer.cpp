@@ -150,7 +150,7 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
   return newTokTp;
 }
 
-static const caseless_unordered_identifier_map<const char* const, TokenType> keywordMap {
+static const caseless_unordered_identifier_map<std::string, TokenType> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
@@ -200,7 +200,7 @@ static const caseless_unordered_identifier_map<const char* const, TokenType> key
 };
 
 // Language extension keywords
-static const caseless_unordered_identifier_map<const char* const, TokenType> languageExtensionsKeywordMap{
+static const caseless_unordered_identifier_map<std::string, TokenType> languageExtensionsKeywordMap{
   { "break", TokenType::kBreak },
   { "case", TokenType::kCase },
   { "continue", TokenType::kContinue },
@@ -437,12 +437,12 @@ StartOver:
           str.append(1, (char)getChar());
       }
 
-      auto f = keywordMap.find(str.c_str());
+      auto f = keywordMap.find(str);
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
 
       if (conf::Papyrus::enableLanguageExtensions) {
-        auto f2 = languageExtensionsKeywordMap.find(str.c_str());
+        auto f2 = languageExtensionsKeywordMap.find(str);
         if (f2 != languageExtensionsKeywordMap.end())
           return setTok(f2->second, baseLoc);
       }
