@@ -2,7 +2,7 @@
 
 namespace caprica {
 
-alignas(64) const uint64_t charToLowerMap[] = {
+alignas(128) const uint64_t charToLowerMap[] = {
   0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
   0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
   0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
@@ -66,13 +66,20 @@ size_t CaselessIdentifierHasher::doIdentifierHash(const char* s, size_t len) {
   return ((size_t)val << 32) | val;
 }
 
-static bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
+alignas(128) static const __m128i spaces{
+  ' ', ' ', ' ', ' ',
+  ' ', ' ', ' ', ' ',
+  ' ', ' ', ' ', ' ',
+  ' ', ' ', ' ', ' '
+};
+bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
+  // This uses the SSE2 instructions movdqa, movdqu, pcmpeqb, por, pmovmskb,
+  // and is safe to use on any 64-bit CPU.
   // This returns via goto's because of how MSVC does codegen.
   if (aLen != bLen)
     goto ReturnFalse;
   if (a == b)
     goto ReturnTrue;
-  static const auto spaces = _mm_set1_epi8(0x20);
   const char* __restrict strA = a;
   int64_t strBOff = b - a;
   // We know the string is null-terminated, so we can align to 2.
