@@ -35,19 +35,10 @@ struct CaselessStringEqual final : public std::function<bool(std::string, std::s
   }
 };
 
-bool idEq(const char* a, size_t aLen, const char* b, size_t bLen);
-inline bool idEq(const char* a, const char* b) {
-  return idEq(a, strlen(a), b, strlen(b));
-}
-inline bool idEq(const char* a, const std::string& b) {
-  return idEq(a, strlen(a), b.c_str(), b.size());
-}
-inline bool idEq(const std::string& a, const char* b) {
-  return idEq(a.c_str(), a.size(), b, strlen(b));
-}
-inline bool idEq(const std::string& a, const std::string& b) {
-  return idEq(a.c_str(), a.size(), b.c_str(), b.size());
-}
+bool idEq(const char* a, const char* b);
+bool idEq(const char* a, const std::string& b);
+bool idEq(const std::string& a, const char* b);
+bool idEq(const std::string& a, const std::string& b);
 
 struct CaselessIdentifierHasher final : public std::function<size_t(std::string)>
 {
@@ -68,7 +59,7 @@ struct CaselessIdentifierEqual final : public std::function<bool(std::string, st
   }
 
   bool operator()(const std::string& lhs, const std::string& rhs) const {
-    return idEq(lhs.c_str(), rhs.c_str());
+    return idEq(lhs, rhs);
   }
 };
 

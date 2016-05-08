@@ -66,20 +66,21 @@ size_t CaselessIdentifierHasher::doIdentifierHash(const char* s, size_t len) {
   return ((size_t)val << 32) | val;
 }
 
-bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
+static bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
   // This returns via goto's because of how MSVC does codegen.
   if (aLen != bLen)
     goto ReturnFalse;
   if (a == b)
     goto ReturnTrue;
+  static const auto spaces = _mm_set1_epi8(0x20);
   const char* __restrict strA = a;
   int64_t strBOff = b - a;
   // We know the string is null-terminated, so we can align to 2.
   size_t lenLeft = ((aLen + 1) & 0xFFFFFFFFFFFFFFFEULL);
   while (lenLeft >= 16) {
-    auto vA = _mm_or_si128(_mm_lddqu_si128((__m128i*)strA), _mm_set1_epi8(0x20));
-    auto vB = _mm_or_si128(_mm_lddqu_si128((__m128i*)(strA + strBOff)), _mm_set1_epi8(0x20));
-    if (!_mm_cmpistra(vA, vB, 0b011000))
+    auto vA = _mm_or_si128(_mm_loadu_si128((__m128i*)strA), spaces);
+    auto vB = _mm_or_si128(_mm_loadu_si128((__m128i*)(strA + strBOff)), spaces);
+    if (_mm_movemask_epi8(_mm_cmpeq_epi8(vA, vB)) != 0xFFFF)
       goto ReturnFalse;
     strA += 16;
     lenLeft -= 16;
@@ -103,6 +104,19 @@ ReturnTrue:
   return true;
 ReturnFalse:
   return false;
+}
+
+bool idEq(const char* a, const char* b) {
+  return idEq(a, strlen(a), b, strlen(b));
+}
+bool idEq(const char* a, const std::string& b) {
+  return idEq(a, strlen(a), b.c_str(), b.size());
+}
+bool idEq(const std::string& a, const char* b) {
+  return idEq(a.c_str(), a.size(), b, strlen(b));
+}
+bool idEq(const std::string& a, const std::string& b) {
+  return idEq(a.c_str(), a.size(), b.c_str(), b.size());
 }
 
 }
