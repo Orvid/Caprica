@@ -29,18 +29,20 @@ namespace conf = caprica::conf;
 
 struct ScriptToCompile final
 {
+  size_t filesize;
   time_t lastModTime;
   std::string sourceFileName;
   std::string outputDirectory;
   std::string sourceFilePath;
 
   ScriptToCompile() = delete;
-  ScriptToCompile(std::string&& sourcePath, std::string&& baseOutputDir, std::string&& absolutePath, time_t lastMod)
+  ScriptToCompile(std::string&& sourcePath, std::string&& baseOutputDir, std::string&& absolutePath, time_t lastMod, size_t fileSize)
     : sourceFileName(std::move(sourcePath)),
     outputDirectory(std::move(baseOutputDir)),
     sourceFilePath(std::move(absolutePath)),
-    lastModTime(lastMod) {
-    caprica::FSUtils::Cache::push_need(sourceFilePath);
+    lastModTime(lastMod),
+    filesize(fileSize) {
+    caprica::FSUtils::Cache::push_need(sourceFilePath, filesize);
   }
   ScriptToCompile(const ScriptToCompile& other) = default;
   ScriptToCompile(ScriptToCompile&& other) = default;
@@ -168,7 +170,20 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               filenameToDisplay = curDir.substr(1) + "\\" + data.cFileName;
               outputDir = baseOutputDir + curDir;
             }
-            filesToCompile.push_back(ScriptToCompile(std::move(filenameToDisplay), std::move(outputDir), std::move(sourceFilePath), calcLastModTime(data.ftLastWriteTime)));
+            filesToCompile.push_back(
+              ScriptToCompile(
+                std::move(filenameToDisplay),
+                std::move(outputDir),
+                std::move(sourceFilePath),
+                calcLastModTime(data.ftLastWriteTime),
+                [](DWORD low, DWORD high) {
+                  ULARGE_INTEGER ull;
+                  ull.LowPart = low;
+                  ull.HighPart = high;
+                  return ull.QuadPart;
+                }(data.nFileSizeLow, data.nFileSizeHigh)
+              )
+            );
           }
         }
       }
@@ -406,7 +421,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         }
         auto canon = caprica::FSUtils::canonical(f).string();
         auto oDir = baseOutputDir;
-        filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f)));
+        filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f), 0));
       }
     }
   } catch (const std::exception& ex) {

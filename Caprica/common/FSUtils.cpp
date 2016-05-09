@@ -26,7 +26,9 @@ struct FileReadCacheEntry final
   FileReadCacheEntry& operator =(const FileReadCacheEntry&) = delete;
   ~FileReadCacheEntry() = default;
 
-  void wantFile(const std::string& filename) {
+  void wantFile(const std::string& filename, size_t filesize) {
+    if (!this->filesize && filesize)
+      this->filesize = filesize;
     if (conf::Performance::asyncFileRead) {
       if (!read->load() && !readTask.valid()) {
         std::unique_lock<std::mutex> lock{ *taskMutex };
@@ -42,10 +44,24 @@ struct FileReadCacheEntry final
   void readFile(const std::string& filename) {
     std::ifstream inFile{ filename, std::ifstream::binary };
     inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-    std::stringstream strStream{ };
-    strStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-    strStream << inFile.rdbuf();
-    auto str = strStream.str();
+    std::string str;
+    if (filesize != 0) {
+      auto size = filesize;
+      auto buf = new char[size];
+      inFile.read(buf, size);
+      str.append(buf, size);
+      delete buf;
+    }
+    // Just because the filesize was one thing when
+    // we iterated the directory doesn't mean it's
+    // not gotten bigger since then.
+    inFile.peek();
+    if (!inFile.eof()) {
+      std::stringstream strStream{ };
+      strStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+      strStream << inFile.rdbuf();
+      str += strStream.str();
+    }
     {
       std::unique_lock<std::mutex> lock{ *dataMutex };
       readFileData = std::move(str);
@@ -85,6 +101,7 @@ private:
   std::string readFileData{ "" };
   std::unique_ptr<std::mutex> taskMutex;
   std::future<void> readTask{ };
+  size_t filesize{ 0 };
 };
 
 static Concurrency::concurrent_unordered_map<std::string, FileReadCacheEntry, CaselessStringHasher, CaselessStringEqual> readFilesMap{ };
@@ -95,9 +112,9 @@ void Cache::waitForAll() {
   }
 }
 
-void Cache::push_need(const std::string& filename) {
+void Cache::push_need(const std::string& filename, size_t filesize) {
   pushKnownExists(filename);
-  readFilesMap[filename].wantFile(filename);
+  readFilesMap[filename].wantFile(filename, filesize);
 }
 
 std::string Cache::cachedReadFull(const std::string& filename) {

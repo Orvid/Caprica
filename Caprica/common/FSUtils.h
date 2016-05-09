@@ -16,7 +16,7 @@ struct Cache abstract
   ~Cache() = delete;
 
   static void waitForAll();
-  static void push_need(const std::string& filename);
+  static void push_need(const std::string& filename, size_t filesize = 0);
   static std::string cachedReadFull(const std::string& filename);
 };
 
