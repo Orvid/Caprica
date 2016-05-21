@@ -11,6 +11,8 @@
 namespace caprica {
 
 template<typename K, typename V>
-using concurrent_caseless_unordered_path_map = typename Concurrency::concurrent_unordered_map<K, V, CaselessPathHasher, CaselessPathEqual>;
+using caseless_concurrent_unordered_identifier_map = typename Concurrency::concurrent_unordered_map<K, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+template<typename K, typename V>
+using caseless_concurrent_unordered_path_map = typename Concurrency::concurrent_unordered_map<K, V, CaselessPathHasher, CaselessPathEqual>;
 
 }

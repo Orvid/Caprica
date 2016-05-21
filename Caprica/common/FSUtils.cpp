@@ -103,7 +103,7 @@ private:
   size_t filesize{ 0 };
 };
 
-static concurrent_caseless_unordered_path_map<std::string, FileReadCacheEntry> readFilesMap{ };
+static caseless_concurrent_unordered_path_map<std::string, FileReadCacheEntry> readFilesMap{ };
 
 void Cache::waitForAll() {
   for (auto& f : readFilesMap) {
@@ -150,7 +150,7 @@ void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<s
   directoryContentsMap.insert({ directory, std::move(files) });
 }
 
-static concurrent_caseless_unordered_path_map<std::string, uint8_t> fileExistenceMap{ };
+static caseless_concurrent_unordered_path_map<std::string, uint8_t> fileExistenceMap{ };
 void pushKnownExists(const std::string& path) {
   fileExistenceMap.insert({ path, 2 });
 }
