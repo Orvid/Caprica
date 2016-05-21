@@ -456,7 +456,7 @@ int main(int argc, char* argv[])
   try {
     auto startCompile = std::chrono::high_resolution_clock::now();
     if (conf::General::compileInParallel) {
-      concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](const ScriptToCompile& fl) {
+      Concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](const ScriptToCompile& fl) {
         compileScript(fl);
       });
     } else {

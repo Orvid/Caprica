@@ -1,7 +1,5 @@
 #include <common/FSUtils.h>
 
-#include <concurrent_unordered_map.h>
-
 #include <cstring>
 #include <future>
 #include <sstream>
@@ -9,6 +7,7 @@
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
+#include <common/Concurrency.h>
 
 namespace caprica { namespace FSUtils {
 
@@ -104,7 +103,7 @@ private:
   size_t filesize{ 0 };
 };
 
-static Concurrency::concurrent_unordered_map<std::string, FileReadCacheEntry, CaselessStringHasher, CaselessStringEqual> readFilesMap{ };
+static concurrent_caseless_unordered_path_map<std::string, FileReadCacheEntry> readFilesMap{ };
 
 void Cache::waitForAll() {
   for (auto& f : readFilesMap) {
@@ -151,7 +150,7 @@ void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<s
   directoryContentsMap.insert({ directory, std::move(files) });
 }
 
-static Concurrency::concurrent_unordered_map<std::string, uint8_t, CaselessStringHasher, CaselessStringEqual> fileExistenceMap{ };
+static concurrent_caseless_unordered_path_map<std::string, uint8_t> fileExistenceMap{ };
 void pushKnownExists(const std::string& path) {
   fileExistenceMap.insert({ path, 2 });
 }
