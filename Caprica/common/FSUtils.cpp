@@ -146,6 +146,13 @@ boost::string_ref filenameAsRef(boost::string_ref file) {
   return file;
 }
 
+boost::string_ref parentPathAsRef(boost::string_ref file) {
+  auto pos = file.find_last_of("\\/");
+  if (pos != boost::string_ref::npos)
+    file = file.substr(0, pos);
+  return file;
+}
+
 static void writeFile(const std::string& filename, std::string&& value) {
   if (!conf::Performance::performanceTestMode) {
     auto containingDir = boost::filesystem::path(filename).parent_path();

@@ -47,16 +47,16 @@ PapyrusScript* PapyrusParser::parseScript() {
   return script;
 }
 
-static bool doesScriptNameMatchNextPartOfDir(const boost::filesystem::path curPath, const std::string curName) {
-  auto idx = curName.find_last_of(':');
+static bool doesScriptNameMatchNextPartOfDir(boost::string_ref curPath, boost::string_ref curName) {
+  auto idx = curName.rfind(':');
   if (idx != std::string::npos) {
     auto namePiece = curName.substr(idx + 1);
-    auto basePath = boost::filesystem::basename(curPath);
-    if (!idEq(namePiece, basePath))
+    auto basePath = FSUtils::basenameAsRef(curPath);
+    if (!pathEq(namePiece, basePath))
       return false;
-    return doesScriptNameMatchNextPartOfDir(curPath.parent_path(), curName.substr(0, idx));
+    return doesScriptNameMatchNextPartOfDir(FSUtils::parentPathAsRef(curPath), curName.substr(0, idx));
   }
-  return !_stricmp(boost::filesystem::basename(curPath).c_str(), curName.c_str());
+  return pathEq(FSUtils::basenameAsRef(curPath), curName);
 }
 
 PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
