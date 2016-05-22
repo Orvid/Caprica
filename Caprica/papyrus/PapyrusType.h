@@ -47,7 +47,6 @@ struct PapyrusType final
   struct Default final { };
 
   Kind type{ Kind::None };
-  std::string name{ };
   CapricaFileLocation location{ };
   union
   {
@@ -96,12 +95,17 @@ struct PapyrusType final
     pt.resolvedObject = obj;
     return pt;
   }
+  static PapyrusType ResolvedStruct(CapricaFileLocation loc, const PapyrusStruct* struc) {
+    auto pt = PapyrusType(Kind::ResolvedStruct, loc);
+    pt.resolvedStruct = struc;
+    return pt;
+  }
 
   pex::PexString buildPex(pex::PexFile* file) const {
     return file->getString(getTypeString());
   }
 
-  PapyrusType getElementType() const {
+  const PapyrusType& getElementType() const& {
     assert(type == Kind::Array);
     return *arrayElementType;
   }
@@ -117,6 +121,9 @@ struct PapyrusType final
   }
 
 private:
+  friend struct PapyrusResolutionContext;
+
+  std::string name{ };
   PoisonKind poisonState{ PoisonKind::None };
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 

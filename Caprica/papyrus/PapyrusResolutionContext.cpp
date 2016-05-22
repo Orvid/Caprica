@@ -349,30 +349,15 @@ static bool tryResolveStruct(const PapyrusObject* object, const std::string& str
   return false;
 }
 
-static PapyrusType tryResolveStruct(const PapyrusObject* object, PapyrusType tp) {
-  for (auto& s : object->structs) {
-    if (idEq(s->name, tp.name)) {
-      tp.type = PapyrusType::Kind::ResolvedStruct;
-      tp.resolvedStruct = s;
-      return tp;
-    }
-  }
-  
-  if (auto parentClass = object->tryGetParentClass())
-    return tryResolveStruct(parentClass, tp);
-
-  return tp;
-}
-
 PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
-    if (tp.type == PapyrusType::Kind::Array)
+    if (tp.type == PapyrusType::Kind::Array && tp.getElementType().type == PapyrusType::Kind::Unresolved)
       return PapyrusType::Array(tp.location, std::make_shared<PapyrusType>(resolveType(tp.getElementType())));
     return tp;
   }
 
   if (isPexResolution || conf::Papyrus::allowDecompiledStructNameRefs) {
-    auto pos = tp.name.find_first_of('#');
+    auto pos = tp.name.find('#');
     if (pos != std::string::npos) {
       auto scName = tp.name.substr(0, pos);
       auto strucName = tp.name.substr(pos + 1);
@@ -382,11 +367,8 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
 
       for (auto obj : sc->objects) {
         for (auto struc : obj->structs) {
-          if (idEq(struc->name, strucName)) {
-            tp.type = PapyrusType::Kind::ResolvedStruct;
-            tp.resolvedStruct = struc;
-            return tp;
-          }
+          if (idEq(struc->name, strucName))
+            return PapyrusType::ResolvedStruct(tp.location, struc);
         }
       }
 
@@ -395,24 +377,18 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   }
 
   if (object) {
-    auto t2 = tryResolveStruct(object, tp);
-    if (t2.type != PapyrusType::Kind::Unresolved)
-      return t2;
+    PapyrusStruct* struc = nullptr;
+    if (tryResolveStruct(object, tp.name, &struc))
+      return PapyrusType::ResolvedStruct(tp.location, struc);
 
-    if (idEq(object->name, tp.name)) {
-      tp.type = PapyrusType::Kind::ResolvedObject;
-      tp.resolvedObject = object;
-      return tp;
-    }
+    if (idEq(object->name, tp.name))
+      return PapyrusType::ResolvedObject(tp.location, object);
   }
 
   for (auto obj : importedObjects) {
     for (auto struc : obj->structs) {
-      if (idEq(struc->name, tp.name)) {
-        tp.type = PapyrusType::Kind::ResolvedStruct;
-        tp.resolvedStruct = struc;
-        return tp;
-      }
+      if (idEq(struc->name, tp.name))
+        return PapyrusType::ResolvedStruct(tp.location, struc);
     }
   }
 
@@ -421,18 +397,12 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
   if (!tryLoadScript(tp.name, &foundObj, &retStructName))
     reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 
-  if (retStructName.size() == 0) {
-    tp.type = PapyrusType::Kind::ResolvedObject;
-    tp.resolvedObject = foundObj;
-    return tp;
-  }
+  if (retStructName.size() == 0)
+    return PapyrusType::ResolvedObject(tp.location, foundObj);
 
   PapyrusStruct* resStruct = nullptr;
-  if (tryResolveStruct(foundObj, retStructName, &resStruct)) {
-    tp.type = PapyrusType::Kind::ResolvedStruct;
-    tp.resolvedStruct = resStruct;
-    return tp;
-  }
+  if (tryResolveStruct(foundObj, retStructName, &resStruct))
+    return PapyrusType::ResolvedStruct(tp.location, resStruct);
   reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.c_str(), foundObj->name.c_str());
 }
 
@@ -443,7 +413,7 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
       return;
     }
   }
-  localVariableScopeStack.back().insert({ local->name, local });
+  localVariableScopeStack.back().emplace(local->name, local);
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
