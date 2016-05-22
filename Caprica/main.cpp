@@ -10,6 +10,7 @@
 
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
+#include <common/CapricaStats.h>
 #include <common/FSUtils.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
@@ -454,6 +455,8 @@ int main(int argc, char* argv[])
   if (conf::Performance::dumpTiming)
     std::cout << "Parse: " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms" << std::endl;
 
+  caprica::CapricaStats::inputFileCount = filesToCompile.size();
+
   auto startRead = std::chrono::high_resolution_clock::now();
   if (conf::Performance::performanceTestMode) {
     caprica::FSUtils::Cache::waitForAll();
@@ -473,8 +476,10 @@ int main(int argc, char* argv[])
         compileScript(file);
     }
     auto endCompile = std::chrono::high_resolution_clock::now();
-    if (conf::Performance::dumpTiming)
+    if (conf::Performance::dumpTiming) {
       std::cout << "Compiled " << filesToCompile.size() << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
+      caprica::CapricaStats::outputStats();
+    }
   } catch (const std::runtime_error& ex) {
     if (ex.what() != "")
       std::cout << ex.what() << std::endl;
