@@ -71,8 +71,8 @@ struct PexWriter final : public CapricaBinaryWriter
   // writing a PexObject, which needs to know
   // the full length of its data before writing
   // the actual data.
-  void writeStream(const std::string& str) {
-    strm.append(str.c_str(), str.size());
+  void writeStream(std::string&& str) {
+    strm += str;
   }
 };
 

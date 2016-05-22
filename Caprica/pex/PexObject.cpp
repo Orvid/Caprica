@@ -58,9 +58,9 @@ void PexObject::write(PexWriter& wtr) const {
   for (auto s : states)
     s->write(iwtr);
 
-  auto str = iwtr.getOutputBuffer();
+  auto&& str = iwtr.getOutputBuffer();
   wtr.boundWrite<uint32_t>(str.size());
-  wtr.writeStream(str);
+  wtr.writeStream(std::move(str));
 }
 
 void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {

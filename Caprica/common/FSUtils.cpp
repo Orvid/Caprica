@@ -48,7 +48,7 @@ struct FileReadCacheEntry final
       auto size = filesize;
       auto buf = new char[size];
       inFile.read(buf, size);
-      str.append(buf, size);
+      str = std::string(buf, size);
       delete buf;
     }
     // Just because the filesize was one thing when
@@ -122,7 +122,7 @@ std::string Cache::cachedReadFull(const std::string& filename) {
   return readFilesMap[abs].getData(abs);
 }
 
-static void writeFile(const std::string& filename, const std::string& value) {
+static void writeFile(const std::string& filename, std::string&& value) {
   if (!conf::Performance::performanceTestMode) {
     auto containingDir = boost::filesystem::path(filename).parent_path();
     if (!boost::filesystem::exists(containingDir))
@@ -133,13 +133,13 @@ static void writeFile(const std::string& filename, const std::string& value) {
   }
 }
 
-void async_write(const std::string& filename, const std::string& value) {
+void async_write(const std::string& filename, std::string&& value) {
   if (!conf::Performance::asyncFileWrite) {
-    writeFile(filename, value);
+    writeFile(filename, std::move(value));
   } else {
-    std::async(std::launch::async, [](const std::string& filename, const std::string& value) {
-      writeFile(filename, value);
-    }, filename, value);
+    std::async(std::launch::async, [](const std::string& filename, std::string&& value) {
+      writeFile(filename, std::move(value));
+    }, filename, std::move(value));
   }
 }
 

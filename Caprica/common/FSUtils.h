@@ -20,7 +20,7 @@ struct Cache abstract
   static std::string cachedReadFull(const std::string& filename);
 };
 
-void async_write(const std::string& filename, const std::string& value);
+void async_write(const std::string& filename, std::string&& value);
 const char* filenameAsRef(const std::string& file);
 bool exists(const std::string& path);
 std::array<bool, 3> multiExistsInDir(const std::string& dir, std::array<std::string, 3>&& filenames);

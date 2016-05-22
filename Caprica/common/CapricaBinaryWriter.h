@@ -17,11 +17,11 @@ struct CapricaBinaryWriter
   CapricaBinaryWriter(const CapricaBinaryWriter&) = delete;
   ~CapricaBinaryWriter() = default;
 
-  std::string getOutputBuffer() const {
-    return strm;
+  std::string&& getOutputBuffer() {
+    return std::move(strm);
   }
 
-  void writeToFile(const std::string& filename) const {
+  void writeToFile(const std::string& filename) {
     FSUtils::async_write(filename, getOutputBuffer());
   }
 
