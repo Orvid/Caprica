@@ -128,10 +128,10 @@ struct PapyrusLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
-    CapricaFileLocation location{ };
-    std::string sValue{ };
     int32_t iValue{ };
     float fValue{ };
+    CapricaFileLocation location{ };
+    std::string sValue{ };
 
     explicit Token(TokenType tp) : type(tp) { }
     Token(const Token&) = delete;
@@ -211,6 +211,7 @@ private:
     strm++;
     return (unsigned)c;
   }
+
   int peekChar() {
     if (strmI + 1 > strmLen)
       return -1;
