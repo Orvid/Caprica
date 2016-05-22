@@ -25,13 +25,12 @@ void identifierToLower(std::string& str) {
   }
 }
 
-bool caselessEq(const std::string& a, const std::string& b) {
+bool caselessEq(boost::string_ref a, boost::string_ref b) {
   if (a.size() != b.size())
     return false;
-  const char* __restrict strA = a.c_str();
-  const int64_t strBOff = b.c_str() - strA;
-  // We know the string is null-terminated, so we can align to 2.
-  size_t lenLeft = ((a.size() + 1) & 0xFFFFFFFFFFFFFFFEULL);
+  const char* __restrict strA = a.data();
+  const int64_t strBOff = b.data() - strA;
+  size_t lenLeft = a.size();
   while (lenLeft) {
     if ((charToLowerMap - 0x20)[*strA] != (charToLowerMap - 0x20)[*(strA + strBOff)])
       return false;
@@ -42,7 +41,7 @@ bool caselessEq(const std::string& a, const std::string& b) {
   return true;
 }
 
-bool pathEq(const std::string& a, const std::string& b) {
+bool pathEq(boost::string_ref a, boost::string_ref b) {
   // TODO: Ensure in lower-ascii range.
   return caselessEq(a, b);
 }

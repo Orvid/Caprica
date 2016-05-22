@@ -9,12 +9,14 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <boost/utility/string_ref.hpp>
+
 namespace caprica {
 
 void identifierToLower(std::string& str);
 
-bool caselessEq(const std::string& a, const std::string& b);
-bool pathEq(const std::string& a, const std::string& b);
+bool caselessEq(boost::string_ref a, boost::string_ref b);
+bool pathEq(boost::string_ref a, boost::string_ref b);
 
 bool idEq(const char* a, const char* b);
 bool idEq(const char* a, const std::string& b);

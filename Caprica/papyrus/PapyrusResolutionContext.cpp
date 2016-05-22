@@ -48,26 +48,22 @@ PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& fullName)
   if (f != loadedScripts.end())
     return f->second.get();
 
-  auto pos = fullName.rfind('.');
-  if (pos == std::string::npos)
-    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.", fullName.c_str());
-
-  auto ext = fullName.substr(pos + 1);
+  auto ext = FSUtils::extensionAsRef(fullName);
   CapricaReportingContext repCtx{ fullName };
   std::unique_ptr<PapyrusScript> loadedScript;
   pex::PexFile* pexFile = nullptr;
   bool isPexFile = false;
 
-  if (ext == "psc") {
+  if (pathEq(ext, ".psc")) {
     auto parser = new parser::PapyrusParser(repCtx, fullName);
     loadedScript = std::unique_ptr<PapyrusScript>(parser->parseScript());
     repCtx.exitIfErrors();
     delete parser;
-  } else if (ext == "pex") {
+  } else if (pathEq(ext, ".pex")) {
     pex::PexReader rdr(fullName);
     pexFile = pex::PexFile::read(rdr);
     isPexFile = true;
-  } else if (ext == "pas") {
+  } else if (pathEq(ext, ".pas")) {
     auto parser = new pex::parser::PexAsmParser(repCtx, fullName);
     pexFile = parser->parseFile();
     repCtx.exitIfErrors();

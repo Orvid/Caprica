@@ -122,6 +122,30 @@ std::string Cache::cachedReadFull(const std::string& filename) {
   return readFilesMap[abs].getData(abs);
 }
 
+boost::string_ref basenameAsRef(boost::string_ref file) {
+  auto pos = file.find_last_of("\\/");
+  if (pos != boost::string_ref::npos)
+    file = file.substr(pos + 1);
+  auto pos2 = file.rfind('.');
+  if (pos2 != boost::string_ref::npos)
+    return file.substr(0, pos2);
+  return file;
+}
+
+boost::string_ref extensionAsRef(boost::string_ref file) {
+  auto pos = file.rfind('.');
+  if (pos != boost::string_ref::npos)
+    return file.substr(pos);
+  return "";
+}
+
+boost::string_ref filenameAsRef(boost::string_ref file) {
+  auto pos = file.find_last_of("\\/");
+  if (pos != boost::string_ref::npos)
+    return file.substr(pos + 1);
+  return file;
+}
+
 static void writeFile(const std::string& filename, std::string&& value) {
   if (!conf::Performance::performanceTestMode) {
     auto containingDir = boost::filesystem::path(filename).parent_path();

@@ -28,6 +28,9 @@
 #include <Windows.h>
 
 namespace conf = caprica::conf;
+namespace po = boost::program_options;
+namespace FSUtils = caprica::FSUtils;
+using caprica::pathEq;
 
 struct ScriptToCompile final
 {
@@ -44,7 +47,7 @@ struct ScriptToCompile final
     sourceFilePath(std::move(absolutePath)),
     lastModTime(lastMod),
     filesize(fileSize) {
-    caprica::FSUtils::Cache::push_need(sourceFilePath, filesize);
+    FSUtils::Cache::push_need(sourceFilePath, filesize);
   }
   ScriptToCompile(const ScriptToCompile& other) = default;
   ScriptToCompile(ScriptToCompile&& other) = default;
@@ -56,11 +59,10 @@ struct ScriptToCompile final
 static void compileScript(const ScriptToCompile& script) {
   if (!conf::General::quietCompile)
     std::cout << "Compiling " << script.sourceFileName << std::endl;
-  auto path = boost::filesystem::path(script.sourceFileName);
-  auto baseName = boost::filesystem::basename(path.filename());
-  auto ext = boost::filesystem::extension(script.sourceFileName);
+  auto baseName = FSUtils::basenameAsRef(script.sourceFileName).to_string();
+  auto ext = FSUtils::extensionAsRef(script.sourceFileName);
   caprica::CapricaReportingContext reportingContext{ script.sourceFileName };
-  if (!_stricmp(ext.c_str(), ".psc")) {
+  if (pathEq(ext, ".psc")) {
     auto parser = new caprica::papyrus::parser::PapyrusParser(reportingContext, script.sourceFilePath);
     auto a = parser->parseScript();
     reportingContext.exitIfErrors();
@@ -88,7 +90,7 @@ static void compileScript(const ScriptToCompile& script) {
     }
 
     delete pex;
-  } else if (!_stricmp(ext.c_str(), ".pas")) {
+  } else if (pathEq(ext, ".pas")) {
     auto parser = new caprica::pex::parser::PexAsmParser(reportingContext, script.sourceFilePath);
     auto pex = parser->parseFile();
     reportingContext.exitIfErrors();
@@ -101,7 +103,7 @@ static void compileScript(const ScriptToCompile& script) {
     pex->write(wtr);
     wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
     delete pex;
-  } else if (!_stricmp(ext.c_str(), ".pex")) {
+  } else if (pathEq(ext, ".pex")) {
     caprica::pex::PexReader rdr(script.sourceFilePath);
     auto pex = caprica::pex::PexFile::read(rdr);
     reportingContext.exitIfErrors();
@@ -118,8 +120,8 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
   // at 40ms vs. 200ms for the boost solution, and the raw API
-  // solution also gets us the relative and absolute paths
-  // without any extra processing.
+  // solution also gets us the relative paths, absolute paths,
+  // last write time, and filesize, all without any extra processing.
   auto absBaseDir = caprica::FSUtils::canonical(f).string();
   std::vector<std::string> dirs{ };
   size_t fCount = 0;
@@ -145,7 +147,8 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     }
 
     do {
-      if (strcmp(data.cFileName, ".") && strcmp(data.cFileName, "..")) {
+      boost::string_ref filenameRef = data.cFileName;
+      if (filenameRef != "." && filenameRef != "..") {
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
           if (recursive) {
             if (curDir == "\\")
@@ -154,10 +157,9 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               dirs.push_back(curDir + "\\" + data.cFileName);
           }
         } else {
-          knownFileSet.emplace(data.cFileName);
-          auto ext = strrchr(data.cFileName, '.');
-          if (ext != nullptr && !strcmp(ext, ".psc")) {
-            auto typeName = std::string(data.cFileName, ext - data.cFileName);
+          knownFileSet.emplace(filenameRef.to_string());
+          auto ext = FSUtils::extensionAsRef(filenameRef);
+          if (pathEq(ext, ".psc")) {
             const auto calcLastModTime = [](FILETIME ft) -> time_t {
               ULARGE_INTEGER ull;
               ull.LowPart = ft.dwLowDateTime;
@@ -174,7 +176,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               filenameToDisplay = curDir.substr(1) + "\\" + data.cFileName;
               outputDir = baseOutputDir + curDir;
             }
-            namespaceMap.emplace(std::move(typeName), sourceFilePath);
+            namespaceMap.emplace(FSUtils::basenameAsRef(filenameRef).to_string(), sourceFilePath);
             filesToCompile.push_back(
               ScriptToCompile(
                 std::move(filenameToDisplay),
@@ -216,8 +218,6 @@ static std::pair<std::string, std::string> parseOddArguments(const std::string& 
 }
 
 static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& filesToCompile) {
-  namespace po = boost::program_options;
-
   try {
     bool iterateCompiledDirectoriesRecursively = false;
 
@@ -379,7 +379,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     auto baseOutputDir = vm["output"].as<std::string>();
     if (!boost::filesystem::exists(baseOutputDir))
       boost::filesystem::create_directories(baseOutputDir);
-    baseOutputDir = caprica::FSUtils::canonical(baseOutputDir).string();
+    baseOutputDir = FSUtils::canonical(baseOutputDir).string();
 
     if (vm.count("flags")) {
       const auto findFlags = [progamBasePath, baseOutputDir](const std::string& flagsPath) -> std::string {
@@ -414,8 +414,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     filesToCompile.reserve(filesPassed.size());
-    for (auto f : filesPassed) {
-      if (!caprica::FSUtils::exists(f)) {
+    for (auto& f : filesPassed) {
+      if (!FSUtils::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
         return false;
       }
@@ -423,13 +423,13 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, filesToCompile))
           return false;
       } else {
-        auto ext = boost::filesystem::extension(f);
-        if (_stricmp(ext.c_str(), ".psc") && _stricmp(ext.c_str(), ".pas") && _stricmp(ext.c_str(), ".pex")) {
+        auto ext = FSUtils::extensionAsRef(f);
+        if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex")) {
           std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        auto canon = caprica::FSUtils::canonical(f).string();
+        auto canon = FSUtils::canonical(f).string();
         auto oDir = baseOutputDir;
         filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f), 0));
       }
