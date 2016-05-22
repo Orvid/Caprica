@@ -122,7 +122,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
   // at 40ms vs. 200ms for the boost solution, and the raw API
   // solution also gets us the relative paths, absolute paths,
   // last write time, and filesize, all without any extra processing.
-  auto absBaseDir = caprica::FSUtils::canonical(f).string();
+  auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{ };
   size_t fCount = 0;
   dirs.push_back("\\");
@@ -367,19 +367,19 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     if (vm.count("import")) {
       auto dirs = vm["import"].as<std::vector<std::string>>();
       conf::Papyrus::importDirectories.reserve(dirs.size());
-      for (auto d : dirs) {
+      for (auto& d : dirs) {
         if (!boost::filesystem::exists(d)) {
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
         }
-        conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(d).string());
+        conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(d));
       }
     }
 
     auto baseOutputDir = vm["output"].as<std::string>();
     if (!boost::filesystem::exists(baseOutputDir))
       boost::filesystem::create_directories(baseOutputDir);
-    baseOutputDir = FSUtils::canonical(baseOutputDir).string();
+    baseOutputDir = FSUtils::canonical(baseOutputDir);
 
     if (vm.count("flags")) {
       const auto findFlags = [progamBasePath, baseOutputDir](const std::string& flagsPath) -> std::string {
@@ -429,7 +429,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        auto canon = FSUtils::canonical(f).string();
+        auto canon = FSUtils::canonical(f);
         auto oDir = baseOutputDir;
         filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f), 0));
       }

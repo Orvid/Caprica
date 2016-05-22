@@ -164,16 +164,12 @@ struct PapyrusLexer
   {
     CapricaStats::lexedFilesCount++;
     auto s = FSUtils::Cache::cachedReadFull(file);
-    strm = _strdup(s.c_str());
-    strmOriginal = strm;
+    strm = s.data();
     strmLen = s.size();
     consume(); // set the first token.
   }
   PapyrusLexer(const PapyrusLexer&) = delete;
-  ~PapyrusLexer() {
-    if (strmOriginal)
-      free((void*)strmOriginal);
-  }
+  ~PapyrusLexer() = default;
 
 protected:
   CapricaReportingContext& reportingContext;
@@ -193,7 +189,6 @@ protected:
   TokenType peekTokenType(int distance = 0);
 
 private:
-  const char* strmOriginal{ nullptr };
   const char* strm{ nullptr };
   size_t strmI{ 0 };
   size_t strmLen{ 0 };

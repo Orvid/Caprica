@@ -68,7 +68,7 @@ struct FileReadCacheEntry final
     }
   }
 
-  std::string getData(const std::string& filename) {
+  boost::string_ref getData(const std::string& filename) {
     if (read->load())
       return readFileData;
 
@@ -116,8 +116,8 @@ void Cache::push_need(const std::string& filename, size_t filesize) {
   readFilesMap[filename].wantFile(filename, filesize);
 }
 
-std::string Cache::cachedReadFull(const std::string& filename) {
-  auto abs = canonical(filename).string();
+boost::string_ref Cache::cachedReadFull(const std::string& filename) {
+  auto abs = canonical(filename);
   push_need(abs);
   return readFilesMap[abs].getData(abs);
 }
@@ -171,7 +171,7 @@ static caseless_unordered_path_map<std::string, caseless_unordered_set<std::stri
 void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<std::string>&& files) {
   if (directoryContentsMap.count(directory))
     CapricaReportingContext::logicalFatal("Attempted to push the known directory state of '%s' multiple times!", directory.c_str());
-  directoryContentsMap.insert({ directory, std::move(files) });
+  directoryContentsMap.emplace(directory, std::move(files));
 }
 
 static caseless_concurrent_unordered_path_map<std::string, uint8_t> fileExistenceMap{ };
@@ -179,23 +179,12 @@ void pushKnownExists(const std::string& path) {
   fileExistenceMap.insert({ path, 2 });
 }
 
-const char* filenameAsRef(const std::string& file) {
-  auto lSl = strrchr(file.c_str(), '\\');
-  auto rSl = strrchr(file.c_str(), '/');
-  if (lSl > rSl) {
-    return lSl + 1;
-  } else if (rSl != nullptr) {
-    return rSl + 1;
-  }
-  return nullptr;
-}
-
 static bool checkAndSetExists(const std::string& path) {
   bool exists = false;
   auto toFind = boost::filesystem::path(path).parent_path().string();
   auto f = directoryContentsMap.find(toFind);
   if (f != directoryContentsMap.end()) {
-    auto fName = filenameAsRef(path);
+    auto fName = filenameAsRef(path).to_string();
     auto e = f->second.count(fName);
     exists = e != 0;
   } else {
@@ -203,18 +192,6 @@ static bool checkAndSetExists(const std::string& path) {
   }
   fileExistenceMap.insert({ path, exists ? 2 : 1 });
   return exists;
-}
-
-std::array<bool, 3> multiExistsInDir(const std::string& dir, std::array<std::string, 3>&& filenames) {
-  auto f = directoryContentsMap.find(dir);
-  if (f != directoryContentsMap.end()) {
-    const auto fA = f->second.find(filenames[0]);
-    const auto fB = f->second.find(filenames[1]);
-    const auto fC = f->second.find(filenames[2]);
-    return { fA != f->second.cend(), fB != f->second.cend(), fC != f->second.cend() };
-  } else {
-    return { exists(dir + "\\" + filenames[0]), exists(dir + "\\" + filenames[1]), exists(dir + "\\" + filenames[2]) };
-  }
 }
 
 bool exists(const std::string& path) {
@@ -226,11 +203,20 @@ bool exists(const std::string& path) {
 }
 
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
-boost::filesystem::path canonical(const boost::filesystem::path& path) {
+std::string canonical(const std::string& path) {
+  if (path.size() > 3 && path[1] == ':') {
+    // Shortcircuit for already canon paths.
+    if (path.find("/") == std::string::npos &&
+        path.find("..") == std::string::npos &&
+        path.find("\\.\\") == std::string::npos &&
+        path.find("\\\\") == std::string::npos) {
+      return path;
+    }
+  }
   static boost::filesystem::path currentDirectory = boost::filesystem::current_path();
   auto absPath = boost::filesystem::absolute(path, currentDirectory);
   if (conf::Performance::resolveSymlinks) {
-    return boost::filesystem::canonical(absPath).make_preferred();
+    return boost::filesystem::canonical(absPath).make_preferred().string();
   } else {
     boost::filesystem::path result;
     for (auto it = absPath.begin(); it != absPath.end(); ++it) {
@@ -249,7 +235,7 @@ boost::filesystem::path canonical(const boost::filesystem::path& path) {
         result /= *it;
       }
     }
-    return result.make_preferred();
+    return result.make_preferred().string();
   }
 }
 

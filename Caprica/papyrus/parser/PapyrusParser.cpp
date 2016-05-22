@@ -42,7 +42,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 PapyrusScript* PapyrusParser::parseScript() {
   auto script = new PapyrusScript();
-  script->sourceFileName = FSUtils::canonical(filename).string();
+  script->sourceFileName = FSUtils::canonical(filename);
   script->objects.push_back(parseObject(script));
   return script;
 }
