@@ -13,6 +13,7 @@
 
 #include <papyrus/PapyrusCustomEvent.h>
 #include <papyrus/PapyrusFunction.h>
+#include <papyrus/PapyrusNamespaceResolutionContext.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/PapyrusStruct.h>
@@ -28,145 +29,99 @@
 namespace caprica { namespace papyrus {
 
 void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
-  auto sc = loadScript(import);
-  if (!sc)
+  PapyrusObject* loadedObj = nullptr;
+  std::string retStrucName;
+  if (!tryLoadScript(import, &loadedObj, &retStrucName))
     reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
-  for (auto s : importedScripts) {
-    if (s == sc)
+  for (auto o : importedObjects) {
+    if (o == loadedObj)
       reportingContext.error(location, "Duplicate import of '%s'.", import.c_str());
   }
-  importedScripts.push_back(sc);
+  importedObjects.push_back(loadedObj);
 }
 
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
-static thread_local caseless_unordered_path_map<const std::string, std::unique_ptr<PapyrusScript>> loadedScripts{ };
-static thread_local caseless_unordered_path_map<const std::string, caseless_unordered_identifier_map<const std::string, PapyrusScript*>> localPerDirIdentMap{ };
-PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& name) {
-  auto baseDir = boost::filesystem::path(script->sourceFileName).parent_path().string();
+static thread_local caseless_unordered_path_map<std::string, std::unique_ptr<PapyrusScript>> loadedScripts{ };
+PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& fullName) const {
+  auto f = loadedScripts.find(fullName);
+  if (f != loadedScripts.end())
+    return f->second.get();
 
-  auto& sf2 = localPerDirIdentMap.find(baseDir);
-  if (sf2 != localPerDirIdentMap.end()) {
-    auto sf3 = sf2->second.find(name);
-    if (sf3 != sf2->second.end()) {
-      return sf3->second;
+  auto pos = fullName.rfind('.');
+  if (pos == std::string::npos)
+    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.", fullName.c_str());
+
+  auto ext = fullName.substr(pos + 1);
+  CapricaReportingContext repCtx{ fullName };
+  std::unique_ptr<PapyrusScript> loadedScript;
+  pex::PexFile* pexFile = nullptr;
+  bool isPexFile = false;
+
+  if (ext == "psc") {
+    auto parser = new parser::PapyrusParser(repCtx, fullName);
+    loadedScript = std::unique_ptr<PapyrusScript>(parser->parseScript());
+    repCtx.exitIfErrors();
+    delete parser;
+  } else if (ext == "pex") {
+    pex::PexReader rdr(fullName);
+    pexFile = pex::PexFile::read(rdr);
+    isPexFile = true;
+  } else if (ext == "pas") {
+    auto parser = new pex::parser::PexAsmParser(repCtx, fullName);
+    pexFile = parser->parseFile();
+    repCtx.exitIfErrors();
+    delete parser;
+    isPexFile = true;
+  } else {
+    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.", fullName.c_str());
+  }
+
+  if (pexFile) {
+    loadedScript = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pexFile));
+    repCtx.exitIfErrors();
+    delete pexFile;
+  }
+
+  auto ctx = new PapyrusResolutionContext(repCtx);
+  ctx->resolvingReferenceScript = true;
+  ctx->isPexResolution = isPexFile;
+  loadedScript->preSemantic(ctx);
+
+  loadedScripts.insert({ fullName, std::move(loadedScript) });
+  loadedScripts[fullName]->semantic(ctx);
+  repCtx.exitIfErrors();
+  delete ctx;
+  return loadedScripts[fullName].get();
+}
+
+static thread_local caseless_unordered_identifier_map<std::string, PapyrusObject*> localTypeIdentifierMap{ };
+bool PapyrusResolutionContext::tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const {
+  std::string baseNamespace = object ? object->getNamespaceName() : "";
+  std::string fullRetTypeName;
+  std::string fullRetTypePath;
+  if (PapyrusNamespaceResolutionContext::tryFindType(baseNamespace, typeName, &fullRetTypeName, &fullRetTypePath, retStructName)) {
+    auto f = localTypeIdentifierMap.find(fullRetTypePath);
+    if (f != localTypeIdentifierMap.end()) {
+      *retObject = f->second;
+      return true;
+    }
+
+    auto sc = loadScript(fullRetTypePath);
+    if (sc == nullptr)
+      return false;
+
+    for (auto obj : sc->objects) {
+      if (idEq(obj->name, fullRetTypeName)) {
+        *retObject = obj;
+        localTypeIdentifierMap[fullRetTypeName] = obj;
+        return true;
+      }
     }
   }
-
-  const auto searchDir = [](const std::string& baseDir, const std::string& scriptName) -> PapyrusScript* {
-    const auto loadPsc = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
-      auto f = loadedScripts.find(filename);
-      if (f != loadedScripts.end())
-        return f->second.get();
-
-      // We should only ever be searching for things in the root import dir,
-      // so this is safe.
-      CapricaReportingContext repCtx{ filename };
-      auto parser = new parser::PapyrusParser(repCtx, filename);
-      auto a = std::unique_ptr<PapyrusScript>(parser->parseScript());
-      repCtx.exitIfErrors();
-      delete parser;
-
-      auto ctx = new PapyrusResolutionContext(repCtx);
-      ctx->resolvingReferenceScript = true;
-      a->preSemantic(ctx);
-
-      if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir, { } });
-      localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
-      loadedScripts.insert({ filename, std::move(a) });
-      loadedScripts[filename]->semantic(ctx);
-      repCtx.exitIfErrors();
-      delete ctx;
-      return loadedScripts[filename].get();
-    };
-    const auto loadPas = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
-      auto f = loadedScripts.find(filename);
-      if (f != loadedScripts.end())
-        return f->second.get();
-
-      CapricaReportingContext repCtx{ filename };
-      auto parser = new pex::parser::PexAsmParser(repCtx, filename);
-      auto pex = parser->parseFile();
-      repCtx.exitIfErrors();
-      delete parser;
-
-      auto a = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pex));
-      repCtx.exitIfErrors();
-      delete pex;
-
-      auto ctx = new PapyrusResolutionContext(repCtx);
-      ctx->resolvingReferenceScript = true;
-      ctx->isPexResolution = true;
-      a->preSemantic(ctx);
-      if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir, { } });
-      localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
-      loadedScripts.insert({ filename, std::move(a) });
-      loadedScripts[filename]->semantic(ctx);
-      repCtx.exitIfErrors();
-      delete ctx;
-
-      return loadedScripts[filename].get();
-    };
-    const auto loadPex = [](const std::string& scriptName, const std::string& baseDir, const std::string& filename) -> PapyrusScript* {
-      auto f = loadedScripts.find(filename);
-      if (f != loadedScripts.end())
-        return f->second.get();
-
-      pex::PexReader rdr(filename);
-      auto pex = pex::PexFile::read(rdr);
-      auto a = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pex));
-      delete pex;
-
-      CapricaReportingContext repCtx{ filename };
-      auto ctx = new PapyrusResolutionContext(repCtx);
-      ctx->resolvingReferenceScript = true;
-      ctx->isPexResolution = true;
-      a->preSemantic(ctx);
-      if (!localPerDirIdentMap.count(baseDir))
-        localPerDirIdentMap.insert({ baseDir, { } });
-      localPerDirIdentMap[baseDir].insert({ scriptName, a.get() });
-      loadedScripts.insert({ filename, std::move(a) });
-      loadedScripts[filename]->semantic(ctx);
-      repCtx.exitIfErrors();
-      delete ctx;
-
-      return loadedScripts[filename].get();
-    };
-    const auto normalizeDir = [](const std::string& filename) -> std::string {
-      return FSUtils::canonical(filename).string();
-    };
-
-    auto sr = FSUtils::multiExistsInDir(baseDir, { scriptName + ".psc", scriptName + ".pas", scriptName + ".pex" });
-    if (sr[0])
-      return loadPsc(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".psc"));
-    else if (sr[1])
-      return loadPas(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pas"));
-    else if (sr[2])
-     return loadPex(scriptName, baseDir, normalizeDir(baseDir + "\\" + scriptName + ".pex"));
-
-    return nullptr;
-  };
-
-  // Allow references to subdirs.
-  auto nm2 = name;
-  std::string extraBase = "";
-  if (auto bPos = strrchr(nm2.c_str(), ':')) {
-    extraBase = "\\" + nm2.substr(0, bPos - nm2.c_str());
-    std::replace(extraBase.begin(), extraBase.end(), ':', '\\');
-    nm2 = nm2.substr(bPos - nm2.c_str() + 1);
-  }
-  if (auto s = searchDir(baseDir + extraBase, nm2))
-    return s;
-
-  for (auto& dir : conf::Papyrus::importDirectories) {
-    if (auto s = searchDir(dir + extraBase, nm2))
-      return s;
-  }
-
-  return nullptr;
+  return false;
 }
+
 
 bool PapyrusResolutionContext::isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent) {
   if (child == parent)
@@ -384,6 +339,20 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name,
   return nullptr;
 }
 
+static bool tryResolveStruct(const PapyrusObject* object, const std::string& structName, PapyrusStruct** ret) {
+  for (auto& s : object->structs) {
+    if (idEq(s->name, structName)) {
+      *ret = s;
+      return true;
+    }
+  }
+
+  if (auto parentClass = object->tryGetParentClass())
+    return tryResolveStruct(parentClass, structName, ret);
+
+  return false;
+}
+
 static PapyrusType tryResolveStruct(const PapyrusObject* object, PapyrusType tp) {
   for (auto& s : object->structs) {
     if (idEq(s->name, tp.name)) {
@@ -441,56 +410,34 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     }
   }
 
-  for (auto sc : importedScripts) {
-    for (auto obj : sc->objects) {
-      for (auto struc : obj->structs) {
-        if (idEq(struc->name, tp.name)) {
-          tp.type = PapyrusType::Kind::ResolvedStruct;
-          tp.resolvedStruct = struc;
-          return tp;
-        }
-      }
-    }
-  }
-
-  auto sc = loadScript(tp.name);
-  if (sc != nullptr) {
-    for (auto obj : sc->objects) {
-      auto oName = obj->name;
-      auto pos = oName.find_last_of(':');
-      if (pos != std::string::npos)
-        oName = oName.substr(pos + 1);
-      if (idEq(obj->name, tp.name) || idEq(oName, tp.name)) {
-        tp.type = PapyrusType::Kind::ResolvedObject;
-        tp.resolvedObject = obj;
+  for (auto obj : importedObjects) {
+    for (auto struc : obj->structs) {
+      if (idEq(struc->name, tp.name)) {
+        tp.type = PapyrusType::Kind::ResolvedStruct;
+        tp.resolvedStruct = struc;
         return tp;
       }
     }
-    reportingContext.fatal(tp.location, "Loaded a script named '%s' but was looking for '%s'!", sc->objects[0]->name.c_str(), tp.name.c_str());
-  }
-  
-  auto pos = tp.name.find_last_of(':');
-  if (pos != std::string::npos) {
-    auto scName = tp.name.substr(0, pos);
-    auto strucName = tp.name.substr(pos + 1);
-    auto sc = loadScript(scName);
-    if (!sc)
-      reportingContext.fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
-
-    for (auto obj : sc->objects) {
-      for (auto struc : obj->structs) {
-        if (idEq(struc->name, strucName)) {
-          tp.type = PapyrusType::Kind::ResolvedStruct;
-          tp.resolvedStruct = struc;
-          return tp;
-        }
-      }
-    }
-
-    reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
   }
 
-  reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
+  PapyrusObject* foundObj = nullptr;
+  std::string retStructName;
+  if (!tryLoadScript(tp.name, &foundObj, &retStructName))
+    reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
+
+  if (retStructName.size() == 0) {
+    tp.type = PapyrusType::Kind::ResolvedObject;
+    tp.resolvedObject = foundObj;
+    return tp;
+  }
+
+  PapyrusStruct* resStruct = nullptr;
+  if (tryResolveStruct(foundObj, retStructName, &resStruct)) {
+    tp.type = PapyrusType::Kind::ResolvedStruct;
+    tp.resolvedStruct = resStruct;
+    return tp;
+  }
+  reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.c_str(), foundObj->name.c_str());
 }
 
 void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
@@ -609,13 +556,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       }
     }
 
-    for (auto sc : importedScripts) {
-      for (auto obj : sc->objects) {
-        if (auto state = obj->getRootState()) {
-          for (auto& func : state->functions) {
-            if (func->isGlobal() && idEq(func->name, ident.name))
-              return PapyrusIdentifier::Function(ident.location, func);
-          }
+    for (auto obj : importedObjects) {
+      if (auto state = obj->getRootState()) {
+        for (auto& func : state->functions) {
+          if (func->isGlobal() && idEq(func->name, ident.name))
+            return PapyrusIdentifier::Function(ident.location, func);
         }
       }
     }

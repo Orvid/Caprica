@@ -64,6 +64,13 @@ struct PapyrusObject final
   const PapyrusState* getRootState() const { return rootState; }
   PapyrusState* getRootState() { return rootState; }
 
+  std::string getNamespaceName() const {
+    auto pos = name.rfind(':');
+    if (pos != std::string::npos)
+      return name.substr(0, pos);
+    return "";
+  }
+
   const PapyrusObject* tryGetParentClass() const;
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const;
   void semantic(PapyrusResolutionContext* ctx);

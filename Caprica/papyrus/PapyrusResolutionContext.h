@@ -111,11 +111,12 @@ struct PapyrusResolutionContext final
   ~PapyrusResolutionContext() = default;
 private:
   std::vector<caseless_unordered_identifier_map<std::string, statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
-  std::vector<PapyrusScript*> importedScripts{ };
+  std::vector<PapyrusObject*> importedObjects{ };
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };
 
-  PapyrusScript* loadScript(const std::string& name);
+  PapyrusScript* loadScript(const std::string& fullName) const;
+  bool tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const;
 };
 
 }}

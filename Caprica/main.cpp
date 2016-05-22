@@ -13,6 +13,7 @@
 #include <common/FSUtils.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
+#include <papyrus/PapyrusNamespaceResolutionContext.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
 #include <papyrus/parser/PapyrusParser.h>
@@ -128,6 +129,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     auto curDir = dirs.back();
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
+    caprica::caseless_unordered_identifier_map<std::string, std::string> namespaceMap{ };
     caprica::caseless_unordered_set<std::string> knownFileSet{ };
     std::string curDirFull;
     if (curDir == "\\")
@@ -154,6 +156,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
           knownFileSet.emplace(data.cFileName);
           auto ext = strrchr(data.cFileName, '.');
           if (ext != nullptr && !strcmp(ext, ".psc")) {
+            auto typeName = std::string(data.cFileName, ext - data.cFileName);
             const auto calcLastModTime = [](FILETIME ft) -> time_t {
               ULARGE_INTEGER ull;
               ull.LowPart = ft.dwLowDateTime;
@@ -170,6 +173,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               filenameToDisplay = curDir.substr(1) + "\\" + data.cFileName;
               outputDir = baseOutputDir + curDir;
             }
+            namespaceMap.emplace(std::move(typeName), sourceFilePath);
             filesToCompile.push_back(
               ScriptToCompile(
                 std::move(filenameToDisplay),
@@ -189,6 +193,11 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
       }
     } while (FindNextFileA(hFind, &data));
     FindClose(hFind);
+
+    auto namespaceName = curDir;
+    std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
+    namespaceName = namespaceName.substr(1);
+    caprica::papyrus::PapyrusNamespaceResolutionContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
     caprica::FSUtils::pushKnownInDirectory(curDirFull, std::move(knownFileSet));
   }
   return true;
