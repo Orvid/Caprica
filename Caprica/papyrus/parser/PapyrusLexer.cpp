@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <common/CapricaConfig.h>
+#include <common/CapricaStats.h>
 
 #include <common/CaselessStringComparer.h>
 
@@ -124,30 +125,27 @@ void PapyrusLexer::setTok(TokenType tp, CapricaFileLocation loc, int consumeChar
 }
 
 TokenType PapyrusLexer::peekTokenType(int distance) {
-  auto oldCurTp = cur.type;
-  auto oldCurPLoc = cur.location;
-  auto oldCurI = cur.iValue;
-  auto oldCurF = cur.fValue;
-  auto oldCurS = cur.sValue;
-  auto oldLoc = location;
-  auto oldPos = strmI;
-  auto oldStrm = strm;
-  reportingContext.startIgnoringLinePushes();
+  assert(distance >= 0);
+  assert(distance <= MaxPeekedTokens - 1);
 
-  for (int i = 0; i <= distance; i++)
-    consume();
+  // It's already been lexed, peek directly.
+  if (peekedTokenI + distance < peekedTokenCount) {
+    return peekedTokens[peekedTokenI + distance].type;
+  } else {
+    assert(peekedTokenI == 0);
+  }
 
-  reportingContext.stopIgnoringLinePushes();
-  auto newTokTp = cur.type;
-  cur.type = oldCurTp;
-  cur.location = oldCurPLoc;
-  cur.iValue = oldCurI;
-  cur.fValue = oldCurF;
-  cur.sValue = oldCurS;
-  location = oldLoc;
-  strm = oldStrm;
-  strmI = oldPos;
-  return newTokTp;
+  Token oldCur = std::move(cur);
+  for (int i = peekedTokenCount; i <= distance; i++) {
+    CapricaStats::peekedTokenCount++;
+    realConsume();
+    peekedTokens[peekedTokenCount] = std::move(cur);
+    peekedTokenCount++;
+    assert(peekedTokenCount <= MaxPeekedTokens);
+  }
+  cur = std::move(oldCur);
+
+  return peekedTokens[distance].type;
 }
 
 static const caseless_unordered_identifier_map<std::string, TokenType> keywordMap {
@@ -225,6 +223,20 @@ static bool isAsciiAlphaNumeric(int c) {
 }
 
 void PapyrusLexer::consume() {
+  CapricaStats::consumedTokenCount++;
+  if (peekedTokenCount) {
+    cur = std::move(peekedTokens[peekedTokenI]);
+    peekedTokenI++;
+    if (peekedTokenI == peekedTokenCount) {
+      peekedTokenI = 0;
+      peekedTokenCount = 0;
+    }
+    return;
+  }
+  realConsume();
+}
+
+void PapyrusLexer::realConsume() {
 StartOver:
   auto baseLoc = location;
   auto c = getChar();
@@ -422,27 +434,25 @@ StartOver:
     case 'Y':
     case 'Z':
     {
-      std::string str;
+      const char* baseStrm = strm - 1;
       
       if (c == ':') {
         if (!conf::Papyrus::allowCompilerIdentifiers || peekChar() != ':')
           reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
         getChar();
-        str.append("::");
-      } else {
-        str.append(1, (char)c);
       }
 
       while (isAsciiAlphaNumeric(peekChar()) || peekChar() == '_' || peekChar() == ':')
-        str.append(1, (char)getChar());
+        getChar();
 
       if (conf::Papyrus::allowDecompiledStructNameRefs && peekChar() == '#') {
-        str.append(1, (char)getChar());
+        getChar();
 
         while (isAsciiAlphaNumeric(peekChar()) || peekChar() == '_')
-          str.append(1, (char)getChar());
+          getChar();
       }
 
+      std::string str{ baseStrm, (size_t)(strm - baseStrm) };
       auto f = keywordMap.find(str);
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);

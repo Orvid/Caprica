@@ -6,6 +6,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/CapricaStats.h>
 #include <common/FSUtils.h>
 
 namespace caprica { namespace papyrus { namespace parser {
@@ -134,6 +135,9 @@ struct PapyrusLexer
 
     explicit Token(TokenType tp) : type(tp) { }
     Token(const Token&) = delete;
+    Token(Token&&) = default;
+    Token& operator=(const Token&) = delete;
+    Token& operator=(Token&&) = default;
     ~Token() = default;
 
     std::string prettyString() const {
@@ -156,9 +160,9 @@ struct PapyrusLexer
 
   explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file)
     : filename(file),
-      cur(TokenType::Unknown),
       reportingContext(repCtx)
   {
+    CapricaStats::lexedFilesCount++;
     auto s = FSUtils::Cache::cachedReadFull(file);
     strm = _strdup(s.c_str());
     strmOriginal = strm;
@@ -174,7 +178,7 @@ struct PapyrusLexer
 protected:
   CapricaReportingContext& reportingContext;
   std::string filename;
-  Token cur;
+  Token cur{ TokenType::Unknown };
 
   void consume();
   CapricaFileLocation consumeLocation() {
@@ -182,8 +186,10 @@ protected:
     consume();
     return loc;
   }
-  // Use this sparingly, as it means
-  // tokens get lexed multiple times.
+  // Max distance is 2, and you must
+  // not attempt to peek past those
+  // 3 tokens until all 3 have been
+  // consumed.
   TokenType peekTokenType(int distance = 0);
 
 private:
@@ -192,6 +198,14 @@ private:
   size_t strmI{ 0 };
   size_t strmLen{ 0 };
   CapricaFileLocation location{ };
+  static constexpr size_t MaxPeekedTokens = 3;
+  int peekedTokenI{ 0 };
+  int peekedTokenCount{ 0 };
+  Token peekedTokens[MaxPeekedTokens]{
+    Token{ TokenType::Unknown },
+    Token{ TokenType::Unknown },
+    Token{ TokenType::Unknown },
+  };
 
   int getChar() {
     if (strmI >= strmLen)
@@ -207,6 +221,8 @@ private:
       return -1;
     return *strm;
   }
+
+  void realConsume();
   void setTok(TokenType tp, CapricaFileLocation loc, int consumeChars = 0);
 };
 
