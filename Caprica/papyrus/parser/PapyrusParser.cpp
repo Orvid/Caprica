@@ -64,7 +64,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   maybeConsumeEOLs();
 
   expectConsume(TokenType::kScriptName);
-  auto name = std::move(expectConsumeIdent());
+  auto name = expectConsumeIdent();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
     reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
 
@@ -80,7 +80,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   obj->name = std::move(name);
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
   expectConsumeEOLs();
-  obj->documentationString = std::move(maybeConsumeDocString());
+  obj->documentationString = maybeConsumeDocString();
 
   while (cur.type != TokenType::END) {
     switch (cur.type) {
@@ -88,7 +88,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       {
         consume();
         auto eLoc = cur.location;
-        obj->imports.push_back(std::make_pair(eLoc, std::move(expectConsumeIdent())));
+        obj->imports.emplace_back(eLoc, expectConsumeIdent());
         expectConsumeEOLs();
         break;
       }
@@ -117,7 +117,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         consume();
         auto ce = new PapyrusCustomEvent(cur.location);
         ce->parentObject = obj;
-        ce->name = std::move(expectConsumeIdent());
+        ce->name = expectConsumeIdent();
         obj->customEvents.push_back(ce);
         expectConsumeEOLs();
         break;
@@ -139,7 +139,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       case TokenType::kVar:
       case TokenType::Identifier:
       {
-        auto tp = std::move(expectConsumePapyrusType());
+        auto tp = expectConsumePapyrusType();
         if (cur.type == TokenType::kFunction) {
           consume();
           obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), std::move(tp), TokenType::kEndFunction));
@@ -162,7 +162,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 
 PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto) {
   auto state = new PapyrusState(cur.location);
-  state->name = std::move(expectConsumeIdent());
+  state->name = expectConsumeIdent();
   if (isAuto) {
     if (object->autoState != nullptr)
       reportingContext.error(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.c_str());
@@ -193,7 +193,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       case TokenType::kVar:
       case TokenType::Identifier:
       {
-        auto tp = std::move(expectConsumePapyrusType());
+        auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kFunction);
         state->functions.push_back(parseFunction(script, object, state, std::move(tp), TokenType::kEndFunction));
         break;
@@ -211,7 +211,7 @@ Return:
 PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* object) {
   auto struc = new PapyrusStruct(cur.location);
   struc->parentObject = object;
-  struc->name = std::move(expectConsumeIdent());
+  struc->name = expectConsumeIdent();
   expectConsumeEOLs();
 
   while (true) {
@@ -227,7 +227,7 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       case TokenType::kString:
       case TokenType::kVar:
       case TokenType::Identifier:
-        struc->members.push_back(parseStructMember(script, object, struc, std::move(expectConsumePapyrusType())));
+        struc->members.push_back(parseStructMember(script, object, struc, expectConsumePapyrusType()));
         break;
 
       default:
@@ -241,29 +241,29 @@ Return:
 
 PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType&& tp) {
   auto mem = new PapyrusStructMember(cur.location, std::move(tp), struc);
-  mem->name = std::move(expectConsumeIdent());
+  mem->name = expectConsumeIdent();
 
   // Needed because None is a valid default value, and we shouldn't
   // be erroring on it.
   bool hadDefault = false;
   if (maybeConsume(TokenType::Equal)) {
     hadDefault = true;
-    mem->defaultValue = std::move(expectConsumePapyrusValue());
+    mem->defaultValue = expectConsumePapyrusValue();
   }
   mem->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::StructMember);
   if (mem->isConst() && !hadDefault)
     reportingContext.error(cur.location, "A constant member must have a value!");
   expectConsumeEOLs();
-  mem->documentationString = std::move(maybeConsumeDocString());
+  mem->documentationString = maybeConsumeDocString();
   return mem;
 }
 
 PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
   auto group = new PapyrusPropertyGroup(cur.location);
-  group->name = std::move(expectConsumeIdent());
+  group->name = expectConsumeIdent();
   group->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::PropertyGroup);
   expectConsumeEOLs();
-  group->documentationComment = std::move(maybeConsumeDocString());
+  group->documentationComment = maybeConsumeDocString();
 
   while (true) {
     bool isConst = false;
@@ -280,7 +280,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       case TokenType::kVar:
       case TokenType::Identifier:
       {
-        auto tp = std::move(expectConsumePapyrusType());
+        auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kProperty);
         group->properties.push_back(parseProperty(script, object, std::move(tp)));
         break;
@@ -297,14 +297,14 @@ Return:
 
 PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type) {
   auto prop = new PapyrusProperty(cur.location, std::move(type), object);
-  prop->name = std::move(expectConsumeIdent());
+  prop->name = expectConsumeIdent();
 
   bool isFullProp = true;
   bool hadDefaultValue = false;
   if (maybeConsume(TokenType::Equal)) {
     isFullProp = false;
     hadDefaultValue = true;
-    prop->defaultValue = std::move(expectConsumePapyrusValue());
+    prop->defaultValue = expectConsumePapyrusValue();
   }
   prop->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Property);
   if (prop->isAuto() || prop->isAutoReadOnly())
@@ -312,7 +312,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
   if (prop->isAutoReadOnly() && !hadDefaultValue)
     reportingContext.error(cur.location, "An AutoReadOnly property must have a value!");
   expectConsumeEOLs();
-  prop->documentationComment = std::move(maybeConsumeDocString());
+  prop->documentationComment = maybeConsumeDocString();
 
   if (isFullProp) {
     for (int i = 0; i < 2; i++) {
@@ -340,7 +340,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
         {
           if (prop->readFunction)
             reportingContext.error(cur.location, "The get function for this property has already been defined!");
-          auto tp = std::move(expectConsumePapyrusType());
+          auto tp = expectConsumePapyrusType();
           if (tp != prop->type)
             reportingContext.error(cur.location, "The return type of the get function must be the same as the property!");
           expectConsume(TokenType::kFunction);
@@ -370,11 +370,11 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
 
 PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type) {
   auto var = new PapyrusVariable(cur.location, std::move(type), object);
-  var->name = std::move(expectConsumeIdent());
+  var->name = expectConsumeIdent();
 
   if (maybeConsume(TokenType::Equal)) {
     var->referenceState.isInitialized = true;
-    var->defaultValue = std::move(expectConsumePapyrusValue());
+    var->defaultValue = expectConsumePapyrusValue();
   }
   var->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Variable);
   if (var->isConst() && !var->referenceState.isInitialized)
@@ -392,11 +392,11 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   else
     CapricaReportingContext::logicalFatal("Unknown end token for a parseFunction call!");
   func->parentObject = object;
-  func->name = std::move(expectConsumeIdent());
+  func->name = expectConsumeIdent();
   if (endToken == TokenType::kEndEvent && maybeConsume(TokenType::Dot)) {
     func->functionType = PapyrusFunctionType::RemoteEvent;
     func->remoteEventParent = std::move(func->name);
-    func->remoteEventName = std::move(expectConsumeIdent());
+    func->remoteEventName = expectConsumeIdent();
     func->name = "::remote_" + func->remoteEventParent + "_" + func->remoteEventName;
   }
   expectConsume(TokenType::LParen);
@@ -406,9 +406,9 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
       maybeConsume(TokenType::Comma);
 
       auto param = new PapyrusFunctionParameter(cur.location, expectConsumePapyrusType());
-      param->name = std::move(expectConsumeIdent());
+      param->name = expectConsumeIdent();
       if (maybeConsume(TokenType::Equal))
-        param->defaultValue = std::move(expectConsumePapyrusValue());
+        param->defaultValue = expectConsumePapyrusValue();
       func->parameters.push_back(param);
     } while (cur.type == TokenType::Comma);
   }
@@ -416,7 +416,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
 
   func->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Function);
   expectConsumeEOLs();
-  func->documentationComment = std::move(maybeConsumeDocString());
+  func->documentationComment = maybeConsumeDocString();
   if (!func->isNative()) {
     while (cur.type != endToken && cur.type != TokenType::END) {
       func->statements.push_back(parseStatement(func));
@@ -452,7 +452,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         while (cur.type != TokenType::kElseIf && cur.type != TokenType::kElse && cur.type != TokenType::kEndIf) {
           curStatements.push_back(parseStatement(func));
         }
-        ret->ifBodies.push_back(std::make_pair(cond, std::move(curStatements)));
+        ret->ifBodies.emplace_back(cond, std::move(curStatements));
         if (cur.type == TokenType::kElseIf) {
           consume();
           continue;
@@ -510,7 +510,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         } else {
           declStatement = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
         }
-        declStatement->name = std::move(expectConsumeIdent());
+        declStatement->name = expectConsumeIdent();
         ret->declareStatement = declStatement;
       } else {
         ident = new PapyrusIdentifier(PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
@@ -544,7 +544,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       } else {
         declStatement = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
       }
-      declStatement->name = std::move(expectConsumeIdent());
+      declStatement->name = expectConsumeIdent();
       ret->declareStatement = declStatement;
       expectConsume(TokenType::kIn);
       ret->expressionToIterate = parseExpression(func);
@@ -570,12 +570,12 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           case TokenType::kCase:
           {
             consume();
-            auto cond = std::move(expectConsumePapyrusValue());
+            auto cond = expectConsumePapyrusValue();
             expectConsumeEOLs();
             std::vector<statements::PapyrusStatement*> curStatements{ };
             while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
               curStatements.push_back(parseStatement(func));
-            ret->caseBodies.push_back(std::make_pair(std::move(cond), std::move(curStatements)));
+            ret->caseBodies.emplace_back(std::move(cond), std::move(curStatements));
             break;
           }
 
@@ -622,7 +622,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       auto eLoc = consumeLocation();
       auto ret = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
       ret->isAuto = true;
-      ret->name = std::move(expectConsumeIdent());
+      ret->name = expectConsumeIdent();
       expectConsume(TokenType::Equal);
       ret->initialValue = parseExpression(func);
       expectConsumeEOLs();
@@ -637,7 +637,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     {
       auto eLoc = cur.location;
       auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
-      ret->name = std::move(expectConsumeIdent());
+      ret->name = expectConsumeIdent();
       if (maybeConsume(TokenType::Equal))
         ret->initialValue = parseExpression(func);
       if (maybeConsume(TokenType::kConst))
@@ -653,7 +653,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       if (cur.type == TokenType::Identifier && (peekTokenType() == TokenType::Identifier ||  (peekTokenType() == TokenType::LSquare && peekTokenType(1) == TokenType::RSquare && peekTokenType(2) == TokenType::Identifier))) {
         auto eLoc = cur.location;
         auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
-        ret->name = std::move(expectConsumeIdent());
+        ret->name = expectConsumeIdent();
         if (maybeConsume(TokenType::Equal))
           ret->initialValue = parseExpression(func);
         expectConsumeEOLs();
@@ -996,7 +996,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
 
             auto param = new expressions::PapyrusFunctionCallExpression::Parameter();
             if (cur.type == TokenType::Identifier && peekTokenType() == TokenType::Equal) {
-              param->name = std::move(expectConsumeIdent());
+              param->name = expectConsumeIdent();
               expectConsume(TokenType::Equal);
             }
             param->value = parseExpression(func);
