@@ -1,5 +1,8 @@
 #include <common/FSUtils.h>
 
+#include <io.h>
+#include <fcntl.h>
+
 #include <cstring>
 #include <future>
 #include <sstream>
@@ -41,26 +44,35 @@ struct FileReadCacheEntry final
   }
 
   void readFile(const std::string& filename) {
-    std::ifstream inFile{ filename, std::ifstream::binary };
-    inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     std::string str;
-    if (filesize != 0) {
-      auto size = filesize;
-      auto buf = new char[size];
-      inFile.read(buf, size);
-      str = std::string(buf, size);
-      delete buf;
+    str.resize(filesize);
+    auto fd = _open(filename.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
+    if (fd != -1) {
+      auto len = _read(fd, (void*)str.data(), filesize);
+      if (len != filesize)
+        str.resize(len);
+      if (_eof(fd) == 1) {
+        _close(fd);
+        goto DoMove;
+      }
     }
-    // Just because the filesize was one thing when
-    // we iterated the directory doesn't mean it's
-    // not gotten bigger since then.
-    inFile.peek();
-    if (!inFile.eof()) {
-      std::stringstream strStream{ };
-      strStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-      strStream << inFile.rdbuf();
-      str += strStream.str();
+    {
+      std::ifstream inFile{ filename, std::ifstream::binary };
+      inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+      if (filesize != 0)
+        inFile.read((char*)str.data(), filesize);
+      // Just because the filesize was one thing when
+      // we iterated the directory doesn't mean it's
+      // not gotten bigger since then.
+      inFile.peek();
+      if (!inFile.eof()) {
+        std::stringstream strStream{ };
+        strStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+        strStream << inFile.rdbuf();
+        str += strStream.str();
+      }
     }
+  DoMove:
     {
       std::unique_lock<std::mutex> lock{ *dataMutex };
       readFileData = std::move(str);
