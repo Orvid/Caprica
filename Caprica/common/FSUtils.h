@@ -26,9 +26,6 @@ boost::string_ref filenameAsRef(boost::string_ref file);
 boost::string_ref parentPathAsRef(boost::string_ref file);
 
 void async_write(const std::string& filename, std::string&& value);
-bool exists(const std::string& path);
-void pushKnownExists(const std::string& path);
-void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<std::string>&& files);
 std::string canonical(const std::string& path);
 
 }}

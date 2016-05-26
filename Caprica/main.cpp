@@ -133,7 +133,6 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
     caprica::caseless_unordered_identifier_map<std::string, std::string> namespaceMap{ };
-    caprica::caseless_unordered_set<std::string> knownFileSet{ };
     std::string curDirFull;
     if (curDir == "\\")
       curDirFull = absBaseDir;
@@ -157,7 +156,6 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               dirs.push_back(curDir + "\\" + data.cFileName);
           }
         } else {
-          knownFileSet.emplace(filenameRef.to_string());
           auto ext = FSUtils::extensionAsRef(filenameRef);
           if (pathEq(ext, ".psc")) {
             const auto calcLastModTime = [](FILETIME ft) -> time_t {
@@ -201,7 +199,6 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
     namespaceName = namespaceName.substr(1);
     caprica::papyrus::PapyrusNamespaceResolutionContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
-    caprica::FSUtils::pushKnownInDirectory(curDirFull, std::move(knownFileSet));
   }
   return true;
 }
@@ -415,7 +412,7 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     filesToCompile.reserve(filesPassed.size());
     for (auto& f : filesPassed) {
-      if (!FSUtils::exists(f)) {
+      if (!boost::filesystem::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
         return false;
       }

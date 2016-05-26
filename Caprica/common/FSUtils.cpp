@@ -46,14 +46,17 @@ struct FileReadCacheEntry final
   void readFile(const std::string& filename) {
     std::string str;
     str.resize(filesize);
-    auto fd = _open(filename.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
-    if (fd != -1) {
-      auto len = _read(fd, (void*)str.data(), filesize);
-      if (len != filesize)
-        str.resize(len);
-      if (_eof(fd) == 1) {
+    if (filesize < std::numeric_limits<uint32_t>::max()) {
+      auto fd = _open(filename.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
+      if (fd != -1) {
+        auto len = _read(fd, (void*)str.data(), (uint32_t)filesize);
+        if (len != filesize)
+          str.resize(len);
+        if (_eof(fd) == 1) {
+          _close(fd);
+          goto DoMove;
+        }
         _close(fd);
-        goto DoMove;
       }
     }
     {
@@ -124,7 +127,6 @@ void Cache::waitForAll() {
 }
 
 void Cache::push_need(const std::string& filename, size_t filesize) {
-  pushKnownExists(filename);
   readFilesMap[filename].wantFile(filename, filesize);
 }
 
@@ -184,41 +186,6 @@ void async_write(const std::string& filename, std::string&& value) {
       writeFile(filename, std::move(value));
     }, filename, std::move(value));
   }
-}
-
-static caseless_unordered_path_map<std::string, caseless_unordered_set<std::string>> directoryContentsMap{ };
-void pushKnownInDirectory(const std::string& directory, caseless_unordered_set<std::string>&& files) {
-  if (directoryContentsMap.count(directory))
-    CapricaReportingContext::logicalFatal("Attempted to push the known directory state of '%s' multiple times!", directory.c_str());
-  directoryContentsMap.emplace(directory, std::move(files));
-}
-
-static caseless_concurrent_unordered_path_map<std::string, uint8_t> fileExistenceMap{ };
-void pushKnownExists(const std::string& path) {
-  fileExistenceMap.insert({ path, 2 });
-}
-
-static bool checkAndSetExists(const std::string& path) {
-  bool exists = false;
-  auto toFind = boost::filesystem::path(path).parent_path().string();
-  auto f = directoryContentsMap.find(toFind);
-  if (f != directoryContentsMap.end()) {
-    auto fName = filenameAsRef(path).to_string();
-    auto e = f->second.count(fName);
-    exists = e != 0;
-  } else {
-    exists = boost::filesystem::exists(path);
-  }
-  fileExistenceMap.insert({ path, exists ? 2 : 1 });
-  return exists;
-}
-
-bool exists(const std::string& path) {
-  // These concurrent maps are a pain, as it's possible to get a value
-  // in the process of being set.
-  if (fileExistenceMap.count(path))
-    return fileExistenceMap[path] == 2 ? true : checkAndSetExists(path);
-  return checkAndSetExists(path);
 }
 
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
