@@ -113,7 +113,6 @@ private:
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };
 
-  PapyrusScript* loadScript(const std::string& fullName) const;
   bool tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const;
 };
 

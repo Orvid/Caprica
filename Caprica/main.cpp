@@ -17,6 +17,7 @@
 #include <papyrus/PapyrusNamespaceResolutionContext.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
+#include <papyrus/PapyrusScriptLoader.h>
 #include <papyrus/parser/PapyrusParser.h>
 
 #include <pex/PexAsmWriter.h>
@@ -59,61 +60,13 @@ struct ScriptToCompile final
 static void compileScript(const ScriptToCompile& script) {
   if (!conf::General::quietCompile)
     std::cout << "Compiling " << script.sourceFileName << std::endl;
-  auto baseName = FSUtils::basenameAsRef(script.sourceFileName).to_string();
-  auto ext = FSUtils::extensionAsRef(script.sourceFileName);
-  caprica::CapricaReportingContext reportingContext{ script.sourceFileName };
-  if (pathEq(ext, ".psc")) {
-    auto parser = new caprica::papyrus::parser::PapyrusParser(reportingContext, script.sourceFilePath);
-    auto a = parser->parseScript();
-    reportingContext.exitIfErrors();
-    delete parser;
-    auto ctx = new caprica::papyrus::PapyrusResolutionContext(reportingContext);
-    a->preSemantic(ctx);
-    a->semantic(ctx);
-    reportingContext.exitIfErrors();
-    auto pex = a->buildPex(reportingContext);
-    reportingContext.exitIfErrors();
-    delete ctx;
-    delete a;
 
-    if (conf::CodeGeneration::enableOptimizations)
-      caprica::pex::PexOptimizer::optimize(pex);
-
-    caprica::pex::PexWriter wtr{ };
-    pex->write(wtr);
-    wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
-
-    if (conf::Debug::dumpPexAsm) {
-      std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
-      caprica::pex::PexAsmWriter asmWtr(asmStrm);
-      pex->writeAsm(asmWtr);
-    }
-
-    delete pex;
-  } else if (pathEq(ext, ".pas")) {
-    auto parser = new caprica::pex::parser::PexAsmParser(reportingContext, script.sourceFilePath);
-    auto pex = parser->parseFile();
-    reportingContext.exitIfErrors();
-    delete parser;
-
-    if (conf::CodeGeneration::enableOptimizations)
-      caprica::pex::PexOptimizer::optimize(pex);
-
-    caprica::pex::PexWriter wtr{ };
-    pex->write(wtr);
-    wtr.writeToFile(script.outputDirectory + "\\" + baseName + ".pex");
-    delete pex;
-  } else if (pathEq(ext, ".pex")) {
-    caprica::pex::PexReader rdr(script.sourceFilePath);
-    auto pex = caprica::pex::PexFile::read(rdr);
-    reportingContext.exitIfErrors();
-    std::ofstream asmStrm(script.outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
-    caprica::pex::PexAsmWriter asmWtr(asmStrm);
-    pex->writeAsm(asmWtr);
-    delete pex;
-  } else {
-    std::cout << "Don't know how to compile " << script.sourceFileName << "!" << std::endl;
-  }
+  caprica::papyrus::PapyrusScriptLoader::loadScript(
+    script.sourceFileName,
+    script.sourceFilePath,
+    script.outputDirectory,
+    caprica::papyrus::PapyrusScriptLoader::LoadType::Compile
+  );
 }
 
 static bool addFilesFromDirectory(const std::string& f, bool recursive, const std::string& baseOutputDir, std::vector<ScriptToCompile>& filesToCompile) {

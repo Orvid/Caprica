@@ -16,15 +16,12 @@
 #include <papyrus/PapyrusNamespaceResolutionContext.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
+#include <papyrus/PapyrusScriptLoader.h>
 #include <papyrus/PapyrusStruct.h>
 #include <papyrus/expressions/PapyrusCastExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
-#include <papyrus/parser/PapyrusParser.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
-
-#include <pex/PexReflector.h>
-#include <pex/parser/PexAsmParser.h>
 
 namespace caprica { namespace papyrus {
 
@@ -40,70 +37,19 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
   importedObjects.push_back(loadedObj);
 }
 
-// This is safe because it will only ever contain scripts referencing items in this map, and this map
-// will never contain a fully-resolved script.
-static thread_local caseless_unordered_path_map<std::string, std::unique_ptr<PapyrusScript>> loadedScripts{ };
-PapyrusScript* PapyrusResolutionContext::loadScript(const std::string& fullName) const {
-  auto f = loadedScripts.find(fullName);
-  if (f != loadedScripts.end())
-    return f->second.get();
-
-  auto ext = FSUtils::extensionAsRef(fullName);
-  CapricaReportingContext repCtx{ fullName };
-  std::unique_ptr<PapyrusScript> loadedScript;
-  pex::PexFile* pexFile = nullptr;
-  bool isPexFile = false;
-
-  if (pathEq(ext, ".psc")) {
-    auto parser = new parser::PapyrusParser(repCtx, fullName);
-    loadedScript = std::unique_ptr<PapyrusScript>(parser->parseScript());
-    repCtx.exitIfErrors();
-    delete parser;
-  } else if (pathEq(ext, ".pex")) {
-    pex::PexReader rdr(fullName);
-    pexFile = pex::PexFile::read(rdr);
-    isPexFile = true;
-  } else if (pathEq(ext, ".pas")) {
-    auto parser = new pex::parser::PexAsmParser(repCtx, fullName);
-    pexFile = parser->parseFile();
-    repCtx.exitIfErrors();
-    delete parser;
-    isPexFile = true;
-  } else {
-    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.", fullName.c_str());
-  }
-
-  if (pexFile) {
-    loadedScript = std::unique_ptr<PapyrusScript>(pex::PexReflector::reflectScript(pexFile));
-    repCtx.exitIfErrors();
-    delete pexFile;
-  }
-
-  auto ctx = new PapyrusResolutionContext(repCtx);
-  ctx->resolvingReferenceScript = true;
-  ctx->isPexResolution = isPexFile;
-  loadedScript->preSemantic(ctx);
-
-  loadedScripts.insert({ fullName, std::move(loadedScript) });
-  loadedScripts[fullName]->semantic(ctx);
-  repCtx.exitIfErrors();
-  delete ctx;
-  return loadedScripts[fullName].get();
-}
-
 static thread_local caseless_unordered_identifier_map<std::string, PapyrusObject*> localTypeIdentifierMap{ };
 bool PapyrusResolutionContext::tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const {
   std::string baseNamespace = object ? object->getNamespaceName() : "";
   std::string fullRetTypeName;
   std::string fullRetTypePath;
   if (PapyrusNamespaceResolutionContext::tryFindType(baseNamespace, typeName, &fullRetTypeName, &fullRetTypePath, retStructName)) {
-    auto f = localTypeIdentifierMap.find(fullRetTypePath);
+    auto f = localTypeIdentifierMap.find(fullRetTypeName);
     if (f != localTypeIdentifierMap.end()) {
       *retObject = f->second;
       return true;
     }
 
-    auto sc = loadScript(fullRetTypePath);
+    auto sc = PapyrusScriptLoader::loadScript(fullRetTypePath, fullRetTypePath, "", PapyrusScriptLoader::LoadType::Reference);
     if (sc == nullptr)
       return false;
 
@@ -361,7 +307,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
     if (pos != std::string::npos) {
       auto scName = tp.name.substr(0, pos);
       auto strucName = tp.name.substr(pos + 1);
-      auto sc = loadScript(scName);
+      auto sc = PapyrusScriptLoader::loadScript(scName, scName, "", PapyrusScriptLoader::LoadType::Reference);
       if (!sc)
         reportingContext.fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(), tp.name.c_str());
 
