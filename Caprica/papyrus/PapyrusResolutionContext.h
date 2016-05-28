@@ -91,8 +91,6 @@ struct PapyrusResolutionContext final
 
   template<typename T>
   void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
-    // TODO: This has a short enough lifetime that an
-    // std::set might actually outperform this.
     caseless_unordered_identifier_set<std::string> foundNames{ };
     foundNames.reserve(nameset.size());
     for (auto member : nameset) {

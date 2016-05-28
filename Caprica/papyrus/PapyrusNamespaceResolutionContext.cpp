@@ -16,64 +16,66 @@ struct PapyrusNamespace final
   // Key is unqualified name, value is full path to file.
   caseless_unordered_identifier_map<std::string, std::string> objects{ };
 
-  void createNamespace(const std::string& curPiece, caseless_unordered_identifier_map<std::string, std::string>&& map) {
+  void createNamespace(boost::string_ref curPiece, caseless_unordered_identifier_map<std::string, std::string>&& map) {
     if (curPiece == "") {
       objects = std::move(map);
       return;
     }
 
-    std::string curSearchPiece = curPiece;
-    std::string nextSearchPiece = "";
+    boost::string_ref curSearchPiece = curPiece;
+    boost::string_ref nextSearchPiece = "";
     auto loc = curPiece.find(':');
-    if (loc != std::string::npos) {
+    if (loc != boost::string_ref::npos) {
       curSearchPiece = curPiece.substr(0, loc);
       nextSearchPiece = curPiece.substr(loc + 1);
     }
 
-    auto f = children.find(curSearchPiece);
+    auto curSearchStr = curSearchPiece.to_string();
+    auto f = children.find(curSearchStr);
     if (f == children.end()) {
       auto n = new PapyrusNamespace();
-      n->name = curSearchPiece;
-      n->fullName = curSearchPiece;
+      n->name = curSearchStr;
+      n->fullName = curSearchStr;
       if (fullName != "")
-        n->fullName = fullName + ':' + curSearchPiece;
+        n->fullName = fullName + ':' + curSearchStr;
       n->parent = this;
-      children.insert({ curSearchPiece, n });
-      f = children.find(curSearchPiece);
+      children.insert({ curSearchStr, n });
+      f = children.find(curSearchStr);
     }
     f->second->createNamespace(nextSearchPiece, std::move(map));
   }
 
-  bool tryFindNamespace(const std::string& curPiece, PapyrusNamespace const** ret) const {
+  bool tryFindNamespace(boost::string_ref curPiece, PapyrusNamespace const** ret) const {
     if (curPiece == "") {
       *ret = this;
       return true;
     }
 
-    std::string curSearchPiece = curPiece;
-    std::string nextSearchPiece = "";
+    boost::string_ref curSearchPiece = curPiece;
+    boost::string_ref nextSearchPiece = "";
     auto loc = curPiece.find(':');
-    if (loc != std::string::npos) {
+    if (loc != boost::string_ref::npos) {
       curSearchPiece = curPiece.substr(0, loc);
       nextSearchPiece = curPiece.substr(loc + 1);
     }
 
-    auto f = children.find(curSearchPiece);
+    auto f = children.find(curSearchPiece.to_string());
     if (f != children.end())
       return f->second->tryFindNamespace(nextSearchPiece, ret);
 
     return false;
   }
 
-  bool tryFindType(const std::string& typeName, std::string* retTypeName, std::string* retTypePath, std::string* retStructName) const {
+  bool tryFindType(boost::string_ref typeName, std::string* retTypeName, std::string* retTypePath, std::string* retStructName) const {
     auto loc = typeName.find(':');
-    if (loc == std::string::npos) {
-      if (objects.find(typeName) != objects.end()) {
+    if (loc == boost::string_ref::npos) {
+      auto tnStr = typeName.to_string();
+      if (objects.find(tnStr) != objects.end()) {
         if (fullName != "")
-          *retTypeName = fullName + ':' + typeName;
+          *retTypeName = fullName + ':' + tnStr;
         else
-          *retTypeName = typeName;
-        *retTypePath = objects.at(typeName);
+          *retTypeName = tnStr;
+        *retTypePath = objects.at(tnStr);
         return true;
       }
       return false;
@@ -81,7 +83,7 @@ struct PapyrusNamespace final
 
     // It's a partially qualified type name, or else is referencing
     // a struct.
-    auto baseName = typeName.substr(0, loc);
+    auto baseName = typeName.substr(0, loc).to_string();
     auto subName = typeName.substr(loc + 1);
 
     // It's a partially qualified name.
@@ -91,7 +93,7 @@ struct PapyrusNamespace final
 
     // subName is still partially qualified, so it can't
     // be referencing a struct in this namespace.
-    if (subName.find(':') != std::string::npos)
+    if (subName.find(':') != boost::string_ref::npos)
       return false;
 
     // It is a struct reference.
@@ -101,7 +103,7 @@ struct PapyrusNamespace final
       else
         *retTypeName = baseName;
       *retTypePath = objects.at(baseName);
-      *retStructName = subName;
+      *retStructName = subName.to_string();
       return true;
     }
 
