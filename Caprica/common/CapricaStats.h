@@ -15,9 +15,9 @@ private:
   };
 
 
-  using counter_type = std::atomic<size_t>;
+  //using counter_type = std::atomic<size_t>;
   //using counter_type = size_t;
-  //using counter_type = NopIncStruct;
+  using counter_type = NopIncStruct;
 
 public:
   static counter_type peekedTokenCount;
