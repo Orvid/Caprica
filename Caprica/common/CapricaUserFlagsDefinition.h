@@ -55,7 +55,7 @@ struct CapricaUserFlagsDefinition final
   ~CapricaUserFlagsDefinition() = default;
 
 private:
-  caseless_unordered_identifier_map<std::string, size_t> flagNameMap{ };
+  caseless_unordered_identifier_map<size_t> flagNameMap{ };
   std::vector<UserFlag> userFlags{ };
 };
 

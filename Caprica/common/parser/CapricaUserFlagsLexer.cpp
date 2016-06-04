@@ -42,7 +42,7 @@ void CapricaUserFlagsLexer::setTok(Token& tok) {
   cur = tok;
 }
 
-static const caseless_unordered_identifier_map<std::string, TokenType> keywordMap {
+static const caseless_unordered_identifier_map<TokenType> keywordMap {
   { "flag", TokenType::kFlag },
   { "function", TokenType::kFunction },
   { "group", TokenType::kGroup },

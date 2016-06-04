@@ -37,7 +37,7 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
   importedObjects.push_back(loadedObj);
 }
 
-static thread_local caseless_unordered_identifier_map<std::string, PapyrusObject*> localTypeIdentifierMap{ };
+static thread_local caseless_unordered_identifier_map<PapyrusObject*> localTypeIdentifierMap{ };
 bool PapyrusResolutionContext::tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const {
   std::string baseNamespace = object ? object->getNamespaceName() : "";
   std::string fullRetTypeName;

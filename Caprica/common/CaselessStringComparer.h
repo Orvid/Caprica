@@ -90,19 +90,16 @@ struct CaselessIdentifierEqual final : public std::function<bool(const std::stri
 
 // These aren't as restricted as identifiers, but must be in the base-ascii
 // range, and must not contain control characters.
-template<typename T>
-using caseless_unordered_set = typename std::unordered_set<T, CaselessStringHasher, CaselessStringEqual>;
+using caseless_unordered_set = std::unordered_set<std::string, CaselessStringHasher, CaselessStringEqual>;
 
 // The path collections are for UTF-8 encoded strings, and when comparing two,
 // they are likely to have a long prefix in common.
-template<typename T>
-using caseless_unordered_path_set = typename std::unordered_set<T, CaselessPathHasher, CaselessPathEqual>;
-template<typename K, typename V>
-using caseless_unordered_path_map = typename std::unordered_map<K, V, CaselessPathHasher, CaselessPathEqual>;
+using caseless_unordered_path_set = std::unordered_set<std::string, CaselessPathHasher, CaselessPathEqual>;
+template<typename V>
+using caseless_unordered_path_map = typename std::unordered_map<std::string, V, CaselessPathHasher, CaselessPathEqual>;
 
-template<typename T>
-using caseless_unordered_identifier_set = typename std::unordered_set<T, CaselessIdentifierHasher, CaselessIdentifierEqual>;
-template<typename K, typename V>
-using caseless_unordered_identifier_map = typename std::unordered_map<K, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+using caseless_unordered_identifier_set = std::unordered_set<std::string, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+template<typename V>
+using caseless_unordered_identifier_map = typename std::unordered_map<std::string, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 
 }

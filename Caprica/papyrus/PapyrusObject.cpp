@@ -89,7 +89,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   ctx->ensureNamesAreUnique(states, "state");
   ctx->ensureNamesAreUnique(customEvents, "custom event");
 
-  caseless_unordered_identifier_map<std::string, std::pair<bool, std::string>> identMap{ };
+  caseless_unordered_identifier_map<std::pair<bool, std::string>> identMap{ };
   checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
 
   // The first pass resolves the types on the public API,
@@ -124,7 +124,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   resolutionState = PapyrusResoultionState::Semantic2Completed;
 }
 
-void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_map<std::string, std::pair<bool, std::string>>& identMap, bool checkInheritedOnly) const {
+void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_map<std::pair<bool, std::string>>& identMap, bool checkInheritedOnly) const {
   if (auto parent = tryGetParentClass())
     parent->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
 

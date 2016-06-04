@@ -92,7 +92,7 @@ struct PapyrusResolutionContext final
 
   template<typename T>
   void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
-    caseless_unordered_identifier_set<std::string> foundNames{ };
+    caseless_unordered_identifier_set foundNames{ };
     foundNames.reserve(nameset.size());
     for (auto member : nameset) {
       // TODO: Output location of first name.
@@ -109,7 +109,7 @@ struct PapyrusResolutionContext final
   PapyrusResolutionContext(const PapyrusResolutionContext&) = delete;
   ~PapyrusResolutionContext() = default;
 private:
-  std::vector<caseless_unordered_identifier_map<std::string, statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
+  std::vector<caseless_unordered_identifier_map<statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
   std::vector<PapyrusObject*> importedObjects{ };
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };

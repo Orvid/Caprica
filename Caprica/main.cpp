@@ -85,7 +85,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     auto curDir = dirs.back();
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
-    caprica::caseless_unordered_identifier_map<std::string, std::string> namespaceMap{ };
+    caprica::caseless_unordered_identifier_map<std::string> namespaceMap{ };
     std::string curDirFull;
     if (curDir == "\\")
       curDirFull = absBaseDir;

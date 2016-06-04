@@ -101,7 +101,7 @@ private:
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
 
-  void checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_map<std::string, std::pair<bool, std::string>>& identMap, bool checkInheritedOnly) const;
+  void checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_map<std::pair<bool, std::string>>& identMap, bool checkInheritedOnly) const;
 };
 
 }}

@@ -1,7 +1,6 @@
 #include <pex/PexInstruction.h>
 
 #include <limits>
-#include <map>
 #include <unordered_map>
 
 #include <common/CaselessStringComparer.h>
@@ -129,7 +128,7 @@ void PexInstruction::write(PexWriter& wtr) const {
   }
 }
 
-static const caseless_unordered_identifier_map<const char*, PexOpCode> opCodeNameMap{
+static const caseless_unordered_identifier_map<PexOpCode> opCodeNameMap{
   { "noop", PexOpCode::Nop },
   { "iadd", PexOpCode::IAdd },
   { "fadd", PexOpCode::FAdd },
@@ -187,7 +186,7 @@ PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
     return PexOpCode::Invalid;
 }
 
-static const std::map<PexOpCode, std::string> opCodeToPexAsmNameMap{
+static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap{
   { PexOpCode::Invalid, "INVALID" },
   { PexOpCode::Nop, "NOOP" },
   { PexOpCode::IAdd, "IADD" },

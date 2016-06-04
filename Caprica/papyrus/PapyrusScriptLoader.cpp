@@ -18,7 +18,7 @@ namespace caprica { namespace papyrus {
 
 // This is safe because it will only ever contain scripts referencing items in this map, and this map
 // will never contain a fully-resolved script.
-static thread_local caseless_unordered_path_map<std::string, std::unique_ptr<PapyrusScript>> loadedScripts{ };
+static thread_local caseless_unordered_path_map<std::unique_ptr<PapyrusScript>> loadedScripts{ };
 PapyrusScript* PapyrusScriptLoader::loadScript(const std::string& reportedName,
                                                const std::string& fullPath,
                                                const std::string& baseOutputDirectory,

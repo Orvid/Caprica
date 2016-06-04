@@ -14,9 +14,9 @@ struct PapyrusNamespace final
   PapyrusNamespace* parent{ nullptr };
   caseless_concurrent_unordered_identifier_map<std::string, PapyrusNamespace*> children{ };
   // Key is unqualified name, value is full path to file.
-  caseless_unordered_identifier_map<std::string, std::string> objects{ };
+  caseless_unordered_identifier_map<std::string> objects{ };
 
-  void createNamespace(boost::string_ref curPiece, caseless_unordered_identifier_map<std::string, std::string>&& map) {
+  void createNamespace(boost::string_ref curPiece, caseless_unordered_identifier_map<std::string>&& map) {
     if (curPiece == "") {
       objects = std::move(map);
       return;
@@ -113,7 +113,7 @@ struct PapyrusNamespace final
 }
 
 static PapyrusNamespace rootNamespace{ };
-void PapyrusNamespaceResolutionContext::pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_map<std::string, std::string>&& map) {
+void PapyrusNamespaceResolutionContext::pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_map<std::string>&& map) {
   rootNamespace.createNamespace(namespaceName, std::move(map));
 }
 

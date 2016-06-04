@@ -419,7 +419,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
         consume();
         expectConsumeEOL();
 
-        caseless_unordered_identifier_map<std::string, PexLabel*> labels{ };
+        caseless_unordered_identifier_map<PexLabel*> labels{ };
         while (!maybeConsumeTokEOL(TokenType::kEndCode)) {
           auto id = expectConsumeIdent();
           if (id[id.size() - 1] == ':') {
