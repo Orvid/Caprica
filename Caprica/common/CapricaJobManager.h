@@ -64,6 +64,12 @@ struct CapricaJobManager final
       CapricaJob* prevFron = nullptr;
       while (fron && !front.compare_exchange_weak(fron, fron->next)) {
         prevFron = fron;
+        if (fron == nullptr) {
+          // We weren't the ones to put the nullptr there,
+          // exit early so that the thread that did put it
+          // there can safely put it back.
+          return false;
+        }
       }
       if (fron == nullptr) {
         assert(prevFron != nullptr);
@@ -82,6 +88,9 @@ struct CapricaJobManager final
     auto oldBack = back.load();
     while (!back.compare_exchange_weak(oldBack, job)) { }
     oldBack->next.store(job, std::memory_order_release);
+
+    if (waiterCount > 0)
+      queueCondition.notify_one();
   }
 
 private:
@@ -90,6 +99,12 @@ private:
   } defaultJob;
   std::atomic<CapricaJob*> front{ &defaultJob };
   std::atomic<CapricaJob*> back{ &defaultJob };
+  std::mutex queueAvailabilityMutex;
+  std::condition_variable queueCondition;
+  std::atomic<size_t> waiterCount{ 0 };
+  std::atomic<bool> stopWorkers{ false };
+
+  void workerMain();
 };
 
 }
