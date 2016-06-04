@@ -14,7 +14,7 @@ void PapyrusVariable::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
   obj->variables.push_back(var);
 }
 
-void PapyrusVariable::semantic(PapyrusResolutionContext* ctx) {
+void PapyrusVariable::semantic2(PapyrusResolutionContext* ctx) {
   if (ctx->object->isNative())
     ctx->reportingContext.error(location, "You cannot define variables in a Native script.");
   if (ctx->object->isConst() && !isConst())

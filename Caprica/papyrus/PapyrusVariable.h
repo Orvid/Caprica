@@ -34,7 +34,7 @@ struct PapyrusVariable final
   ~PapyrusVariable() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const;
-  void semantic(PapyrusResolutionContext* ctx);
+  void semantic2(PapyrusResolutionContext* ctx);
 };
 
 }}

@@ -17,7 +17,6 @@ static PapyrusFunction* searchRootStateForFunction(const std::string& name, cons
 
 void PapyrusState::semantic(PapyrusResolutionContext* ctx) {
   ctx->state = this;
-  ctx->ensureNamesAreUnique(functions, "function");
   for (auto f : functions)
     f->semantic(ctx);
   ctx->state = nullptr;
@@ -50,6 +49,7 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
     }
   }
 
+  ctx->ensureNamesAreUnique(functions, "function");
   for (auto f : functions)
     f->semantic2(ctx);
   ctx->state = nullptr;

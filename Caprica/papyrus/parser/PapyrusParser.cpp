@@ -322,6 +322,8 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
             reportingContext.error(cur.location, "The set function for this property has already been defined!");
           consume();
           prop->writeFunction = parseFunction(script, object, nullptr, PapyrusType::None(cur.location), TokenType::kEndFunction);
+          if (!prop->writeFunction)
+            CapricaReportingContext::logicalFatal("Somehow failed while parsing the property setter!");
           prop->writeFunction->functionType = PapyrusFunctionType::Setter;
           if (!idEq(prop->writeFunction->name, "set"))
             reportingContext.error(cur.location, "The set function must be named \"Set\"!");
@@ -345,6 +347,8 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
             reportingContext.error(cur.location, "The return type of the get function must be the same as the property!");
           expectConsume(TokenType::kFunction);
           prop->readFunction = parseFunction(script, object, nullptr, std::move(tp), TokenType::kEndFunction);
+          if (!prop->readFunction)
+            CapricaReportingContext::logicalFatal("Somehow failed while parsing the property getter!");
           prop->readFunction->functionType = PapyrusFunctionType::Getter;
           if (!idEq(prop->readFunction->name, "get"))
             reportingContext.error(cur.location, "The get function must be named \"Get\"!");

@@ -83,16 +83,8 @@ void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
   if (isDebugOnly())
     returnType.poison(PapyrusType::PoisonKind::Debug);
 
-  ctx->ensureNamesAreUnique(parameters, "parameter");
   for (auto p : parameters)
     p->semantic(ctx);
-
-  // We don't care about the body in reference scripts.
-  if (ctx->resolvingReferenceScript) {
-    for (auto s : statements)
-      delete s;
-    statements.clear();
-  }
 }
 
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
@@ -100,6 +92,8 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
     ctx->reportingContext.error(location, "Global functions are only allowed in the empty state.");
   if (isNative() && !ctx->object->isNative())
     ctx->reportingContext.error(location, "You can only define Native functions in a script marked Native.");
+
+  ctx->ensureNamesAreUnique(parameters, "parameter");
 
   ctx->function = this;
   ctx->pushLocalVariableScope();

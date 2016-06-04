@@ -49,6 +49,8 @@ bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation location, siz
 }
 
 size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) const {
+  if (!lineOffsets.size())
+    CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
   if (lastLineHint != 0) {
     if (location.fileOffset >= lineOffsets[lastLineHint - 1]) {
       return lastLineHint + 1;
@@ -64,6 +66,8 @@ size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, si
     if (location.fileOffset >= lineOffsets[i]) {
       return i + 1;
     }
+    if (i == 0)
+      break;
   }
   CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
 }

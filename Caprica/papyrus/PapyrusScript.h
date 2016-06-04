@@ -42,6 +42,13 @@ struct PapyrusScript final
       o->semantic(ctx);
     ctx->script = nullptr;
   }
+
+  void semantic2(PapyrusResolutionContext* ctx) {
+    ctx->script = this;
+    for (auto o : objects)
+      o->semantic2(ctx);
+    ctx->script = nullptr;
+  }
 };
 
 }}

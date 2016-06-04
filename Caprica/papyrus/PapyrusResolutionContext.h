@@ -46,6 +46,7 @@ struct PapyrusResolutionContext final
   bool isPexResolution{ false };
 
   void addImport(const CapricaFileLocation& location, const std::string& import);
+  void clearImports() { importedObjects.clear(); }
 
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
   static bool canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest);

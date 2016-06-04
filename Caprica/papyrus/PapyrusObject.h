@@ -22,6 +22,20 @@
 
 namespace caprica { namespace papyrus {
 
+enum class PapyrusResoultionState
+{
+  Unresolved,
+
+  PreSemanticInProgress,
+  PreSemanticCompleted,
+
+  SemanticInProgress,
+  SemanticCompleted,
+
+  Semantic2InProgress,
+  Semantic2Completed,
+};
+
 struct PapyrusObject final
 {
   std::string name{ "" };
@@ -74,12 +88,16 @@ struct PapyrusObject final
   const PapyrusObject* tryGetParentClass() const;
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const;
   void semantic(PapyrusResolutionContext* ctx);
+  void semantic2(PapyrusResolutionContext* ctx);
 
   void preSemantic(PapyrusResolutionContext* ctx) {
+    resolutionState = PapyrusResoultionState::PreSemanticInProgress;
     parentClass = ctx->resolveType(parentClass);
+    resolutionState = PapyrusResoultionState::PreSemanticCompleted;
   }
 
 private:
+  PapyrusResoultionState resolutionState{ PapyrusResoultionState::Unresolved };
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
 

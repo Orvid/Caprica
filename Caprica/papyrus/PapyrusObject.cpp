@@ -63,62 +63,65 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
 }
 
 void PapyrusObject::semantic(PapyrusResolutionContext* ctx) {
+  resolutionState = PapyrusResoultionState::SemanticInProgress;
+  ctx->object = this;
+  for (auto i : imports)
+    ctx->addImport(i.first, i.second);
+  for (auto s : structs)
+    s->semantic(ctx);
+  for (auto g : propertyGroups)
+    g->semantic(ctx);
+  for (auto s : states)
+    s->semantic(ctx);
+  ctx->clearImports();
+  ctx->object = nullptr;
+  resolutionState = PapyrusResoultionState::SemanticCompleted;
+}
+
+void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
+  resolutionState = PapyrusResoultionState::Semantic2InProgress;
   ctx->object = this;
   for (auto i : imports)
     ctx->addImport(i.first, i.second);
   ctx->ensureNamesAreUnique(structs, "struct");
-  for (auto s : structs)
-    s->semantic(ctx);
-  if (ctx->resolvingReferenceScript) {
-    for (auto v : variables)
-      delete v;
-    variables.clear();
-  } else {
-    ctx->ensureNamesAreUnique(variables, "variable");
-    for (auto v : variables)
-      v->semantic(ctx);
-  }
+  ctx->ensureNamesAreUnique(variables, "variable");
   ctx->ensureNamesAreUnique(propertyGroups, "property group");
-  for (auto g : propertyGroups)
-    g->semantic(ctx);
   ctx->ensureNamesAreUnique(states, "state");
-  for (auto s : states)
-    s->semantic(ctx);
-  // Custom events don't currently need a semantic pass.
-  // They do however, get a semantic2 pass.
   ctx->ensureNamesAreUnique(customEvents, "custom event");
 
-  if (!ctx->resolvingReferenceScript) {
-    caseless_unordered_identifier_map<std::string, std::pair<bool, std::string>> identMap{ };
-    checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
+  caseless_unordered_identifier_map<std::string, std::pair<bool, std::string>> identMap{ };
+  checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
 
-    // The first pass resolves the types on the public API,
-    // property types, return types, and parameter types.
-    // This second pass resolves the actual identifiers and
-    // types in the bodies of functions.
-    for (auto g : propertyGroups)
-      g->semantic2(ctx);
-    for (auto s : states)
-      s->semantic2(ctx);
-    for (auto c : customEvents)
-      c->semantic2(ctx);
+  // The first pass resolves the types on the public API,
+  // property types, return types, and parameter types.
+  // This second pass resolves the actual identifiers and
+  // types in the bodies of functions.
+  for (auto v : variables)
+    v->semantic2(ctx);
+  for (auto g : propertyGroups)
+    g->semantic2(ctx);
+  for (auto s : states)
+    s->semantic2(ctx);
+  for (auto c : customEvents)
+    c->semantic2(ctx);
 
-    for (auto v : variables) {
-      if (!v->referenceState.isRead) {
-        if (!v->referenceState.isInitialized) {
-          if (v->referenceState.isWritten)
-            ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name.c_str());
-          else
-            ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.c_str());
-        } else {
-          ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.c_str());
-        }
-      } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
-        ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.c_str());
+  for (auto v : variables) {
+    if (!v->referenceState.isRead) {
+      if (!v->referenceState.isInitialized) {
+        if (v->referenceState.isWritten)
+          ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name.c_str());
+        else
+          ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.c_str());
+      } else {
+        ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.c_str());
       }
+    } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
+      ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.c_str());
     }
   }
+  ctx->clearImports();
   ctx->object = nullptr;
+  resolutionState = PapyrusResoultionState::Semantic2Completed;
 }
 
 void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_map<std::string, std::pair<bool, std::string>>& identMap, bool checkInheritedOnly) const {

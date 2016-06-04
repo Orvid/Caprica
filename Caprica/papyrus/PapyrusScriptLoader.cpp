@@ -84,6 +84,8 @@ PapyrusScript* PapyrusScriptLoader::loadScript(const std::string& reportedName,
     pexFile = nullptr;
   }
 
+  assert(loadedScript != nullptr);
+
   auto ctx = new PapyrusResolutionContext(repCtx);
   ctx->resolvingReferenceScript = loadType == LoadType::Reference;
   ctx->isPexResolution = isPexFile;
@@ -98,6 +100,12 @@ PapyrusScript* PapyrusScriptLoader::loadScript(const std::string& reportedName,
 
   loadedScript->semantic(ctx);
   repCtx.exitIfErrors();
+
+  if (loadType != LoadType::Reference && loadType != LoadType::CheckOnly) {
+    loadedScript->semantic2(ctx);
+    repCtx.exitIfErrors();
+  }
+
   delete ctx;
   ctx = nullptr;
 
