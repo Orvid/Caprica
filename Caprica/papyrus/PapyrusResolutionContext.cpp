@@ -29,6 +29,8 @@ void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, co
   boost::string_ref retStrucName;
   if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", import, &retNode, &retStrucName))
     reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
+  if (retStrucName.length())
+    reportingContext.error(location, "You cannot directly import a single struct '%s'!", import.c_str());
   for (auto o : importedNodes) {
     if (o == retNode)
       reportingContext.error(location, "Duplicate import of '%s'.", import.c_str());
@@ -150,8 +152,7 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
 
     if (canCast && expr->resultType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float) {
       if (auto le = expr->as<expressions::PapyrusLiteralExpression>()) {
-        le->value.f = (float)le->value.i;
-        le->value.type = PapyrusValueType::Float;
+        le->value = PapyrusValue::Float(le->value.location, (float)le->value.i);
         return expr;
       }
     }
