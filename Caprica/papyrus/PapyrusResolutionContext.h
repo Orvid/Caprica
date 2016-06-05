@@ -6,16 +6,18 @@
 #include <vector>
 #include <unordered_set>
 
-namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
-
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
+
+namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
+
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusValue.h>
 
 namespace caprica { namespace papyrus {
 
+struct PapyrusCompilationNode;
 struct PapyrusCustomEvent;
 struct PapyrusFunction;
 struct PapyrusObject;
@@ -35,18 +37,12 @@ struct PapyrusResolutionContext final
   const PapyrusObject* object{ nullptr };
   const PapyrusState* state{ nullptr };
   const PapyrusFunction* function{ nullptr };
-  // This is only true if the resolution being done
-  // isn't being done to be able to emit the pex.
-  // This means that anything that can't be referenced
-  // by an external script is free to be removed from
-  // the object, and doesn't need to be resolved.
-  bool resolvingReferenceScript{ false };
   // If true, we're resolving a tree generated from
   // a pex file.
   bool isPexResolution{ false };
 
   void addImport(const CapricaFileLocation& location, const std::string& import);
-  void clearImports() { importedObjects.clear(); }
+  void clearImports() { importedNodes.clear(); }
 
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
   static bool canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest);
@@ -82,7 +78,7 @@ struct PapyrusResolutionContext final
   PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const;
   PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, const std::string& name) const;
   PapyrusState* tryResolveState(const std::string& name, const PapyrusObject* parentObj = nullptr) const;
-  PapyrusType resolveType(PapyrusType tp);
+  PapyrusType resolveType(PapyrusType tp, bool lazy = false);
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const;
@@ -110,11 +106,9 @@ struct PapyrusResolutionContext final
   ~PapyrusResolutionContext() = default;
 private:
   std::vector<caseless_unordered_identifier_map<statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
-  std::vector<PapyrusObject*> importedObjects{ };
+  std::vector<PapyrusCompilationNode*> importedNodes{ };
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };
-
-  bool tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const;
 };
 
 }}

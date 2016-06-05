@@ -47,12 +47,12 @@ struct PapyrusPropertyGroup final
   }
 
   void semantic(PapyrusResolutionContext* ctx) {
-    ctx->ensureNamesAreUnique(properties, "property");
     for (auto p : properties)
       p->semantic(ctx);
   }
 
   void semantic2(PapyrusResolutionContext* ctx) {
+    ctx->ensureNamesAreUnique(properties, "property");
     for (auto p : properties)
       p->semantic2(ctx);
   }

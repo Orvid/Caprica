@@ -61,7 +61,7 @@ void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
 }
 
 void PapyrusProperty::semantic(PapyrusResolutionContext* ctx) {
-  type = ctx->resolveType(type);
+  type = ctx->resolveType(type, true);
   defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   if (readFunction)
     readFunction->semantic(ctx);

@@ -15,7 +15,7 @@ namespace caprica { namespace papyrus { namespace parser {
 
 struct PapyrusParser final : private PapyrusLexer
 {
-  explicit PapyrusParser(CapricaReportingContext& repCtx, const std::string& file) : PapyrusLexer(repCtx, file) { }
+  explicit PapyrusParser(CapricaReportingContext& repCtx, const std::string& file, boost::string_ref data) : PapyrusLexer(repCtx, file, data) { }
   PapyrusParser(const PapyrusParser&) = delete;
   ~PapyrusParser() = default;
 

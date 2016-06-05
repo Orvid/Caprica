@@ -1,6 +1,12 @@
 #include <papyrus/PapyrusObject.h>
 
+#include <papyrus/PapyrusCompilationContext.h>
+
 namespace caprica { namespace papyrus {
+
+PapyrusObject* PapyrusObject::awaitSemantic() const {
+  return compilationNode->awaitSemantic();
+}
 
 PapyrusPropertyGroup* PapyrusObject::getRootPropertyGroup() {
   if (!rootPropertyGroup) {
@@ -64,6 +70,8 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
 
 void PapyrusObject::semantic(PapyrusResolutionContext* ctx) {
   resolutionState = PapyrusResoultionState::SemanticInProgress;
+  if (auto c = this->tryGetParentClass())
+    c->awaitSemantic();
   ctx->object = this;
   for (auto i : imports)
     ctx->addImport(i.first, i.second);

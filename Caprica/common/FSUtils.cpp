@@ -7,134 +7,14 @@
 #include <future>
 #include <sstream>
 
+#include <boost/filesystem.hpp>
+
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
 #include <common/Concurrency.h>
 
 namespace caprica { namespace FSUtils {
-
-struct FileReadCacheEntry final
-{
-  FileReadCacheEntry() :
-    read(std::make_unique<std::atomic<bool>>(false)),
-    dataMutex(std::make_unique<std::mutex>()),
-    taskMutex(std::make_unique<std::mutex>())
-  {
-  }
-  FileReadCacheEntry(FileReadCacheEntry&& o) = default;
-  FileReadCacheEntry& operator =(FileReadCacheEntry&&) = default;
-  FileReadCacheEntry(const FileReadCacheEntry&) = delete;
-  FileReadCacheEntry& operator =(const FileReadCacheEntry&) = delete;
-  ~FileReadCacheEntry() = default;
-
-  void wantFile(const std::string& filename, size_t filesize) {
-    if (!this->filesize && filesize)
-      this->filesize = filesize;
-    if (conf::Performance::asyncFileRead) {
-      if (!read->load() && !readTask.valid()) {
-        std::unique_lock<std::mutex> lock{ *taskMutex };
-        if (!read->load() && !readTask.valid()) {
-          readTask = std::move(std::async(std::launch::async, [this, filename]() {
-            this->readFile(filename);
-          }));
-        }
-      }
-    }
-  }
-
-  void readFile(const std::string& filename) {
-    std::string str;
-    str.resize(filesize);
-    if (filesize < std::numeric_limits<uint32_t>::max()) {
-      auto fd = _open(filename.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
-      if (fd != -1) {
-        auto len = _read(fd, (void*)str.data(), (uint32_t)filesize);
-        if (len != filesize)
-          str.resize(len);
-        if (_eof(fd) == 1) {
-          _close(fd);
-          goto DoMove;
-        }
-        _close(fd);
-      }
-    }
-    {
-      std::ifstream inFile{ filename, std::ifstream::binary };
-      inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-      if (filesize != 0)
-        inFile.read((char*)str.data(), filesize);
-      // Just because the filesize was one thing when
-      // we iterated the directory doesn't mean it's
-      // not gotten bigger since then.
-      inFile.peek();
-      if (!inFile.eof()) {
-        std::stringstream strStream{ };
-        strStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-        strStream << inFile.rdbuf();
-        str += strStream.str();
-      }
-    }
-  DoMove:
-    {
-      std::unique_lock<std::mutex> lock{ *dataMutex };
-      readFileData = std::move(str);
-      read->store(true);
-    }
-  }
-
-  boost::string_ref getData(const std::string& filename) {
-    if (read->load())
-      return readFileData;
-
-    if (readTask.valid()) {
-      std::unique_lock<std::mutex> lock{ *taskMutex };
-      if (readTask.valid())
-        readTask.get();
-      assert(read->load());
-      return readFileData;
-    }
-
-    readFile(filename);
-    assert(read->load());
-    return readFileData;
-  }
-
-  void waitForRead() {
-    if (readTask.valid()) {
-      std::unique_lock<std::mutex> lock{ *taskMutex };
-      if (readTask.valid())
-        readTask.get();
-      assert(read->load());
-    }
-  }
-
-private:
-  std::unique_ptr<std::atomic<bool>> read;
-  std::unique_ptr<std::mutex> dataMutex;
-  std::string readFileData{ "" };
-  std::unique_ptr<std::mutex> taskMutex;
-  std::future<void> readTask{ };
-  size_t filesize{ 0 };
-};
-
-static caseless_concurrent_unordered_path_map<std::string, FileReadCacheEntry> readFilesMap{ };
-
-void Cache::waitForAll() {
-  for (auto& f : readFilesMap) {
-    f.second.waitForRead();
-  }
-}
-
-void Cache::push_need(const std::string& filename, size_t filesize) {
-  readFilesMap[filename].wantFile(filename, filesize);
-}
-
-boost::string_ref Cache::cachedReadFull(const std::string& filename) {
-  auto abs = canonical(filename);
-  push_need(abs);
-  return readFilesMap[abs].getData(abs);
-}
 
 boost::string_ref basenameAsRef(boost::string_ref file) {
   auto pos = file.find_last_of("\\/");

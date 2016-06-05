@@ -1,5 +1,6 @@
 #include <papyrus/parser/PapyrusLexer.h>
 
+#include <cassert>
 #include <cctype>
 #include <map>
 #include <unordered_map>

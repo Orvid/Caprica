@@ -77,7 +77,7 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
 }
 
 void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
-  returnType = ctx->resolveType(returnType);
+  returnType = ctx->resolveType(returnType, true);
   if (isBetaOnly())
     returnType.poison(PapyrusType::PoisonKind::Beta);
   if (isDebugOnly())

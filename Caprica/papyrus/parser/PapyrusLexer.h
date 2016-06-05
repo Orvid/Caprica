@@ -158,14 +158,13 @@ struct PapyrusLexer
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file)
+  explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file, boost::string_ref data)
     : filename(file),
       reportingContext(repCtx)
   {
     CapricaStats::lexedFilesCount++;
-    auto s = FSUtils::Cache::cachedReadFull(file);
-    strm = s.data();
-    strmLen = s.size();
+    strm = data.data();
+    strmLen = data.size();
     consume(); // set the first token.
   }
   PapyrusLexer(const PapyrusLexer&) = delete;

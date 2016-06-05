@@ -11,12 +11,11 @@
 #include <common/CapricaReportingContext.h>
 #include <common/FSUtils.h>
 
+#include <papyrus/PapyrusCompilationContext.h>
 #include <papyrus/PapyrusCustomEvent.h>
 #include <papyrus/PapyrusFunction.h>
-#include <papyrus/PapyrusNamespaceResolutionContext.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusScript.h>
-#include <papyrus/PapyrusScriptLoader.h>
 #include <papyrus/PapyrusStruct.h>
 #include <papyrus/expressions/PapyrusCastExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
@@ -26,44 +25,16 @@
 namespace caprica { namespace papyrus {
 
 void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
-  PapyrusObject* loadedObj = nullptr;
+  PapyrusCompilationNode* retNode;
   std::string retStrucName;
-  if (!tryLoadScript(import, &loadedObj, &retStrucName))
+  if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", import, &retNode, &retStrucName))
     reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
-  for (auto o : importedObjects) {
-    if (o == loadedObj)
+  for (auto o : importedNodes) {
+    if (o == retNode)
       reportingContext.error(location, "Duplicate import of '%s'.", import.c_str());
   }
-  importedObjects.push_back(loadedObj);
+  importedNodes.push_back(retNode);
 }
-
-static thread_local caseless_unordered_identifier_map<PapyrusObject*> localTypeIdentifierMap{ };
-bool PapyrusResolutionContext::tryLoadScript(const std::string& typeName, PapyrusObject** retObject, std::string* retStructName) const {
-  std::string baseNamespace = object ? object->getNamespaceName() : "";
-  std::string fullRetTypeName;
-  std::string fullRetTypePath;
-  if (PapyrusNamespaceResolutionContext::tryFindType(baseNamespace, typeName, &fullRetTypeName, &fullRetTypePath, retStructName)) {
-    auto f = localTypeIdentifierMap.find(fullRetTypeName);
-    if (f != localTypeIdentifierMap.end()) {
-      *retObject = f->second;
-      return true;
-    }
-
-    auto sc = PapyrusScriptLoader::loadScript(fullRetTypePath, fullRetTypePath, "", PapyrusScriptLoader::LoadType::Reference);
-    if (sc == nullptr)
-      return false;
-
-    for (auto obj : sc->objects) {
-      if (idEq(obj->name, fullRetTypeName)) {
-        *retObject = obj;
-        localTypeIdentifierMap[fullRetTypeName] = obj;
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 
 bool PapyrusResolutionContext::isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent) {
   if (child == parent)
@@ -295,14 +266,14 @@ static bool tryResolveStruct(const PapyrusObject* object, const std::string& str
   return false;
 }
 
-PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
+PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
     if (tp.type == PapyrusType::Kind::Array && tp.getElementType().type == PapyrusType::Kind::Unresolved)
-      return PapyrusType::Array(tp.location, std::make_shared<PapyrusType>(resolveType(tp.getElementType())));
+      return PapyrusType::Array(tp.location, std::make_shared<PapyrusType>(resolveType(tp.getElementType(), lazy)));
     return tp;
   }
 
-  if (isPexResolution || conf::Papyrus::allowDecompiledStructNameRefs) {
+  /*if (isPexResolution || conf::Papyrus::allowDecompiledStructNameRefs) {
     auto pos = tp.name.find('#');
     if (pos != std::string::npos) {
       auto scName = tp.name.substr(0, pos);
@@ -320,7 +291,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
 
       reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(), scName.c_str());
     }
-  }
+  }*/
 
   if (object) {
     PapyrusStruct* struc = nullptr;
@@ -331,18 +302,20 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp) {
       return PapyrusType::ResolvedObject(tp.location, object);
   }
 
-  for (auto obj : importedObjects) {
+  for (auto node : importedNodes) {
+    auto obj = lazy ? node->awaitParse() : node->awaitSemantic();
     for (auto struc : obj->structs) {
       if (idEq(struc->name, tp.name))
         return PapyrusType::ResolvedStruct(tp.location, struc);
     }
   }
 
-  PapyrusObject* foundObj = nullptr;
+  PapyrusCompilationNode* retNode{ nullptr };
   std::string retStructName;
-  if (!tryLoadScript(tp.name, &foundObj, &retStructName))
+  if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", tp.name, &retNode, &retStructName))
     reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 
+  PapyrusObject* foundObj = lazy ? retNode->awaitParse() : retNode->awaitSemantic();
   if (retStructName.size() == 0)
     return PapyrusType::ResolvedObject(tp.location, foundObj);
 
@@ -431,7 +404,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
         return PapyrusIdentifier::StructMember(ident.location, sm);
     }
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
-    for (auto& propGroup : baseType.resolvedObject->propertyGroups) {
+    for (auto& propGroup : baseType.resolvedObject->awaitSemantic()->propertyGroups) {
       for (auto& prop : propGroup->properties) {
         if (idEq(prop->name, ident.name))
           return PapyrusIdentifier::Property(ident.location, prop);
@@ -468,8 +441,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       }
     }
 
-    for (auto obj : importedObjects) {
-      if (auto state = obj->getRootState()) {
+    for (auto node : importedNodes) {
+      if (auto state = node->awaitSemantic()->getRootState()) {
         for (auto& func : state->functions) {
           if (func->isGlobal() && idEq(func->name, ident.name))
             return PapyrusIdentifier::Function(ident.location, func);
@@ -503,7 +476,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
-    if (auto state = baseType.resolvedObject->getRootState()) {
+    if (auto state = baseType.resolvedObject->awaitSemantic()->getRootState()) {
       for (auto& func : state->functions) {
         if (idEq(func->name, ident.name)) {
           if (!wantGlobal && func->isGlobal())

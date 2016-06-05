@@ -37,7 +37,7 @@ struct PapyrusFunctionParameter final
   }
   
   void semantic(PapyrusResolutionContext* ctx) {
-    type = ctx->resolveType(type);
+    type = ctx->resolveType(type, true);
     defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   }
 };

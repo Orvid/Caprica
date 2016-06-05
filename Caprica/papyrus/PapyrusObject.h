@@ -22,6 +22,8 @@
 
 namespace caprica { namespace papyrus {
 
+struct PapyrusCompilationNode;
+
 enum class PapyrusResoultionState
 {
   Unresolved,
@@ -92,11 +94,16 @@ struct PapyrusObject final
 
   void preSemantic(PapyrusResolutionContext* ctx) {
     resolutionState = PapyrusResoultionState::PreSemanticInProgress;
-    parentClass = ctx->resolveType(parentClass);
+    parentClass = ctx->resolveType(parentClass, true);
     resolutionState = PapyrusResoultionState::PreSemanticCompleted;
   }
 
+  PapyrusObject* awaitSemantic() const;
+
 private:
+  friend PapyrusCompilationNode;
+
+  PapyrusCompilationNode* compilationNode{ nullptr };
   PapyrusResoultionState resolutionState{ PapyrusResoultionState::Unresolved };
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };

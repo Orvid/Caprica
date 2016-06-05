@@ -9,15 +9,15 @@
 #include <boost/program_options.hpp>
 
 #include <common/CapricaConfig.h>
+#include <common/CapricaJobManager.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
 #include <common/FSUtils.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
-#include <papyrus/PapyrusNamespaceResolutionContext.h>
+#include <papyrus/PapyrusCompilationContext.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusScript.h>
-#include <papyrus/PapyrusScriptLoader.h>
 #include <papyrus/parser/PapyrusParser.h>
 
 #include <pex/PexAsmWriter.h>
@@ -32,44 +32,9 @@ namespace conf = caprica::conf;
 namespace po = boost::program_options;
 namespace FSUtils = caprica::FSUtils;
 using caprica::pathEq;
+using caprica::papyrus::PapyrusCompilationNode;
 
-struct ScriptToCompile final
-{
-  size_t filesize;
-  time_t lastModTime;
-  std::string sourceFileName;
-  std::string outputDirectory;
-  std::string sourceFilePath;
-
-  ScriptToCompile() = delete;
-  ScriptToCompile(std::string&& sourcePath, std::string&& baseOutputDir, std::string&& absolutePath, time_t lastMod, size_t fileSize)
-    : sourceFileName(std::move(sourcePath)),
-    outputDirectory(std::move(baseOutputDir)),
-    sourceFilePath(std::move(absolutePath)),
-    lastModTime(lastMod),
-    filesize(fileSize) {
-    FSUtils::Cache::push_need(sourceFilePath, filesize);
-  }
-  ScriptToCompile(const ScriptToCompile& other) = default;
-  ScriptToCompile(ScriptToCompile&& other) = default;
-  ScriptToCompile& operator =(const ScriptToCompile&) = default;
-  ScriptToCompile& operator =(ScriptToCompile&&) = default;
-  ~ScriptToCompile() = default;
-};
-
-static void compileScript(const ScriptToCompile& script) {
-  if (!conf::General::quietCompile)
-    std::cout << "Compiling " << script.sourceFileName << std::endl;
-
-  caprica::papyrus::PapyrusScriptLoader::loadScript(
-    script.sourceFileName,
-    script.sourceFilePath,
-    script.outputDirectory,
-    caprica::papyrus::PapyrusScriptLoader::LoadType::Compile
-  );
-}
-
-static bool addFilesFromDirectory(const std::string& f, bool recursive, const std::string& baseOutputDir, std::vector<ScriptToCompile>& filesToCompile) {
+static bool addFilesFromDirectory(const std::string& f, bool recursive, const std::string& baseOutputDir, caprica::CapricaJobManager* jobManager) {
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
   // at 40ms vs. 200ms for the boost solution, and the raw API
@@ -85,7 +50,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     auto curDir = dirs.back();
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
-    caprica::caseless_unordered_identifier_map<std::string> namespaceMap{ };
+    caprica::caseless_unordered_identifier_map<PapyrusCompilationNode*> namespaceMap{ };
     std::string curDirFull;
     if (curDir == "\\")
       curDirFull = absBaseDir;
@@ -127,9 +92,12 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               filenameToDisplay = curDir.substr(1) + "\\" + data.cFileName;
               outputDir = baseOutputDir + curDir;
             }
-            namespaceMap.emplace(FSUtils::basenameAsRef(filenameRef).to_string(), sourceFilePath);
-            filesToCompile.push_back(
-              ScriptToCompile(
+            caprica::CapricaStats::inputFileCount++;
+            namespaceMap.emplace(
+              FSUtils::basenameAsRef(filenameRef).to_string(),
+              new PapyrusCompilationNode(
+                jobManager,
+                PapyrusCompilationNode::NodeType::PapyrusCompile,
                 std::move(filenameToDisplay),
                 std::move(outputDir),
                 std::move(sourceFilePath),
@@ -140,7 +108,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
                   ull.HighPart = high;
                   return ull.QuadPart;
                 }(data.nFileSizeLow, data.nFileSizeHigh)
-              )
+               )
             );
           }
         }
@@ -151,7 +119,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     auto namespaceName = curDir;
     std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
     namespaceName = namespaceName.substr(1);
-    caprica::papyrus::PapyrusNamespaceResolutionContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
+    caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
   }
   return true;
 }
@@ -167,7 +135,7 @@ static std::pair<std::string, std::string> parseOddArguments(const std::string& 
     return std::make_pair(std::string(), std::string());
 }
 
-static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& filesToCompile) {
+static bool parseArgs(int argc, char* argv[], caprica::CapricaJobManager* jobManager) {
   try {
     bool iterateCompiledDirectoriesRecursively = false;
 
@@ -363,14 +331,13 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
 
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
-    filesToCompile.reserve(filesPassed.size());
     for (auto& f : filesPassed) {
       if (!boost::filesystem::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
         return false;
       }
       if (boost::filesystem::is_directory(f)) {
-        if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, filesToCompile))
+        if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, jobManager))
           return false;
       } else {
         auto ext = FSUtils::extensionAsRef(f);
@@ -381,7 +348,8 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
         }
         auto canon = FSUtils::canonical(f);
         auto oDir = baseOutputDir;
-        filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f), 0));
+        // TODO: Implement correctly.
+        //filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f), 0));
       }
     }
   } catch (const std::exception& ex) {
@@ -395,9 +363,9 @@ static bool parseArgs(int argc, char* argv[], std::vector<ScriptToCompile>& file
 
 int main(int argc, char* argv[])
 {
+  caprica::CapricaJobManager jobManager{ };
   auto startParse = std::chrono::high_resolution_clock::now();
-  std::vector<ScriptToCompile> filesToCompile;
-  if (!parseArgs(argc, argv, filesToCompile)) {
+  if (!parseArgs(argc, argv, &jobManager)) {
     caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
   }
@@ -405,11 +373,10 @@ int main(int argc, char* argv[])
   if (conf::Performance::dumpTiming)
     std::cout << "Parse: " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms" << std::endl;
 
-  caprica::CapricaStats::inputFileCount = filesToCompile.size();
-
   auto startRead = std::chrono::high_resolution_clock::now();
+  jobManager.startup();
   if (conf::Performance::performanceTestMode) {
-    caprica::FSUtils::Cache::waitForAll();
+    //caprica::FSUtils::Cache::waitForAll();
   }
   auto endRead = std::chrono::high_resolution_clock::now();
   if (conf::Performance::dumpTiming)
@@ -417,17 +384,10 @@ int main(int argc, char* argv[])
 
   try {
     auto startCompile = std::chrono::high_resolution_clock::now();
-    if (conf::General::compileInParallel) {
-      Concurrency::parallel_for_each(filesToCompile.begin(), filesToCompile.end(), [](const ScriptToCompile& fl) {
-        compileScript(fl);
-      });
-    } else {
-      for (auto& file : filesToCompile)
-        compileScript(file);
-    }
+    caprica::papyrus::PapyrusCompilationContext::doCompile();
     auto endCompile = std::chrono::high_resolution_clock::now();
     if (conf::Performance::dumpTiming) {
-      std::cout << "Compiled " << filesToCompile.size() << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
+      std::cout << "Compiled " << "N/A" /*caprica::CapricaStats::inputFileCount*/ << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
       caprica::CapricaStats::outputStats();
     }
   } catch (const std::runtime_error& ex) {

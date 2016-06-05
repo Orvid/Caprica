@@ -11,7 +11,7 @@ namespace caprica {
 
 struct CapricaJob abstract
 {
-  CapricaJob() : runningLock(runningMutex) { }
+  CapricaJob() = default;
   CapricaJob(const CapricaJob& other) = delete;
   CapricaJob(CapricaJob&& other) = delete;
   CapricaJob& operator =(const CapricaJob&) = delete;
@@ -20,12 +20,10 @@ struct CapricaJob abstract
 
   void await() {
     if (!hasRan.load(std::memory_order_acquire)) {
-      if (runningLock.try_lock()) {
+      bool r = runningLock.load(std::memory_order_acquire);
+      if (!r && runningLock.compare_exchange_strong(r, true)) {
         std::unique_lock<std::mutex> ranLock{ ranMutex };
-        ranLock.lock();
-
         run();
-
         hasRan.store(true, std::memory_order_release);
         ranLock.unlock();
         ranCondition.notify_all();
@@ -45,8 +43,7 @@ private:
   std::atomic<bool> hasRan{ false };
   std::condition_variable ranCondition;
   std::mutex ranMutex;
-  std::mutex runningMutex;
-  std::unique_lock<std::mutex> runningLock;
+  std::atomic<bool> runningLock{ false };
 
   friend struct CapricaJobManager;
   std::atomic<CapricaJob*> next{ nullptr };
