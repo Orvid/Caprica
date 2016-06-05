@@ -25,11 +25,13 @@ struct PapyrusCompilationNode final
     PexReflection,
   };
 
+  boost::string_ref baseName;
+
   PapyrusCompilationNode() = delete;
   PapyrusCompilationNode(CapricaJobManager* mgr, NodeType compileType, std::string&& sourcePath,
                          std::string&& baseOutputDir, std::string&& absolutePath,
-                         time_t lastMod, size_t fileSize)
-    : reportedName(std::move(sourcePath)),
+                         time_t lastMod, size_t fileSize) :
+    reportedName(std::move(sourcePath)),
     outputDirectory(std::move(baseOutputDir)),
     sourceFilePath(std::move(absolutePath)),
     lastModTime(lastMod),
@@ -37,6 +39,7 @@ struct PapyrusCompilationNode final
     reportingContext(reportedName),
     jobManager(mgr),
     type(compileType) {
+    baseName = FSUtils::basenameAsRef(sourceFilePath);
     jobManager->queueJob(&readJob);
   }
 
@@ -106,8 +109,8 @@ private:
 struct PapyrusCompilationContext final
 {
   static void doCompile();
-  static void pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_map<PapyrusCompilationNode*>&& map);
-  static bool tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, std::string* retStructName);
+  static void pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map);
+  static bool tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName);
 };
 
 }}

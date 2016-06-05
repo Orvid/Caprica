@@ -130,6 +130,8 @@ void PapyrusCompilationNode::FileSemanticJob::run() {
   parent->reportingContext.exitIfErrors();
 }
 
+static constexpr bool disablePexBuild = true;
+
 void PapyrusCompilationNode::FileCompileJob::run() {
   parent->semanticJob.await();
   switch (parent->type) {
@@ -137,31 +139,31 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       parent->loadedScript->semantic2(parent->resolutionContext);
       parent->reportingContext.exitIfErrors();
 
-      parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext);
-      parent->reportingContext.exitIfErrors();
+      if (!disablePexBuild) {
+        parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext);
+        parent->reportingContext.exitIfErrors();
 
-      if (conf::CodeGeneration::enableOptimizations)
-        pex::PexOptimizer::optimize(parent->pexFile);
+        if (conf::CodeGeneration::enableOptimizations)
+          pex::PexOptimizer::optimize(parent->pexFile);
 
-      pex::PexWriter wtr{ };
-      parent->pexFile->write(wtr);
-      parent->dataToWrite = std::move(wtr.getOutputBuffer());
+        pex::PexWriter wtr{ };
+        parent->pexFile->write(wtr);
+        parent->dataToWrite = std::move(wtr.getOutputBuffer());
 
-      if (conf::Debug::dumpPexAsm) {
-      auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
-        std::ofstream asmStrm(parent->outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
-        asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-        pex::PexAsmWriter asmWtr(asmStrm);
-        parent->pexFile->writeAsm(asmWtr);
+        if (conf::Debug::dumpPexAsm) {
+          std::ofstream asmStrm(parent->outputDirectory + "\\" + parent->baseName.to_string() + ".pas", std::ofstream::binary);
+          asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+          pex::PexAsmWriter asmWtr(asmStrm);
+          parent->pexFile->writeAsm(asmWtr);
+        }
+
+        delete parent->pexFile;
+        parent->pexFile = nullptr;
       }
-
-      delete parent->pexFile;
-      parent->pexFile = nullptr;
       return;
     }
     case NodeType::PexDissassembly: {
-      auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
-      std::ofstream asmStrm(parent->outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
+      std::ofstream asmStrm(parent->outputDirectory + "\\" + parent->baseName.to_string() + ".pas", std::ofstream::binary);
       asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       parent->pexFile->writeAsm(asmWtr);
@@ -219,9 +221,9 @@ struct PapyrusNamespace final
 {
   std::string name{ "" };
   PapyrusNamespace* parent{ nullptr };
-  caseless_unordered_identifier_map<PapyrusNamespace*> children{ };
+  caseless_unordered_identifier_ref_map<PapyrusNamespace*> children{ };
   // Key is unqualified name, value is full path to file.
-  caseless_unordered_identifier_map<PapyrusCompilationNode*> objects{ };
+  caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> objects{ };
 
   void queueCompile() {
     for (auto o : objects)
@@ -237,7 +239,7 @@ struct PapyrusNamespace final
       c.second->awaitCompile();
   }
 
-  void createNamespace(boost::string_ref curPiece, caseless_unordered_identifier_map<PapyrusCompilationNode*>&& map) {
+  void createNamespace(boost::string_ref curPiece, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
     if (curPiece == "") {
       objects = std::move(map);
       return;
@@ -251,14 +253,13 @@ struct PapyrusNamespace final
       nextSearchPiece = curPiece.substr(loc + 1);
     }
 
-    auto curSearchStr = curSearchPiece.to_string();
-    auto f = children.find(curSearchStr);
+    auto f = children.find(curSearchPiece);
     if (f == children.end()) {
       auto n = new PapyrusNamespace();
-      n->name = curSearchStr;
+      n->name = curSearchPiece.to_string();
       n->parent = this;
-      children.insert({ curSearchStr, n });
-      f = children.find(curSearchStr);
+      children.emplace(n->name, n);
+      f = children.find(curSearchPiece);
     }
     f->second->createNamespace(nextSearchPiece, std::move(map));
   }
@@ -277,18 +278,17 @@ struct PapyrusNamespace final
       nextSearchPiece = curPiece.substr(loc + 1);
     }
 
-    auto f = children.find(curSearchPiece.to_string());
+    auto f = children.find(curSearchPiece);
     if (f != children.end())
       return f->second->tryFindNamespace(nextSearchPiece, ret);
 
     return false;
   }
 
-  bool tryFindType(boost::string_ref typeName, PapyrusCompilationNode** retNode, std::string* retStructName) const {
+  bool tryFindType(boost::string_ref typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) const {
     auto loc = typeName.find(':');
     if (loc == boost::string_ref::npos) {
-      auto tnStr = typeName.to_string();
-      auto f2 = objects.find(tnStr);
+      auto f2 = objects.find(typeName);
       if (f2 != objects.end()) {
         *retNode = f2->second;
         return true;
@@ -298,7 +298,7 @@ struct PapyrusNamespace final
 
     // It's a partially qualified type name, or else is referencing
     // a struct.
-    auto baseName = typeName.substr(0, loc).to_string();
+    auto baseName = typeName.substr(0, loc);
     auto subName = typeName.substr(loc + 1);
 
     // It's a partially qualified name.
@@ -315,7 +315,7 @@ struct PapyrusNamespace final
     auto f2 = objects.find(baseName);
     if (f2 != objects.end()) {
       *retNode = f2->second;
-      *retStructName = subName.to_string();
+      *retStructName = subName;
       return true;
     }
 
@@ -325,7 +325,7 @@ struct PapyrusNamespace final
 }
 
 static PapyrusNamespace rootNamespace{ };
-void PapyrusCompilationContext::pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_map<PapyrusCompilationNode*>&& map) {
+void PapyrusCompilationContext::pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
   rootNamespace.createNamespace(namespaceName, std::move(map));
 }
 
@@ -334,7 +334,7 @@ void PapyrusCompilationContext::doCompile() {
   rootNamespace.awaitCompile();
 }
 
-bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, std::string* retStructName) {
+bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) {
   const PapyrusNamespace* curNamespace = nullptr;
   if (!rootNamespace.tryFindNamespace(baseNamespace, &curNamespace))
     return false;

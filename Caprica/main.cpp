@@ -50,7 +50,7 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
     auto curDir = dirs.back();
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
-    caprica::caseless_unordered_identifier_map<PapyrusCompilationNode*> namespaceMap{ };
+    caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> namespaceMap{ };
     std::string curDirFull;
     if (curDir == "\\")
       curDirFull = absBaseDir;
@@ -93,23 +93,21 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
               outputDir = baseOutputDir + curDir;
             }
             caprica::CapricaStats::inputFileCount++;
-            namespaceMap.emplace(
-              FSUtils::basenameAsRef(filenameRef).to_string(),
-              new PapyrusCompilationNode(
-                jobManager,
-                PapyrusCompilationNode::NodeType::PapyrusCompile,
-                std::move(filenameToDisplay),
-                std::move(outputDir),
-                std::move(sourceFilePath),
-                calcLastModTime(data.ftLastWriteTime),
-                [](DWORD low, DWORD high) {
-                  ULARGE_INTEGER ull;
-                  ull.LowPart = low;
-                  ull.HighPart = high;
-                  return ull.QuadPart;
-                }(data.nFileSizeLow, data.nFileSizeHigh)
-               )
+            auto node = new PapyrusCompilationNode(
+              jobManager,
+              PapyrusCompilationNode::NodeType::PapyrusCompile,
+              std::move(filenameToDisplay),
+              std::move(outputDir),
+              std::move(sourceFilePath),
+              calcLastModTime(data.ftLastWriteTime),
+              [](DWORD low, DWORD high) {
+                ULARGE_INTEGER ull;
+                ull.LowPart = low;
+                ull.HighPart = high;
+                return ull.QuadPart;
+              }(data.nFileSizeLow, data.nFileSizeHigh)
             );
+            namespaceMap.emplace(node->baseName, node);
           }
         }
       }

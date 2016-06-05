@@ -26,7 +26,7 @@ namespace caprica { namespace papyrus {
 
 void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
   PapyrusCompilationNode* retNode;
-  std::string retStrucName;
+  boost::string_ref retStrucName;
   if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", import, &retNode, &retStrucName))
     reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
   for (auto o : importedNodes) {
@@ -252,7 +252,7 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name,
   return nullptr;
 }
 
-static bool tryResolveStruct(const PapyrusObject* object, const std::string& structName, PapyrusStruct** ret) {
+static bool tryResolveStruct(const PapyrusObject* object, boost::string_ref structName, PapyrusStruct** ret) {
   for (auto& s : object->structs) {
     if (idEq(s->name, structName)) {
       *ret = s;
@@ -311,7 +311,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   }
 
   PapyrusCompilationNode* retNode{ nullptr };
-  std::string retStructName;
+  boost::string_ref retStructName;
   if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", tp.name, &retNode, &retStructName))
     reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
 
@@ -322,7 +322,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   PapyrusStruct* resStruct = nullptr;
   if (tryResolveStruct(foundObj, retStructName, &resStruct))
     return PapyrusType::ResolvedStruct(tp.location, resStruct);
-  reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.c_str(), foundObj->name.c_str());
+  reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.to_string().c_str(), foundObj->name.c_str());
 }
 
 void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
@@ -399,6 +399,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
     return ident;
 
   if (baseType.type == PapyrusType::Kind::ResolvedStruct) {
+    baseType.resolvedStruct->parentObject->awaitSemantic();
     for (auto& sm : baseType.resolvedStruct->members) {
       if (idEq(sm->name, ident.name))
         return PapyrusIdentifier::StructMember(ident.location, sm);
