@@ -9,8 +9,8 @@
 
 namespace caprica {
 
-void CapricaReportingContext::pushToErrorStream(std::string&& msg) {
-  if (!conf::Performance::performanceTestMode) {
+void CapricaReportingContext::pushToErrorStream(std::string&& msg, bool isError) {
+  if (!conf::Performance::performanceTestMode || isError) {
     std::cout.flush();
     std::cerr << msg << std::endl;
   }

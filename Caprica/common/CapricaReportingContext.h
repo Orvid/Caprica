@@ -42,14 +42,14 @@ struct CapricaReportingContext final
   NEVER_INLINE
   void error(CapricaFileLocation location, const std::string& msg, Args&&... args) {
     errorCount++;
-    pushToErrorStream(formatString(location, "Error", msg, std::forward<Args>(args)...));
+    pushToErrorStream(formatString(location, "Error", msg, std::forward<Args>(args)...), true);
     breakIfDebugging();
   }
 
   template<typename... Args>
   [[noreturn]] NEVER_INLINE
   void fatal(CapricaFileLocation location, const std::string& msg, Args&&... args) {
-    pushToErrorStream(formatString(location, "Fatal Error", msg, std::forward<Args>(args)...));
+    pushToErrorStream(formatString(location, "Fatal Error", msg, std::forward<Args>(args)...), true);
     throw std::runtime_error("");
   }
 
@@ -98,7 +98,7 @@ private:
   std::vector<size_t> lineOffsets{ };
 
   NEVER_INLINE
-  static void pushToErrorStream(std::string&& msg);
+  static void pushToErrorStream(std::string&& msg, bool isError = false);
   NEVER_INLINE
   bool isWarningError(CapricaFileLocation location, size_t warningNumber) const;
   NEVER_INLINE
@@ -112,7 +112,7 @@ private:
     if (isWarningEnabled(location, warningNumber)) {
       if (isWarningError(location, warningNumber)) {
         errorCount++;
-        pushToErrorStream(formatString(location, "Error W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
+        pushToErrorStream(formatString(location, "Error W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...), true);
       } else {
         warningCount++;
         pushToErrorStream(formatString(location, "Warning W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
