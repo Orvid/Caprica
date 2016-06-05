@@ -7,7 +7,8 @@
 #include <future>
 #include <sstream>
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
@@ -45,27 +46,6 @@ boost::string_ref parentPathAsRef(boost::string_ref file) {
   if (pos != boost::string_ref::npos)
     file = file.substr(0, pos);
   return file;
-}
-
-static void writeFile(const std::string& filename, std::string&& value) {
-  if (!conf::Performance::performanceTestMode) {
-    auto containingDir = boost::filesystem::path(filename).parent_path();
-    if (!boost::filesystem::exists(containingDir))
-      boost::filesystem::create_directories(containingDir);
-    std::ofstream destFile{ filename, std::ifstream::binary };
-    destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-    destFile << value;
-  }
-}
-
-void async_write(const std::string& filename, std::string&& value) {
-  if (!conf::Performance::asyncFileWrite) {
-    writeFile(filename, std::move(value));
-  } else {
-    std::async(std::launch::async, [](const std::string& filename, std::string&& value) {
-      writeFile(filename, std::move(value));
-    }, filename, std::move(value));
-  }
 }
 
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797

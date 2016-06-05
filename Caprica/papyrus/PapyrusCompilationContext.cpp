@@ -5,6 +5,9 @@
 
 #include <iostream>
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+
 #include <common/CapricaConfig.h>
 
 #include <papyrus/parser/PapyrusParser.h>
@@ -29,8 +32,8 @@ void PapyrusCompilationNode::queueCompile() {
   jobManager->queueJob(&compileJob);
 }
 
-void PapyrusCompilationNode::awaitCompile() {
-  compileJob.await();
+void PapyrusCompilationNode::awaitWrite() {
+  writeJob.await();
 }
 
 void PapyrusCompilationNode::FileReadJob::run() {
@@ -142,10 +145,10 @@ void PapyrusCompilationNode::FileCompileJob::run() {
 
       pex::PexWriter wtr{ };
       parent->pexFile->write(wtr);
-      auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
-      wtr.writeToFile(parent->outputDirectory + "\\" + baseName + ".pex");
+      parent->dataToWrite = std::move(wtr.getOutputBuffer());
 
       if (conf::Debug::dumpPexAsm) {
+      auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
         std::ofstream asmStrm(parent->outputDirectory + "\\" + baseName + ".pas", std::ofstream::binary);
         asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         pex::PexAsmWriter asmWtr(asmStrm);
@@ -172,8 +175,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
 
       pex::PexWriter wtr{ };
       parent->pexFile->write(wtr);
-      auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
-      wtr.writeToFile(parent->outputDirectory + "\\" + baseName + ".pex");
+      parent->dataToWrite = std::move(wtr.getOutputBuffer());
       delete parent->pexFile;
       parent->pexFile = nullptr;
       return;
@@ -186,6 +188,30 @@ void PapyrusCompilationNode::FileCompileJob::run() {
   CapricaReportingContext::logicalFatal("You shouldn't be trying to compile this!");
 }
 
+void PapyrusCompilationNode::FileWriteJob::run() {
+  parent->compileJob.await();
+  switch (parent->type) {
+    case NodeType::PasCompile:
+    case NodeType::PapyrusCompile: {
+      if (!conf::Performance::performanceTestMode) {
+        auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
+        auto containingDir = boost::filesystem::path(parent->outputDirectory);
+        if (!boost::filesystem::exists(containingDir))
+          boost::filesystem::create_directories(containingDir);
+        std::ofstream destFile{ parent->outputDirectory + "\\" + baseName + ".pex", std::ifstream::binary };
+        destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+        destFile << std::move(parent->dataToWrite);
+      }
+      return;
+    }
+    case NodeType::Unknown:
+    case NodeType::PexDissassembly:
+    case NodeType::PasReflection:
+    case NodeType::PexReflection:
+      break;
+  }
+  CapricaReportingContext::logicalFatal("You shouldn't be trying to compile this!");
+}
 
 namespace {
 
@@ -206,7 +232,7 @@ struct PapyrusNamespace final
 
   void awaitCompile() {
     for (auto o : objects)
-      o.second->awaitCompile();
+      o.second->awaitWrite();
     for (auto c : children)
       c.second->awaitCompile();
   }

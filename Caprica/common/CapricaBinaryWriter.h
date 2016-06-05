@@ -21,10 +21,6 @@ struct CapricaBinaryWriter
     return std::move(strm);
   }
 
-  void writeToFile(const std::string& filename) {
-    FSUtils::async_write(filename, getOutputBuffer());
-  }
-
   template<typename T>
   void boundWrite(size_t val) {
     assert(val <= std::numeric_limits<T>::max());

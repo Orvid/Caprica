@@ -51,10 +51,10 @@ struct PapyrusCompilationNode final
       delete resolutionContext;
   }
 
-  void queueCompile();
-  void awaitCompile();
   PapyrusObject* awaitParse();
   PapyrusObject* awaitSemantic();
+  void queueCompile();
+  void awaitWrite();
 
 private:
   struct BaseJob : public CapricaJob {
@@ -70,6 +70,7 @@ private:
   std::string outputDirectory;
   std::string sourceFilePath;
   std::string readFileData{ };
+  std::string dataToWrite{ };
   PapyrusScript* loadedScript{ nullptr };
   pex::PexFile* pexFile{ nullptr };
   PapyrusObject* resolvedObject{ nullptr };
@@ -95,6 +96,11 @@ private:
     using BaseJob::BaseJob;
     virtual void run() override;
   } compileJob{ this };
+  struct FileWriteJob final : public BaseJob
+  {
+    using BaseJob::BaseJob;
+    virtual void run() override;
+  } writeJob{ this };
 };
 
 struct PapyrusCompilationContext final
