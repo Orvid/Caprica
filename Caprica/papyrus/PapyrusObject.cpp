@@ -97,7 +97,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   ctx->ensureNamesAreUnique(states, "state");
   ctx->ensureNamesAreUnique(customEvents, "custom event");
 
-  caseless_unordered_identifier_map<std::pair<bool, std::string>> identMap{ };
+  caseless_unordered_identifier_ref_map<std::pair<bool, const char*>> identMap{ };
   checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
 
   // The first pass resolves the types on the public API,
@@ -132,15 +132,15 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   resolutionState = PapyrusResoultionState::Semantic2Completed;
 }
 
-void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_map<std::pair<bool, std::string>>& identMap, bool checkInheritedOnly) const {
+void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap, bool checkInheritedOnly) const {
   if (auto parent = tryGetParentClass())
     parent->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
 
-  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const std::string& otherType, const std::string& identName) {
+  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const char* otherType, const std::string& identName) {
     if (isParent)
-      repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType.c_str(), identName.c_str());
+      repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType, identName.c_str());
     else
-      repCtx.error(loc, "A %s named '%s' was already defined in this object.", otherType.c_str(), identName.c_str());
+      repCtx.error(loc, "A %s named '%s' was already defined in this object.", otherType, identName.c_str());
   };
 
   for (auto pg : propertyGroups) {
