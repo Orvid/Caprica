@@ -308,7 +308,7 @@ void PapyrusCompilationContext::doCompile() {
   rootNamespace.awaitCompile();
 }
 
-bool PapyrusCompilationContext::tryFindType(const std::string& baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, std::string* retStructName) {
+bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, std::string* retStructName) {
   const PapyrusNamespace* curNamespace = nullptr;
   if (!rootNamespace.tryFindNamespace(baseNamespace, &curNamespace))
     return false;

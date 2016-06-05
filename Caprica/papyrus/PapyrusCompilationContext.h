@@ -101,7 +101,7 @@ struct PapyrusCompilationContext final
 {
   static void doCompile();
   static void pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_map<PapyrusCompilationNode*>&& map);
-  static bool tryFindType(const std::string& baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, std::string* retStructName);
+  static bool tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, std::string* retStructName);
 };
 
 }}

@@ -80,10 +80,10 @@ struct PapyrusObject final
   const PapyrusState* getRootState() const { return rootState; }
   PapyrusState* getRootState() { return rootState; }
 
-  std::string getNamespaceName() const {
+  boost::string_ref getNamespaceName() const {
     auto pos = name.rfind(':');
     if (pos != std::string::npos)
-      return name.substr(0, pos);
+      return boost::string_ref(name).substr(0, pos);
     return "";
   }
 
