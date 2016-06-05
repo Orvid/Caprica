@@ -49,7 +49,7 @@ PapyrusScript* PapyrusParser::parseScript() {
 
 static bool doesScriptNameMatchNextPartOfDir(boost::string_ref curPath, boost::string_ref curName) {
   auto idx = curName.rfind(':');
-  if (idx != std::string::npos) {
+  if (idx != boost::string_ref::npos) {
     auto namePiece = curName.substr(idx + 1);
     auto basePath = FSUtils::basenameAsRef(curPath);
     if (!pathEq(namePiece, basePath))
