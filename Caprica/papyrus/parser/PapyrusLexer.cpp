@@ -149,7 +149,7 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
   return peekedTokens[distance].type;
 }
 
-static const caseless_unordered_identifier_map<TokenType> keywordMap {
+static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
@@ -199,7 +199,7 @@ static const caseless_unordered_identifier_map<TokenType> keywordMap {
 };
 
 // Language extension keywords
-static const caseless_unordered_identifier_map<TokenType> languageExtensionsKeywordMap{
+static const caseless_unordered_identifier_ref_map<TokenType> languageExtensionsKeywordMap{
   { "break", TokenType::kBreak },
   { "case", TokenType::kCase },
   { "continue", TokenType::kContinue },
@@ -453,7 +453,7 @@ StartOver:
           getChar();
       }
 
-      std::string str{ baseStrm, (size_t)(strm - baseStrm) };
+      boost::string_ref str{ baseStrm, (size_t)(strm - baseStrm) };
       auto f = keywordMap.find(str);
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
@@ -465,8 +465,7 @@ StartOver:
       }
 
       setTok(TokenType::Identifier, baseLoc);
-      str.shrink_to_fit();
-      cur.sValue = std::move(str);
+      cur.sValue = str.to_string();
       return;
     }
 
@@ -506,7 +505,6 @@ StartOver:
       getChar();
 
       setTok(TokenType::String, baseLoc);
-      str.shrink_to_fit();
       cur.sValue = std::move(str);
       return;
     }
@@ -570,12 +568,11 @@ StartOver:
       getChar();
 
       setTok(TokenType::DocComment, baseLoc);
-      cur.sValue = std::move(str);
       // Trim trailing whitespace.
-      if (cur.sValue.length()) {
-        cur.sValue = cur.sValue.substr(0, cur.sValue.find_last_not_of(" \t\n\v\f\r") + 1);
-        cur.sValue.shrink_to_fit();
-      }
+      auto lPos = str.find_last_not_of(" \t\n\v\f\r");
+      if (lPos != std::string::npos && lPos != str.size() + 1)
+        str.resize(lPos + 1);
+      cur.sValue = std::move(str);
       return;
     }
 
