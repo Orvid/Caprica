@@ -52,7 +52,8 @@ alignas(128) static const __m128i spaces{
   ' ', ' ', ' ', ' ',
   ' ', ' ', ' ', ' '
 };
-bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
+template<bool isNullTerminated>
+static bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
   // This uses the SSE2 instructions movdqa, movdqu, pcmpeqb, por, pmovmskb,
   // and is safe to use on any 64-bit CPU.
   // This returns via goto's because of how MSVC does codegen.
@@ -62,8 +63,11 @@ bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
     goto ReturnTrue;
   const char* __restrict strA = a;
   const int64_t strBOff = b - a;
-  // We know the string is null-terminated, so we can align to 2.
-  size_t lenLeft = ((aLen + 1) & 0xFFFFFFFFFFFFFFFEULL);
+  size_t lenLeft = aLen;
+  if (isNullTerminated) {
+    // We know the string is null-terminated, so we can align to 2.
+    lenLeft = ((aLen + 1) & 0xFFFFFFFFFFFFFFFEULL);
+  }
   while (lenLeft >= 16) {
     auto vA = _mm_or_si128(_mm_loadu_si128((__m128i*)strA), spaces);
     auto vB = _mm_or_si128(_mm_loadu_si128((__m128i*)(strA + strBOff)), spaces);
@@ -86,6 +90,14 @@ bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
   if (lenLeft & 2) {
     if ((*(uint16_t*)strA | 0x2020) != (*(uint16_t*)(strA + strBOff) | 0x2020))
       goto ReturnFalse;
+    if (!isNullTerminated)
+      strA += 2;
+  }
+  if (!isNullTerminated) {
+    if (lenLeft & 1) {
+      if ((*(uint8_t*)strA | 0x20) != (*(uint8_t*)(strA + strBOff) | 0x20))
+        goto ReturnFalse;
+    }
   }
 ReturnTrue:
   return true;
@@ -94,16 +106,19 @@ ReturnFalse:
 }
 
 bool idEq(const char* a, const char* b) {
-  return idEq(a, strlen(a), b, strlen(b));
+  return idEq<true>(a, strlen(a), b, strlen(b));
 }
 bool idEq(const char* a, const std::string& b) {
-  return idEq(a, strlen(a), b.c_str(), b.size());
+  return idEq<true>(a, strlen(a), b.c_str(), b.size());
 }
 bool idEq(const std::string& a, const char* b) {
-  return idEq(a.c_str(), a.size(), b, strlen(b));
+  return idEq<true>(a.c_str(), a.size(), b, strlen(b));
 }
 bool idEq(const std::string& a, const std::string& b) {
-  return idEq(a.c_str(), a.size(), b.c_str(), b.size());
+  return idEq<true>(a.c_str(), a.size(), b.c_str(), b.size());
+}
+bool idEq(boost::string_ref a, boost::string_ref b) {
+  return idEq<false>(a.data(), a.size(), b.data(), b.size());
 }
 
 size_t CaselessStringHasher::doCaselessHash(const char* k, size_t len) {
@@ -137,19 +152,39 @@ size_t CaselessPathHasher::doPathHash(const char* k, size_t len) {
   return CaselessStringHasher::doCaselessHash(k, len);
 }
 
-size_t CaselessIdentifierHasher::doIdentifierHash(const char* s, size_t len) {
+template<bool isNullTerminated>
+static size_t doIdentifierHash(const char* s, size_t len) {
   const char* cStr = s;
 
-  // We know the string is null-terminated, so we can align to 2.
-  size_t lenLeft = ((len + 1) & 0xFFFFFFFFFFFFFFFEULL);
+  size_t lenLeft = len;
+  if (isNullTerminated) {
+    // We know the string is null-terminated, so we can align to 2.
+    lenLeft = ((len + 1) & 0xFFFFFFFFFFFFFFFEULL);
+  }
   size_t iterCount = lenLeft >> 2;
   uint32_t val = 0x84222325U;
   size_t i = iterCount;
   while (i)
     val = _mm_crc32_u32(val, ((uint32_t*)cStr)[--i] | 0x20202020);
-  if (lenLeft & 2)
+  if (lenLeft & 2) {
     val = _mm_crc32_u16(val, *(uint16_t*)(cStr + (iterCount * 4)) | (uint16_t)0x2020);
+    if (!isNullTerminated) {
+      // This is duplicated like this because it ends up cost-free when compared to
+      // any other methods.
+      if (lenLeft & 1)
+        val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4) + 2) | (uint8_t)0x20);
+    }
+  } else if (!isNullTerminated && (lenLeft & 1)) {
+    val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4)) | (uint8_t)0x20);
+  }
   return ((size_t)val << 32) | val;
+}
+
+size_t CaselessIdentifierHasher::operator()(const std::string& k) const {
+  return doIdentifierHash<true>(k.c_str(), k.size());
+}
+size_t CaselessIdentifierHasher::operator()(boost::string_ref k) const {
+  return doIdentifierHash<false>(k.data(), k.size());
 }
 
 

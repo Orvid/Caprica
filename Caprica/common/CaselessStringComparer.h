@@ -22,12 +22,11 @@ bool idEq(const char* a, const char* b);
 bool idEq(const char* a, const std::string& b);
 bool idEq(const std::string& a, const char* b);
 bool idEq(const std::string& a, const std::string& b);
+bool idEq(boost::string_ref a, boost::string_ref b);
 
 struct CaselessStringHasher final : public std::function<size_t(const std::string&)>
 {
-  size_t operator()(const char* k) const {
-    return doCaselessHash(k, strlen(k));
-  }
+  size_t operator()(const char* k) const = delete;
   size_t operator()(const std::string& k) const {
     return doCaselessHash(k.c_str(), k.size());
   }
@@ -39,10 +38,7 @@ private:
 
 struct CaselessStringEqual final : public std::function<bool(const std::string&, const std::string&)>
 {
-  bool operator()(const char* lhs, const char* rhs) const {
-    return _stricmp(lhs, rhs) == 0;
-  }
-
+  bool operator()(const char* lhs, const char* rhs) const = delete;
   bool operator()(const std::string& lhs, const std::string& rhs) const {
     return caselessEq(lhs, rhs);
   }
@@ -67,23 +63,18 @@ struct CaselessPathEqual final : public std::function<bool(const std::string&, c
 
 struct CaselessIdentifierHasher final : public std::function<size_t(const std::string&)>
 {
-  size_t operator()(const char* k) const {
-    return doIdentifierHash(k, strlen(k));
-  }
-  size_t operator()(const std::string& k) const {
-    return doIdentifierHash(k.c_str(), k.size());
-  }
-private:
-  static size_t doIdentifierHash(const char* k, size_t len);
+  size_t operator()(const char* k) const = delete;
+  size_t operator()(const std::string& k) const;
+  size_t operator()(boost::string_ref k) const;
 };
 
 struct CaselessIdentifierEqual final : public std::function<bool(const std::string&, const std::string&)>
 {
-  bool operator()(const char* lhs, const char* rhs) const {
+  bool operator()(const char* lhs, const char* rhs) const = delete;
+  bool operator()(const std::string& lhs, const std::string& rhs) const {
     return idEq(lhs, rhs);
   }
-
-  bool operator()(const std::string& lhs, const std::string& rhs) const {
+  bool operator()(boost::string_ref lhs, boost::string_ref rhs) const {
     return idEq(lhs, rhs);
   }
 };
@@ -99,7 +90,10 @@ template<typename V>
 using caseless_unordered_path_map = typename std::unordered_map<std::string, V, CaselessPathHasher, CaselessPathEqual>;
 
 using caseless_unordered_identifier_set = std::unordered_set<std::string, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+using caseless_unordered_identifier_ref_set = std::unordered_set<boost::string_ref, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 template<typename V>
 using caseless_unordered_identifier_map = typename std::unordered_map<std::string, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+template<typename V>
+using caseless_unordered_identifier_ref_map = typename std::unordered_map<boost::string_ref, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 
 }
