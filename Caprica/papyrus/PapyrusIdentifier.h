@@ -16,9 +16,11 @@ namespace caprica { namespace papyrus {
 struct PapyrusFunction;
 struct PapyrusFunctionParameter;
 struct PapyrusProperty;
+struct PapyrusResolutionContext;
 struct PapyrusStructMember;
 struct PapyrusVariable;
 
+namespace expressions { struct PapyrusMemberAccessExpression; }
 namespace statements { struct PapyrusDeclareStatement; }
 
 enum class PapyrusIdentifierType
@@ -54,7 +56,6 @@ enum class PapyrusBuiltinArrayFunctionKind
 struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
-  std::string name{ };
   CapricaFileLocation location;
   std::shared_ptr<PapyrusType> arrayFuncElementType{ nullptr };
   union
@@ -101,6 +102,11 @@ struct PapyrusIdentifier final
   PapyrusType resultType() const;
 
 private:
+  friend expressions::PapyrusMemberAccessExpression;
+  friend PapyrusResolutionContext;
+
+  std::string name{ };
+
   PapyrusIdentifier(PapyrusIdentifierType k, CapricaFileLocation loc) : type(k), location(loc) { }
 };
 
