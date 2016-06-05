@@ -4,7 +4,6 @@
 #include <ostream>
 #include <string>
 
-#include <ppl.h>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 

@@ -13,7 +13,6 @@
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
-#include <common/Concurrency.h>
 
 namespace caprica { namespace FSUtils {
 
