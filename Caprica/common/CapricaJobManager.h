@@ -18,23 +18,7 @@ struct CapricaJob abstract
   CapricaJob& operator =(CapricaJob&&) = delete;
   ~CapricaJob() = default;
 
-  void await() {
-    if (!hasRan.load(std::memory_order_acquire)) {
-      bool r = runningLock.load(std::memory_order_acquire);
-      if (!r && runningLock.compare_exchange_strong(r, true)) {
-        std::unique_lock<std::mutex> ranLock{ ranMutex };
-        run();
-        hasRan.store(true, std::memory_order_release);
-        ranLock.unlock();
-        ranCondition.notify_all();
-        // We deliberately never release the running lock,
-        // so we just use it as a once_flag.
-      } else {
-        std::unique_lock<std::mutex> ranLock{ ranMutex };
-        ranCondition.wait(ranLock, [this] { return hasRan.load(std::memory_order_consume); });
-      }
-    }
-  }
+  void await();
 
 protected:
   virtual void run() abstract = 0;
