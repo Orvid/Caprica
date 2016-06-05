@@ -30,13 +30,8 @@ struct CapricaReportingContext final
   }
   ~CapricaReportingContext() = default;
 
-  void startIgnoringLinePushes() noexcept { ignoringLinePushes = true; }
-  void stopIgnoringLinePushes() noexcept { ignoringLinePushes = false; }
   size_t getLocationLine(CapricaFileLocation location, size_t lastLineHint = 0) const;
-  void pushNextLineOffset(CapricaFileLocation location) {
-    if (!ignoringLinePushes)
-      lineOffsets.push_back(location.fileOffset);
-  }
+  void pushNextLineOffset(CapricaFileLocation location) { lineOffsets.push_back(location.fileOffset); }
   
   NEVER_INLINE
   static void breakIfDebugging();
@@ -100,7 +95,6 @@ NEVER_INLINE void warning_W##num##_##id##(CapricaFileLocation location, arg1Type
 #undef DEFINE_WARNING_A3
 
 private:
-  bool ignoringLinePushes{ false };
   std::vector<size_t> lineOffsets{ };
 
   NEVER_INLINE
