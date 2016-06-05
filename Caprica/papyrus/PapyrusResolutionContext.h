@@ -87,16 +87,20 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal = false) const;
 
   template<typename T>
-  void ensureNamesAreUnique(const std::vector<T*>& nameset, const std::string& typeOfName) {
-    caseless_unordered_identifier_set foundNames{ };
-    foundNames.reserve(nameset.size());
-    for (auto member : nameset) {
-      // TODO: Output location of first name.
-      auto f = foundNames.find(member->name);
-      if (f != foundNames.end()) {
-        reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName.c_str(), member->name.c_str());
-      } else {
-        foundNames.insert(member->name);
+  void ensureNamesAreUnique(const std::vector<T*>& nameset, const char* typeOfName) {
+    // If there's nothing in it, or only one thing,
+    // it will always be unique.
+    if (nameset.size() > 1) {
+      caseless_unordered_identifier_ref_set foundNames{ };
+      foundNames.reserve(nameset.size());
+      for (auto member : nameset) {
+        // TODO: Output location of first name.
+        auto f = foundNames.find(member->name);
+        if (f != foundNames.end()) {
+          reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName, member->name.c_str());
+        } else {
+          foundNames.insert(member->name);
+        }
       }
     }
   }
@@ -105,7 +109,7 @@ struct PapyrusResolutionContext final
   PapyrusResolutionContext(const PapyrusResolutionContext&) = delete;
   ~PapyrusResolutionContext() = default;
 private:
-  std::vector<caseless_unordered_identifier_map<statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
+  std::vector<caseless_unordered_identifier_ref_map<statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
   std::vector<PapyrusCompilationNode*> importedNodes{ };
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };
