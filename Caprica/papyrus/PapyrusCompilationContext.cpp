@@ -8,6 +8,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include <common/CapricaAllocator.h>
 #include <common/CapricaConfig.h>
 
 #include <papyrus/parser/PapyrusParser.h>
@@ -36,27 +37,28 @@ void PapyrusCompilationNode::awaitWrite() {
   writeJob.await();
 }
 
+HugeConcurrentPooledBufferAllocator readAllocator{ 1024 * 1024 * 4 };
 void PapyrusCompilationNode::FileReadJob::run() {
   if (parent->type == NodeType::PapyrusCompile || parent->type == NodeType::PasCompile || parent->type == NodeType::PexDissassembly) {
     if (!conf::General::quietCompile)
       std::cout << "Compiling " << parent->reportedName << std::endl;
   }
-  std::string str;
-  str.resize(parent->filesize);
   if (parent->filesize < std::numeric_limits<uint32_t>::max()) {
+    auto buf = readAllocator.allocate(parent->filesize);
     auto fd = _open(parent->sourceFilePath.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
     if (fd != -1) {
-      auto len = _read(fd, (void*)str.data(), (uint32_t)parent->filesize);
-      if (len != parent->filesize)
-        str.resize(len);
+      auto len = _read(fd, (void*)buf, (uint32_t)parent->filesize);
+      parent->readFileData = boost::string_ref(buf, len);
       if (_eof(fd) == 1) {
         _close(fd);
-        goto DoMove;
+        return;
       }
       _close(fd);
     }
   }
   {
+    std::string str;
+    str.resize(parent->filesize);
     std::ifstream inFile{ parent->sourceFilePath, std::ifstream::binary };
     inFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     if (parent->filesize != 0)
@@ -71,9 +73,9 @@ void PapyrusCompilationNode::FileReadJob::run() {
       strStream << inFile.rdbuf();
       str += strStream.str();
     }
+    parent->ownedReadFileData = std::move(str);
+    parent->readFileData = parent->ownedReadFileData;
   }
-DoMove:
-  parent->readFileData = std::move(str);
 }
 
 void PapyrusCompilationNode::FileParseJob::run() {
