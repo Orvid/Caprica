@@ -364,6 +364,7 @@ static bool parseArgs(int argc, char* argv[], caprica::CapricaJobManager* jobMan
 int main(int argc, char* argv[])
 {
   caprica::CapricaJobManager jobManager{ };
+  jobManager.startup((uint32_t)(std::thread::hardware_concurrency() * 1.5));
   auto startParse = std::chrono::high_resolution_clock::now();
   if (!parseArgs(argc, argv, &jobManager)) {
     caprica::CapricaReportingContext::breakIfDebugging();
@@ -374,7 +375,6 @@ int main(int argc, char* argv[])
     std::cout << "Parse: " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms" << std::endl;
 
   auto startRead = std::chrono::high_resolution_clock::now();
-  jobManager.startup();
   if (conf::Performance::performanceTestMode) {
     //caprica::FSUtils::Cache::waitForAll();
   }
