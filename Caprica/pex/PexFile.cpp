@@ -40,21 +40,13 @@ const PexDebugFunctionInfo* PexFile::tryFindFunctionDebugInfo(const PexObject* o
 }
 
 PexString PexFile::getString(const std::string& str) {
-  auto a = stringTableLookup.find(str);
-  if (a != stringTableLookup.end()) {
-    auto ret = PexString();
-    ret.index = a->second;
-    return ret;
-  }
-  stringTable.emplace_back(str);
-  stringTableLookup.emplace(str, stringTable.size() - 1);
   auto ret = PexString();
-  ret.index = stringTable.size() - 1;
+  ret.index = stringTable.lookup(str);
   return ret;
 }
 
 std::string PexFile::getStringValue(const PexString& str) const {
-  return stringTable[str.index];
+  return stringTable.byIndex(str.index).to_string();
 }
 
 PexUserFlags PexFile::getUserFlag(PexString name, uint8_t bitNum) {
@@ -94,7 +86,6 @@ PexFile* PexFile::read(PexReader& rdr) {
   for (size_t i = 0; i < strTableSize; i++) {
     auto str = rdr.read<std::string>();
     file->stringTable.push_back(str);
-    file->stringTableLookup[str] = i;
   }
 
   if (rdr.read<uint8_t>() != 0)
@@ -128,8 +119,8 @@ void PexFile::write(PexWriter& wtr) const {
   wtr.write<const std::string&>(computerName);
 
   wtr.boundWrite<uint16_t>(stringTable.size());
-  for (auto& str : stringTable)
-    wtr.write<const std::string&>(str);
+  for (size_t i = 0; i < stringTable.size(); i++)
+    wtr.write<boost::string_ref>(stringTable.byIndex(i));
 
   if (debugInfo) {
     wtr.write<uint8_t>(0x01);

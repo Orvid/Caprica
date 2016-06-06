@@ -37,7 +37,7 @@ void PapyrusCompilationNode::awaitWrite() {
   writeJob.await();
 }
 
-HugeConcurrentPooledBufferAllocator readAllocator{ 1024 * 1024 * 4 };
+ConcurrentPooledBufferAllocator readAllocator{ 1024 * 1024 * 4 };
 void PapyrusCompilationNode::FileReadJob::run() {
   if (parent->type == NodeType::PapyrusCompile || parent->type == NodeType::PasCompile || parent->type == NodeType::PexDissassembly) {
     if (!conf::General::quietCompile)
@@ -132,7 +132,7 @@ void PapyrusCompilationNode::FileSemanticJob::run() {
   parent->reportingContext.exitIfErrors();
 }
 
-static constexpr bool disablePexBuild = true;
+static constexpr bool disablePexBuild = false;
 
 void PapyrusCompilationNode::FileCompileJob::run() {
   parent->semanticJob.await();

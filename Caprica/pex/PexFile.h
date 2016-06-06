@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include <common/CapricaAllocator.h>
+
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugInfo.h>
 #include <pex/PexObject.h>
@@ -62,8 +64,7 @@ struct PexFile final
   void writeAsm(PexAsmWriter& wtr) const;
 
 private:
-  std::vector<std::string> stringTable;
-  std::unordered_map<std::string, size_t> stringTableLookup;
+  ReffyStringPool stringTable;
 
   std::vector<std::pair<PexString, uint8_t>> userFlagTable;
   std::unordered_map<size_t, size_t> userFlagTableLookup;

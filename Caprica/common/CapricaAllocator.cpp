@@ -2,7 +2,25 @@
 
 namespace caprica {
 
-bool HugeConcurrentPooledBufferAllocator::Heap::tryAlloc(size_t size, void** retBuf) {
+ConcurrentPooledBufferAllocator::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(heapSize) {
+  baseAlloc = calloc(1, heapSize);
+  if (!baseAlloc)
+    CapricaReportingContext::logicalFatal("Failed to allocate a Heap!");
+}
+
+ConcurrentPooledBufferAllocator::Heap::~Heap() {
+  if (baseAlloc) {
+    free(baseAlloc);
+    baseAlloc = nullptr;
+  }
+
+  if (next.load()) {
+    delete next.load();
+    next = nullptr;
+  }
+}
+
+bool ConcurrentPooledBufferAllocator::Heap::tryAlloc(size_t size, void** retBuf) {
   auto fb = freeBytes.load(std::memory_order_acquire);
   auto newFree = fb - size;
   while (fb > size) {
@@ -15,7 +33,7 @@ bool HugeConcurrentPooledBufferAllocator::Heap::tryAlloc(size_t size, void** ret
   return false;
 }
 
-char* HugeConcurrentPooledBufferAllocator::allocate(size_t size) {
+char* ConcurrentPooledBufferAllocator::allocate(size_t size) {
   if (size > heapSize) {
     return (char*)allocHeap(size, size);
   }
@@ -35,7 +53,7 @@ Again:
   return (char*)ret;
 }
 
-void* HugeConcurrentPooledBufferAllocator::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
+void* ConcurrentPooledBufferAllocator::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
   void* ret = nullptr;
   auto hp = new Heap(newHeapSize);
   if (!hp->tryAlloc(firstAllocSize, &ret))
@@ -54,6 +72,26 @@ void* HugeConcurrentPooledBufferAllocator::allocHeap(size_t newHeapSize, size_t 
   }
 
   return ret;
+}
+
+void ReffyStringPool::push_back(boost::string_ref str) {
+  auto newStr = boost::string_ref(alloc.allocate(str.size()), str.size());
+  memcpy((void*)newStr.data(), str.data(), str.size());
+
+  allocedStrings.emplace_back(newStr);
+  idxLookup.emplace(newStr, allocedStrings.size() - 1);
+}
+
+size_t ReffyStringPool::lookup(boost::string_ref str) {
+  auto f = idxLookup.find(str);
+  if (f != idxLookup.end())
+    return f->second;
+  auto newStr = boost::string_ref(alloc.allocate(str.size()), str.size());
+  memcpy((void*)newStr.data(), str.data(), str.size());
+
+  allocedStrings.emplace_back(newStr);
+  idxLookup.emplace(newStr, allocedStrings.size() - 1);
+  return allocedStrings.size() - 1;
 }
 
 }

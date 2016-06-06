@@ -7,6 +7,8 @@
 #include <limits>
 #include <string>
 
+#include <boost/utility/string_ref.hpp>
+
 #include <common/FSUtils.h>
 
 namespace caprica {
@@ -78,6 +80,13 @@ struct CapricaBinaryWriter
     boundWrite<uint16_t>(val.size());
     if (val.size())
       strm.append(val.c_str(), val.size());
+  }
+
+  template<>
+  void write(boost::string_ref val) {
+    boundWrite<uint16_t>(val.size());
+    if (val.size())
+      strm.append(val.data(), val.size());
   }
 
 protected:
