@@ -3,7 +3,7 @@
 namespace caprica {
 
 ConcurrentPooledBufferAllocator::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(heapSize) {
-  baseAlloc = calloc(1, heapSize);
+  baseAlloc = malloc(heapSize);
   if (!baseAlloc)
     CapricaReportingContext::logicalFatal("Failed to allocate a Heap!");
 }
