@@ -147,13 +147,13 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return push(PexOpCode::opcod
 #undef OP_ARG5
 
   PexFunctionBuilder& operator <<(op::callmethod&& instr) {
-    return push(new PexInstruction(PexOpCode::CallMethod, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
+    return push(new PexInstruction(PexOpCode::CallMethod, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
   }
   PexFunctionBuilder& operator <<(op::callparent&& instr) {
-    return push(new PexInstruction(PexOpCode::CallParent, std::vector<PexValue>{ instr.a1, instr.a2 }, std::move(instr.variadicArgs)));
+    return push(new PexInstruction(PexOpCode::CallParent, PexInstructionArgs{ instr.a1, instr.a2 }, std::move(instr.variadicArgs)));
   }
   PexFunctionBuilder& operator <<(op::callstatic&& instr) {
-    return push(new PexInstruction(PexOpCode::CallStatic, std::vector<PexValue>{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
+    return push(new PexInstruction(PexOpCode::CallStatic, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
   }
 
   PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
@@ -266,7 +266,7 @@ private:
 
   template<typename... Args>
   PexFunctionBuilder& push(PexOpCode op, Args&&... args) {
-    return push(new PexInstruction(op, std::vector<PexValue>{ std::forward<Args>(args)... }));
+    return push(new PexInstruction(op, PexInstructionArgs{ std::forward<Args>(args)... }));
   }
   
   PexFunctionBuilder& push(PexInstruction* instr);

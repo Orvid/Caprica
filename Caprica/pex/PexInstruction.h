@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/container/static_vector.hpp>
+
 #include <pex/PexReader.h>
 #include <pex/PexValue.h>
 #include <pex/PexWriter.h>
@@ -63,16 +65,20 @@ enum class PexOpCode : uint8_t
   ArrayClear,
 };
 
+using PexInstructionArgs = boost::container::static_vector<caprica::pex::PexValue, 5>;
+
 struct PexInstruction final
 {
+  static constexpr size_t kMaxRawArgs = 5;
+
   PexOpCode opCode{ PexOpCode::Nop };
-  std::vector<PexValue> args{ };
+  PexInstructionArgs args{ };
   std::vector<PexValue> variadicArgs{ };
 
   explicit PexInstruction() = default;
   explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
-  explicit PexInstruction(PexOpCode op, std::vector<PexValue>&& arguments) : opCode(op), args(std::move(arguments)) { }
-  explicit PexInstruction(PexOpCode op, std::vector<PexValue>&& arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments) : opCode(op), args(arguments) { }
+  explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(arguments), variadicArgs(std::move(varArguments)) { }
   PexInstruction(const PexInstruction&) = delete;
   ~PexInstruction() = default;
 

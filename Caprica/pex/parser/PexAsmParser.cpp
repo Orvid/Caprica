@@ -494,11 +494,11 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               if (op == PexOpCode::Invalid)
                 reportingContext.fatal(cur.location, "Unknown op-code '%s'!", id.c_str());
 
-              std::vector<PexValue> params;
+              PexInstructionArgs params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(op, std::move(params)));
+              func->instructions.push_back(new PexInstruction(op, params));
             }
 
             if (maybeConsume(TokenType::LineNumer)) {
