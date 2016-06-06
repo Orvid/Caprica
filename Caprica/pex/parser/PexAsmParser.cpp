@@ -442,7 +442,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.insert({ labName, target = new PexLabel() });
-              func->instructions.push_back(new PexInstruction(PexOpCode::Jmp, { target }));
+              func->instructions.emplace_back(PexInstruction(PexOpCode::Jmp, { target }));
             } else if (idEq(id, "jumpf")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -452,7 +452,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.insert({ labName, target = new PexLabel() });
-              func->instructions.push_back(new PexInstruction(PexOpCode::JmpF, { val, target }));
+              func->instructions.emplace_back(PexInstruction(PexOpCode::JmpF, { val, target }));
             } else if (idEq(id, "jumpt")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -462,7 +462,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.insert({ labName, target = new PexLabel() });
-              func->instructions.push_back(new PexInstruction(PexOpCode::JmpT, { val, target }));
+              func->instructions.emplace_back(PexInstruction(PexOpCode::JmpT, { val, target }));
             } else if (idEq(id, "callmethod")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -471,7 +471,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, std::move(params)));
+              func->instructions.emplace_back(PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, std::move(params)));
             } else if (idEq(id, "callparent")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -479,7 +479,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(PexOpCode::CallParent, { valA, valB }, std::move(params)));
+              func->instructions.emplace_back(PexInstruction(PexOpCode::CallParent, { valA, valB }, std::move(params)));
             } else if (idEq(id, "callstatic")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -488,7 +488,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(PexOpCode::CallStatic, { valA, valB, valC }, std::move(params)));
+              func->instructions.emplace_back(PexInstruction(PexOpCode::CallStatic, { valA, valB, valC }, std::move(params)));
             } else {
               auto op = PexInstruction::tryParseOpCode(id);
               if (op == PexOpCode::Invalid)
@@ -498,7 +498,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.push_back(expectConsumeValue(file));
               }
-              func->instructions.push_back(new PexInstruction(op, params));
+              func->instructions.emplace_back(PexInstruction(op, params));
             }
 
             if (maybeConsume(TokenType::LineNumer)) {
@@ -517,7 +517,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
         }
 
         for (size_t i = 0; i < func->instructions.size(); i++) {
-          for (auto& arg : func->instructions[i]->args) {
+          for (auto& arg : func->instructions[i].args) {
             if (arg.type == PexValueType::Label) {
               if (arg.l->targetIdx == (size_t)-1)
                 CapricaReportingContext::logicalFatal("Unresolved label!");

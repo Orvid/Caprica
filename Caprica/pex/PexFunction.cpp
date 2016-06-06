@@ -57,8 +57,8 @@ void PexFunction::write(PexWriter& wtr) const {
   for (auto l : locals)
     l->write(wtr);
   wtr.boundWrite<uint16_t>(instructions.size());
-  for (auto i : instructions)
-    i->write(wtr);
+  for (auto& i : instructions)
+    i.write(wtr);
 }
 
 void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const {
@@ -105,8 +105,8 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
     // This is the fun part.
     std::unordered_map<size_t, size_t> labelMap;
     for (size_t i = 0; i < instructions.size(); i++) {
-      if (instructions[i]->isBranch()) {
-        auto targI = instructions[i]->branchTarget() + i;
+      if (instructions[i].isBranch()) {
+        auto targI = instructions[i].branchTarget() + i;
         if (!labelMap.count((size_t)(targI)))
           labelMap.insert({ (size_t)targI, labelMap.size() });
       }
@@ -118,20 +118,20 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
         wtr.writeln("label%llu:", f->second);
       }
 
-      wtr.write(PexInstruction::opCodeToPexAsm(instructions[i]->opCode));
+      wtr.write(PexInstruction::opCodeToPexAsm(instructions[i].opCode));
 
-      if (instructions[i]->opCode == PexOpCode::Jmp) {
-        wtr.write(" label%llu", labelMap[(size_t)(instructions[i]->args[0].i + i)]);
-      } else if (instructions[i]->opCode == PexOpCode::JmpT || instructions[i]->opCode == PexOpCode::JmpF) {
+      if (instructions[i].opCode == PexOpCode::Jmp) {
+        wtr.write(" label%llu", labelMap[(size_t)(instructions[i].args[0].i + i)]);
+      } else if (instructions[i].opCode == PexOpCode::JmpT || instructions[i].opCode == PexOpCode::JmpF) {
         wtr.write(" ");
-        instructions[i]->args[0].writeAsm(file, wtr);
-        wtr.write(" label%llu", labelMap[(size_t)(instructions[i]->args[1].i + i)]);
+        instructions[i].args[0].writeAsm(file, wtr);
+        wtr.write(" label%llu", labelMap[(size_t)(instructions[i].args[1].i + i)]);
       } else {
-        for (auto& a : instructions[i]->args) {
+        for (auto& a : instructions[i].args) {
           wtr.write(" ");
           a.writeAsm(file, wtr);
         }
-        for (auto& a : instructions[i]->variadicArgs) {
+        for (auto& a : instructions[i].variadicArgs) {
           wtr.write(" ");
           a.writeAsm(file, wtr);
         }

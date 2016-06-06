@@ -32,7 +32,7 @@ struct PexFunction final
   bool isGlobal{ false };
   std::vector<PexFunctionParameter*> parameters{ };
   std::vector<PexLocalVariable*> locals{ };
-  std::vector<PexInstruction*> instructions{ };
+  std::vector<PexInstruction> instructions{ };
 
   explicit PexFunction() = default;
   PexFunction(const PexFunction&) = delete;
@@ -41,8 +41,6 @@ struct PexFunction final
       delete p;
     for (auto l : locals)
       delete l;
-    for (auto i : instructions)
-      delete i;
   }
 
   static PexFunction* read(PexReader& rdr, bool isProperty);

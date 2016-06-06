@@ -5,8 +5,13 @@
 namespace caprica { namespace pex {
 
 void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
-  for (size_t i = 0; i < instructions.size(); i++) {
-    for (auto& arg : instructions[i]->args) {
+  std::vector<PexInstruction> newInstructions;
+  newInstructions.reserve(instructions.size());
+  instructions.evacuate([&](PexInstruction&& instr) {
+    newInstructions.emplace_back(std::move(instr));
+  });
+  for (size_t i = 0; i < newInstructions.size(); i++) {
+    for (auto& arg : newInstructions[i].args) {
       if (arg.type == PexValueType::Label) {
         if (arg.l->targetIdx == (size_t)-1)
           CapricaReportingContext::logicalFatal("Unresolved label!");
@@ -31,7 +36,7 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   }
   tempVarRefs.clear();
 
-  func->instructions = instructions;
+  func->instructions = std::move(newInstructions);
   func->locals = locals;
   debInfo->instructionLineMap.reserve(instructionLocations.size());
   size_t line = 0;
@@ -39,7 +44,7 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
     line = reportingContext.getLocationLine(l, line);
     if (line > std::numeric_limits<uint16_t>::max())
       reportingContext.fatal(l, "The file has too many lines for the debug info to be able to map correctly!");
-    debInfo->instructionLineMap.push_back((uint16_t)line);
+    debInfo->instructionLineMap.emplace_back((uint16_t)line);
   }
 }
 
@@ -71,20 +76,20 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
   auto loc = new PexLocalVariable();
   loc->name = file->getString("::temp" + std::to_string(currentTempI++));
   loc->type = typeName;
-  tempVarNameTypeMap.insert({ loc->name, loc });
+  tempVarNameTypeMap.emplace(loc->name, loc);
   locals.push_back(loc);
   return loc;
 }
 
-PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
-  for (auto& v : instr->args) {
+PexFunctionBuilder& PexFunctionBuilder::emplace_back(PexInstruction&& instr) {
+  for (auto& v : instr.args) {
     if (v.type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
       v = PexValue::Identifier(v.tmpVar->var);
     freeValueIfTemp(v);
   }
-  for (auto& v : instr->variadicArgs) {
+  for (auto& v : instr.variadicArgs) {
     if (v.type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
@@ -92,24 +97,24 @@ PexFunctionBuilder& PexFunctionBuilder::push(PexInstruction* instr) {
     freeValueIfTemp(v);
   }
 
-  auto destIdx = instr->getDestArgIndex();
-  if (destIdx != -1 && instr->args[destIdx].type == PexValueType::TemporaryVar) {
-    auto loc = internalAllocateTempVar(instr->args[destIdx].tmpVar->type);
-    instr->args[destIdx].tmpVar->var = loc;
-    instr->args[destIdx] = PexValue::Identifier(loc);
+  auto destIdx = instr.getDestArgIndex();
+  if (destIdx != -1 && instr.args[destIdx].type == PexValueType::TemporaryVar) {
+    auto loc = internalAllocateTempVar(instr.args[destIdx].tmpVar->type);
+    instr.args[destIdx].tmpVar->var = loc;
+    instr.args[destIdx] = PexValue::Identifier(loc);
   }
 
-  for (auto& v : instr->args) {
+  for (auto& v : instr.args) {
     if (v.type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
-  for (auto& v : instr->variadicArgs) {
+  for (auto& v : instr.variadicArgs) {
     if (v.type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
 
-  instructionLocations.push_back(currentLocation);
-  instructions.push_back(instr);
+  instructionLocations.emplace_back(currentLocation);
+  instructions.emplace_back(std::move(instr));
   return *this;
 }
 

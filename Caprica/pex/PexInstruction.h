@@ -79,7 +79,10 @@ struct PexInstruction final
   explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments) : opCode(op), args(arguments) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(arguments), variadicArgs(std::move(varArguments)) { }
-  PexInstruction(const PexInstruction&) = delete;
+  PexInstruction(const PexInstruction&) = default;
+  PexInstruction(PexInstruction&&) = default;
+  PexInstruction& operator=(const PexInstruction&) = default;
+  PexInstruction& operator=(PexInstruction&&) = default;
   ~PexInstruction() = default;
 
   bool isBranch() const noexcept {
@@ -119,7 +122,7 @@ struct PexInstruction final
   }
   int32_t getDestArgIndex() const;
 
-  static PexInstruction* read(PexReader& rdr);
+  static PexInstruction read(PexReader& rdr);
   void write(PexWriter& wtr) const;
 
   static PexOpCode tryParseOpCode(const std::string& str);

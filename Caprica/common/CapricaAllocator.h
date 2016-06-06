@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/container/static_vector.hpp>
 #include <boost/utility/string_ref.hpp>
 
 #include <common/CapricaReportingContext.h>
@@ -59,8 +60,8 @@ private:
   };
 
   size_t heapSize;
-  Heap base;
   std::atomic<Heap*> current{ &base };
+  Heap base;
 
   void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
 };
@@ -82,6 +83,56 @@ private:
   ConcurrentPooledBufferAllocator alloc{ 1024 * 4 };
   std::vector<boost::string_ref> allocedStrings{ };
   std::unordered_map<boost::string_ref, size_t> idxLookup{ };
+};
+
+
+template<typename T, size_t heapSize>
+struct FlatishDestructedPooledBufferAllocator final
+{
+private:
+  struct Heap final
+  {
+    boost::container::static_vector<T, heapSize> heap;
+    Heap* next{ nullptr };
+
+    Heap() { }
+    ~Heap() {
+      if (next != nullptr)
+        delete next;
+    }
+  };
+
+  size_t count{ 0 };
+  Heap* current{ &base };
+  Heap base;
+
+public:
+  FlatishDestructedPooledBufferAllocator() { }
+  ~FlatishDestructedPooledBufferAllocator() = default;
+
+  template<typename... Args>
+  void emplace_back(Args&&... args) {
+    if (current->heap.size() >= current->heap.capacity()) {
+      Heap* next = new Heap();
+      current->next = next;
+      current = next;
+    }
+    count++;
+    current->heap.emplace_back(std::forward<Args>(args)...);
+  }
+
+  size_t size() const { return count; }
+
+  template<typename F>
+  void evacuate(F func) {
+    auto cur = &base;
+    while (cur != nullptr) {
+      for (auto&& r : cur->heap) {
+        func(std::move(r));
+      }
+      cur = cur->next;
+    }
+  }
 };
 
 }
