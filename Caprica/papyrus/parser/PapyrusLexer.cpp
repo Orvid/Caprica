@@ -323,13 +323,13 @@ StartOver:
     case '9':
     {
       std::string str;
-      str.append(1, (char)c);
+      str.push_back((char)c);
 
       // It's hex.
       if (c == '0' && peekChar() == 'x') {
-        str.append(1, (char)getChar());
+        str.push_back((char)getChar());
         while (isxdigit(peekChar()))
-          str.append(1, (char)getChar());
+          str.push_back((char)getChar());
         
         auto i = std::stoul(str, nullptr, 16);
         setTok(TokenType::Integer, baseLoc);
@@ -339,23 +339,23 @@ StartOver:
 
       // Either normal int or float.
       while (isdigit(peekChar()))
-        str.append(1, (char)getChar());
+        str.push_back((char)getChar());
 
       // It's a float.
       if (peekChar() == '.') {
-        str.append(1, (char)getChar());
+        str.push_back((char)getChar());
         while (isdigit(peekChar()))
-          str.append(1, (char)getChar());
+          str.push_back((char)getChar());
 
         // Allow e+ notation.
         if (conf::Papyrus::enableLanguageExtensions && peekChar() == 'e') {
-          str.append(1, (char)getChar());
+          str.push_back((char)getChar());
           if (getChar() != '+')
             reportingContext.fatal(location, "Unexpected character 'e'!");
-          str.append(1, '+');
+          str.push_back('+');
 
           while (isdigit(peekChar()))
-            str.append(1, (char)getChar());
+            str.push_back((char)getChar());
         }
 
         auto f = std::stof(str);
@@ -479,16 +479,16 @@ StartOver:
           auto escapeChar = getChar();
           switch (escapeChar) {
             case 'n':
-              str.append(1, '\n');
+              str.push_back('\n');
               break;
             case 't':
-              str.append(1, '\t');
+              str.push_back('\t');
               break;
             case '\\':
-              str.append(1, '\\');
+              str.push_back('\\');
               break;
             case '"':
-              str.append(1, '"');
+              str.push_back('"');
               break;
             case -1:
               reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
@@ -496,7 +496,7 @@ StartOver:
               reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
-          str.append(1, (char)getChar());
+          str.push_back((char)getChar());
         }
       }
 
@@ -552,14 +552,14 @@ StartOver:
         auto c2 = getChar();
         if (c2 == '\r' && peekChar() == '\n') {
           getChar();
-          str.append(1, '\n');
+          str.push_back('\n');
           reportingContext.pushNextLineOffset(location);
         } else {
           if (c2 == '\n')
             reportingContext.pushNextLineOffset(location);
           // Whether this is a Unix newline, or a normal character,
           // we don't care, they both get written as-is.
-          str.append(1, (char)c2);
+          str.push_back((char)c2);
         }
       }
 
