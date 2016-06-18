@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <common/CapricaAllocator.h>
+
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFunctionParameter.h>
@@ -19,6 +21,8 @@ struct PexFile;
 struct PexObject;
 struct PexState;
 
+using PexInstructionList = ChainedDestructedPooledAllocator<PexInstruction, 128>;
+
 struct PexFunction final
 {
   // If name is invalid, it is assumed this is
@@ -32,7 +36,7 @@ struct PexFunction final
   bool isGlobal{ false };
   std::vector<PexFunctionParameter*> parameters{ };
   std::vector<PexLocalVariable*> locals{ };
-  std::vector<PexInstruction> instructions{ };
+  PexInstructionList instructions{ };
 
   explicit PexFunction() = default;
   PexFunction(const PexFunction&) = delete;

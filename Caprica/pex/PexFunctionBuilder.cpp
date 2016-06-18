@@ -5,17 +5,12 @@
 namespace caprica { namespace pex {
 
 void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
-  std::vector<PexInstruction> newInstructions;
-  newInstructions.reserve(instructions.size());
-  instructions.evacuate([&](PexInstruction&& instr) {
-    newInstructions.emplace_back(std::move(instr));
-  });
-  for (size_t i = 0; i < newInstructions.size(); i++) {
-    for (auto& arg : newInstructions[i].args) {
+  for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
+    for (auto& arg : cur->args) {
       if (arg.type == PexValueType::Label) {
         if (arg.l->targetIdx == (size_t)-1)
           CapricaReportingContext::logicalFatal("Unresolved label!");
-        auto newVal = arg.l->targetIdx - i;
+        auto newVal = arg.l->targetIdx - cur.index;
         arg.type = PexValueType::Integer;
         arg.i = (int32_t)newVal;
       }
@@ -36,8 +31,8 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   }
   tempVarRefs.clear();
 
-  func->instructions = std::move(newInstructions);
-  func->locals = locals;
+  func->instructions = std::move(instructions);
+  func->locals = std::move(locals);
   debInfo->instructionLineMap.reserve(instructionLocations.size());
   size_t line = 0;
   for (auto l : instructionLocations) {

@@ -253,7 +253,7 @@ private:
   PexFile* file;
   CapricaFileLocation currentLocation;
   std::vector<CapricaFileLocation> instructionLocations{ };
-  FlatishDestructedPooledBufferAllocator<PexInstruction, 512> instructions{ };
+  PexInstructionList instructions{ };
   std::vector<PexLocalVariable*> locals{ };
   std::vector<PexLabel*> labels{ };
   std::vector<PexTemporaryVariableRef*> tempVarRefs{ };

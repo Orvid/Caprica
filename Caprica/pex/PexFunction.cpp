@@ -32,7 +32,7 @@ PexFunction* PexFunction::read(PexReader& rdr, bool isProperty) {
   auto iSize = rdr.read<uint16_t>();
   func->instructions.reserve(iSize);
   for (size_t i = 0; i < iSize; i++)
-    func->instructions.push_back(PexInstruction::read(rdr));
+    func->instructions.emplace_back(PexInstruction::read(rdr));
 
   return func;
 }
@@ -57,8 +57,8 @@ void PexFunction::write(PexWriter& wtr) const {
   for (auto l : locals)
     l->write(wtr);
   wtr.boundWrite<uint16_t>(instructions.size());
-  for (auto& i : instructions)
-    i.write(wtr);
+  for (auto i : instructions)
+    i->write(wtr);
 }
 
 void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const {
@@ -104,41 +104,41 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
 
     // This is the fun part.
     std::unordered_map<size_t, size_t> labelMap;
-    for (size_t i = 0; i < instructions.size(); i++) {
-      if (instructions[i].isBranch()) {
-        auto targI = instructions[i].branchTarget() + i;
+    for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
+      if (cur->isBranch()) {
+        auto targI = cur->branchTarget() + cur.index;
         if (!labelMap.count((size_t)(targI)))
-          labelMap.insert({ (size_t)targI, labelMap.size() });
+          labelMap.emplace((size_t)targI, labelMap.size());
       }
     }
 
-    for (size_t i = 0; i < instructions.size(); i++) {
-      auto f = labelMap.find(i);
+    for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
+      auto f = labelMap.find(cur.index);
       if (f != labelMap.end()) {
         wtr.writeln("label%llu:", f->second);
       }
 
-      wtr.write(PexInstruction::opCodeToPexAsm(instructions[i].opCode));
+      wtr.write(PexInstruction::opCodeToPexAsm(cur->opCode));
 
-      if (instructions[i].opCode == PexOpCode::Jmp) {
-        wtr.write(" label%llu", labelMap[(size_t)(instructions[i].args[0].i + i)]);
-      } else if (instructions[i].opCode == PexOpCode::JmpT || instructions[i].opCode == PexOpCode::JmpF) {
+      if (cur->opCode == PexOpCode::Jmp) {
+        wtr.write(" label%llu", labelMap[(size_t)(cur->args[0].i + cur.index)]);
+      } else if (cur->opCode == PexOpCode::JmpT || cur->opCode == PexOpCode::JmpF) {
         wtr.write(" ");
-        instructions[i].args[0].writeAsm(file, wtr);
-        wtr.write(" label%llu", labelMap[(size_t)(instructions[i].args[1].i + i)]);
+        cur->args[0].writeAsm(file, wtr);
+        wtr.write(" label%llu", labelMap[(size_t)(cur->args[1].i + cur.index)]);
       } else {
-        for (auto& a : instructions[i].args) {
+        for (auto& a : cur->args) {
           wtr.write(" ");
           a.writeAsm(file, wtr);
         }
-        for (auto& a : instructions[i].variadicArgs) {
+        for (auto& a : cur->variadicArgs) {
           wtr.write(" ");
           a.writeAsm(file, wtr);
         }
       }
 
-      if (debInf && i < debInf->instructionLineMap.size()) {
-        wtr.write(" ;@line %u", debInf->instructionLineMap[i]);
+      if (debInf && cur.index < debInf->instructionLineMap.size()) {
+        wtr.write(" ;@line %u", debInf->instructionLineMap[cur.index]);
       }
 
       wtr.writeln();

@@ -20,7 +20,7 @@ void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
     auto func = new pex::PexFunction();
     func->returnTypeName = prop->typeName;
     func->documentationString = file->getString("");
-    func->instructions.emplace_back(pex::PexInstruction(pex::PexOpCode::Return, { defaultValue.buildPex(file) }));
+    func->instructions.emplace_back(pex::PexOpCode::Return, pex::PexInstructionArgs{ defaultValue.buildPex(file) });
     prop->readFunction = func;
 
     if (file->debugInfo) {

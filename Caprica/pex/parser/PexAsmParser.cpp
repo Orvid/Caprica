@@ -137,9 +137,9 @@ PexFile* PexAsmParser::parseFile() {
                           reportingContext.fatal(cur.location, "Unknown child of .variable '%s'!", cur.prettyString().c_str());
                       }
                     }
-                    struc->members.push_back(mem);
+                    struc->members.emplace_back(mem);
                   }
-                  obj->structs.push_back(struc);
+                  obj->structs.emplace_back(struc);
                 }
                 break;
               }
@@ -430,7 +430,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
             } else {
               auto lab = new PexLabel();
               lab->targetIdx = func->instructions.size();
-              labels.insert({ id.substr(0, id.size() - 1), lab });
+              labels.emplace(id.substr(0, id.size() - 1), lab);
             }
             expectConsumeEOL();
           } else {
@@ -441,8 +441,8 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               if (f != labels.end())
                 target = f->second;
               else
-                labels.insert({ labName, target = new PexLabel() });
-              func->instructions.emplace_back(PexInstruction(PexOpCode::Jmp, { target }));
+                labels.emplace(labName, target = new PexLabel());
+              func->instructions.emplace_back(PexInstruction{ PexOpCode::Jmp, { target } });
             } else if (idEq(id, "jumpf")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -451,7 +451,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               if (f != labels.end())
                 target = f->second;
               else
-                labels.insert({ labName, target = new PexLabel() });
+                labels.emplace(labName, target = new PexLabel());
               func->instructions.emplace_back(PexInstruction(PexOpCode::JmpF, { val, target }));
             } else if (idEq(id, "jumpt")) {
               auto val = expectConsumeValue(file);
@@ -461,7 +461,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               if (f != labels.end())
                 target = f->second;
               else
-                labels.insert({ labName, target = new PexLabel() });
+                labels.emplace(labName, target = new PexLabel());
               func->instructions.emplace_back(PexInstruction(PexOpCode::JmpT, { val, target }));
             } else if (idEq(id, "callmethod")) {
               auto valA = expectConsumeValue(file);
@@ -469,7 +469,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               auto valC = expectConsumeValue(file);
               std::vector<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(expectConsumeValue(file));
+                params.emplace_back(expectConsumeValue(file));
               }
               func->instructions.emplace_back(PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, std::move(params)));
             } else if (idEq(id, "callparent")) {
@@ -477,7 +477,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               auto valB = expectConsumeValue(file);
               std::vector<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(expectConsumeValue(file));
+                params.emplace_back(expectConsumeValue(file));
               }
               func->instructions.emplace_back(PexInstruction(PexOpCode::CallParent, { valA, valB }, std::move(params)));
             } else if (idEq(id, "callstatic")) {
@@ -486,7 +486,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               auto valC = expectConsumeValue(file);
               std::vector<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(expectConsumeValue(file));
+                params.emplace_back(expectConsumeValue(file));
               }
               func->instructions.emplace_back(PexInstruction(PexOpCode::CallStatic, { valA, valB, valC }, std::move(params)));
             } else {
@@ -496,7 +496,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
 
               PexInstructionArgs params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(expectConsumeValue(file));
+                params.emplace_back(expectConsumeValue(file));
               }
               func->instructions.emplace_back(PexInstruction(op, params));
             }
@@ -506,22 +506,22 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               if (num < 0 || num > std::numeric_limits<uint16_t>::max())
                 reportingContext.fatal(cur.location, "Line number '%i' out of the range of a uint16_t!", (int)num);
               if (debInfo)
-                debInfo->instructionLineMap.push_back((uint16_t)num);
+                debInfo->instructionLineMap.emplace_back((uint16_t)num);
             } else {
               if (debInfo && debInfo->instructionLineMap.size() != 0 && debInfo->instructionLineMap.size() != func->instructions.size()) {
-                debInfo->instructionLineMap.push_back(debInfo->instructionLineMap[debInfo->instructionLineMap.size() - 1]);
+                debInfo->instructionLineMap.emplace_back(debInfo->instructionLineMap[debInfo->instructionLineMap.size() - 1]);
               }
               expectConsumeEOL();
             }
           }
         }
 
-        for (size_t i = 0; i < func->instructions.size(); i++) {
-          for (auto& arg : func->instructions[i].args) {
+        for (auto cur = func->instructions.begin(), end = func->instructions.end(); cur != end; ++cur) {
+          for (auto& arg : cur->args) {
             if (arg.type == PexValueType::Label) {
               if (arg.l->targetIdx == (size_t)-1)
                 CapricaReportingContext::logicalFatal("Unresolved label!");
-              auto newVal = arg.l->targetIdx - i;
+              auto newVal = arg.l->targetIdx - cur.index;
               arg.type = PexValueType::Integer;
               arg.i = (int32_t)newVal;
             }

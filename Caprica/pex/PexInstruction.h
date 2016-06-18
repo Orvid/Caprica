@@ -72,12 +72,14 @@ struct PexInstruction final
   static constexpr size_t kMaxRawArgs = 5;
 
   PexOpCode opCode{ PexOpCode::Nop };
-  PexInstructionArgs args{ };
   std::vector<PexValue> variadicArgs{ };
+  PexInstructionArgs args{ };
 
   explicit PexInstruction() = default;
   explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
+  explicit PexInstruction(PexOpCode op, std::initializer_list<PexValue> arguments) : opCode(op), args(arguments) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments) : opCode(op), args(arguments) { }
+  explicit PexInstruction(PexOpCode op, std::initializer_list<PexValue> arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(arguments), variadicArgs(std::move(varArguments)) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(arguments), variadicArgs(std::move(varArguments)) { }
   PexInstruction(const PexInstruction&) = default;
   PexInstruction(PexInstruction&&) = default;
