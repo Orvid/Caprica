@@ -4,8 +4,22 @@
 #include <iostream>
 
 #include <common/CapricaReportingContext.h>
+#include <common/allocators/AtomicCachePool.h>
 
 namespace caprica { namespace pex {
+
+static allocators::AtomicCachePool<allocators::ReffyStringPool> stringPoolAllocator;
+PexFile::PexFile() {
+  stringTable = stringPoolAllocator.acquire();
+}
+
+PexFile::~PexFile() {
+  if (debugInfo)
+    delete debugInfo;
+  for (auto o : objects)
+    delete o;
+  stringPoolAllocator.release(stringTable);
+}
 
 PexDebugFunctionInfo* PexFile::tryFindFunctionDebugInfo(const PexObject* object,
                                                         const PexState* state,

@@ -8,9 +8,8 @@
 
 namespace caprica { namespace papyrus {
 
-pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx, allocators::ReffyStringPool* pool) const {
+pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
   auto pex = new pex::PexFile();
-  pex->stringTable = pool;
   if (conf::CodeGeneration::emitDebugInfo) {
     pex->debugInfo = new pex::PexDebugInfo();
     pex->debugInfo->modificationTime = lastModificationTime;

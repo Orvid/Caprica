@@ -135,7 +135,6 @@ void PapyrusCompilationNode::FileSemanticJob::run() {
 
 static constexpr bool disablePexBuild = false;
 
-static thread_local allocators::ReffyStringPool localStringPool{ };
 void PapyrusCompilationNode::FileCompileJob::run() {
   parent->semanticJob.await();
   switch (parent->type) {
@@ -144,8 +143,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       parent->reportingContext.exitIfErrors();
 
       if (!disablePexBuild) {
-        localStringPool.reset();
-        parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext, &localStringPool);
+        parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext);
         parent->reportingContext.exitIfErrors();
 
         if (conf::CodeGeneration::enableOptimizations)

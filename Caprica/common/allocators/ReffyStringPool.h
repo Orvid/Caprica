@@ -34,7 +34,7 @@ private:
     uint16_t upperHash{ 0 };
   };
 
-  static constexpr size_t mask = MaxCapacity - 1;
+  static constexpr size_t mask = MaxCapacity;
   uint32_t generationNumber{ 1 };
   size_t count{ 0 };
   ChainedPool alloc{ 1024 * 4 };

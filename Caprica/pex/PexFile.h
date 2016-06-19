@@ -34,14 +34,9 @@ struct PexFile final
   PexDebugInfo* debugInfo{ nullptr };
   std::vector<PexObject*> objects{ };
 
-  explicit PexFile() = default;
+  explicit PexFile();
   PexFile(const PexFile&) = delete;
-  ~PexFile() {
-    if (debugInfo)
-      delete debugInfo;
-    for (auto o : objects)
-      delete o;
-  }
+  ~PexFile();
 
   void ensureDebugInfo() {
     if (!debugInfo)
@@ -68,7 +63,6 @@ struct PexFile final
   void writeAsm(PexAsmWriter& wtr) const;
 
 private:
-  friend ::caprica::papyrus::PapyrusScript;
   allocators::ReffyStringPool* stringTable;
 
   std::vector<std::pair<PexString, uint8_t>> userFlagTable;
