@@ -80,6 +80,14 @@ struct PapyrusObject final
   const PapyrusState* getRootState() const { return rootState; }
   PapyrusState* getRootState() { return rootState; }
 
+  boost::string_ref loweredName() const {
+    if (lowerName.size() == name.size())
+      return lowerName;
+    lowerName = name;
+    identifierToLower(lowerName);
+    return lowerName;
+  }
+
   boost::string_ref getNamespaceName() const {
     auto pos = name.rfind(':');
     if (pos != std::string::npos)
@@ -107,6 +115,7 @@ private:
   PapyrusResoultionState resolutionState{ PapyrusResoultionState::Unresolved };
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
+  mutable std::string lowerName{ };
 
   void checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap, bool checkInheritedOnly) const;
 };

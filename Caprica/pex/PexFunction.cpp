@@ -68,7 +68,7 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
   else if (funcType == PexDebugFunctionType::Setter)
     wtr.write("set");
   else
-    wtr.write(file->getStringValue(name).c_str());
+    wtr.write(file->getStringValue(name).to_string().c_str());
 
   if (isNative)
     wtr.write(" native");
@@ -79,8 +79,8 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
   wtr.ident++;
 
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
-  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
-  wtr.writeln(".return %s", file->getStringValue(returnTypeName).c_str());
+  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString).to_string());
+  wtr.writeln(".return %s", file->getStringValue(returnTypeName).to_string().c_str());
 
   wtr.writeln(".paramTable");
   wtr.ident++;

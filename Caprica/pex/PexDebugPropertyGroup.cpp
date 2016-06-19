@@ -28,13 +28,13 @@ void PexDebugPropertyGroup::write(PexWriter& wtr) const {
 }
 
 void PexDebugPropertyGroup::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.writeln(".propertyGroup %s", file->getStringValue(groupName).c_str());
+  wtr.writeln(".propertyGroup %s", file->getStringValue(groupName).to_string().c_str());
   wtr.ident++;
 
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
-  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
+  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString).to_string());
   for (auto p : properties)
-    wtr.writeln(".property %s", file->getStringValue(p).c_str());
+    wtr.writeln(".property %s", file->getStringValue(p).to_string().c_str());
 
   wtr.ident--;
   wtr.writeln(".endPropertyGroup");

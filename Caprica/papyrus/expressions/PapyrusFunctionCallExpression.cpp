@@ -108,12 +108,10 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
 
     std::vector<pex::PexValue> args;
     for (auto param : arguments)
-      args.push_back(param->value->generateLoad(file, bldr));
+      args.emplace_back(param->value->generateLoad(file, bldr));
     bldr << location;
     if (function.func->isGlobal()) {
-      std::string objName = function.func->parentObject->name;
-      boost::algorithm::to_lower(objName);
-      bldr << op::callstatic{ file->getString(objName), file->getString(function.func->name), dest, std::move(args) };
+      bldr << op::callstatic{ file->getString(function.func->parentObject->loweredName()), file->getString(function.func->name), dest, std::move(args) };
     } else if (base && base->is<PapyrusParentExpression>()) {
       bldr << op::callparent{ file->getString(function.func->name), dest, std::move(args) };
     } else if (base) {

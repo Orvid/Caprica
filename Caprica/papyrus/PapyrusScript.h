@@ -27,7 +27,7 @@ struct PapyrusScript final
       delete obj;
   }
 
-  pex::PexFile* buildPex(CapricaReportingContext& repCtx) const;
+  pex::PexFile* buildPex(CapricaReportingContext& repCtx, allocators::ReffyStringPool* pool) const;
 
   void preSemantic(PapyrusResolutionContext* ctx) {
     ctx->script = this;

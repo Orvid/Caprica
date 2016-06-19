@@ -64,11 +64,7 @@ std::string PapyrusType::getTypeString() const {
     case Kind::Unresolved:
       return name;
     case Kind::ResolvedObject:
-    {
-      auto lowerType = resolvedObject->name;
-      identifierToLower(lowerType);
-      return lowerType;
-    }
+      return resolvedObject->loweredName().to_string();
     case Kind::ResolvedStruct:
     {
       auto name = resolvedStruct->parentObject->name + "#" + resolvedStruct->name;

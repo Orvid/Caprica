@@ -12,10 +12,10 @@ void PexValue::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
       wtr.write("None");
       return;
     case PexValueType::Identifier:
-      wtr.write("%s", file->getStringValue(s).c_str());
+      wtr.write("%s", file->getStringValue(s).to_string().c_str());
       return;
     case PexValueType::String:
-      wtr.write("\"%s\"", PexAsmWriter::escapeString(file->getStringValue(s)).c_str());
+      wtr.write("\"%s\"", PexAsmWriter::escapeString(file->getStringValue(s).to_string()).c_str());
       return;
     case PexValueType::Integer:
       wtr.write("%i", (int)i);

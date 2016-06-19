@@ -61,21 +61,21 @@ void PexProperty::write(PexWriter& wtr) const {
 
 void PexProperty::writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const {
   // TODO: Handle the property group info in the debug info.
-  wtr.write(".property %s %s", file->getStringValue(name).c_str(), file->getStringValue(typeName).c_str());
+  wtr.write(".property %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(typeName).to_string().c_str());
   if (isAuto)
     wtr.write(" auto");
   wtr.writeln();
   wtr.ident++;
 
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
-  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString));
+  wtr.writeKV<std::string>("docString", file->getStringValue(documentationString).to_string());
   if (isAuto) {
-    wtr.writeln(".autoVar %s", file->getStringValue(autoVar).c_str());
+    wtr.writeln(".autoVar %s", file->getStringValue(autoVar).to_string().c_str());
   } else {
     if (isReadable)
-      readFunction->writeAsm(file, obj, nullptr, PexDebugFunctionType::Getter, file->getStringValue(name), wtr);
+      readFunction->writeAsm(file, obj, nullptr, PexDebugFunctionType::Getter, file->getStringValue(name).to_string(), wtr);
     if (isWritable)
-      writeFunction->writeAsm(file, obj, nullptr, PexDebugFunctionType::Setter, file->getStringValue(name), wtr);
+      writeFunction->writeAsm(file, obj, nullptr, PexDebugFunctionType::Setter, file->getStringValue(name).to_string(), wtr);
   }
 
   wtr.ident--;

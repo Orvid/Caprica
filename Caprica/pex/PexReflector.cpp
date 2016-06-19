@@ -27,7 +27,7 @@ static PapyrusType reflectType(CapricaFileLocation loc, const std::string& name)
 }
 
 static PapyrusType reflectType(CapricaFileLocation loc, PexFile* pex, PexString pexName) {
-  return reflectType(loc, pex->getStringValue(pexName));
+  return reflectType(loc, pex->getStringValue(pexName).to_string());
 }
 
 static PapyrusFunction* reflectFunction(CapricaFileLocation loc, PexFile* pex, PapyrusObject* obj, PexFunction* pFunc, std::string funcName) {
@@ -39,7 +39,7 @@ static PapyrusFunction* reflectFunction(CapricaFileLocation loc, PexFile* pex, P
 
   for (auto pp : pFunc->parameters) {
     auto param = new PapyrusFunctionParameter(loc, reflectType(loc, pex, pp->type));
-    param->name = pex->getStringValue(pp->name);
+    param->name = pex->getStringValue(pp->name).to_string();
     func->parameters.push_back(param);
   }
 
@@ -57,16 +57,16 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
     if (pex->getStringValue(po->parentClassName) != "")
       baseTp = reflectType(loc, pex, po->parentClassName);
     auto obj = new PapyrusObject(loc, baseTp);
-    obj->name = pex->getStringValue(po->name);
+    obj->name = pex->getStringValue(po->name).to_string();
 
     for (auto ps : po->structs) {
       auto struc = new PapyrusStruct(loc);
       struc->parentObject = obj;
-      struc->name = pex->getStringValue(ps->name);
+      struc->name = pex->getStringValue(ps->name).to_string();
       for (auto pm : ps->members) {
         auto mem = new PapyrusStructMember(loc, reflectType(loc, pex, pm->typeName), struc);
         mem->userFlags.isConst = pm->isConst;
-        mem->name = pex->getStringValue(pm->name);
+        mem->name = pex->getStringValue(pm->name).to_string();
         struc->members.push_back(mem);
       }
       obj->structs.push_back(struc);
@@ -74,7 +74,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
 
     for (auto pp : po->properties) {
       auto prop = new PapyrusProperty(loc, reflectType(loc, pex, pp->typeName), obj);
-      prop->name = pex->getStringValue(pp->name);
+      prop->name = pex->getStringValue(pp->name).to_string();
       if (pp->isAuto) {
         prop->userFlags.isAuto = true;
       } else {
@@ -95,13 +95,13 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       PapyrusState* state{ nullptr };
       if (pushState) {
         state = new PapyrusState(loc);
-        state->name = pex->getStringValue(ps->name);
+        state->name = pex->getStringValue(ps->name).to_string();
       } else {
         state = obj->getRootState();
       }
 
       for (auto pf : ps->functions) {
-        auto f = reflectFunction(loc, pex, obj, pf, pex->getStringValue(pf->name));
+        auto f = reflectFunction(loc, pex, obj, pf, pex->getStringValue(pf->name).to_string());
         f->functionType = PapyrusFunctionType::Function;
         if (f->name.size() > 2 && idEq(f->name.substr(0, 2), "on"))
           f->functionType = PapyrusFunctionType::Event;

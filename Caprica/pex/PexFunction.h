@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <common/CapricaAllocator.h>
+#include <common/allocators/ChainedDestructedPooledAllocator.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugFunctionInfo.h>
@@ -21,7 +21,7 @@ struct PexFile;
 struct PexObject;
 struct PexState;
 
-using PexInstructionList = ChainedDestructedPooledAllocator<PexInstruction, 128>;
+using PexInstructionList = allocators::ChainedDestructedPooledAllocator<PexInstruction, 128>;
 
 struct PexFunction final
 {

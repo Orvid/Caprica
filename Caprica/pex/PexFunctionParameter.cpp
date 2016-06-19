@@ -17,7 +17,7 @@ void PexFunctionParameter::write(PexWriter& wtr) const {
 }
 
 void PexFunctionParameter::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.writeln(".param %s %s", file->getStringValue(name).c_str(), file->getStringValue(type).c_str());
+  wtr.writeln(".param %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(type).to_string().c_str());
 }
 
 }}

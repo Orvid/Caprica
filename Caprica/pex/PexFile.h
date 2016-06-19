@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include <common/CapricaAllocator.h>
+#include <common/allocators/ReffyStringPool.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugInfo.h>
@@ -16,7 +16,11 @@
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
 
-namespace caprica { namespace pex {
+namespace caprica {
+
+namespace papyrus { struct PapyrusScript; }
+
+namespace pex {
 
 struct PexFile final
 {
@@ -54,8 +58,8 @@ struct PexFile final
                                                        const PexFunction* function,
                                                        const std::string& propertyName,
                                                        PexDebugFunctionType functionType) const;
-  PexString getString(const std::string& str);
-  std::string getStringValue(const PexString& str) const;
+  PexString getString(boost::string_ref str);
+  boost::string_ref getStringValue(const PexString& str) const;
   PexUserFlags getUserFlag(PexString name, uint8_t bitNum);
   size_t getUserFlagCount() const noexcept;
 
@@ -64,7 +68,8 @@ struct PexFile final
   void writeAsm(PexAsmWriter& wtr) const;
 
 private:
-  ReffyStringPool stringTable;
+  friend ::caprica::papyrus::PapyrusScript;
+  allocators::ReffyStringPool* stringTable;
 
   std::vector<std::pair<PexString, uint8_t>> userFlagTable;
   std::unordered_map<size_t, size_t> userFlagTableLookup;

@@ -10,6 +10,7 @@
 
 #include <common/CapricaAllocator.h>
 #include <common/CapricaConfig.h>
+#include <common/allocators/ReffyStringPool.h>
 
 #include <papyrus/parser/PapyrusParser.h>
 
@@ -134,6 +135,7 @@ void PapyrusCompilationNode::FileSemanticJob::run() {
 
 static constexpr bool disablePexBuild = false;
 
+static thread_local allocators::ReffyStringPool localStringPool{ };
 void PapyrusCompilationNode::FileCompileJob::run() {
   parent->semanticJob.await();
   switch (parent->type) {
@@ -142,7 +144,8 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       parent->reportingContext.exitIfErrors();
 
       if (!disablePexBuild) {
-        parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext);
+        localStringPool.reset();
+        parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext, &localStringPool);
         parent->reportingContext.exitIfErrors();
 
         if (conf::CodeGeneration::enableOptimizations)

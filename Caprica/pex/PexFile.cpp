@@ -39,14 +39,14 @@ const PexDebugFunctionInfo* PexFile::tryFindFunctionDebugInfo(const PexObject* o
   return ((PexFile*)this)->tryFindFunctionDebugInfo(object, state, function, propertyName, functionType);
 }
 
-PexString PexFile::getString(const std::string& str) {
+PexString PexFile::getString(boost::string_ref str) {
   auto ret = PexString();
-  ret.index = stringTable.lookup(str);
+  ret.index = stringTable->lookup(str);
   return ret;
 }
 
-std::string PexFile::getStringValue(const PexString& str) const {
-  return stringTable.byIndex(str.index).to_string();
+boost::string_ref PexFile::getStringValue(const PexString& str) const {
+  return stringTable->byIndex(str.index);
 }
 
 PexUserFlags PexFile::getUserFlag(PexString name, uint8_t bitNum) {
@@ -82,10 +82,10 @@ PexFile* PexFile::read(PexReader& rdr) {
   file->computerName = rdr.read<std::string>();
 
   auto strTableSize = rdr.read<uint16_t>();
-  file->stringTable.reserve(strTableSize);
+  //file->stringTable.reserve(strTableSize);
   for (size_t i = 0; i < strTableSize; i++) {
     auto str = rdr.read<std::string>();
-    file->stringTable.push_back(str);
+    file->stringTable->push_back(str);
   }
 
   if (rdr.read<uint8_t>() != 0)
@@ -118,9 +118,9 @@ void PexFile::write(PexWriter& wtr) const {
   wtr.write<const std::string&>(userName);
   wtr.write<const std::string&>(computerName);
 
-  wtr.boundWrite<uint16_t>(stringTable.size());
-  for (size_t i = 0; i < stringTable.size(); i++)
-    wtr.write<boost::string_ref>(stringTable.byIndex(i));
+  wtr.boundWrite<uint16_t>(stringTable->size());
+  for (size_t i = 0; i < stringTable->size(); i++)
+    wtr.write<boost::string_ref>(stringTable->byIndex(i));
 
   if (debugInfo) {
     wtr.write<uint8_t>(0x01);
@@ -157,7 +157,7 @@ void PexFile::writeAsm(PexAsmWriter& wtr) const {
   wtr.writeln(".userFlagsRef");
   wtr.ident++;
   for (auto a : userFlagTable)
-    wtr.writeln(".flag %s %u", getStringValue(a.first).c_str(), (unsigned)a.second);
+    wtr.writeln(".flag %s %u", getStringValue(a.first).to_string().c_str(), (unsigned)a.second);
   wtr.ident--;
   wtr.writeln(".endUserFlagsRef");
 

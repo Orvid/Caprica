@@ -74,24 +74,4 @@ void* ConcurrentPooledBufferAllocator::allocHeap(size_t newHeapSize, size_t firs
   return ret;
 }
 
-void ReffyStringPool::push_back(boost::string_ref str) {
-  auto newStr = boost::string_ref(alloc.allocate(str.size()), str.size());
-  memcpy((void*)newStr.data(), str.data(), str.size());
-
-  allocedStrings.emplace_back(newStr);
-  idxLookup.emplace(newStr, allocedStrings.size() - 1);
-}
-
-size_t ReffyStringPool::lookup(boost::string_ref str) {
-  auto f = idxLookup.find(str);
-  if (f != idxLookup.end())
-    return f->second;
-  auto newStr = boost::string_ref(alloc.allocate(str.size()), str.size());
-  memcpy((void*)newStr.data(), str.data(), str.size());
-
-  allocedStrings.emplace_back(newStr);
-  idxLookup.emplace(newStr, allocedStrings.size() - 1);
-  return allocedStrings.size() - 1;
-}
-
 }

@@ -23,7 +23,7 @@ void PexStruct::write(PexWriter& wtr) const {
 
 void PexStruct::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
   // TODO: Handle the struct order info in the debug info.
-  wtr.writeln(".struct %s", file->getStringValue(name).c_str());
+  wtr.writeln(".struct %s", file->getStringValue(name).to_string().c_str());
   wtr.ident++;
   for (auto m : members)
     m->writeAsm(file, wtr);
