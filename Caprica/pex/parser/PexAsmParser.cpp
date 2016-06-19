@@ -442,7 +442,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.emplace(labName, target = new PexLabel());
-              func->instructions.emplace_back(PexInstruction{ PexOpCode::Jmp, { target } });
+              func->instructions.emplace_back(PexOpCode::Jmp, PexInstructionArgs{ target });
             } else if (idEq(id, "jumpf")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -452,7 +452,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.emplace(labName, target = new PexLabel());
-              func->instructions.emplace_back(PexInstruction(PexOpCode::JmpF, { val, target }));
+              func->instructions.emplace_back(PexOpCode::JmpF, PexInstructionArgs{ val, target });
             } else if (idEq(id, "jumpt")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -462,7 +462,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.emplace(labName, target = new PexLabel());
-              func->instructions.emplace_back(PexInstruction(PexOpCode::JmpT, { val, target }));
+              func->instructions.emplace_back(PexOpCode::JmpT, PexInstructionArgs{ val, target });
             } else if (idEq(id, "callmethod")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -471,7 +471,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.emplace_back(expectConsumeValue(file));
               }
-              func->instructions.emplace_back(PexInstruction(PexOpCode::CallMethod, { valA, valB, valC }, std::move(params)));
+              func->instructions.emplace_back(PexOpCode::CallMethod, PexInstructionArgs{ valA, valB, valC }, std::move(params));
             } else if (idEq(id, "callparent")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -479,7 +479,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.emplace_back(expectConsumeValue(file));
               }
-              func->instructions.emplace_back(PexInstruction(PexOpCode::CallParent, { valA, valB }, std::move(params)));
+              func->instructions.emplace_back(PexOpCode::CallParent, PexInstructionArgs{ valA, valB }, std::move(params));
             } else if (idEq(id, "callstatic")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
@@ -488,7 +488,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.emplace_back(expectConsumeValue(file));
               }
-              func->instructions.emplace_back(PexInstruction(PexOpCode::CallStatic, { valA, valB, valC }, std::move(params)));
+              func->instructions.emplace_back(PexOpCode::CallStatic, PexInstructionArgs{ valA, valB, valC }, std::move(params));
             } else {
               auto op = PexInstruction::tryParseOpCode(id);
               if (op == PexOpCode::Invalid)
@@ -498,7 +498,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.emplace_back(expectConsumeValue(file));
               }
-              func->instructions.emplace_back(PexInstruction(op, params));
+              func->instructions.emplace_back(op, std::move(params));
             }
 
             if (maybeConsume(TokenType::LineNumer)) {

@@ -32,8 +32,8 @@ static size_t getArgCountForOpCode(PexOpCode op) {
   CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
 }
 
-int32_t PexInstruction::getDestArgIndex() const {
-  switch (opCode) {
+int32_t PexInstruction::getDestArgIndexForOpCode(PexOpCode op) {
+  switch (op) {
     case PexOpCode::Nop:
       return -1;
     case PexOpCode::CallMethod:

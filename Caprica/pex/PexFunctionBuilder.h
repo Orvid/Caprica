@@ -147,13 +147,13 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCod
 #undef OP_ARG5
 
   PexFunctionBuilder& operator <<(op::callmethod&& instr) {
-    return emplace_back(PexInstruction(PexOpCode::CallMethod, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
+    return emplace_back(PexOpCode::CallMethod, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs));
   }
   PexFunctionBuilder& operator <<(op::callparent&& instr) {
-    return emplace_back(PexInstruction(PexOpCode::CallParent, PexInstructionArgs{ instr.a1, instr.a2 }, std::move(instr.variadicArgs)));
+    return emplace_back(PexOpCode::CallParent, PexInstructionArgs{ instr.a1, instr.a2 }, std::move(instr.variadicArgs));
   }
   PexFunctionBuilder& operator <<(op::callstatic&& instr) {
-    return emplace_back(PexInstruction(PexOpCode::CallStatic, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs)));
+    return emplace_back(PexOpCode::CallStatic, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs));
   }
 
   PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
@@ -266,10 +266,10 @@ private:
 
   template<typename... Args>
   PexFunctionBuilder& emplace_back(PexOpCode op, Args&&... args) {
-    return emplace_back(PexInstruction(op, PexInstructionArgs{ std::forward<Args>(args)... }));
+    return emplace_back(op, PexInstructionArgs{ std::forward<Args>(args)... }, std::vector<PexValue>{ 0 });
   }
   
-  PexFunctionBuilder& emplace_back(PexInstruction&& instr);
+  PexFunctionBuilder& emplace_back(PexOpCode op, PexInstructionArgs&& args, std::vector<PexValue>&& variadicArgs);
   PexLocalVariable* internalAllocateTempVar(const PexString& typeName);
 };
 

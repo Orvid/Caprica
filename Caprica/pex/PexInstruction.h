@@ -77,10 +77,8 @@ struct PexInstruction final
 
   explicit PexInstruction() = default;
   explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
-  explicit PexInstruction(PexOpCode op, std::initializer_list<PexValue> arguments) : opCode(op), args(arguments) { }
-  explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments) : opCode(op), args(arguments) { }
-  explicit PexInstruction(PexOpCode op, std::initializer_list<PexValue> arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(arguments), variadicArgs(std::move(varArguments)) { }
-  explicit PexInstruction(PexOpCode op, PexInstructionArgs arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(arguments), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments) : opCode(op), args(std::move(arguments)) { }
+  explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
   PexInstruction(const PexInstruction&) = default;
   PexInstruction(PexInstruction&&) = default;
   PexInstruction& operator=(const PexInstruction&) = default;
@@ -122,7 +120,7 @@ struct PexInstruction final
       CapricaReportingContext::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
     }
   }
-  int32_t getDestArgIndex() const;
+  static int32_t getDestArgIndexForOpCode(PexOpCode op);
 
   static PexInstruction read(PexReader& rdr);
   void write(PexWriter& wtr) const;
