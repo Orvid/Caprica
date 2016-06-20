@@ -361,7 +361,7 @@ static bool parseArgs(int argc, char* argv[], caprica::CapricaJobManager* jobMan
 int main(int argc, char* argv[])
 {
   caprica::CapricaJobManager jobManager{ };
-  jobManager.startup((uint32_t)(std::thread::hardware_concurrency() * 1.5));
+  jobManager.startup((uint32_t)std::thread::hardware_concurrency());
   auto startParse = std::chrono::high_resolution_clock::now();
   if (!parseArgs(argc, argv, &jobManager)) {
     caprica::CapricaReportingContext::breakIfDebugging();

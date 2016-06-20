@@ -2,8 +2,6 @@
 
 #include <cstring>
 
-#include <boost/algorithm/string/case_conv.hpp>
-
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
