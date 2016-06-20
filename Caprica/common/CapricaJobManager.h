@@ -31,6 +31,8 @@ private:
 
   friend struct CapricaJobManager;
   std::atomic<CapricaJob*> next{ nullptr };
+
+  bool tryRun();
 };
 
 struct CapricaJobManager final
@@ -38,6 +40,11 @@ struct CapricaJobManager final
   void startup(size_t workerCount);
   bool tryDeque(CapricaJob** retJob);
   void queueJob(CapricaJob* job);
+
+  void setQueueInitialized() { queueInitialized.store(true, std::memory_order_relaxed); }
+  // Run the currently executing thread as
+  // a worker.
+  void enjoin();
 
 private:
   struct DefaultJob final : public CapricaJob {
@@ -47,8 +54,11 @@ private:
   std::atomic<CapricaJob*> back{ &defaultJob };
   std::mutex queueAvailabilityMutex;
   std::condition_variable queueCondition;
+  std::atomic<size_t> queuedItemCount{ 0 };
   std::atomic<size_t> waiterCount{ 0 };
   std::atomic<bool> stopWorkers{ false };
+  std::atomic<bool> queueInitialized{ false };
+  std::atomic<size_t> workerCount{ 0 };
 
   void workerMain();
 };

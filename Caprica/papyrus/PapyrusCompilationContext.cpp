@@ -20,6 +20,10 @@
 
 namespace caprica { namespace papyrus {
 
+void PapyrusCompilationNode::awaitRead() {
+  readJob.await();
+}
+
 PapyrusObject* PapyrusCompilationNode::awaitParse() {
   parseJob.await();
   return resolvedObject;
@@ -228,6 +232,13 @@ struct PapyrusNamespace final
   // Key is unqualified name, value is full path to file.
   caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> objects{ };
 
+  void awaitRead() {
+    for (auto o : objects)
+      o.second->awaitRead();
+    for (auto c : children)
+      c.second->awaitRead();
+  }
+
   void queueCompile() {
     for (auto o : objects)
       o.second->queueCompile();
@@ -332,9 +343,14 @@ void PapyrusCompilationContext::pushNamespaceFullContents(const std::string& nam
   rootNamespace.createNamespace(namespaceName, std::move(map));
 }
 
-void PapyrusCompilationContext::doCompile() {
+void PapyrusCompilationContext::awaitRead() {
+  rootNamespace.awaitRead();
+}
+
+void PapyrusCompilationContext::doCompile(CapricaJobManager* jobManager) {
   rootNamespace.queueCompile();
-  rootNamespace.awaitCompile();
+  jobManager->setQueueInitialized();
+  jobManager->enjoin();
 }
 
 bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) {

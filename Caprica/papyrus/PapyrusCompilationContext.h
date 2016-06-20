@@ -54,6 +54,7 @@ struct PapyrusCompilationNode final
       delete resolutionContext;
   }
 
+  void awaitRead();
   PapyrusObject* awaitParse();
   PapyrusObject* awaitSemantic();
   void queueCompile();
@@ -109,7 +110,8 @@ private:
 
 struct PapyrusCompilationContext final
 {
-  static void doCompile();
+  static void awaitRead();
+  static void doCompile(CapricaJobManager* jobManager);
   static void pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map);
   static bool tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName);
 };

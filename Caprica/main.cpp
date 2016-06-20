@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
 
   auto startRead = std::chrono::high_resolution_clock::now();
   if (conf::Performance::performanceTestMode) {
-    //caprica::FSUtils::Cache::waitForAll();
+    caprica::papyrus::PapyrusCompilationContext::awaitRead();
   }
   auto endRead = std::chrono::high_resolution_clock::now();
   if (conf::Performance::dumpTiming)
@@ -381,10 +381,11 @@ int main(int argc, char* argv[])
 
   try {
     auto startCompile = std::chrono::high_resolution_clock::now();
-    caprica::papyrus::PapyrusCompilationContext::doCompile();
+    caprica::papyrus::PapyrusCompilationContext::doCompile(&jobManager);
     auto endCompile = std::chrono::high_resolution_clock::now();
     if (conf::Performance::dumpTiming) {
-      std::cout << "Compiled " << "N/A" /*caprica::CapricaStats::inputFileCount*/ << " files in " << std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count() << "ms" << std::endl;
+      auto compTime = std::chrono::duration_cast<std::chrono::milliseconds>(endCompile - startCompile).count();
+      std::cout << "Compiled " << "N/A" /*caprica::CapricaStats::inputFileCount*/ << " files in " << compTime << "ms" << std::endl;
       caprica::CapricaStats::outputStats();
     }
   } catch (const std::runtime_error& ex) {

@@ -1,8 +1,17 @@
 #include <common/CapricaJobManager.h>
 
+#include <common/CapricaReportingContext.h>
+
 namespace caprica {
 
 void CapricaJob::await() {
+  if (!tryRun()) {
+    std::unique_lock<std::mutex> ranLock{ ranMutex };
+    ranCondition.wait(ranLock, [this] { return hasRan.load(std::memory_order_consume); });
+  }
+}
+
+bool CapricaJob::tryRun() {
   if (!hasRan.load(std::memory_order_acquire)) {
     bool r = runningLock.load(std::memory_order_acquire);
     if (!r && runningLock.compare_exchange_strong(r, true)) {
@@ -13,10 +22,10 @@ void CapricaJob::await() {
       ranCondition.notify_all();
       // We deliberately never release the running lock
     } else {
-      std::unique_lock<std::mutex> ranLock{ ranMutex };
-      ranCondition.wait(ranLock, [this] { return hasRan.load(std::memory_order_consume); });
+      return false;
     }
   }
+  return true;
 }
 
 void CapricaJobManager::startup(size_t workerCount) {
@@ -30,24 +39,28 @@ void CapricaJobManager::startup(size_t workerCount) {
 
 bool CapricaJobManager::tryDeque(CapricaJob** retJob) {
   auto fron = front.load(std::memory_order_consume);
-  if (fron != nullptr && fron->next.load(std::memory_order_acquire) != nullptr) {
-    CapricaJob* prevFron = nullptr;
-    while (fron && !front.compare_exchange_weak(fron, fron->next)) {
-      prevFron = fron;
+  if (!fron)
+    return false;
+  auto next = fron->next.load(std::memory_order_acquire);
+  if (next != nullptr) {
+    while (!front.compare_exchange_weak(fron, next)) {
       if (fron == nullptr) {
         // We weren't the ones to put the nullptr there,
         // exit early so that the thread that did put it
         // there can safely put it back.
         return false;
       }
+      next = fron->next.load(std::memory_order_acquire);
     }
-    if (fron == nullptr) {
-      assert(prevFron != nullptr);
+    if (next == nullptr) {
       // We can only have managed to do this ourselves, nothing else will write
       // while front is still nullptr.
-      front.compare_exchange_weak(fron, prevFron);
-      return false;
+      front.compare_exchange_strong(next, fron);
+    } else {
+      queuedItemCount--;
     }
+  }
+  if (!fron->hasRan.load(std::memory_order_consume)) {
     *retJob = fron;
     return true;
   }
@@ -57,26 +70,50 @@ bool CapricaJobManager::tryDeque(CapricaJob** retJob) {
 void CapricaJobManager::queueJob(CapricaJob* job) {
   auto oldBack = back.load();
   while (!back.compare_exchange_weak(oldBack, job)) { }
+  queuedItemCount++;
   oldBack->next.store(job, std::memory_order_release);
 
   if (waiterCount > 0)
     queueCondition.notify_one();
 }
 
+void CapricaJobManager::enjoin() {
+  workerMain();
+}
+
 void CapricaJobManager::workerMain() {
+  std::mutex notARealMutex{ };
+  const auto waitCallback = [&] {
+    return queuedItemCount > 0 || stopWorkers.load(std::memory_order_consume);
+  };
+  workerCount++;
 StartOver:
   CapricaJob* job = nullptr;
   while (tryDeque(&job)) {
-    job->await();
+    job->tryRun();
   }
-  // Don't stop until all jobs have run.
-  if (stopWorkers.load(std::memory_order_consume))
+
+  // Don't stop until all jobs have been added.
+  if (stopWorkers.load(std::memory_order_consume)) {
+    workerCount--;
     return;
+  }
+  
+  // If the queue is fully initialized, then only the last
+  // living thread is allowed to shut everything down.
+  if (!queuedItemCount.load(std::memory_order_consume) &&
+      queueInitialized.load(std::memory_order_consume) &&
+      waiterCount.load(std::memory_order_consume) == workerCount - 1) {
+    stopWorkers.store(true, std::memory_order_release);
+    workerCount--;
+    queueCondition.notify_all();
+    return;
+  }
 
   {
-    std::unique_lock<std::mutex> lk{ queueAvailabilityMutex };
+    std::unique_lock<std::mutex> lk{ notARealMutex };
     waiterCount++;
-    queueCondition.wait(lk);
+    queueCondition.wait(lk, waitCallback);
     waiterCount--;
     goto StartOver;
   }
