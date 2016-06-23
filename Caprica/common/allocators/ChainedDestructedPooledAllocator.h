@@ -99,17 +99,11 @@ public:
   }
 
   template<typename... Args>
-  void emplace_back(Args&&... args) {
-    if (base == nullptr) {
-      base = new Heap();
-      current = base;
-    } else if (current->heap.size() >= heapSize) {
-      Heap* next = new Heap();
-      current->next = next;
-      current = next;
-    }
+  T& emplace_back(Args&&... args) {
+    ensure_space_for_emplace();
     count++;
     current->heap.emplace_back(std::forward<Args>(args)...);
+    return current->heap.back();
   }
 
   void reserve(size_t i) {
@@ -150,6 +144,18 @@ public:
   }
 
   size_t size() const { return count; }
+
+private:
+  void ensure_space_for_emplace() {
+    if (base == nullptr) {
+      base = new Heap();
+      current = base;
+    } else if (current->heap.size() >= heapSize) {
+      Heap* next = new Heap();
+      current->next = next;
+      current = next;
+    }
+  }
 };
 
 }}

@@ -127,18 +127,18 @@ struct callstatic final
 
 struct PexFunctionBuilder final
 {
-  PexFunctionBuilder& operator <<(op::nop&& instr) { return emplace_back(PexOpCode::Nop); }
+  PexFunctionBuilder& operator <<(op::nop&& instr) { return fixup(instructions.emplace_back(PexOpCode::Nop)); }
 
 #define OP_ARG1(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCode::opcode, instr.a1); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1)); }
 #define OP_ARG2(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCode::opcode, instr.a1, instr.a2); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2)); }
 #define OP_ARG3(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3)); }
 #define OP_ARG4(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4)); }
 #define OP_ARG5(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5)); }
   OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
@@ -147,13 +147,13 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return emplace_back(PexOpCod
 #undef OP_ARG5
 
   PexFunctionBuilder& operator <<(op::callmethod&& instr) {
-    return emplace_back(PexOpCode::CallMethod, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs));
+    return fixup(instructions.emplace_back(PexOpCode::CallMethod, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
   }
   PexFunctionBuilder& operator <<(op::callparent&& instr) {
-    return emplace_back(PexOpCode::CallParent, PexInstructionArgs{ instr.a1, instr.a2 }, std::move(instr.variadicArgs));
+    return fixup(instructions.emplace_back(PexOpCode::CallParent, instr.a1, instr.a2, std::move(instr.variadicArgs)));
   }
   PexFunctionBuilder& operator <<(op::callstatic&& instr) {
-    return emplace_back(PexOpCode::CallStatic, PexInstructionArgs{ instr.a1, instr.a2, instr.a3 }, std::move(instr.variadicArgs));
+    return fixup(instructions.emplace_back(PexOpCode::CallStatic, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
   }
 
   PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
@@ -264,12 +264,7 @@ private:
   std::vector<PexLabel*> curBreakStack{ };
   std::vector<PexLabel*> curContinueStack{ };
 
-  template<typename... Args>
-  PexFunctionBuilder& emplace_back(PexOpCode op, Args&&... args) {
-    return emplace_back(op, PexInstructionArgs{ std::forward<Args>(args)... }, std::vector<PexValue>{ 0 });
-  }
-  
-  PexFunctionBuilder& emplace_back(PexOpCode op, PexInstructionArgs&& args, std::vector<PexValue>&& variadicArgs);
+  PexFunctionBuilder& fixup(PexInstruction& instr);
   PexLocalVariable* internalAllocateTempVar(const PexString& typeName);
 };
 

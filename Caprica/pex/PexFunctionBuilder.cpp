@@ -74,15 +74,15 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
   return loc;
 }
 
-PexFunctionBuilder& PexFunctionBuilder::emplace_back(PexOpCode op, PexInstructionArgs&& args, std::vector<PexValue>&& variadicArgs) {
-  for (auto& v : args) {
+PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction& instr) {
+  for (auto& v : instr.args) {
     if (v.type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
       v = PexValue::Identifier(v.tmpVar->var);
     freeValueIfTemp(v);
   }
-  for (auto& v : variadicArgs) {
+  for (auto& v : instr.variadicArgs) {
     if (v.type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
@@ -90,24 +90,23 @@ PexFunctionBuilder& PexFunctionBuilder::emplace_back(PexOpCode op, PexInstructio
     freeValueIfTemp(v);
   }
 
-  auto destIdx = PexInstruction::getDestArgIndexForOpCode(op);
-  if (destIdx != -1 && args[destIdx].type == PexValueType::TemporaryVar) {
-    auto loc = internalAllocateTempVar(args[destIdx].tmpVar->type);
-    args[destIdx].tmpVar->var = loc;
-    args[destIdx] = PexValue::Identifier(loc);
+  auto destIdx = PexInstruction::getDestArgIndexForOpCode(instr.opCode);
+  if (destIdx != -1 && instr.args[destIdx].type == PexValueType::TemporaryVar) {
+    auto loc = internalAllocateTempVar(instr.args[destIdx].tmpVar->type);
+    instr.args[destIdx].tmpVar->var = loc;
+    instr.args[destIdx] = PexValue::Identifier(loc);
   }
 
-  for (auto& v : args) {
+  for (auto& v : instr.args) {
     if (v.type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
-  for (auto& v : variadicArgs) {
+  for (auto& v : instr.variadicArgs) {
     if (v.type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
 
   instructionLocations.emplace_back(currentLocation);
-  instructions.emplace_back(op, std::move(args), std::move(variadicArgs));
   return *this;
 }
 
