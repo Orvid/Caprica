@@ -114,6 +114,7 @@ void PexOptimizer::optimize(PexFile* file,
           if (opt->id < opt->branchTarget->id && isDeadBetween(opt->id, opt->branchTarget->id))
             opt->killInstruction();
           break;
+#if 0
         case PexOpCode::Not: {
           if (i <= 1)
             break;
@@ -137,6 +138,7 @@ void PexOptimizer::optimize(PexFile* file,
           opt->killInstruction();
           break;
         }
+#endif
         default:
           break;
       }
