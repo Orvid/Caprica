@@ -75,6 +75,16 @@ Again:
 }
 
 void ChainedPool::reset() {
+  auto curNode = rootDestructorChain;
+  if (curNode != nullptr) {
+    while (curNode != nullptr) {
+      curNode->destructor((void*)((size_t)curNode + sizeof(DestructionNode)));
+      curNode = curNode->next;
+    }
+    rootDestructorChain = nullptr;
+    currentDestructorNode = nullptr;
+  }
+
   current = &base;
   auto c = current;
   while (c && c->freeBytes != c->allocedHeapSize) {
