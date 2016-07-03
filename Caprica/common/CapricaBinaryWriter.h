@@ -2,14 +2,12 @@
 
 #include <cassert>
 #include <cstdint>
-#include <fstream>
-#include <iostream>
 #include <limits>
-#include <string>
 
 #include <boost/utility/string_ref.hpp>
 
 #include <common/FSUtils.h>
+#include <common/allocators/ChainedPool.h>
 
 namespace caprica {
 
@@ -19,8 +17,11 @@ struct CapricaBinaryWriter
   CapricaBinaryWriter(const CapricaBinaryWriter&) = delete;
   ~CapricaBinaryWriter() = default;
 
-  std::string&& getOutputBuffer() {
-    return std::move(strm);
+  template<typename F>
+  void applyToBuffers(F&& func) {
+    for (auto beg = strm.begin(), end = strm.end(); beg != end; ++beg) {
+      func(beg.data(), beg.size());
+    }
   }
 
   template<typename T>
@@ -36,61 +37,65 @@ struct CapricaBinaryWriter
 
   template<>
   void write(int8_t val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(uint8_t val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(int16_t val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(uint16_t val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(int32_t val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(uint32_t val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(float val) {
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(time_t val) {
     static_assert(sizeof(time_t) == 8, "time_t is not 64 bits");
-    strm.append((char*)&val, sizeof(val));
+    append((char*)&val, sizeof(val));
   }
 
   template<>
   void write(const std::string& val) {
     boundWrite<uint16_t>(val.size());
     if (val.size())
-      strm.append(val.c_str(), val.size());
+      append(val.c_str(), val.size());
   }
 
   template<>
   void write(boost::string_ref val) {
     boundWrite<uint16_t>(val.size());
     if (val.size())
-      strm.append(val.data(), val.size());
+      append(val.data(), val.size());
   }
 
 protected:
-  std::string strm{ };
+  allocators::ChainedPool strm{ 1024 * 4 };
+
+  void append(const char* __restrict a, size_t size) {
+    memcpy(strm.allocate(size), a, size);
+  }
 };
 
 }

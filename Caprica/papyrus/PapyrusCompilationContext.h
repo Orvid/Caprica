@@ -75,7 +75,7 @@ private:
   std::string sourceFilePath;
   boost::string_ref readFileData{ };
   std::string ownedReadFileData{ };
-  std::string dataToWrite{ };
+  pex::PexWriter* pexWriter{ nullptr };
   PapyrusScript* loadedScript{ nullptr };
   pex::PexFile* pexFile{ nullptr };
   PapyrusObject* resolvedObject{ nullptr };

@@ -37,30 +37,27 @@ PexObject* PexObject::read(PexReader& rdr) {
 
 void PexObject::write(PexWriter& wtr) const {
   wtr.write<PexString>(name);
-  PexWriter iwtr{ };
+  wtr.beginObject();
 
-  iwtr.write<PexString>(parentClassName);
-  iwtr.write<PexString>(documentationString);
-  iwtr.write<uint8_t>(isConst ? 0x01 : 0x00);
-  iwtr.write<PexUserFlags>(userFlags);
-  iwtr.write<PexString>(autoStateName);
+  wtr.write<PexString>(parentClassName);
+  wtr.write<PexString>(documentationString);
+  wtr.write<uint8_t>(isConst ? 0x01 : 0x00);
+  wtr.write<PexUserFlags>(userFlags);
+  wtr.write<PexString>(autoStateName);
   
-  iwtr.boundWrite<uint16_t>(structs.size());
+  wtr.boundWrite<uint16_t>(structs.size());
   for (auto s : structs)
-    s->write(iwtr);
-  iwtr.boundWrite<uint16_t>(variables.size());
+    s->write(wtr);
+  wtr.boundWrite<uint16_t>(variables.size());
   for (auto v : variables)
-    v->write(iwtr);
-  iwtr.boundWrite<uint16_t>(properties.size());
+    v->write(wtr);
+  wtr.boundWrite<uint16_t>(properties.size());
   for (auto p : properties)
-    p->write(iwtr);
-  iwtr.boundWrite<uint16_t>(states.size());
+    p->write(wtr);
+  wtr.boundWrite<uint16_t>(states.size());
   for (auto s : states)
-    s->write(iwtr);
-
-  auto&& str = iwtr.getOutputBuffer();
-  wtr.boundWrite<uint32_t>(str.size());
-  wtr.writeStream(std::move(str));
+    s->write(wtr);
+  wtr.endObject();
 }
 
 void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {

@@ -11,6 +11,7 @@ struct ChainedPool final
 
   char* allocate(size_t size);
   void reset();
+  size_t totalAllocatedBytes() const { return totalSize; }
 
 private:
   struct Heap final
@@ -30,13 +31,32 @@ private:
     ~Heap();
 
     bool tryAlloc(size_t size, void** retBuf);
+
+    friend struct HeapIterator;
+  };
+
+
+  struct HeapIterator final
+  {
+    const char* data() const;
+    size_t size() const;
+    bool operator !=(const HeapIterator& other) const;
+    HeapIterator& operator ++();
+  private:
+    friend ChainedPool;
+    Heap* curHeap{ nullptr };
   };
 
   size_t heapSize;
+  size_t totalSize{ 0 };
   Heap* current{ &base };
   Heap base;
 
   void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
+
+public:
+  HeapIterator begin() const;
+  HeapIterator end() const;
 };
 
 }}

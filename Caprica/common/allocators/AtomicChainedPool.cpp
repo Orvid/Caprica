@@ -1,14 +1,16 @@
-#include <common/CapricaAllocator.h>
+#include <common/allocators/AtomicChainedPool.h>
 
-namespace caprica {
+#include <common/CapricaReportingContext.h>
 
-ConcurrentPooledBufferAllocator::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(heapSize) {
+namespace caprica { namespace allocators {
+
+AtomicChainedPool::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(heapSize) {
   baseAlloc = malloc(heapSize);
   if (!baseAlloc)
     CapricaReportingContext::logicalFatal("Failed to allocate a Heap!");
 }
 
-ConcurrentPooledBufferAllocator::Heap::~Heap() {
+AtomicChainedPool::Heap::~Heap() {
   if (baseAlloc) {
     free(baseAlloc);
     baseAlloc = nullptr;
@@ -20,7 +22,7 @@ ConcurrentPooledBufferAllocator::Heap::~Heap() {
   }
 }
 
-bool ConcurrentPooledBufferAllocator::Heap::tryAlloc(size_t size, void** retBuf) {
+bool AtomicChainedPool::Heap::tryAlloc(size_t size, void** retBuf) {
   auto fb = freeBytes.load(std::memory_order_acquire);
   auto newFree = fb - size;
   while (fb > size) {
@@ -33,7 +35,7 @@ bool ConcurrentPooledBufferAllocator::Heap::tryAlloc(size_t size, void** retBuf)
   return false;
 }
 
-char* ConcurrentPooledBufferAllocator::allocate(size_t size) {
+char* AtomicChainedPool::allocate(size_t size) {
   if (size > heapSize) {
     return (char*)allocHeap(size, size);
   }
@@ -53,7 +55,7 @@ Again:
   return (char*)ret;
 }
 
-void* ConcurrentPooledBufferAllocator::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
+void* AtomicChainedPool::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
   void* ret = nullptr;
   auto hp = new Heap(newHeapSize);
   if (!hp->tryAlloc(firstAllocSize, &ret))
@@ -74,4 +76,4 @@ void* ConcurrentPooledBufferAllocator::allocHeap(size_t newHeapSize, size_t firs
   return ret;
 }
 
-}
+}}

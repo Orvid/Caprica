@@ -8,9 +8,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <common/CapricaAllocator.h>
 #include <common/CapricaConfig.h>
-#include <common/allocators/ReffyStringPool.h>
+#include <common/allocators/AtomicChainedPool.h>
 
 #include <papyrus/parser/PapyrusParser.h>
 
@@ -42,7 +41,7 @@ void PapyrusCompilationNode::awaitWrite() {
   writeJob.await();
 }
 
-ConcurrentPooledBufferAllocator readAllocator{ 1024 * 1024 * 4 };
+allocators::AtomicChainedPool readAllocator{ 1024 * 1024 * 4 };
 void PapyrusCompilationNode::FileReadJob::run() {
   if (parent->type == NodeType::PapyrusCompile || parent->type == NodeType::PasCompile || parent->type == NodeType::PexDissassembly) {
     if (!conf::General::quietCompile)
@@ -153,9 +152,8 @@ void PapyrusCompilationNode::FileCompileJob::run() {
         if (conf::CodeGeneration::enableOptimizations)
           pex::PexOptimizer::optimize(parent->pexFile);
 
-        pex::PexWriter wtr{ };
-        parent->pexFile->write(wtr);
-        parent->dataToWrite = std::move(wtr.getOutputBuffer());
+        parent->pexWriter = new pex::PexWriter();
+        parent->pexFile->write(*parent->pexWriter);
 
         if (conf::Debug::dumpPexAsm) {
           std::ofstream asmStrm(parent->outputDirectory + "\\" + parent->baseName.to_string() + ".pas", std::ofstream::binary);
@@ -182,9 +180,8 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       if (conf::CodeGeneration::enableOptimizations)
         pex::PexOptimizer::optimize(parent->pexFile);
 
-      pex::PexWriter wtr{ };
-      parent->pexFile->write(wtr);
-      parent->dataToWrite = std::move(wtr.getOutputBuffer());
+      parent->pexWriter = new pex::PexWriter();
+      parent->pexFile->write(*parent->pexWriter);
       delete parent->pexFile;
       parent->pexFile = nullptr;
       return;
@@ -209,8 +206,12 @@ void PapyrusCompilationNode::FileWriteJob::run() {
           boost::filesystem::create_directories(containingDir);
         std::ofstream destFile{ parent->outputDirectory + "\\" + baseName + ".pex", std::ifstream::binary };
         destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-        destFile << std::move(parent->dataToWrite);
+        parent->pexWriter->applyToBuffers([&](const char* data, size_t size) {
+          destFile.write(data, size);
+        });
       }
+      delete parent->pexWriter;
+      parent->pexWriter = nullptr;
       return;
     }
     case NodeType::Unknown:

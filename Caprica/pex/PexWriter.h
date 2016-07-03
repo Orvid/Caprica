@@ -2,11 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <fstream>
-#include <iostream>
 #include <limits>
-#include <string>
-#include <sstream>
 
 #include <common/CapricaBinaryWriter.h>
 #include <common/CapricaReportingContext.h>
@@ -67,13 +63,20 @@ struct PexWriter final : public CapricaBinaryWriter
     CapricaReportingContext::logicalFatal("Unknown PexValueType!");
   }
 
-  // This is intended specifically for use when
-  // writing a PexObject, which needs to know
-  // the full length of its data before writing
-  // the actual data.
-  void writeStream(std::string&& str) {
-    strm += str;
+  void beginObject() {
+    objectLength = (uint32_t*)strm.allocate(sizeof(uint32_t));
+    objectStartSize = strm.totalAllocatedBytes();
   }
+
+  void endObject() {
+    assert(strm.totalAllocatedBytes() - objectStartSize <= std::numeric_limits<uint32_t>::max);
+    *objectLength = (uint32_t)(strm.totalAllocatedBytes() - objectStartSize);
+    objectLength = nullptr;
+  }
+
+private:
+  uint32_t* objectLength{ nullptr };
+  size_t objectStartSize{ 0 };
 };
 
 }}

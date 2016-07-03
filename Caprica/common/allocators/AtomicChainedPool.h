@@ -4,22 +4,18 @@
 
 #include <atomic>
 
-#include <boost/container/static_vector.hpp>
-#include <boost/utility/string_ref.hpp>
+namespace caprica { namespace allocators {
 
-#include <common/CapricaReportingContext.h>
-
-namespace caprica {
-
-struct ConcurrentPooledBufferAllocator final
+struct AtomicChainedPool final
 {
-  explicit ConcurrentPooledBufferAllocator(size_t hpSize) : heapSize(hpSize), base(hpSize) { }
-  ~ConcurrentPooledBufferAllocator() = default;
+  explicit AtomicChainedPool(size_t hpSize) : heapSize(hpSize), base(hpSize) { }
+  ~AtomicChainedPool() = default;
 
   char* allocate(size_t size);
 
 private:
-  struct Heap final {
+  struct Heap final
+  {
     size_t allocedHeapSize;
     std::atomic<size_t> freeBytes;
     void* baseAlloc;
@@ -44,4 +40,4 @@ private:
   void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
 };
 
-}
+}}

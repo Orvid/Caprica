@@ -31,7 +31,26 @@ bool ChainedPool::Heap::tryAlloc(size_t size, void** retBuf) {
   return false;
 }
 
+const char* ChainedPool::HeapIterator::data() const {
+  return (const char*)curHeap->baseAlloc;
+}
+
+size_t ChainedPool::HeapIterator::size() const {
+  return curHeap->allocedHeapSize - curHeap->freeBytes;
+}
+
+bool ChainedPool::HeapIterator::operator !=(const HeapIterator& other) const {
+  return curHeap != other.curHeap;
+}
+
+ChainedPool::HeapIterator& ChainedPool::HeapIterator::operator ++() {
+  if (curHeap)
+    curHeap = curHeap->next;
+  return *this;
+}
+
 char* ChainedPool::allocate(size_t size) {
+  totalSize += size;
   if (size > heapSize) {
     return (char*)allocHeap(size, size);
   }
@@ -67,6 +86,17 @@ void* ChainedPool::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
     curHp = curHp->next;
   curHp->next = hp;
   return ret;
+}
+
+
+ChainedPool::HeapIterator ChainedPool::begin() const {
+  HeapIterator iter{ };
+  iter.curHeap = current;
+  return iter;
+}
+
+ChainedPool::HeapIterator ChainedPool::end() const {
+  return HeapIterator();
 }
 
 }}
