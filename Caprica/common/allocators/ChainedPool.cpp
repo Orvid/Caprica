@@ -74,6 +74,12 @@ Again:
   return (char*)ret;
 }
 
+boost::string_ref ChainedPool::allocateString(const char* str, size_t len) {
+  auto buf = allocate(len);
+  memcpy(buf, str, len);
+  return boost::string_ref(buf, len);
+}
+
 void ChainedPool::reset() {
   auto curNode = rootDestructorChain;
   if (curNode != nullptr) {

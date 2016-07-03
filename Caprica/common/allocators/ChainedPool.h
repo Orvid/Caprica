@@ -5,6 +5,8 @@
 #include <memory>
 #include <type_traits>
 
+#include <boost/utility/string_ref.hpp>
+
 namespace caprica { namespace allocators {
 
 struct ChainedPool final
@@ -36,6 +38,8 @@ struct ChainedPool final
     }
     return new (buf + sizeof(DestructionNode)) T(std::forward<Args...>(args)...);
   }
+  boost::string_ref allocateString(const char* str, size_t len);
+
   void reset();
   size_t totalAllocatedBytes() const { return totalSize; }
 
