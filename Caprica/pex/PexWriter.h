@@ -69,7 +69,7 @@ struct PexWriter final : public CapricaBinaryWriter
   }
 
   void endObject() {
-    assert(strm.totalAllocatedBytes() - objectStartSize <= std::numeric_limits<uint32_t>::max);
+    assert(strm.totalAllocatedBytes() - objectStartSize <= std::numeric_limits<uint32_t>::max());
     *objectLength = (uint32_t)(strm.totalAllocatedBytes() - objectStartSize);
     objectLength = nullptr;
   }
