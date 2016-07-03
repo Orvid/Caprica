@@ -465,13 +465,14 @@ StartOver:
       }
 
       setTok(TokenType::Identifier, baseLoc);
-      cur.sValue = str.to_string();
+      cur.sValue = str;
       return;
     }
 
     case '"':
     {
-      std::string str;
+      const char* baseStrm = strm;
+      size_t charsRequired = 0;
 
       while (peekChar() != '"' && peekChar() != '\r' && peekChar() != '\n' && peekChar() != -1) {
         if (peekChar() == '\\') {
@@ -479,16 +480,9 @@ StartOver:
           auto escapeChar = getChar();
           switch (escapeChar) {
             case 'n':
-              str.push_back('\n');
-              break;
             case 't':
-              str.push_back('\t');
-              break;
             case '\\':
-              str.push_back('\\');
-              break;
             case '"':
-              str.push_back('"');
               break;
             case -1:
               reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
@@ -496,16 +490,46 @@ StartOver:
               reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
-          str.push_back((char)getChar());
+          getChar();
         }
+        charsRequired++;
       }
+      boost::string_ref str{ baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() != '"')
         reportingContext.fatal(location, "Unclosed string!");
       getChar();
 
       setTok(TokenType::String, baseLoc);
-      cur.sValue = std::move(str);
+      if (charsRequired != str.size()) {
+        auto buf = alloc->allocate(charsRequired);
+        for (size_t i = 0, i2 = 0; i < charsRequired;) {
+          if (baseStrm[i2] == '\\') {
+            i2++;
+            switch (baseStrm[i2++]) {
+              case 'n':
+                buf[i++] = '\n';
+                break;
+              case 't':
+                buf[i++] = '\t';
+                break;
+              case '\\':
+                buf[i++] = '\\';
+                break;
+              case '"':
+                buf[i++] = '"';
+                break;
+              default:
+                reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)baseStrm[i2 - 1]);
+            }
+          } else {
+            buf[i++] = baseStrm[i2++];
+          }
+        }
+        cur.sValue = boost::string_ref(buf, charsRequired);
+      } else {
+        cur.sValue = alloc->allocateString(str.data(), str.size());
+      }
       return;
     }
 
@@ -540,28 +564,28 @@ StartOver:
 
     case '{':
     {
-      std::string str;
-
       // Trim all leading whitespace.
       while (isspace(peekChar()))
         getChar();
 
+      const char* baseStrm = strm;
+      size_t charsRequired = 0;
       while (peekChar() != '}' && peekChar() != -1) {
         // For sanity reasons, we only put out unix newlines in the
         // doc comment string.
+        charsRequired++;
         auto c2 = getChar();
         if (c2 == '\r' && peekChar() == '\n') {
           getChar();
-          str.push_back('\n');
           reportingContext.pushNextLineOffset(location);
         } else {
           if (c2 == '\n')
             reportingContext.pushNextLineOffset(location);
           // Whether this is a Unix newline, or a normal character,
           // we don't care, they both get written as-is.
-          str.push_back((char)c2);
         }
       }
+      boost::string_ref str{ baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() == -1)
         reportingContext.fatal(location, "Unexpected EOF before the end of a documentation comment!");
@@ -570,9 +594,25 @@ StartOver:
       setTok(TokenType::DocComment, baseLoc);
       // Trim trailing whitespace.
       auto lPos = str.find_last_not_of(" \t\n\v\f\r");
-      if (lPos != std::string::npos && lPos != str.size() + 1)
-        str.resize(lPos + 1);
-      cur.sValue = std::move(str);
+      if (lPos != boost::string_ref::npos && lPos != str.size() + 1 && lPos + 1 != str.size()) {
+        charsRequired -= str.size() - (lPos + 1);
+        str = str.substr(0, lPos + 1);
+      }
+
+      if (charsRequired != str.size()) {
+        auto buf = alloc->allocate(charsRequired);
+        for (size_t i = 0, i2 = 0; i < charsRequired;) {
+          if (baseStrm[i2] == '\r' && i2 + 1 < str.size() && baseStrm[i2 + 1] == '\n') {
+            i2 += 2;
+            buf[i++] = '\n';
+          } else {
+            buf[i++] = baseStrm[i2++];
+          }
+        }
+        cur.sValue = boost::string_ref(buf, charsRequired);
+      } else {
+        cur.sValue = alloc->allocateString(str.data(), str.size());
+      }
       return;
     }
 

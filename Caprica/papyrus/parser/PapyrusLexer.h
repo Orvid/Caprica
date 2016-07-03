@@ -4,6 +4,9 @@
 #include <functional>
 #include <string>
 
+#include <boost/utility/string_ref.hpp>
+
+#include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
@@ -128,10 +131,10 @@ struct PapyrusLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
+    CapricaFileLocation location{ };
     int32_t iValue{ };
     float fValue{ };
-    CapricaFileLocation location{ };
-    std::string sValue{ };
+    boost::string_ref sValue{ };
 
     explicit Token(TokenType tp) : type(tp) { }
     Token(const Token&) = delete;
@@ -143,9 +146,9 @@ struct PapyrusLexer
     std::string prettyString() const {
       switch (type) {
         case TokenType::Identifier:
-          return "Identifier(" + sValue + ")";
+          return "Identifier(" + sValue.to_string() + ")";
         case TokenType::String:
-          return "String(\"" + sValue + "\")";
+          return "String(\"" + sValue.to_string() + "\")";
         case TokenType::Integer:
           return "Integer(" + std::to_string(iValue) + ")";
         case TokenType::Float:
@@ -160,7 +163,8 @@ struct PapyrusLexer
 
   explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file, boost::string_ref data)
     : filename(file),
-      reportingContext(repCtx)
+      reportingContext(repCtx),
+      alloc(new allocators::ChainedPool(1024 * 4))
   {
     CapricaStats::lexedFilesCount++;
     strm = data.data();
@@ -171,6 +175,7 @@ struct PapyrusLexer
   ~PapyrusLexer() = default;
 
 protected:
+  allocators::ChainedPool* alloc;
   CapricaReportingContext& reportingContext;
   std::string filename;
   Token cur{ TokenType::Unknown };

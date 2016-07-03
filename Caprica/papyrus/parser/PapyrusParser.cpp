@@ -1081,7 +1081,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
       return val;
     case TokenType::String:
       val.type = PapyrusValueType::String;
-      val.s = std::move(cur.sValue);
+      val.s = cur.sValue.to_string();
       consume();
       return val;
     case TokenType::kNone:
@@ -1143,9 +1143,9 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
         if (cur.type == TokenType::kDefault)
           str = "default";
 
-        auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
+        auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str.to_string());
         if (!flg.isValidOn(location))
-          reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
+          reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.to_string().c_str());
 
         PapyrusUserFlags newFlag;
         newFlag.data = flg.getData();

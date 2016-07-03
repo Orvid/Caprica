@@ -1,6 +1,5 @@
 #pragma once
 
-#include <sstream>
 #include <string>
 
 #include <common/CapricaReportingContext.h>
@@ -79,22 +78,30 @@ private:
     maybeConsumeEOLs();
   }
 
-  std::string expectConsumeIdent() {
+  boost::string_ref expectConsumeIdentRef() {
     expect(TokenType::Identifier);
-    auto str = std::move(cur.sValue);
+    auto str = cur.sValue;
     consume();
     return str;
   }
 
-  std::string maybeConsumeDocString() {
+  std::string expectConsumeIdent() {
+    return expectConsumeIdentRef().to_string();
+  }
+
+  boost::string_ref maybeConsumeDocStringRef() {
     if (cur.type == TokenType::DocComment) {
-      auto str = std::move(cur.sValue);
+      auto str = cur.sValue;
       consume();
       expectConsumeEOLs();
       return str;
     }
     maybeConsumeEOLs();
     return "";
+  }
+
+  std::string maybeConsumeDocString() {
+    return maybeConsumeDocStringRef().to_string();
   }
 
 };
