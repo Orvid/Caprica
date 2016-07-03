@@ -20,7 +20,7 @@ struct ChainedPool final
     if (std::is_trivially_destructible<T>::value) {
       auto t = allocate(sizeof(T));
       __assume(t != nullptr);
-      return new (t) T(std::forward<Args...>(args)...);
+      return new (t) T(std::forward<Args>(args)...);
     }
     auto buf = allocate(sizeof(DestructionNode) + sizeof(T));
     __assume(buf != nullptr);
@@ -36,7 +36,7 @@ struct ChainedPool final
       currentDestructorNode->next = node;
       currentDestructorNode = node;
     }
-    return new (buf + sizeof(DestructionNode)) T(std::forward<Args...>(args)...);
+    return new (buf + sizeof(DestructionNode)) T(std::forward<Args>(args)...);
   }
   boost::string_ref allocateString(const char* str, size_t len);
 
