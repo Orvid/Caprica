@@ -64,7 +64,7 @@ struct PexWriter final : public CapricaBinaryWriter
   }
 
   void beginObject() {
-    objectLength = (uint32_t*)strm.allocate(sizeof(uint32_t));
+    objectLength = strm.make<uint32_t>();
     objectStartSize = strm.totalAllocatedBytes();
   }
 

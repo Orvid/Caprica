@@ -2,18 +2,50 @@
 
 #include <stdlib.h>
 
+#include <memory>
+#include <type_traits>
+
 namespace caprica { namespace allocators {
 
 struct ChainedPool final
 {
   explicit ChainedPool(size_t hpSize) : heapSize(hpSize), base(hpSize) { }
-  ~ChainedPool() = default;
+  ~ChainedPool();
 
   char* allocate(size_t size);
+  template<typename T, typename... Args>
+  T* make(Args&&... args) {
+    if (std::is_trivially_destructible<T>::value) {
+      auto t = allocate(sizeof(T));
+      __assume(t != nullptr);
+      return new (t) T(std::forward<Args...>(args)...);
+    }
+    auto buf = allocate(sizeof(DestructionNode) + sizeof(T));
+    __assume(buf != nullptr);
+    auto node = (DestructionNode*)buf;
+    node->destructor = [](void* val) {
+      ((T*)val)->T::~T();
+    };
+    node->next = nullptr;
+    if (!rootDestructorChain) {
+      rootDestructorChain = node;
+      currentDestructorNode = node;
+    } else {
+      currentDestructorNode->next = node;
+      currentDestructorNode = node;
+    }
+    return new (buf + sizeof(DestructionNode)) T(std::forward<Args...>(args)...);
+  }
   void reset();
   size_t totalAllocatedBytes() const { return totalSize; }
 
 private:
+  struct DestructionNode final
+  {
+    void(*destructor)(void*){ nullptr };
+    DestructionNode* next{ nullptr };
+  };
+
   struct Heap final
   {
     size_t allocedHeapSize;
@@ -35,7 +67,6 @@ private:
     friend struct HeapIterator;
   };
 
-
   struct HeapIterator final
   {
     const char* data() const;
@@ -51,6 +82,8 @@ private:
   size_t totalSize{ 0 };
   Heap* current{ &base };
   Heap base;
+  DestructionNode* rootDestructorChain{ nullptr };
+  DestructionNode* currentDestructorNode{ nullptr };
 
   void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
 

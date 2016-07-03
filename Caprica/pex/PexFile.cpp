@@ -128,9 +128,9 @@ void PexFile::write(PexWriter& wtr) const {
   wtr.write<uint8_t>(minorVersion);
   wtr.write<uint16_t>(gameID);
   wtr.write<time_t>(compilationTime);
-  wtr.write<const std::string&>(sourceFileName);
-  wtr.write<const std::string&>(userName);
-  wtr.write<const std::string&>(computerName);
+  wtr.write<boost::string_ref>(sourceFileName);
+  wtr.write<boost::string_ref>(userName);
+  wtr.write<boost::string_ref>(computerName);
 
   wtr.boundWrite<uint16_t>(stringTable->size());
   for (size_t i = 0; i < stringTable->size(); i++)

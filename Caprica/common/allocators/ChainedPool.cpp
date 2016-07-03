@@ -4,6 +4,14 @@
 
 namespace caprica { namespace allocators {
 
+ChainedPool::~ChainedPool() {
+  auto curNode = rootDestructorChain;
+  while (curNode != nullptr) {
+    curNode->destructor((void*)((size_t)curNode + sizeof(DestructionNode)));
+    curNode = curNode->next;
+  }
+}
+
 ChainedPool::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(heapSize) {
   baseAlloc = malloc(heapSize);
   if (!baseAlloc)
@@ -87,7 +95,6 @@ void* ChainedPool::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
   curHp->next = hp;
   return ret;
 }
-
 
 ChainedPool::HeapIterator ChainedPool::begin() const {
   HeapIterator iter{ };

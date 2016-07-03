@@ -37,50 +37,43 @@ struct CapricaBinaryWriter
 
   template<>
   void write(int8_t val) {
-    append((char*)&val, sizeof(val));
+    strm.make<int8_t>(val);
   }
 
   template<>
   void write(uint8_t val) {
-    append((char*)&val, sizeof(val));
+    strm.make<uint8_t>(val);
   }
 
   template<>
   void write(int16_t val) {
-    append((char*)&val, sizeof(val));
+    strm.make<int16_t>(val);
   }
 
   template<>
   void write(uint16_t val) {
-    append((char*)&val, sizeof(val));
+    strm.make<uint16_t>(val);
   }
 
   template<>
   void write(int32_t val) {
-    append((char*)&val, sizeof(val));
+    strm.make<int32_t>(val);
   }
 
   template<>
   void write(uint32_t val) {
-    append((char*)&val, sizeof(val));
+    strm.make<uint32_t>(val);
   }
 
   template<>
   void write(float val) {
-    append((char*)&val, sizeof(val));
+    strm.make<float>(val);
   }
 
   template<>
   void write(time_t val) {
     static_assert(sizeof(time_t) == 8, "time_t is not 64 bits");
-    append((char*)&val, sizeof(val));
-  }
-
-  template<>
-  void write(const std::string& val) {
-    boundWrite<uint16_t>(val.size());
-    if (val.size())
-      append(val.c_str(), val.size());
+    strm.make<time_t>(val);
   }
 
   template<>
