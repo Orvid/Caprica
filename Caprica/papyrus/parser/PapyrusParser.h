@@ -85,10 +85,6 @@ private:
     return str;
   }
 
-  std::string expectConsumeIdent() {
-    return expectConsumeIdentRef().to_string();
-  }
-
   boost::string_ref maybeConsumeDocStringRef() {
     if (cur.type == TokenType::DocComment) {
       auto str = cur.sValue;
@@ -98,10 +94,6 @@ private:
     }
     maybeConsumeEOLs();
     return "";
-  }
-
-  std::string maybeConsumeDocString() {
-    return maybeConsumeDocStringRef().to_string();
   }
 
 };

@@ -17,17 +17,14 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusState final
 {
-  std::string name{ "" };
+  boost::string_ref name{ "" };
   std::vector<PapyrusFunction*> functions{ };
 
   CapricaFileLocation location;
 
   explicit PapyrusState(CapricaFileLocation loc) : location(loc) { }
   PapyrusState(const PapyrusState&) = delete;
-  ~PapyrusState() {
-    for (auto f : functions)
-      delete f;
-  }
+  ~PapyrusState() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     auto state = new pex::PexState();
@@ -41,10 +38,10 @@ struct PapyrusState final
     }
 
     if (name == "") {
-      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_EmptyStateFunctionCount, functions.size(), name.c_str());
+      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_EmptyStateFunctionCount, functions.size(), name);
       EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_StaticFunctionCount, staticFunctionCount);
     } else {
-      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexState_FunctionCount, functions.size(), name.c_str());
+      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexState_FunctionCount, functions.size(), name);
     }
 
     obj->states.push_back(state);

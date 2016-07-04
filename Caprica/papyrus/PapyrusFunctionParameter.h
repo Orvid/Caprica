@@ -19,7 +19,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusFunctionParameter final
 {
-  std::string name{ "" };
+  boost::string_ref name{ "" };
   PapyrusType type;
   PapyrusValue defaultValue{ PapyrusValue::Default() };
 

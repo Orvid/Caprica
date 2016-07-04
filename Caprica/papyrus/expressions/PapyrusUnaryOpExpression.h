@@ -23,10 +23,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
 
   explicit PapyrusUnaryOpExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusUnaryOpExpression(const PapyrusUnaryOpExpression&) = delete;
-  virtual ~PapyrusUnaryOpExpression() override {
-    if (innerExpression)
-      delete innerExpression;
-  }
+  virtual ~PapyrusUnaryOpExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;

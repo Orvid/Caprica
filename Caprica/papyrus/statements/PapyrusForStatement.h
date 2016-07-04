@@ -22,20 +22,7 @@ struct PapyrusForStatement final : public PapyrusStatement
 
   explicit PapyrusForStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   PapyrusForStatement(const PapyrusForStatement&) = delete;
-  virtual ~PapyrusForStatement() override {
-    if (declareStatement)
-      delete declareStatement;
-    if (iteratorVariable)
-      delete iteratorVariable;
-    if (initialValue)
-      delete initialValue;
-    if (targetValue)
-      delete targetValue;
-    if (stepValue)
-      delete stepValue;
-    for (auto s : body)
-      delete s;
-  }
+  virtual ~PapyrusForStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     if (declareStatement)

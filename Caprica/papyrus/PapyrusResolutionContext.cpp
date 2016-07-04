@@ -24,16 +24,16 @@
 
 namespace caprica { namespace papyrus {
 
-void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const std::string& import) {
+void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, boost::string_ref import) {
   PapyrusCompilationNode* retNode;
   boost::string_ref retStrucName;
   if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", import, &retNode, &retStrucName))
-    reportingContext.error(location, "Failed to find imported script '%s'!", import.c_str());
+    reportingContext.error(location, "Failed to find imported script '%s'!", import.to_string().c_str());
   if (retStrucName.length())
-    reportingContext.error(location, "You cannot directly import a single struct '%s'!", import.c_str());
+    reportingContext.error(location, "You cannot directly import a single struct '%s'!", import.to_string().c_str());
   for (auto o : importedNodes) {
     if (o == retNode)
-      reportingContext.error(location, "Duplicate import of '%s'.", import.c_str());
+      reportingContext.error(location, "Duplicate import of '%s'.", import.to_string().c_str());
   }
   importedNodes.push_back(retNode);
 }
@@ -214,7 +214,7 @@ CheckDebug:
   }
 }
 
-PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const {
+PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, boost::string_ref name) const {
   for (auto f : parentObj->getRootState()->functions) {
     if (idEq(f->name, name) && f->functionType == PapyrusFunctionType::Event)
       return f;
@@ -226,7 +226,7 @@ PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* 
   return nullptr;
 }
 
-PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const PapyrusObject* parentObj, const std::string& name) const {
+PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const PapyrusObject* parentObj, boost::string_ref name) const {
   for (auto c : parentObj->customEvents) {
     if (idEq(c->name, name))
       return c;
@@ -238,7 +238,7 @@ PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const Papyru
   return nullptr;
 }
 
-PapyrusState* PapyrusResolutionContext::tryResolveState(const std::string& name, const PapyrusObject* parentObj) const {
+PapyrusState* PapyrusResolutionContext::tryResolveState(boost::string_ref name, const PapyrusObject* parentObj) const {
   if (!parentObj)
     parentObj = object;
 
@@ -314,7 +314,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   PapyrusCompilationNode* retNode{ nullptr };
   boost::string_ref retStructName;
   if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "", tp.name, &retNode, &retStructName))
-    reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.c_str());
+    reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.to_string().c_str());
 
   PapyrusObject* foundObj = lazy ? retNode->awaitParse() : retNode->awaitSemantic();
   if (retStructName.size() == 0)
@@ -323,13 +323,13 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   PapyrusStruct* resStruct = nullptr;
   if (tryResolveStruct(foundObj, retStructName, &resStruct))
     return PapyrusType::ResolvedStruct(tp.location, resStruct);
-  reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.to_string().c_str(), foundObj->name.c_str());
+  reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.to_string().c_str(), foundObj->name.to_string().c_str());
 }
 
 void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
   for (auto is : localVariableScopeStack) {
     if (is.count(local->name)) {
-      reportingContext.error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.c_str());
+      reportingContext.error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.to_string().c_str());
       return;
     }
   }
@@ -339,7 +339,7 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
   auto id = tryResolveIdentifier(ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
+    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.name.to_string().c_str());
   return id;
 }
 
@@ -391,7 +391,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
   auto id = tryResolveMemberIdentifier(baseType, ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.name.c_str());
+    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.name.to_string().c_str());
   return id;
 }
 
@@ -423,7 +423,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
 PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal) const {
   auto id = tryResolveFunctionIdentifier(baseType, ident, wantGlobal);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    reportingContext.fatal(ident.location, "Unresolved function name '%s'!", ident.name.c_str());
+    reportingContext.fatal(ident.location, "Unresolved function name '%s'!", ident.name.to_string().c_str());
   return id;
 }
 
@@ -437,7 +437,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       for (auto& func : state->functions) {
         if (idEq(func->name, ident.name)) {
           if (wantGlobal && !func->isGlobal())
-            reportingContext.error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.c_str());
+            reportingContext.error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.to_string().c_str());
           return PapyrusIdentifier::Function(ident.location, func);
         }
       }
@@ -474,7 +474,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     } else if (idEq(ident.name, "removelast")) {
       fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
     } else {
-      reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.c_str());
+      reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.to_string().c_str());
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
@@ -482,7 +482,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       for (auto& func : state->functions) {
         if (idEq(func->name, ident.name)) {
           if (!wantGlobal && func->isGlobal())
-            reportingContext.error(ident.location, "You cannot call the global function '%s' on an object.", func->name.c_str());
+            reportingContext.error(ident.location, "You cannot call the global function '%s' on an object.", func->name.to_string().c_str());
           return PapyrusIdentifier::Function(ident.location, func);
         }
       }

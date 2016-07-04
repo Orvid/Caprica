@@ -4,6 +4,8 @@
 #include <memory>
 #include <string>
 
+#include <boost/utility/string_ref.hpp>
+
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
 
@@ -62,14 +64,16 @@ struct PapyrusType final
   PapyrusType& operator =(PapyrusType&&) = default;
   ~PapyrusType() = default;
 
-  static PapyrusType Unresolved(CapricaFileLocation loc, const std::string& nm) {
+  static PapyrusType Unresolved(CapricaFileLocation loc, const std::string& nm) = delete;
+  static PapyrusType Unresolved(CapricaFileLocation loc, std::string&& nm) = delete;
+  static PapyrusType Unresolved(CapricaFileLocation loc, const char* nm) {
     auto pt = PapyrusType(Kind::Unresolved, loc);
     pt.name = nm;
     return pt;
   }
-  static PapyrusType Unresolved(CapricaFileLocation loc, std::string&& nm) {
+  static PapyrusType Unresolved(CapricaFileLocation loc, boost::string_ref nm) {
     auto pt = PapyrusType(Kind::Unresolved, loc);
-    pt.name = std::move(nm);
+    pt.name = nm;
     return pt;
   }
 
@@ -123,7 +127,7 @@ struct PapyrusType final
 private:
   friend struct PapyrusResolutionContext;
 
-  std::string name{ };
+  boost::string_ref name{ };
   PoisonKind poisonState{ PoisonKind::None };
   std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
 

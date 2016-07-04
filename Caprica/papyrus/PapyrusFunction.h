@@ -34,16 +34,16 @@ enum class PapyrusFunctionType
 
 struct PapyrusFunction final
 {
-  std::string name{ "" };
-  std::string documentationComment{ "" };
+  boost::string_ref name{ "" };
+  boost::string_ref documentationComment{ "" };
   PapyrusType returnType;
   PapyrusUserFlags userFlags{ };
   std::vector<PapyrusFunctionParameter*> parameters{ };
   std::vector<statements::PapyrusStatement*> statements{ };
   PapyrusObject* parentObject{ nullptr };
   PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
-  std::string remoteEventParent{ "" };
-  std::string remoteEventName{ "" };
+  boost::string_ref remoteEventParent{ "" };
+  boost::string_ref remoteEventName{ "" };
 
   CapricaFileLocation location;
 
@@ -54,12 +54,7 @@ struct PapyrusFunction final
 
   explicit PapyrusFunction(CapricaFileLocation loc, PapyrusType&& ret) : location(loc), returnType(std::move(ret)) { }
   PapyrusFunction(const PapyrusFunction&) = delete;
-  ~PapyrusFunction() {
-    for (auto p : parameters)
-      delete p;
-    for (auto s : statements)
-      delete s;
-  }
+  ~PapyrusFunction() = default;
 
   pex::PexFunction* buildPex(CapricaReportingContext& repCtx, 
                              pex::PexFile* file,

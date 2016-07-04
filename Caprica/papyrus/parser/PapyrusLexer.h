@@ -206,6 +206,7 @@ private:
     Token{ TokenType::Unknown },
   };
 
+  __forceinline
   int getChar() {
     if (strmI >= strmLen)
       return -1;
@@ -216,6 +217,7 @@ private:
     return (unsigned)c;
   }
 
+  __forceinline
   int peekChar() {
     if (strmI + 1 > strmLen)
       return -1;
@@ -223,6 +225,8 @@ private:
   }
 
   void realConsume();
+
+  __forceinline
   void setTok(TokenType tp, CapricaFileLocation loc, int consumeChars = 0);
 };
 

@@ -13,7 +13,7 @@ struct PapyrusObject;
 
 struct PapyrusCustomEvent final
 {
-  std::string name{ };
+  boost::string_ref name{ };
   PapyrusObject* parentObject{ nullptr };
   CapricaFileLocation location;
 

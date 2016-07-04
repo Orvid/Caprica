@@ -40,15 +40,15 @@ enum class PapyrusResoultionState
 
 struct PapyrusObject final
 {
-  std::string name{ "" };
-  std::string documentationString{ "" };
+  boost::string_ref name{ "" };
+  boost::string_ref documentationString{ "" };
   PapyrusUserFlags userFlags{ };
   PapyrusType parentClass;
   PapyrusState* autoState{ nullptr };
   
   CapricaFileLocation location;
 
-  std::vector<std::pair<CapricaFileLocation, std::string>> imports{ };
+  std::vector<std::pair<CapricaFileLocation, boost::string_ref>> imports{ };
   std::vector<PapyrusStruct*> structs{ };
   std::vector<PapyrusVariable*> variables{ };
   std::vector<PapyrusPropertyGroup*> propertyGroups{ };
@@ -65,16 +65,7 @@ struct PapyrusObject final
     states.push_back(rootState);
   }
   PapyrusObject(const PapyrusObject&) = delete;
-  ~PapyrusObject() {
-    for (auto s : structs)
-      delete s;
-    for (auto v : variables)
-      delete v;
-    for (auto g : propertyGroups)
-      delete g;
-    for (auto s : states)
-      delete s;
-  }
+  ~PapyrusObject() = default;
 
   PapyrusPropertyGroup* getRootPropertyGroup();
   const PapyrusState* getRootState() const { return rootState; }
@@ -83,14 +74,14 @@ struct PapyrusObject final
   boost::string_ref loweredName() const {
     if (lowerName.size() == name.size())
       return lowerName;
-    lowerName = name;
+    lowerName = name.to_string();
     identifierToLower(lowerName);
     return lowerName;
   }
 
   boost::string_ref getNamespaceName() const {
     auto pos = name.rfind(':');
-    if (pos != std::string::npos)
+    if (pos != boost::string_ref::npos)
       return boost::string_ref(name).substr(0, pos);
     return "";
   }

@@ -38,12 +38,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
 
   explicit PapyrusBinaryOpExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   PapyrusBinaryOpExpression(const PapyrusBinaryOpExpression&) = delete;
-  virtual ~PapyrusBinaryOpExpression() override {
-    if (left)
-      delete left;
-    if (right)
-      delete right;
-  }
+  virtual ~PapyrusBinaryOpExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;

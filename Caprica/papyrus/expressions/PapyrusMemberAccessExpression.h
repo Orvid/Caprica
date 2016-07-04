@@ -18,12 +18,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
 
   explicit PapyrusMemberAccessExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusMemberAccessExpression(const PapyrusMemberAccessExpression&) = delete;
-  virtual ~PapyrusMemberAccessExpression() override {
-    if (baseExpression)
-      delete baseExpression;
-    if (accessExpression)
-      delete accessExpression;
-  }
+  virtual ~PapyrusMemberAccessExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
@@ -69,7 +64,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
         if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
           auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject)
-            ctx->reportingContext.fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.c_str());
+            ctx->reportingContext.fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.to_string().c_str());
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function, true);
           fc->semantic(ctx);
           return;

@@ -34,11 +34,11 @@ std::string PapyrusType::prettyString() const {
     case Kind::Array:
       return arrayElementType->prettyString() + "[]";
     case Kind::Unresolved:
-      return "unresolved(" + name + ")";
+      return "unresolved(" + name.to_string() + ")";
     case Kind::ResolvedObject:
-      return resolvedObject->name;
+      return resolvedObject->name.to_string();
     case Kind::ResolvedStruct:
-      return "struct " + resolvedStruct->parentObject->name + "." + resolvedStruct->name;
+      return "struct " + resolvedStruct->parentObject->name.to_string() + "." + resolvedStruct->name.to_string();
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
@@ -62,12 +62,12 @@ std::string PapyrusType::getTypeString() const {
     case Kind::Array:
       return arrayElementType->getTypeString() + "[]";
     case Kind::Unresolved:
-      return name;
+      return name.to_string();
     case Kind::ResolvedObject:
       return resolvedObject->loweredName().to_string();
     case Kind::ResolvedStruct:
     {
-      auto name = resolvedStruct->parentObject->name + "#" + resolvedStruct->name;
+      auto name = resolvedStruct->parentObject->name.to_string() + "#" + resolvedStruct->name.to_string();
       identifierToLower(name);
       return name;
     }

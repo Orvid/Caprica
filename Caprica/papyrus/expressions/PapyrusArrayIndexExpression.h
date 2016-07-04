@@ -16,12 +16,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
 
   explicit PapyrusArrayIndexExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusArrayIndexExpression(const PapyrusArrayIndexExpression&) = delete;
-  virtual ~PapyrusArrayIndexExpression() override {
-    if (baseExpression)
-      delete baseExpression;
-    if (indexExpression)
-      delete indexExpression;
-  }
+  virtual ~PapyrusArrayIndexExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;

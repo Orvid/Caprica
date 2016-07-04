@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_set>
 
+#include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
 
@@ -33,6 +34,7 @@ namespace statements { struct PapyrusDeclareStatement; }
 struct PapyrusResolutionContext final
 {
   CapricaReportingContext& reportingContext;
+  allocators::ChainedPool* allocator{ nullptr };
   const PapyrusScript* script{ nullptr };
   const PapyrusObject* object{ nullptr };
   const PapyrusState* state{ nullptr };
@@ -41,7 +43,7 @@ struct PapyrusResolutionContext final
   // a pex file.
   bool isPexResolution{ false };
 
-  void addImport(const CapricaFileLocation& location, const std::string& import);
+  void addImport(const CapricaFileLocation& location, boost::string_ref import);
   void clearImports() { importedNodes.clear(); }
 
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
@@ -75,9 +77,9 @@ struct PapyrusResolutionContext final
 
   void addLocalVariable(statements::PapyrusDeclareStatement* ident);
 
-  PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, const std::string& name) const;
-  PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, const std::string& name) const;
-  PapyrusState* tryResolveState(const std::string& name, const PapyrusObject* parentObj = nullptr) const;
+  PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, boost::string_ref name) const;
+  PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, boost::string_ref name) const;
+  PapyrusState* tryResolveState(boost::string_ref name, const PapyrusObject* parentObj = nullptr) const;
   PapyrusType resolveType(PapyrusType tp, bool lazy = false);
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;
@@ -97,7 +99,7 @@ struct PapyrusResolutionContext final
         // TODO: Output location of first name.
         auto f = foundNames.find(member->name);
         if (f != foundNames.end()) {
-          reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName, member->name.c_str());
+          reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName, member->name.to_string().c_str());
         } else {
           foundNames.insert(member->name);
         }

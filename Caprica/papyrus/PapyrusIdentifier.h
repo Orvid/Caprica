@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <boost/utility/string_ref.hpp>
+
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
 
@@ -76,14 +78,16 @@ struct PapyrusIdentifier final
   PapyrusIdentifier& operator =(PapyrusIdentifier&&) = default;
   ~PapyrusIdentifier() = default;
 
-  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const std::string& nm) {
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const std::string& nm) = delete;
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, std::string&& nm) = delete;
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const char* nm) {
     auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
     id.name = nm;
     return id;
   }
-  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, std::string&& nm) {
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, boost::string_ref nm) {
     auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
-    id.name = std::move(nm);
+    id.name = nm;
     return id;
   }
   static PapyrusIdentifier Property(CapricaFileLocation loc, PapyrusProperty* p);
@@ -105,7 +109,7 @@ private:
   friend expressions::PapyrusMemberAccessExpression;
   friend PapyrusResolutionContext;
 
-  std::string name{ };
+  boost::string_ref name{ };
 
   PapyrusIdentifier(PapyrusIdentifierType k, CapricaFileLocation loc) : type(k), location(loc) { }
 };

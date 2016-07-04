@@ -14,10 +14,7 @@ struct PapyrusExpressionStatement final : public PapyrusStatement
 
   explicit PapyrusExpressionStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusExpressionStatement(const PapyrusExpressionStatement&) = delete;
-  virtual ~PapyrusExpressionStatement() override {
-    if (expression)
-      delete expression;
-  }
+  virtual ~PapyrusExpressionStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     cfg.appendStatement(this);

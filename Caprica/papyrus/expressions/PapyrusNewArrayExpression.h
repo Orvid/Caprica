@@ -19,10 +19,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
 
   explicit PapyrusNewArrayExpression(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusExpression(loc), type(std::move(tp)) { }
   PapyrusNewArrayExpression(const PapyrusNewArrayExpression&) = delete;
-  virtual ~PapyrusNewArrayExpression() override {
-    if (lengthExpression)
-      delete lengthExpression;
-  }
+  virtual ~PapyrusNewArrayExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;

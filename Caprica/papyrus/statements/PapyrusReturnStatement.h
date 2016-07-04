@@ -15,10 +15,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
 
   explicit PapyrusReturnStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusReturnStatement(const PapyrusReturnStatement&) = delete;
-  virtual ~PapyrusReturnStatement() override {
-    if (returnValue)
-      delete returnValue;
-  }
+  virtual ~PapyrusReturnStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     cfg.terminateNode(PapyrusControlFlowNodeEdgeType::Return);

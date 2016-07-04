@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include <common/allocators/ChainedPool.h>
 #include <common/CapricaReportingContext.h>
 
 #include <papyrus/PapyrusObject.h>
@@ -19,13 +20,11 @@ struct PapyrusScript final
   time_t lastModificationTime{ };
   std::string sourceFileName{ "" };
   std::vector<PapyrusObject*> objects{ };
+  allocators::ChainedPool* allocator{ nullptr };
 
   explicit PapyrusScript() = default;
   PapyrusScript(const PapyrusScript&) = delete;
-  ~PapyrusScript() {
-    for (auto obj : objects)
-      delete obj;
-  }
+  ~PapyrusScript() = default;
 
   pex::PexFile* buildPex(CapricaReportingContext& repCtx) const;
 

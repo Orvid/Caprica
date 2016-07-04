@@ -16,10 +16,7 @@ struct PapyrusIsExpression final : public PapyrusExpression
 
   explicit PapyrusIsExpression(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusExpression(loc), targetType(std::move(tp)) { }
   PapyrusIsExpression(const PapyrusIsExpression&) = delete;
-  virtual ~PapyrusIsExpression() override {
-    if (innerExpression)
-      delete innerExpression;
-  }
+  virtual ~PapyrusIsExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;

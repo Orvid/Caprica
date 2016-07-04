@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <boost/utility/string_ref.hpp>
+
 #include <common/CapricaFileLocation.h>
 
 #include <papyrus/PapyrusType.h>
@@ -26,7 +28,7 @@ struct PapyrusValue final
 {
   PapyrusValueType type{ PapyrusValueType::None };
   CapricaFileLocation location;
-  std::string s;
+  boost::string_ref s;
   union
   {
     int32_t i;

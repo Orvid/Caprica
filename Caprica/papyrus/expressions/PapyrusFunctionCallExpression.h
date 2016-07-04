@@ -17,25 +17,19 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
 {
   struct Parameter final
   {
-    std::string name{ "" };
+    boost::string_ref name{ "" };
     PapyrusExpression* value{ nullptr };
 
     explicit Parameter() = default;
     Parameter(const Parameter&) = delete;
-    ~Parameter() {
-      if (value)
-        delete value;
-    }
+    ~Parameter() = default;
   };
   PapyrusIdentifier function;
   std::vector<Parameter*> arguments{ };
 
   explicit PapyrusFunctionCallExpression(CapricaFileLocation loc, PapyrusIdentifier&& f) : PapyrusExpression(loc), function(std::move(f)) { }
   PapyrusFunctionCallExpression(const PapyrusFunctionCallExpression&) = delete;
-  virtual ~PapyrusFunctionCallExpression() override {
-    for (auto a : arguments)
-      delete a;
-  }
+  virtual ~PapyrusFunctionCallExpression() override = default;
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, PapyrusExpression* base) const;
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {

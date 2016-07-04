@@ -121,6 +121,7 @@ void PapyrusCompilationNode::FileParseJob::run() {
   for (auto o : parent->loadedScript->objects)
     o->compilationNode = parent;
   parent->resolutionContext = new PapyrusResolutionContext(parent->reportingContext);
+  parent->resolutionContext->allocator = parent->loadedScript->allocator;
   parent->resolutionContext->isPexResolution = isPexFile;
   parent->loadedScript->preSemantic(parent->resolutionContext);
   parent->reportingContext.exitIfErrors();
@@ -354,7 +355,7 @@ void PapyrusCompilationContext::doCompile(CapricaJobManager* jobManager) {
   jobManager->enjoin();
 }
 
-bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, const std::string& typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) {
+bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, boost::string_ref typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) {
   const PapyrusNamespace* curNamespace = nullptr;
   if (!rootNamespace.tryFindNamespace(baseNamespace, &curNamespace))
     return false;

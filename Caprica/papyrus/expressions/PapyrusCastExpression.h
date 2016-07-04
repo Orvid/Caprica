@@ -17,10 +17,7 @@ struct PapyrusCastExpression final : public PapyrusExpression
   explicit PapyrusCastExpression(CapricaFileLocation loc, const PapyrusType& targ) : PapyrusExpression(loc), targetType(targ) { }
   explicit PapyrusCastExpression(CapricaFileLocation loc, PapyrusType&& targ) : PapyrusExpression(loc), targetType(std::move(targ)) { }
   PapyrusCastExpression(const PapyrusCastExpression&) = delete;
-  virtual ~PapyrusCastExpression() override {
-    if (innerExpression)
-      delete innerExpression;
-  }
+  virtual ~PapyrusCastExpression() override = default;
 
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override;
   virtual void semantic(PapyrusResolutionContext* ctx) override;

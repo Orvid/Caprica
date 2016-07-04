@@ -19,18 +19,7 @@ struct PapyrusForEachStatement final : public PapyrusStatement
 
   explicit PapyrusForEachStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusForEachStatement(const PapyrusForEachStatement&) = delete;
-  virtual ~PapyrusForEachStatement() override {
-    if (expressionToIterate)
-      delete expressionToIterate;
-    if (declareStatement)
-      delete declareStatement;
-    if (getCountIdentifier)
-      delete getCountIdentifier;
-    if (getAtIdentifier)
-      delete getAtIdentifier;
-    for (auto s : body)
-      delete s;
-  }
+  virtual ~PapyrusForEachStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     cfg.appendStatement(declareStatement);

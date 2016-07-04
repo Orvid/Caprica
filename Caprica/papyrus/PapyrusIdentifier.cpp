@@ -79,7 +79,7 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
     case PapyrusIdentifierType::BuiltinArrayFunction:
       CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
-      bldr.reportingContext.fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.c_str());
+      bldr.reportingContext.fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.to_string().c_str());
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
@@ -117,7 +117,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     case PapyrusIdentifierType::BuiltinArrayFunction:
       CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
-      bldr.reportingContext.fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.c_str());
+      bldr.reportingContext.fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.to_string().c_str());
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
@@ -126,26 +126,26 @@ void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const 
   switch (type) {
     case PapyrusIdentifierType::Property:
       if (prop->isAutoReadOnly())
-        return repCtx.error(location, "You cannot assign to the read-only property '%s'.", prop->name.c_str());
+        return repCtx.error(location, "You cannot assign to the read-only property '%s'.", prop->name.to_string().c_str());
       if (prop->isConst())
-        return repCtx.error(location, "You cannot assign to the const property '%s'.", prop->name.c_str());
+        return repCtx.error(location, "You cannot assign to the const property '%s'.", prop->name.to_string().c_str());
       if (prop->parent->isConst())
-        return repCtx.error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.c_str(), prop->parent->name.c_str());
+        return repCtx.error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.to_string().c_str(), prop->parent->name.to_string().c_str());
       return;
     case PapyrusIdentifierType::Variable:
       if (var->isConst())
-        return repCtx.error(location, "You cannot assign to the const variable '%s'.", var->name.c_str());
+        return repCtx.error(location, "You cannot assign to the const variable '%s'.", var->name.to_string().c_str());
       if (var->parent->isConst())
-        return repCtx.error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.c_str(), var->parent->name.c_str());
+        return repCtx.error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.to_string().c_str(), var->parent->name.to_string().c_str());
       return;
     case PapyrusIdentifierType::StructMember:
       if (structMember->isConst())
-        return repCtx.error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.c_str(), structMember->parent->name.c_str());
+        return repCtx.error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.to_string().c_str(), structMember->parent->name.to_string().c_str());
       return;
 
     case PapyrusIdentifierType::DeclareStatement:
       if (declStatement->isConst)
-        return repCtx.error(location, "You cannot assign to the const local variable '%s'.", declStatement->name.c_str());
+        return repCtx.error(location, "You cannot assign to the const local variable '%s'.", declStatement->name.to_string().c_str());
       return;
 
     case PapyrusIdentifierType::Parameter:

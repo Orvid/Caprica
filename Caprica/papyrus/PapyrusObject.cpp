@@ -117,14 +117,14 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
     if (!v->referenceState.isRead) {
       if (!v->referenceState.isInitialized) {
         if (v->referenceState.isWritten)
-          ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name.c_str());
+          ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name.to_string().c_str());
         else
-          ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.c_str());
+          ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.to_string().c_str());
       } else {
-        ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.c_str());
+        ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.to_string().c_str());
       }
     } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
-      ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.c_str());
+      ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.to_string().c_str());
     }
   }
   ctx->clearImports();
@@ -136,11 +136,11 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
   if (auto parent = tryGetParentClass())
     parent->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
 
-  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const char* otherType, const std::string& identName) {
+  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const char* otherType, boost::string_ref identName) {
     if (isParent)
-      repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType, identName.c_str());
+      repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType, identName.to_string().c_str());
     else
-      repCtx.error(loc, "A %s named '%s' was already defined in this object.", otherType, identName.c_str());
+      repCtx.error(loc, "A %s named '%s' was already defined in this object.", otherType, identName.to_string().c_str());
   };
 
   for (auto pg : propertyGroups) {

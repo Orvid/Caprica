@@ -35,22 +35,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
 
   explicit PapyrusAssignStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusAssignStatement(const PapyrusAssignStatement&) = delete;
-  virtual ~PapyrusAssignStatement() override {
-    // This is a bit of a special case, because we still need the lValue, but
-    // we've given ownership of the lValue to the binOpExpression, to avoid
-    // having to adjust the binOpExpression for this single use-case.
-    if (binOpExpression) {
-      if (rValue != binOpExpression->right)
-        delete rValue;
-      else
-        delete binOpExpression;
-    } else {
-      if (lValue)
-        delete lValue;
-      if (rValue)
-        delete rValue;
-    }
-  }
+  virtual ~PapyrusAssignStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     cfg.appendStatement(this);

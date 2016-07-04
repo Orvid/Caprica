@@ -18,12 +18,7 @@ struct PapyrusWhileStatement final : public PapyrusStatement
 
   explicit PapyrusWhileStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusWhileStatement(const PapyrusWhileStatement&) = delete;
-  virtual ~PapyrusWhileStatement() override {
-    if (condition)
-      delete condition;
-    for (auto s : body)
-      delete s;
-  }
+  virtual ~PapyrusWhileStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     return cfg.processCommonLoopBody(body);

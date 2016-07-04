@@ -149,7 +149,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiStartIndex"))
-            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
+            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.to_string().c_str());
           arguments[1]->value = ctx->coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         return;
@@ -161,7 +161,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (arguments[0]->value->resultType().type != PapyrusType::Kind::String)
           ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
         
-        std::string memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
+        auto memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.arrayFuncElementType->resolvedStruct->members) {
           if (idEq(m->name, memberName)) {
@@ -170,7 +170,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType->resolvedStruct->name.c_str());
+          ctx->reportingContext.fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.arrayFuncElementType->resolvedStruct->name.to_string().c_str());
         arguments[1]->value = ctx->coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -179,7 +179,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (arguments[2]->name != "" && !idEq(arguments[2]->name, "aiStartIndex"))
-            ctx->reportingContext.error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
+            ctx->reportingContext.error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.to_string().c_str());
           arguments[2]->value = ctx->coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
         return;
@@ -195,7 +195,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiStartIndex"))
-            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.c_str());
+            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[1]->name.to_string().c_str());
           arguments[1]->value = ctx->coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         return;
@@ -207,7 +207,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (arguments[0]->value->resultType().type != PapyrusType::Kind::String)
           ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
 
-        std::string memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
+        auto memberName = arguments[0]->value->as<PapyrusLiteralExpression>()->value.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.arrayFuncElementType->resolvedStruct->members) {
           if (idEq(m->name, memberName)) {
@@ -216,7 +216,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.c_str(), function.arrayFuncElementType->resolvedStruct->name.c_str());
+          ctx->reportingContext.fatal(arguments[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.arrayFuncElementType->resolvedStruct->name.to_string().c_str());
         arguments[1]->value = ctx->coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -225,7 +225,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (arguments[2]->name != "" && !idEq(arguments[2]->name, "aiStartIndex"))
-            ctx->reportingContext.error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.c_str());
+            ctx->reportingContext.error(arguments[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", arguments[2]->name.to_string().c_str());
           arguments[2]->value = ctx->coerceExpression(arguments[2]->value, PapyrusType::Int(arguments[2]->value->location));
         }
         return;
@@ -241,7 +241,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiCount"))
-            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
+            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.to_string().c_str());
           arguments[1]->value = ctx->coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         return;
@@ -267,7 +267,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiCount"))
-            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.c_str());
+            ctx->reportingContext.error(arguments[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", arguments[1]->name.to_string().c_str());
           arguments[1]->value = ctx->coerceExpression(arguments[1]->value, PapyrusType::Int(arguments[1]->value->location));
         }
         return;
@@ -317,7 +317,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
               goto ContinueOuterLoop;
             }
           }
-          ctx->reportingContext.fatal(arguments[i]->value->location, "Unable to find a parameter named '%s'!", arguments[i]->name.c_str());
+          ctx->reportingContext.fatal(arguments[i]->value->location, "Unable to find a parameter named '%s'!", arguments[i]->name.to_string().c_str());
         }
         if (hadNamedArgs)
           ctx->reportingContext.fatal(arguments[i]->value->location, "No normal arguments are allowed after the first named argument!");
@@ -364,12 +364,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolvedObject, le->value.s)) {
             continue;
           } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolvedObject, le->value.s)) {
-            le->value.s = ev->parentObject->name + "_" + le->value.s;
+            le->value.s = ctx->allocator->allocateString(ev->parentObject->name.to_string() + "_" + le->value.s.to_string());
             continue;
           }
 
         EventResolutionError:
-          ctx->reportingContext.error(arguments[i]->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.s.c_str(), baseType.prettyString().c_str());
+          ctx->reportingContext.error(arguments[i]->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.s.to_string().c_str(), baseType.prettyString().c_str());
           break;
         }
         default:
@@ -394,7 +394,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       if (le && le->value.type == PapyrusValueType::String) {
         auto targetStateName = le->value.s;
         if (!ctx->tryResolveState(targetStateName))
-          ctx->reportingContext.warning_W4003_State_Doesnt_Exist(le->location, targetStateName.c_str());
+          ctx->reportingContext.warning_W4003_State_Doesnt_Exist(le->location, targetStateName.to_string().c_str());
       }
     }
   }

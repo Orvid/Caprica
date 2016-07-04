@@ -4,7 +4,7 @@
 
 namespace caprica { namespace papyrus {
 
-static PapyrusFunction* searchRootStateForFunction(const std::string& name, const PapyrusObject* obj) {
+static PapyrusFunction* searchRootStateForFunction(boost::string_ref name, const PapyrusObject* obj) {
   for (auto f : obj->getRootState()->functions) {
     if (idEq(f->name, name))
       return f;
@@ -33,9 +33,9 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
     for (auto f : functions) {
       auto baseFunc = searchRootStateForFunction(f->name, ctx->object);
       if (!baseFunc)
-        ctx->reportingContext.error(f->location, "Function '%s' cannot be defined in state '%s' without also being defined in the empty state!", f->name.c_str(), name.c_str());
+        ctx->reportingContext.error(f->location, "Function '%s' cannot be defined in state '%s' without also being defined in the empty state!", f->name.to_string().c_str(), name.to_string().c_str());
       else if (!baseFunc->hasSameSignature(f))
-        ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) in the '%s' state doesn't match the signature in the root state. The expected signature is '%s'.", f->name.c_str(), f->prettySignature().c_str(), name.c_str(), baseFunc->prettySignature().c_str());
+        ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) in the '%s' state doesn't match the signature in the root state. The expected signature is '%s'.", f->name.to_string().c_str(), f->prettySignature().c_str(), name.to_string().c_str(), baseFunc->prettySignature().c_str());
     }
   }
 
@@ -45,7 +45,7 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
       if (f->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative())
         ctx->reportingContext.error(f->location, "Non-native scripts cannot define new events.");
       if (baseFunc && !baseFunc->hasSameSignature(f))
-        ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f->name.c_str(), f->prettySignature().c_str(), baseFunc->parentObject->name.c_str(), baseFunc->prettySignature().c_str());
+        ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f->name.to_string().c_str(), f->prettySignature().c_str(), baseFunc->parentObject->name.to_string().c_str(), baseFunc->prettySignature().c_str());
     }
   }
 

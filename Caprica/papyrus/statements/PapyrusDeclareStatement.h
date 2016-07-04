@@ -14,7 +14,7 @@ namespace caprica { namespace papyrus { namespace statements {
 struct PapyrusDeclareStatement final : public PapyrusStatement
 {
   PapyrusType type;
-  std::string name{ "" };
+  boost::string_ref name{ "" };
   bool isAuto{ false };
   bool isConst{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };

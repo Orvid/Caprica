@@ -18,8 +18,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusProperty final
 {
-  std::string name{ "" };
-  std::string documentationComment{ "" };
+  boost::string_ref name{ "" };
+  boost::string_ref documentationComment{ "" };
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
   PapyrusFunction* readFunction{ nullptr };
@@ -37,15 +37,10 @@ struct PapyrusProperty final
 
   explicit PapyrusProperty(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par) : location(loc), type(std::move(tp)), parent(par) { }
   PapyrusProperty(const PapyrusProperty&) = delete;
-  ~PapyrusProperty() {
-    if (readFunction)
-      delete readFunction;
-    if (writeFunction)
-      delete writeFunction;
-  }
+  ~PapyrusProperty() = default;
 
   std::string getAutoVarName() const {
-    return "::" + name + "_var";
+    return "::" + name.to_string() + "_var";
   }
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const;

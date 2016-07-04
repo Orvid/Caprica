@@ -18,8 +18,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusStructMember final
 {
-  std::string name{ "" };
-  std::string documentationString{ "" };
+  boost::string_ref name{ "" };
+  boost::string_ref documentationString{ "" };
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
   PapyrusValue defaultValue{ PapyrusValue::Default() };

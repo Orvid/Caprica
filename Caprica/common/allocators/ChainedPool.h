@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include <memory>
+#include <string>
 #include <type_traits>
 
 #include <boost/utility/string_ref.hpp>
@@ -38,6 +39,7 @@ struct ChainedPool final
     }
     return new (buf + sizeof(DestructionNode)) T(std::forward<Args>(args)...);
   }
+  boost::string_ref ChainedPool::allocateString(std::string&& str);
   boost::string_ref allocateString(const char* str, size_t len);
 
   void reset();

@@ -16,8 +16,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusPropertyGroup final
 {
-  std::string name{ "" };
-  std::string documentationComment{ "" };
+  boost::string_ref name{ "" };
+  boost::string_ref documentationComment{ "" };
   PapyrusUserFlags userFlags{ };
   std::vector<PapyrusProperty*> properties{ };
 
@@ -25,10 +25,7 @@ struct PapyrusPropertyGroup final
 
   explicit PapyrusPropertyGroup(CapricaFileLocation loc) : location(loc) { }
   PapyrusPropertyGroup(const PapyrusPropertyGroup&) = delete;
-  ~PapyrusPropertyGroup() {
-    for (auto p : properties)
-      delete p;
-  }
+  ~PapyrusPropertyGroup() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     if (file->debugInfo) {

@@ -41,9 +41,10 @@
 namespace caprica { namespace papyrus { namespace parser {
 
 PapyrusScript* PapyrusParser::parseScript() {
-  auto script = new PapyrusScript();
+  auto script = alloc->make<PapyrusScript>();
+  script->allocator = alloc;
   script->sourceFileName = FSUtils::canonical(filename);
-  script->objects.push_back(parseObject(script));
+  script->objects.emplace_back(parseObject(script));
   return script;
 }
 
@@ -64,23 +65,23 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   maybeConsumeEOLs();
 
   expectConsume(TokenType::kScriptName);
-  auto name = expectConsumeIdent();
+  auto name = expectConsumeIdentRef();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
-    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
+    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.to_string().c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {
     auto eLoc = cur.location;
-    obj = new PapyrusObject(loc, PapyrusType::Unresolved(eLoc, expectConsumeIdent()));
+    obj = alloc->make<PapyrusObject>(loc, PapyrusType::Unresolved(eLoc, expectConsumeIdentRef()));
   } else if (idEq(name, "ScriptObject")) {
-    obj = new PapyrusObject(loc, PapyrusType::None(cur.location));
+    obj = alloc->make<PapyrusObject>(loc, PapyrusType::None(cur.location));
   } else {
-    obj = new PapyrusObject(loc, PapyrusType::Unresolved(loc, "ScriptObject"));
+    obj = alloc->make<PapyrusObject>(loc, PapyrusType::Unresolved(loc, "ScriptObject"));
   }
-  obj->name = std::move(name);
+  obj->name = name;
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
   expectConsumeEOLs();
-  obj->documentationString = maybeConsumeDocString();
+  obj->documentationString = maybeConsumeDocStringRef();
 
   while (cur.type != TokenType::END) {
     switch (cur.type) {
@@ -88,7 +89,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       {
         consume();
         auto eLoc = cur.location;
-        obj->imports.emplace_back(eLoc, expectConsumeIdent());
+        obj->imports.emplace_back(eLoc, expectConsumeIdentRef());
         expectConsumeEOLs();
         break;
       }
@@ -96,40 +97,40 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       case TokenType::kAuto:
         consume();
         expectConsume(TokenType::kState);
-        obj->states.push_back(parseState(script, obj, true));
+        obj->states.emplace_back(parseState(script, obj, true));
         break;
       case TokenType::kState:
         consume();
-        obj->states.push_back(parseState(script, obj, false));
+        obj->states.emplace_back(parseState(script, obj, false));
         break;
 
       case TokenType::kStruct:
         consume();
-        obj->structs.push_back(parseStruct(script, obj));
+        obj->structs.emplace_back(parseStruct(script, obj));
         break;
 
       case TokenType::kGroup:
         consume();
-        obj->propertyGroups.push_back(parsePropertyGroup(script, obj));
+        obj->propertyGroups.emplace_back(parsePropertyGroup(script, obj));
         break;
 
       case TokenType::kCustomEvent: {
         consume();
-        auto ce = new PapyrusCustomEvent(cur.location);
+        auto ce = alloc->make<PapyrusCustomEvent>(cur.location);
         ce->parentObject = obj;
-        ce->name = expectConsumeIdent();
-        obj->customEvents.push_back(ce);
+        ce->name = expectConsumeIdentRef();
+        obj->customEvents.emplace_back(ce);
         expectConsumeEOLs();
         break;
       }
 
       case TokenType::kEvent:
         consume();
-        obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndEvent));
+        obj->getRootState()->functions.emplace_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndEvent));
         break;
       case TokenType::kFunction:
         consume();
-        obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction));
+        obj->getRootState()->functions.emplace_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction));
         break;
 
       case TokenType::kBool:
@@ -142,12 +143,12 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         auto tp = expectConsumePapyrusType();
         if (cur.type == TokenType::kFunction) {
           consume();
-          obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), std::move(tp), TokenType::kEndFunction));
+          obj->getRootState()->functions.emplace_back(parseFunction(script, obj, obj->getRootState(), std::move(tp), TokenType::kEndFunction));
         } else if (cur.type == TokenType::kProperty) {
           consume();
-          obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, std::move(tp)));
+          obj->getRootPropertyGroup()->properties.emplace_back(parseProperty(script, obj, std::move(tp)));
         } else {
-          obj->variables.push_back(parseVariable(script, obj, std::move(tp)));
+          obj->variables.emplace_back(parseVariable(script, obj, std::move(tp)));
         }
         break;
       }
@@ -161,11 +162,11 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 }
 
 PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto) {
-  auto state = new PapyrusState(cur.location);
-  state->name = expectConsumeIdent();
+  auto state = alloc->make<PapyrusState>(cur.location);
+  state->name = expectConsumeIdentRef();
   if (isAuto) {
     if (object->autoState != nullptr)
-      reportingContext.error(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.c_str());
+      reportingContext.error(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.to_string().c_str());
     object->autoState = state;
   }
   expectConsumeEOLs();
@@ -179,11 +180,11 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
 
       case TokenType::kEvent:
         consume();
-        state->functions.push_back(parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndEvent));
+        state->functions.emplace_back(parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndEvent));
         break;
       case TokenType::kFunction:
         consume();
-        state->functions.push_back(parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndFunction));
+        state->functions.emplace_back(parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndFunction));
         break;
 
       case TokenType::kBool:
@@ -195,7 +196,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kFunction);
-        state->functions.push_back(parseFunction(script, object, state, std::move(tp), TokenType::kEndFunction));
+        state->functions.emplace_back(parseFunction(script, object, state, std::move(tp), TokenType::kEndFunction));
         break;
       }
 
@@ -209,9 +210,9 @@ Return:
 }
 
 PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* object) {
-  auto struc = new PapyrusStruct(cur.location);
+  auto struc = alloc->make<PapyrusStruct>(cur.location);
   struc->parentObject = object;
-  struc->name = expectConsumeIdent();
+  struc->name = expectConsumeIdentRef();
   expectConsumeEOLs();
 
   while (true) {
@@ -227,7 +228,7 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       case TokenType::kString:
       case TokenType::kVar:
       case TokenType::Identifier:
-        struc->members.push_back(parseStructMember(script, object, struc, expectConsumePapyrusType()));
+        struc->members.emplace_back(parseStructMember(script, object, struc, expectConsumePapyrusType()));
         break;
 
       default:
@@ -240,8 +241,8 @@ Return:
 }
 
 PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType&& tp) {
-  auto mem = new PapyrusStructMember(cur.location, std::move(tp), struc);
-  mem->name = expectConsumeIdent();
+  auto mem = alloc->make<PapyrusStructMember>(cur.location, std::move(tp), struc);
+  mem->name = expectConsumeIdentRef();
 
   // Needed because None is a valid default value, and we shouldn't
   // be erroring on it.
@@ -254,16 +255,16 @@ PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, Pap
   if (mem->isConst() && !hadDefault)
     reportingContext.error(cur.location, "A constant member must have a value!");
   expectConsumeEOLs();
-  mem->documentationString = maybeConsumeDocString();
+  mem->documentationString = maybeConsumeDocStringRef();
   return mem;
 }
 
 PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, PapyrusObject* object) {
-  auto group = new PapyrusPropertyGroup(cur.location);
-  group->name = expectConsumeIdent();
+  auto group = alloc->make<PapyrusPropertyGroup>(cur.location);
+  group->name = expectConsumeIdentRef();
   group->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::PropertyGroup);
   expectConsumeEOLs();
-  group->documentationComment = maybeConsumeDocString();
+  group->documentationComment = maybeConsumeDocStringRef();
 
   while (true) {
     bool isConst = false;
@@ -282,7 +283,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kProperty);
-        group->properties.push_back(parseProperty(script, object, std::move(tp)));
+        group->properties.emplace_back(parseProperty(script, object, std::move(tp)));
         break;
       }
 
@@ -296,8 +297,8 @@ Return:
 }
 
 PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type) {
-  auto prop = new PapyrusProperty(cur.location, std::move(type), object);
-  prop->name = expectConsumeIdent();
+  auto prop = alloc->make<PapyrusProperty>(cur.location, std::move(type), object);
+  prop->name = expectConsumeIdentRef();
 
   bool isFullProp = true;
   bool hadDefaultValue = false;
@@ -312,7 +313,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
   if (prop->isAutoReadOnly() && !hadDefaultValue)
     reportingContext.error(cur.location, "An AutoReadOnly property must have a value!");
   expectConsumeEOLs();
-  prop->documentationComment = maybeConsumeDocString();
+  prop->documentationComment = maybeConsumeDocStringRef();
 
   if (isFullProp) {
     for (int i = 0; i < 2; i++) {
@@ -373,8 +374,8 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
 }
 
 PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type) {
-  auto var = new PapyrusVariable(cur.location, std::move(type), object);
-  var->name = expectConsumeIdent();
+  auto var = alloc->make<PapyrusVariable>(cur.location, std::move(type), object);
+  var->name = expectConsumeIdentRef();
 
   if (maybeConsume(TokenType::Equal)) {
     var->referenceState.isInitialized = true;
@@ -388,7 +389,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
 }
 
 PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType&& returnType, TokenType endToken) {
-  auto func = new PapyrusFunction(cur.location, std::move(returnType));
+  auto func = alloc->make<PapyrusFunction>(cur.location, std::move(returnType));
   if (endToken == TokenType::kEndFunction)
     func->functionType = PapyrusFunctionType::Function;
   else if (endToken == TokenType::kEndEvent)
@@ -396,12 +397,12 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   else
     CapricaReportingContext::logicalFatal("Unknown end token for a parseFunction call!");
   func->parentObject = object;
-  func->name = expectConsumeIdent();
+  func->name = expectConsumeIdentRef();
   if (endToken == TokenType::kEndEvent && maybeConsume(TokenType::Dot)) {
     func->functionType = PapyrusFunctionType::RemoteEvent;
-    func->remoteEventParent = std::move(func->name);
-    func->remoteEventName = expectConsumeIdent();
-    func->name = "::remote_" + func->remoteEventParent + "_" + func->remoteEventName;
+    func->remoteEventParent = func->name;
+    func->remoteEventName = expectConsumeIdentRef();
+    func->name = alloc->allocateString("::remote_" + func->remoteEventParent.to_string() + "_" + func->remoteEventName.to_string());
   }
   expectConsume(TokenType::LParen);
 
@@ -409,21 +410,21 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     do {
       maybeConsume(TokenType::Comma);
 
-      auto param = new PapyrusFunctionParameter(cur.location, expectConsumePapyrusType());
-      param->name = expectConsumeIdent();
+      auto param = alloc->make<PapyrusFunctionParameter>(cur.location, expectConsumePapyrusType());
+      param->name = expectConsumeIdentRef();
       if (maybeConsume(TokenType::Equal))
         param->defaultValue = expectConsumePapyrusValue();
-      func->parameters.push_back(param);
+      func->parameters.emplace_back(param);
     } while (cur.type == TokenType::Comma);
   }
   expectConsume(TokenType::RParen);
 
   func->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Function);
   expectConsumeEOLs();
-  func->documentationComment = maybeConsumeDocString();
+  func->documentationComment = maybeConsumeDocStringRef();
   if (!func->isNative()) {
     while (cur.type != endToken && cur.type != TokenType::END) {
-      func->statements.push_back(parseStatement(func));
+      func->statements.emplace_back(parseStatement(func));
     }
 
     if (cur.type == TokenType::END)
@@ -439,7 +440,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
   switch (cur.type) {
     case TokenType::kReturn:
     {
-      auto ret = new statements::PapyrusReturnStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusReturnStatement>(consumeLocation());
       if (cur.type != TokenType::EOL)
         ret->returnValue = parseExpression(func);
       expectConsumeEOLs();
@@ -448,13 +449,13 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kIf:
     {
-      auto ret = new statements::PapyrusIfStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusIfStatement>(consumeLocation());
       while (true) {
         auto cond = parseExpression(func);
         expectConsumeEOLs();
         std::vector<statements::PapyrusStatement*> curStatements{ };
         while (cur.type != TokenType::kElseIf && cur.type != TokenType::kElse && cur.type != TokenType::kEndIf) {
-          curStatements.push_back(parseStatement(func));
+          curStatements.emplace_back(parseStatement(func));
         }
         ret->ifBodies.emplace_back(cond, std::move(curStatements));
         if (cur.type == TokenType::kElseIf) {
@@ -465,7 +466,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           consume();
           expectConsumeEOLs();
           while (cur.type != TokenType::kEndIf) {
-            ret->elseStatements.push_back(parseStatement(func));
+            ret->elseStatements.emplace_back(parseStatement(func));
           }
         }
         expectConsume(TokenType::kEndIf);
@@ -476,24 +477,24 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kBreak:
     {
-      auto ret = new statements::PapyrusBreakStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusBreakStatement>(consumeLocation());
       expectConsumeEOLs();
       return ret;
     }
 
     case TokenType::kContinue:
     {
-      auto ret = new statements::PapyrusContinueStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusContinueStatement>(consumeLocation());
       expectConsumeEOLs();
       return ret;
     }
 
     case TokenType::kDo:
     {
-      auto ret = new statements::PapyrusDoWhileStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusDoWhileStatement>(consumeLocation());
       expectConsumeEOLs();
       while (cur.type != TokenType::kLoopWhile)
-        ret->body.push_back(parseStatement(func));
+        ret->body.emplace_back(parseStatement(func));
       expectConsume(TokenType::kLoopWhile);
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
@@ -502,22 +503,22 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kFor:
     {
-      auto ret = new statements::PapyrusForStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusForStatement>(consumeLocation());
       auto eLoc = cur.location;
       PapyrusIdentifier* ident{ nullptr };
       statements::PapyrusDeclareStatement* declStatement{ nullptr };
       if (peekTokenType() == TokenType::Identifier) {
         if (cur.type == TokenType::kAuto) {
-          declStatement = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
+          declStatement = alloc->make<statements::PapyrusDeclareStatement>(eLoc, PapyrusType::None(eLoc));
           declStatement->isAuto = true;
           expectConsume(TokenType::kAuto);
         } else {
-          declStatement = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
+          declStatement = alloc->make<statements::PapyrusDeclareStatement>(eLoc, expectConsumePapyrusType());
         }
-        declStatement->name = expectConsumeIdent();
+        declStatement->name = expectConsumeIdentRef();
         ret->declareStatement = declStatement;
       } else {
-        ident = new PapyrusIdentifier(PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
+        ident = alloc->make<PapyrusIdentifier>(PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
         ret->iteratorVariable = ident;
       }
       expectConsume(TokenType::Equal);
@@ -529,7 +530,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       expectConsumeEOLs();
 
       while (!maybeConsume(TokenType::kEndFor))
-        ret->body.push_back(parseStatement(func));
+        ret->body.emplace_back(parseStatement(func));
       expectConsumeEOLs();
 
       return ret;
@@ -537,18 +538,18 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kForEach:
     {
-      auto ret = new statements::PapyrusForEachStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusForEachStatement>(consumeLocation());
       bool hadLParen = maybeConsume(TokenType::LParen);
       auto eLoc = cur.location;
       statements::PapyrusDeclareStatement* declStatement;
       if (cur.type == TokenType::kAuto) {
-        declStatement = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
+        declStatement = alloc->make<statements::PapyrusDeclareStatement>(eLoc, PapyrusType::None(eLoc));
         declStatement->isAuto = true;
         expectConsume(TokenType::kAuto);
       } else {
-        declStatement = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
+        declStatement = alloc->make<statements::PapyrusDeclareStatement>(eLoc, expectConsumePapyrusType());
       }
-      declStatement->name = expectConsumeIdent();
+      declStatement->name = expectConsumeIdentRef();
       ret->declareStatement = declStatement;
       expectConsume(TokenType::kIn);
       ret->expressionToIterate = parseExpression(func);
@@ -557,7 +558,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       expectConsumeEOLs();
 
       while (!maybeConsume(TokenType::kEndForEach))
-        ret->body.push_back(parseStatement(func));
+        ret->body.emplace_back(parseStatement(func));
       expectConsumeEOLs();
 
       return ret;
@@ -565,7 +566,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kSwitch:
     {
-      auto ret = new statements::PapyrusSwitchStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusSwitchStatement>(consumeLocation());
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
 
@@ -578,7 +579,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
             expectConsumeEOLs();
             std::vector<statements::PapyrusStatement*> curStatements{ };
             while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
-              curStatements.push_back(parseStatement(func));
+              curStatements.emplace_back(parseStatement(func));
             ret->caseBodies.emplace_back(std::move(cond), std::move(curStatements));
             break;
           }
@@ -591,7 +592,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
             expectConsumeEOLs();
 
             while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
-              ret->defaultStatements.push_back(parseStatement(func));
+              ret->defaultStatements.emplace_back(parseStatement(func));
             break;
           }
 
@@ -608,11 +609,11 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kWhile:
     {
-      auto ret = new statements::PapyrusWhileStatement(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusWhileStatement>(consumeLocation());
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
       while (cur.type != TokenType::kEndWhile)
-        ret->body.push_back(parseStatement(func));
+        ret->body.emplace_back(parseStatement(func));
       expectConsume(TokenType::kEndWhile);
       expectConsumeEOLs();
       return ret;
@@ -624,9 +625,9 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         goto DefaultCase;
 
       auto eLoc = consumeLocation();
-      auto ret = new statements::PapyrusDeclareStatement(eLoc, PapyrusType::None(eLoc));
+      auto ret = alloc->make<statements::PapyrusDeclareStatement>(eLoc, PapyrusType::None(eLoc));
       ret->isAuto = true;
-      ret->name = expectConsumeIdent();
+      ret->name = expectConsumeIdentRef();
       expectConsume(TokenType::Equal);
       ret->initialValue = parseExpression(func);
       expectConsumeEOLs();
@@ -640,8 +641,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     case TokenType::kVar:
     {
       auto eLoc = cur.location;
-      auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
-      ret->name = expectConsumeIdent();
+      auto ret = alloc->make<statements::PapyrusDeclareStatement>(eLoc, expectConsumePapyrusType());
+      ret->name = expectConsumeIdentRef();
       if (maybeConsume(TokenType::Equal))
         ret->initialValue = parseExpression(func);
       if (maybeConsume(TokenType::kConst))
@@ -656,10 +657,12 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     {
       if (cur.type == TokenType::Identifier && (peekTokenType() == TokenType::Identifier ||  (peekTokenType() == TokenType::LSquare && peekTokenType(1) == TokenType::RSquare && peekTokenType(2) == TokenType::Identifier))) {
         auto eLoc = cur.location;
-        auto ret = new statements::PapyrusDeclareStatement(eLoc, expectConsumePapyrusType());
-        ret->name = expectConsumeIdent();
+        auto ret = alloc->make<statements::PapyrusDeclareStatement>(eLoc, expectConsumePapyrusType());
+        ret->name = expectConsumeIdentRef();
         if (maybeConsume(TokenType::Equal))
           ret->initialValue = parseExpression(func);
+        if (maybeConsume(TokenType::kConst))
+          ret->isConst = true;
         expectConsumeEOLs();
         return ret;
       }
@@ -687,7 +690,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           goto AssignStatementCommon;
         AssignStatementCommon:
         {
-          auto assStat = new statements::PapyrusAssignStatement(consumeLocation());
+          auto assStat = alloc->make<statements::PapyrusAssignStatement>(consumeLocation());
           assStat->lValue = expr;
           assStat->operation = op;
           assStat->rValue = parseExpression(func);
@@ -697,7 +700,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
         default:
         {
-          auto exprStat = new statements::PapyrusExpressionStatement(expr->location);
+          auto exprStat = alloc->make<statements::PapyrusExpressionStatement>(expr->location);
           exprStat->expression = expr;
           expectConsumeEOLs();
           return exprStat;
@@ -710,7 +713,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* func) {
   auto expr = parseAndExpression(func);
   while (cur.type == TokenType::BooleanOr) {
-    auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
+    auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
     binExpr->left = expr;
     binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanOr;
     binExpr->right = parseAndExpression(func);
@@ -722,7 +725,7 @@ expressions::PapyrusExpression* PapyrusParser::parseExpression(PapyrusFunction* 
 expressions::PapyrusExpression* PapyrusParser::parseAndExpression(PapyrusFunction* func) {
   auto expr = parseCmpExpression(func);
   while (cur.type == TokenType::BooleanAnd) {
-    auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
+    auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
     binExpr->left = expr;
     binExpr->operation = expressions::PapyrusBinaryOperatorType::BooleanAnd;
     binExpr->right = parseCmpExpression(func);
@@ -757,7 +760,7 @@ expressions::PapyrusExpression* PapyrusParser::parseCmpExpression(PapyrusFunctio
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
+        auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
         binExpr->right = parseAddExpression(func);
@@ -795,7 +798,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
+        auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
         binExpr->right = parseMultExpression(func);
@@ -807,7 +810,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
       {
         if (!conf::Papyrus::allowNegativeLiteralAsBinaryOp)
           goto Return;
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(cur.location);
+        auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(cur.location);
         binExpr->left = expr;
         binExpr->operation = expressions::PapyrusBinaryOperatorType::Add;
         binExpr->right = parseMultExpression(func);
@@ -840,7 +843,7 @@ expressions::PapyrusExpression* PapyrusParser::parseMultExpression(PapyrusFuncti
 
       OperatorCommon:
       {
-        auto binExpr = new expressions::PapyrusBinaryOpExpression(consumeLocation());
+        auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
         binExpr->right = parseUnaryExpression(func);
@@ -868,7 +871,7 @@ expressions::PapyrusExpression* PapyrusParser::parseUnaryExpression(PapyrusFunct
 
     OperatorCommon:
     {
-      auto unExpr = new expressions::PapyrusUnaryOpExpression(consumeLocation());
+      auto unExpr = alloc->make<expressions::PapyrusUnaryOpExpression>(consumeLocation());
       unExpr->operation = op;
       unExpr->innerExpression = parseCastExpression(func);
       return unExpr;
@@ -883,12 +886,12 @@ expressions::PapyrusExpression* PapyrusParser::parseCastExpression(PapyrusFuncti
 
   if (cur.type == TokenType::kIs) {
     auto loc = consumeLocation();
-    auto isExpr = new expressions::PapyrusIsExpression(loc, expectConsumePapyrusType());
+    auto isExpr = alloc->make<expressions::PapyrusIsExpression>(loc, expectConsumePapyrusType());
     isExpr->innerExpression = expr;
     expr = isExpr;
   } else if (cur.type == TokenType::kAs) {
     auto loc = consumeLocation();
-    auto castExpr = new expressions::PapyrusCastExpression(loc, expectConsumePapyrusType());
+    auto castExpr = alloc->make<expressions::PapyrusCastExpression>(loc, expectConsumePapyrusType());
     castExpr->innerExpression = expr;
     expr = castExpr;
   }
@@ -906,19 +909,19 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     case TokenType::kFalse:
     {
       auto eLoc = cur.location;
-      return new expressions::PapyrusLiteralExpression(eLoc, expectConsumePapyrusValue());
+      return alloc->make<expressions::PapyrusLiteralExpression>(eLoc, expectConsumePapyrusValue());
     }
 
     default:
     {
       auto expr = parseArrayExpression(func);
       while (cur.type == TokenType::Dot) {
-        auto maExpr = new expressions::PapyrusMemberAccessExpression(consumeLocation());
+        auto maExpr = alloc->make<expressions::PapyrusMemberAccessExpression>(consumeLocation());
         maExpr->baseExpression = expr;
         maExpr->accessExpression = parseFuncOrIdExpression(func);
 
         if (cur.type == TokenType::LSquare) {
-          auto aiExpr = new expressions::PapyrusArrayIndexExpression(consumeLocation());
+          auto aiExpr = alloc->make<expressions::PapyrusArrayIndexExpression>(consumeLocation());
           aiExpr->baseExpression = maExpr;
           aiExpr->indexExpression = parseExpression(func);
           expectConsume(TokenType::RSquare);
@@ -936,7 +939,7 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
 expressions::PapyrusExpression* PapyrusParser::parseArrayExpression(PapyrusFunction* func) {
   auto expr = parseAtomExpression(func);
   if (cur.type == TokenType::LSquare) {
-    auto aiExpr = new expressions::PapyrusArrayIndexExpression(consumeLocation());
+    auto aiExpr = alloc->make<expressions::PapyrusArrayIndexExpression>(consumeLocation());
     aiExpr->baseExpression = expr;
     aiExpr->indexExpression = parseExpression(func);
     expectConsume(TokenType::RSquare);
@@ -961,13 +964,13 @@ expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFuncti
       consume();
       auto tp = expectConsumePapyrusType();
       if (maybeConsume(TokenType::LSquare)) {
-        auto nArrExpr = new expressions::PapyrusNewArrayExpression(loc, std::move(tp));
+        auto nArrExpr = alloc->make<expressions::PapyrusNewArrayExpression>(loc, std::move(tp));
         nArrExpr->lengthExpression = parseExpression(func);
         expectConsume(TokenType::RSquare);
         return nArrExpr;
       }
 
-      return new expressions::PapyrusNewStructExpression(loc, std::move(tp));
+      return alloc->make<expressions::PapyrusNewStructExpression>(loc, std::move(tp));
     }
 
     default:
@@ -978,12 +981,12 @@ expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFuncti
 expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFunction* func) {
   switch (cur.type) {
     case TokenType::kLength:
-      return new expressions::PapyrusArrayLengthExpression(consumeLocation());
+      return alloc->make<expressions::PapyrusArrayLengthExpression>(consumeLocation());
     case TokenType::kParent:
-      return new expressions::PapyrusParentExpression(consumeLocation(), func->parentObject->parentClass);
+      return alloc->make<expressions::PapyrusParentExpression>(consumeLocation(), func->parentObject->parentClass);
     case TokenType::kSelf:
     {
-      auto selfExpr = new expressions::PapyrusSelfExpression(cur.location, PapyrusType::ResolvedObject(cur.location, func->parentObject));
+      auto selfExpr = alloc->make<expressions::PapyrusSelfExpression>(cur.location, PapyrusType::ResolvedObject(cur.location, func->parentObject));
       consume();
       return selfExpr;
     }
@@ -991,20 +994,20 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
     {
       if (peekTokenType() == TokenType::LParen) {
         auto eLoc = cur.location;
-        auto fCallExpr = new expressions::PapyrusFunctionCallExpression(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
+        auto fCallExpr = alloc->make<expressions::PapyrusFunctionCallExpression>(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
         expectConsume(TokenType::LParen);
 
         if (cur.type != TokenType::RParen) {
           do {
             maybeConsume(TokenType::Comma);
 
-            auto param = new expressions::PapyrusFunctionCallExpression::Parameter();
+            auto param = alloc->make<expressions::PapyrusFunctionCallExpression::Parameter>();
             if (cur.type == TokenType::Identifier && peekTokenType() == TokenType::Equal) {
-              param->name = expectConsumeIdent();
+              param->name = expectConsumeIdentRef();
               expectConsume(TokenType::Equal);
             }
             param->value = parseExpression(func);
-            fCallExpr->arguments.push_back(param);
+            fCallExpr->arguments.emplace_back(param);
           } while (cur.type == TokenType::Comma);
         }
         expectConsume(TokenType::RParen);
@@ -1012,7 +1015,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
         return fCallExpr;
       } else {
         auto eLoc = cur.location;
-        return new expressions::PapyrusIdentifierExpression(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdent()));
+        return alloc->make<expressions::PapyrusIdentifierExpression>(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
       }
     }
     default:
@@ -1049,7 +1052,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
     case TokenType::Identifier:
     {
       auto eLoc = cur.location;
-      tp = PapyrusType::Unresolved(eLoc, expectConsumeIdent());
+      tp = PapyrusType::Unresolved(eLoc, expectConsumeIdentRef());
       break;
     }
 
@@ -1081,7 +1084,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
       return val;
     case TokenType::String:
       val.type = PapyrusValueType::String;
-      val.s = cur.sValue.to_string();
+      val.s = cur.sValue;
       consume();
       return val;
     case TokenType::kNone:
@@ -1139,13 +1142,13 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
       case TokenType::Identifier:
       case TokenType::kDefault: {
         auto loc = cur.location;
-        auto str = std::move(cur.sValue);
+        auto str = cur.sValue.to_string();
         if (cur.type == TokenType::kDefault)
           str = "default";
 
-        auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str.to_string());
+        auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
         if (!flg.isValidOn(location))
-          reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.to_string().c_str());
+          reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
         PapyrusUserFlags newFlag;
         newFlag.data = flg.getData();

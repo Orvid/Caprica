@@ -1,6 +1,5 @@
 #include <papyrus/PapyrusFunction.h>
 
-#include <sstream>
 #include <unordered_set>
 
 #include <common/EngineLimits.h>
@@ -72,7 +71,7 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
   else
     delete fDebInfo;
 
-  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name.c_str());
+  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name.to_string().c_str());
   return func;
 }
 
@@ -116,7 +115,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
       }
 
       if (curNode == nullptr)
-        ctx->reportingContext.error(location, "Not all control paths of '%s' return a value.", name.c_str());
+        ctx->reportingContext.error(location, "Not all control paths of '%s' return a value.", name.to_string().c_str());
     }
 
     if (conf::Debug::debugControlFlowGraph) {
@@ -130,16 +129,18 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   // the ones that are the same.
   struct CheckLocalNamesStatementVisitor final : statements::PapyrusSelectiveStatementVisitor
   {
-    caseless_unordered_identifier_set allLocalNames{ };
+    PapyrusResolutionContext* ctx;
+    caseless_unordered_identifier_ref_set allLocalNames{ };
+    CheckLocalNamesStatementVisitor(PapyrusResolutionContext* oCtx) : ctx(oCtx) { }
 
     virtual void visit(statements::PapyrusDeclareStatement* s) override {
       int i = 0;
       auto baseName = s->name;
       while (allLocalNames.count(s->name))
-        s->name = "::mangled_" + baseName + "_" + std::to_string(i++);
+        s->name = ctx->allocator->allocateString("::mangled_" + baseName.to_string() + "_" + std::to_string(i++));
       allLocalNames.insert(s->name);
     }
-  } visitor;
+  } visitor(ctx);
 
   for (auto s : statements)
     s->visit(visitor);

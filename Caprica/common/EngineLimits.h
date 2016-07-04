@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/utility/string_ref.hpp>
+
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
 
@@ -20,7 +22,7 @@ struct EngineLimits final
     PexState_FunctionCount,
   };
 
-  static void checkLimit(CapricaReportingContext& repCtx, CapricaFileLocation location, Type tp, size_t value, const char* referenceName = nullptr) {
+  static void checkLimit(CapricaReportingContext& repCtx, CapricaFileLocation location, Type tp, size_t value, boost::string_ref referenceName = "") {
     const auto exceedsLimit = [](size_t value, size_t max) {
       return max != 0 && value > max;
     };
@@ -36,7 +38,7 @@ struct EngineLimits final
         break;
       case Type::PexFunction_ParameterCount:
         if (exceedsLimit(value, conf::EngineLimits::maxParametersPerFunction))
-          repCtx.warning_W2003_EngineLimits_PexFunction_ParameterCount(location, value, referenceName, conf::EngineLimits::maxParametersPerFunction);
+          repCtx.warning_W2003_EngineLimits_PexFunction_ParameterCount(location, value, referenceName.to_string().c_str(), conf::EngineLimits::maxParametersPerFunction);
         break;
       case Type::PexObject_EmptyStateFunctionCount:
         if (exceedsLimit(value, conf::EngineLimits::maxFunctionsInEmptyStatePerObject))
@@ -64,7 +66,7 @@ struct EngineLimits final
         break;
       case Type::PexState_FunctionCount:
         if (exceedsLimit(value, conf::EngineLimits::maxFunctionsPerState))
-          repCtx.warning_W2010_EngineLimits_PexState_FunctionCount(location, value, referenceName, conf::EngineLimits::maxFunctionsPerState);
+          repCtx.warning_W2010_EngineLimits_PexState_FunctionCount(location, value, referenceName.to_string().c_str(), conf::EngineLimits::maxFunctionsPerState);
         break;
     }
   }

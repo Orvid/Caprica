@@ -18,15 +18,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
 
   explicit PapyrusIfStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusIfStatement(const PapyrusIfStatement&) = delete;
-  virtual ~PapyrusIfStatement() override {
-    for (auto& i : ifBodies) {
-      delete i.first;
-      for (auto s : i.second)
-        delete s;
-    }
-    for (auto s : elseStatements)
-      delete s;
-  }
+  virtual ~PapyrusIfStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     bool isTerminal = true;

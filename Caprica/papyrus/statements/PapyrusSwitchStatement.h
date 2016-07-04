@@ -19,16 +19,7 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
 
   explicit PapyrusSwitchStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusSwitchStatement(const PapyrusSwitchStatement&) = delete;
-  virtual ~PapyrusSwitchStatement() override {
-    if (condition)
-      delete condition;
-    for (auto& i : caseBodies) {
-      for (auto s : i.second)
-        delete s;
-    }
-    for (auto s : defaultStatements)
-      delete s;
-  }
+  virtual ~PapyrusSwitchStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     cfg.pushBreakTerminal();

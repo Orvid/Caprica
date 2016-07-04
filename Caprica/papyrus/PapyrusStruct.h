@@ -17,7 +17,7 @@ struct PapyrusObject;
 
 struct PapyrusStruct final
 {
-  std::string name{ "" };
+  boost::string_ref name{ "" };
   std::vector<PapyrusStructMember*> members{ };
   PapyrusObject* parentObject{ nullptr };
 
@@ -25,10 +25,7 @@ struct PapyrusStruct final
 
   explicit PapyrusStruct(CapricaFileLocation loc) : location(loc) { }
   PapyrusStruct(const PapyrusStruct&) = delete;
-  ~PapyrusStruct() {
-    for (auto m : members)
-      delete m;
-  }
+  ~PapyrusStruct() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     auto struc = new pex::PexStruct();
@@ -40,12 +37,12 @@ struct PapyrusStruct final
 
     for (auto m : members) {
       m->buildPex(repCtx, file, obj, struc);
-      debInf->members.push_back(file->getString(m->name));
+      debInf->members.emplace_back(file->getString(m->name));
     }
-    obj->structs.push_back(struc);
+    obj->structs.emplace_back(struc);
     
     if (file->debugInfo)
-      file->debugInfo->structOrders.push_back(debInf);
+      file->debugInfo->structOrders.emplace_back(debInf);
     else
       delete debInf;
   }
