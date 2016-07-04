@@ -21,7 +21,9 @@ bool pathEq(boost::string_ref a, boost::string_ref b);
 bool idEq(const char* a, const char* b);
 bool idEq(const char* a, const std::string& b);
 bool idEq(const std::string& a, const char* b);
+__declspec(noinline)
 bool idEq(const std::string& a, const std::string& b);
+__declspec(noinline)
 bool idEq(boost::string_ref a, boost::string_ref b);
 
 struct CaselessStringHasher final : public std::function<size_t(const std::string&)>
@@ -33,6 +35,7 @@ struct CaselessStringHasher final : public std::function<size_t(const std::strin
 
 private:
   friend struct CaselessPathHasher;
+  __declspec(noinline)
   static size_t doCaselessHash(const char* k, size_t len);
 };
 
@@ -51,6 +54,7 @@ struct CaselessPathHasher final : public std::function<size_t(const std::string&
   }
 
 private:
+  __declspec(noinline)
   static size_t doPathHash(const char* k, size_t len);
 };
 
@@ -64,7 +68,9 @@ struct CaselessPathEqual final : public std::function<bool(const std::string&, c
 struct CaselessIdentifierHasher final : public std::function<size_t(const std::string&)>
 {
   size_t operator()(const char* k) const = delete;
+  __declspec(noinline)
   size_t operator()(const std::string& k) const;
+  __declspec(noinline)
   size_t operator()(boost::string_ref k) const;
 };
 
