@@ -161,7 +161,7 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
       reportingContext.error(expr->location, "No implicit conversion from '%s' to '%s' exists!", expr->resultType().prettyString().c_str(), target.prettyString().c_str());
       return expr;
     }
-    auto ce = new expressions::PapyrusCastExpression(expr->location, target);
+    auto ce = allocator->make<expressions::PapyrusCastExpression>(expr->location, target);
     ce->innerExpression = expr;
     return ce;
   }

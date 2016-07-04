@@ -144,8 +144,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           ctx->reportingContext.fatal(location, "Expected either 1 or 2 parameters to 'Find'!");
         arguments[0]->value = ctx->coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
-          auto p = new Parameter();
-          p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 0));
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 0));
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiStartIndex"))
@@ -174,8 +174,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         arguments[1]->value = ctx->coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
-          auto p = new Parameter();
-          p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 0));
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 0));
           arguments.push_back(p);
         } else {
           if (arguments[2]->name != "" && !idEq(arguments[2]->name, "aiStartIndex"))
@@ -190,8 +190,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           ctx->reportingContext.fatal(location, "Expected either 1 or 2 parameters to 'RFind'!");
         arguments[0]->value = ctx->coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
-          auto p = new Parameter();
-          p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, -1));
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, -1));
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiStartIndex"))
@@ -220,8 +220,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         arguments[1]->value = ctx->coerceExpression(arguments[1]->value, elemType);
 
         if (arguments.size() == 2) {
-          auto p = new Parameter();
-          p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, -1));
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, -1));
           arguments.push_back(p);
         } else {
           if (arguments[2]->name != "" && !idEq(arguments[2]->name, "aiStartIndex"))
@@ -236,8 +236,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           ctx->reportingContext.fatal(location, "Expected either 1 or 2 parameters to 'Add'!");
         arguments[0]->value = ctx->coerceExpression(arguments[0]->value, *function.arrayFuncElementType);
         if (arguments.size() == 1) {
-          auto p = new Parameter();
-          p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 1));
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 1));
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiCount"))
@@ -262,8 +262,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           ctx->reportingContext.fatal(location, "Expected either 1 or 2 parameters to 'Remove'!");
         arguments[0]->value = ctx->coerceExpression(arguments[0]->value, PapyrusType::Int(arguments[0]->value->location));
         if (arguments.size() == 1) {
-          auto p = new Parameter();
-          p->value = new PapyrusLiteralExpression(location, PapyrusValue::Integer(location, 1));
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 1));
           arguments.push_back(p);
         } else {
           if (arguments[1]->name != "" && !idEq(arguments[1]->name, "aiCount"))
@@ -329,11 +329,11 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (newArgs[i] == nullptr) {
           if (function.func->parameters[i]->defaultValue.type == PapyrusValueType::Invalid)
             ctx->reportingContext.fatal(location, "Not enough arguments provided.");
-          newArgs[i] = new Parameter();
-          newArgs[i]->value = new PapyrusLiteralExpression(location, function.func->parameters[i]->defaultValue);
+          newArgs[i] = ctx->allocator->make<Parameter>();
+          newArgs[i]->value = ctx->allocator->make<PapyrusLiteralExpression>(location, function.func->parameters[i]->defaultValue);
         }
       }
-      arguments = newArgs;
+      arguments = std::move(newArgs);
     }
 
     for (size_t i = 0; i < arguments.size(); i++) {
