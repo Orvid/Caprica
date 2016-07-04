@@ -80,4 +80,22 @@ std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) con
   return ret;
 }
 
+void CapricaReportingContext::maybePushMessage(CapricaReportingContext* ctx, CapricaFileLocation* location, const char* msgType, size_t warningNumber, const std::string& msg, bool forceAsError) {
+  if (warningNumber != 0) {
+    if (ctx->isWarningEnabled(*location, warningNumber)) {
+      if (ctx->isWarningError(*location, warningNumber)) {
+        ctx->errorCount++;
+        pushToErrorStream(ctx->formatLocation(*location) + ": Error W" + std::to_string(warningNumber) + ": " + msg, true);
+      } else {
+        ctx->warningCount++;
+        pushToErrorStream(ctx->formatLocation(*location) + ": Warning W" + std::to_string(warningNumber) + ": " + msg);
+      }
+    }
+  } else if (location != nullptr) {
+    pushToErrorStream(ctx->formatLocation(*location) + ": " + msgType + ": " + msg, forceAsError);
+  } else {
+    pushToErrorStream((std::string)msgType + ": " + msg, forceAsError);
+  }
+}
+
 }

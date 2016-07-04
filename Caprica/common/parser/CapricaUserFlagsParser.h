@@ -18,7 +18,7 @@ struct CapricaUserFlagsParser final : private CapricaUserFlagsLexer
 private:
   void expect(TokenType tp) {
     if (cur.type != tp)
-      reportingContext.fatal(cur.location, "Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
+      reportingContext.fatal(cur.location, "Expected '%s' got '%s'!", Token::prettyTokenType(tp).c_str(), cur.prettyString().c_str());
   }
 
   void expectConsume(TokenType tp) {

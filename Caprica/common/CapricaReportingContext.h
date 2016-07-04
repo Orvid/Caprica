@@ -40,16 +40,16 @@ struct CapricaReportingContext final
 
   template<typename... Args>
   NEVER_INLINE
-  void error(CapricaFileLocation location, const std::string& msg, Args&&... args) {
+  void error(CapricaFileLocation location, const char* msg, Args&&... args) {
     errorCount++;
-    pushToErrorStream(formatString(location, "Error", msg, std::forward<Args>(args)...), true);
+    maybePushMessage(this, &location, "Error", 0, formatString(msg, std::forward<Args>(args)...), true);
     breakIfDebugging();
   }
 
   template<typename... Args>
   [[noreturn]] NEVER_INLINE
-  void fatal(CapricaFileLocation location, const std::string& msg, Args&&... args) {
-    pushToErrorStream(formatString(location, "Fatal Error", msg, std::forward<Args>(args)...), true);
+  void fatal(CapricaFileLocation location, const char* msg, Args&&... args) {
+    maybePushMessage(this, &location, "Fatal Error", 0, formatString(msg, std::forward<Args>(args)...), true);
     throw std::runtime_error("");
   }
 
@@ -58,8 +58,8 @@ struct CapricaReportingContext final
   // file is likely not available.
   template<typename... Args>
   [[noreturn]] NEVER_INLINE
-  static void logicalFatal(const std::string& msg, Args&&... args) {
-    pushToErrorStream(formatString("Fatal Error", msg, std::forward<Args>(args)...));
+  static void logicalFatal(const char* msg, Args&&... args) {
+    maybePushMessage(nullptr, nullptr, "Fatal Error", 0, formatString(msg, std::forward<Args>(args)...), true);
     throw std::runtime_error("");
   }
 
@@ -105,37 +105,25 @@ private:
   bool isWarningEnabled(CapricaFileLocation location, size_t warningNumber) const;
   NEVER_INLINE
   std::string formatLocation(CapricaFileLocation loc) const;
+  NEVER_INLINE
+  static void maybePushMessage(CapricaReportingContext* ctx, CapricaFileLocation* loc, const char* msgType, size_t warnNum, const std::string& msg, bool forceAsError = false);
 
   template<typename... Args>
-  NEVER_INLINE
-  void warning(CapricaFileLocation location, size_t warningNumber, const std::string& msg, Args&&... args) {
-    if (isWarningEnabled(location, warningNumber)) {
-      if (isWarningError(location, warningNumber)) {
-        errorCount++;
-        pushToErrorStream(formatString(location, "Error W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...), true);
-      } else {
-        warningCount++;
-        pushToErrorStream(formatString(location, "Warning W" + std::to_string(warningNumber), msg, std::forward<Args>(args)...));
-      }
-    }
+  ALWAYS_INLINE
+  void warning(CapricaFileLocation location, size_t warningNumber, const char* msg, Args&&... args) {
+    maybePushMessage(this, &location, nullptr, warningNumber, formatString(msg, std::forward<Args>(args)...));
   }
 
   template<typename... Args>
   NEVER_INLINE
-  std::string formatString(CapricaFileLocation location, const std::string& msgType, const std::string& msg, Args&&... args) const {
-    return formatLocation(location) + ": " + formatString(msgType, msg, std::forward<Args>(args)...);
-  }
-
-  template<typename... Args>
-  NEVER_INLINE
-  static std::string formatString(const std::string& msgType, const std::string& msg, Args&&... args) {
+  static std::string formatString(const char* msg, Args&&... args) {
     if (sizeof...(args)) {
-      size_t size = std::snprintf(nullptr, 0, msg.c_str(), std::forward<Args>(args)...) + 1;
+      size_t size = std::snprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);
-      std::snprintf(buf.get(), size, msg.c_str(), std::forward<Args>(args)...);
-      return msgType + ": " + std::string(buf.get(), buf.get() + size - 1);
+      std::snprintf(buf.get(), size, msg, std::forward<Args>(args)...);
+      return std::string(buf.get(), buf.get() + size - 1);
     } else {
-      return msgType + ": " + msg;
+      return msg;
     }
   }
 };

@@ -26,7 +26,7 @@ private:
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      reportingContext.fatal(cur.location, "Expected '" + Token::prettyTokenType(tp) + "' got '" + cur.prettyString() + "'!");
+      reportingContext.fatal(cur.location, "Expected '%s' got '%s'!", Token::prettyTokenType(tp).c_str(), cur.prettyString().c_str());
     }
   }
 
