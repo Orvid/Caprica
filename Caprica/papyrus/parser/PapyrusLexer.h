@@ -11,6 +11,7 @@
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
 #include <common/FSUtils.h>
+#include <common/UtilMacros.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -181,6 +182,7 @@ protected:
   Token cur{ TokenType::Unknown };
 
   void consume();
+  ALWAYS_INLINE
   CapricaFileLocation consumeLocation() {
     auto loc = cur.location;
     consume();
@@ -206,7 +208,7 @@ private:
     Token{ TokenType::Unknown },
   };
 
-  __forceinline
+  ALWAYS_INLINE
   int getChar() {
     if (strmI >= strmLen)
       return -1;
@@ -217,16 +219,17 @@ private:
     return (unsigned)c;
   }
 
-  __forceinline
+  ALWAYS_INLINE
   int peekChar() {
     if (strmI + 1 > strmLen)
       return -1;
     return *strm;
   }
 
+  NEVER_INLINE
   void realConsume();
 
-  __forceinline
+  ALWAYS_INLINE
   void setTok(TokenType tp, CapricaFileLocation loc, int consumeChars = 0);
 };
 

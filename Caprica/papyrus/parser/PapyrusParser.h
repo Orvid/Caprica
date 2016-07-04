@@ -48,6 +48,7 @@ private:
   PapyrusValue expectConsumePapyrusValue();
   PapyrusUserFlags maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location);
 
+  ALWAYS_INLINE
   void expect(TokenType tp) {
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
@@ -56,11 +57,13 @@ private:
     }
   }
 
+  ALWAYS_INLINE
   void expectConsume(TokenType tp) {
     expect(tp);
     consume();
   }
 
+  ALWAYS_INLINE
   bool maybeConsume(TokenType tp) {
     if (cur.type == tp) {
       consume();
@@ -69,15 +72,18 @@ private:
     return false;
   }
 
+  ALWAYS_INLINE
   void maybeConsumeEOLs() {
     while (maybeConsume(TokenType::EOL)) { }
   }
 
+  ALWAYS_INLINE
   void expectConsumeEOLs() {
     expectConsume(TokenType::EOL);
     maybeConsumeEOLs();
   }
 
+  ALWAYS_INLINE
   boost::string_ref expectConsumeIdentRef() {
     expect(TokenType::Identifier);
     auto str = cur.sValue;
@@ -85,6 +91,7 @@ private:
     return str;
   }
 
+  ALWAYS_INLINE
   boost::string_ref maybeConsumeDocStringRef() {
     if (cur.type == TokenType::DocComment) {
       auto str = cur.sValue;
@@ -95,7 +102,6 @@ private:
     maybeConsumeEOLs();
     return "";
   }
-
 };
 
 }}}

@@ -54,7 +54,7 @@ alignas(128) static const __m128i spaces{
 };
 
 template<bool isNullTerminated>
-__forceinline
+ALWAYS_INLINE
 static bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
   // This uses the SSE2 instructions movdqa, movdqu, pcmpeqb, por, pmovmskb,
   // and is safe to use on any 64-bit CPU.
@@ -116,16 +116,16 @@ bool idEq(const char* a, const std::string& b) {
 bool idEq(const std::string& a, const char* b) {
   return idEq<true>(a.c_str(), a.size(), b, strlen(b));
 }
-__declspec(noinline)
+NEVER_INLINE
 bool idEq(const std::string& a, const std::string& b) {
   return idEq<true>(a.c_str(), a.size(), b.c_str(), b.size());
 }
-__declspec(noinline)
+NEVER_INLINE
 bool idEq(boost::string_ref a, boost::string_ref b) {
   return idEq<false>(a.data(), a.size(), b.data(), b.size());
 }
 
-__declspec(noinline)
+NEVER_INLINE
 size_t CaselessStringHasher::doCaselessHash(const char* k, size_t len) {
   // Using FNV-1a hash, the same as the MSVC std lib hash of strings.
   static_assert(sizeof(size_t) == 8, "This is 64-bit only!");
@@ -158,7 +158,7 @@ size_t CaselessPathHasher::doPathHash(const char* k, size_t len) {
 }
 
 template<bool isNullTerminated>
-__forceinline
+ALWAYS_INLINE
 static size_t doIdentifierHash(const char* s, size_t len) {
   const char* cStr = s;
 
@@ -186,12 +186,12 @@ static size_t doIdentifierHash(const char* s, size_t len) {
   return ((size_t)val << 32) | val;
 }
 
-__declspec(noinline)
+NEVER_INLINE
 size_t CaselessIdentifierHasher::operator()(const std::string& k) const {
   return doIdentifierHash<true>(k.c_str(), k.size());
 }
 
-__declspec(noinline)
+NEVER_INLINE
 size_t CaselessIdentifierHasher::operator()(boost::string_ref k) const {
   return doIdentifierHash<false>(k.data(), k.size());
 }

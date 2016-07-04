@@ -118,7 +118,7 @@ const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
   return f->second;
 }
 
-__forceinline
+ALWAYS_INLINE
 void PapyrusLexer::setTok(TokenType tp, CapricaFileLocation loc, int consumeChars) {
   cur.type = tp;
   cur.location = loc;
@@ -218,7 +218,7 @@ static const caseless_unordered_identifier_ref_map<TokenType> languageExtensions
   { "to", TokenType::kTo },
 };
 
-__forceinline
+ALWAYS_INLINE
 static bool isAsciiAlphaNumeric(int c) {
   return (c >= 'a' && c <= 'z') ||
          (c >= 'A' && c <= 'Z') ||
@@ -239,6 +239,7 @@ void PapyrusLexer::consume() {
   realConsume();
 }
 
+NEVER_INLINE
 void PapyrusLexer::realConsume() {
 StartOver:
   auto baseLoc = location;
