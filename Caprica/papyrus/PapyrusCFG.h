@@ -27,7 +27,7 @@ struct PapyrusControlFlowNode final
 {
   int id{ };
   PapyrusControlFlowNodeEdgeType edgeType{ PapyrusControlFlowNodeEdgeType::None };
-  std::vector<const statements::PapyrusStatement*> statements{ };
+  //std::vector<const statements::PapyrusStatement*> statements{ };
   std::vector<PapyrusControlFlowNode*> children{ };
   PapyrusControlFlowNode* nextSibling{ nullptr };
 
@@ -71,7 +71,7 @@ struct PapyrusCFG final
   }
 
   void appendStatement(const statements::PapyrusStatement* stmt) {
-    nodeStack.top()->statements.push_back(stmt);
+    //nodeStack.top()->statements.push_back(stmt);
   }
 
   void terminateNode(PapyrusControlFlowNodeEdgeType tp) {

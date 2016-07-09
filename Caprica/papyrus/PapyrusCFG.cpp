@@ -86,11 +86,11 @@ void PapyrusControlFlowNode::dumpNode(int currentDepth) {
   writeIndent(currentDepth);
   std::cout << "Node " << id << " " << std::endl;
   
-  for (auto s : statements) {
+  /*for (auto s : statements) {
     writeIndent(currentDepth + 1);
     writeStatementType(s);
     std::cout << std::endl;
-  }
+  }*/
 
   if (edgeType != PapyrusControlFlowNodeEdgeType::None) {
     writeIndent(currentDepth + 1);
