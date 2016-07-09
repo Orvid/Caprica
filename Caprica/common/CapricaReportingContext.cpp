@@ -94,7 +94,7 @@ void CapricaReportingContext::maybePushMessage(CapricaReportingContext* ctx, Cap
   } else if (location != nullptr) {
     pushToErrorStream(ctx->formatLocation(*location) + ": " + msgType + ": " + msg, forceAsError);
   } else {
-    pushToErrorStream((std::string)msgType + ": " + msg, forceAsError);
+    pushToErrorStream(std::string(msgType) + ": " + msg, forceAsError);
   }
 }
 
