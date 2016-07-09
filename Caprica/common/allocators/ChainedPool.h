@@ -97,7 +97,7 @@ private:
         return *this;
       index++;
       heapI++;
-      if (heapI < curHeap->baseAlloc + (curHeap->allocedHeapSize - curHeap->freeBytes))
+      if ((char*)heapI < (char*)curHeap->baseAlloc + (curHeap->allocedHeapSize - curHeap->freeBytes))
         return *this;
       heapI = nullptr;
       curHeap = curHeap->next;
@@ -130,7 +130,7 @@ private:
     }
 
     bool operator !=(const TypedHeapIterator<T>& other) const {
-      return !(this == other);
+      return !(*this == other);
     }
 
   private:
@@ -140,7 +140,10 @@ private:
     T* heapI{ nullptr };
 
     TypedHeapIterator() = default;
-    TypedHeapIterator(Heap* cur) : curHeap(cur) { }
+    TypedHeapIterator(Heap* cur) : curHeap(cur) {
+      if (curHeap->freeBytes != curHeap->allocedHeapSize)
+        heapI = (T*)curHeap->baseAlloc;
+    }
   };
 
   template<typename T>
