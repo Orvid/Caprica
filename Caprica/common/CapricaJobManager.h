@@ -25,9 +25,9 @@ protected:
 
 private:
   std::atomic<bool> hasRan{ false };
+  std::atomic<bool> runningLock{ false };
   std::condition_variable ranCondition;
   std::mutex ranMutex;
-  std::atomic<bool> runningLock{ false };
 
   friend struct CapricaJobManager;
   std::atomic<CapricaJob*> next{ nullptr };
@@ -56,9 +56,9 @@ private:
   std::condition_variable queueCondition;
   std::atomic<size_t> queuedItemCount{ 0 };
   std::atomic<size_t> waiterCount{ 0 };
+  std::atomic<size_t> workerCount{ 0 };
   std::atomic<bool> stopWorkers{ false };
   std::atomic<bool> queueInitialized{ false };
-  std::atomic<size_t> workerCount{ 0 };
 
   void workerMain();
 };
