@@ -71,7 +71,7 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
   else
     delete fDebInfo;
 
-  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name.to_string().c_str());
+  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name);
   return func;
 }
 
