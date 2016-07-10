@@ -105,6 +105,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     auto dest = getDest(bldr, location, function.func->returnType);
 
     std::vector<pex::PexValue> args;
+    args.reserve(arguments.size());
     for (auto param : arguments)
       args.emplace_back(param->value->generateLoad(file, bldr));
     bldr << location;
@@ -381,9 +382,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     // we've transformed CustomEventName and ScriptEventName parameters.
     for (size_t i = 0; i < arguments.size(); i++) {
       if (function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName) {
-        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, PapyrusType::String(function.func->parameters[i]->type.location));
+        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, PapyrusType::String(arguments[i]->value->location));
       } else if (function.func->parameters[i]->type.type == PapyrusType::Kind::ScriptEventName) {
-        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, PapyrusType::String(function.func->parameters[i]->type.location));
+        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, PapyrusType::String(arguments[i]->value->location));
       } else {
         arguments[i]->value = ctx->coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
       }

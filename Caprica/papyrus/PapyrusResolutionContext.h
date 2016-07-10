@@ -57,7 +57,7 @@ struct PapyrusResolutionContext final
   void checkForPoison(const expressions::PapyrusExpression* expr) const;
   void checkForPoison(const PapyrusType& type) const;
 
-  void pushLocalVariableScope() { localVariableScopeStack.push_back({ }); }
+  void pushLocalVariableScope() { localVariableScopeStack.emplace_back(); }
   void popLocalVariableScope() { localVariableScopeStack.pop_back(); }
 
   bool canBreak() const { return currentBreakScopeDepth > 0; }
