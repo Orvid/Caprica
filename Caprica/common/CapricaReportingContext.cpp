@@ -61,15 +61,10 @@ size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, si
       }
     }
   }
-  // TODO: B-Tree search.
-  for (size_t i = lineOffsets.size() - 1; i >= 0; i--) {
-    if (location.fileOffset >= lineOffsets[i]) {
-      return i + 1;
-    }
-    if (i == 0)
-      break;
-  }
-  CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+  auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.fileOffset);
+  if (a == lineOffsets.end())
+    CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+  return std::distance(lineOffsets.begin(), a);
 }
 
 std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) const {
