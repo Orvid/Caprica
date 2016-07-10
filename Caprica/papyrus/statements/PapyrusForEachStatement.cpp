@@ -79,8 +79,8 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
         ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function does not accept exactly one parameter!", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
-      if (gAtId.func->parameters[0]->type != gCountId.func->returnType) {
-        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function has one parameter, but it is of type '%s', not 'Int'!", tp.prettyString().c_str(), gAtId.func->parameters[0]->type.prettyString().c_str());
+      if (gAtId.func->parameters.front()->type != gCountId.func->returnType) {
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function has one parameter, but it is of type '%s', not 'Int'!", tp.prettyString().c_str(), gAtId.func->parameters.front()->type.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       this->getAtIdentifier = new PapyrusIdentifier(gAtId);

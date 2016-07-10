@@ -42,9 +42,9 @@ static PapyrusFunction* reflectFunction(CapricaFileLocation loc, allocators::Cha
   func->userFlags.isNative = pFunc->isNative;
 
   for (auto pp : pFunc->parameters) {
-    auto param = alloc->make<PapyrusFunctionParameter>(loc, reflectType(loc, alloc, pex, pp->type));
+    auto param = alloc->make<PapyrusFunctionParameter>(loc, func->parameters.size(), reflectType(loc, alloc, pex, pp->type));
     param->name = alloc->allocateString(pex->getStringValue(pp->name));
-    func->parameters.emplace_back(param);
+    func->parameters.push_back(param);
   }
 
   return func;

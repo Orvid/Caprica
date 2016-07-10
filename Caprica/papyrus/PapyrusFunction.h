@@ -39,7 +39,7 @@ struct PapyrusFunction final
   boost::string_ref documentationComment{ "" };
   PapyrusType returnType;
   PapyrusUserFlags userFlags{ };
-  std::vector<PapyrusFunctionParameter*> parameters{ };
+  IntrusiveLinkedList<PapyrusFunctionParameter> parameters{ };
   IntrusiveLinkedList<statements::PapyrusStatement> statements{ };
   PapyrusObject* parentObject{ nullptr };
   PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };

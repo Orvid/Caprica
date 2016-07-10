@@ -3,6 +3,7 @@
 #include <boost/utility/string_ref.hpp>
 
 #include <common/CapricaFileLocation.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -20,12 +21,13 @@ namespace caprica { namespace papyrus {
 struct PapyrusFunctionParameter final
 {
   boost::string_ref name{ "" };
+  const size_t index;
   PapyrusType type;
   PapyrusValue defaultValue{ PapyrusValue::Default() };
 
   const CapricaFileLocation location;
 
-  explicit PapyrusFunctionParameter(CapricaFileLocation loc, PapyrusType&& tp) : location(loc), type(std::move(tp)) { }
+  explicit PapyrusFunctionParameter(CapricaFileLocation loc, size_t idx, PapyrusType&& tp) : location(loc), index(idx), type(std::move(tp)) { }
   PapyrusFunctionParameter(const PapyrusFunctionParameter&) = delete;
   ~PapyrusFunctionParameter() = default;
 
@@ -40,6 +42,10 @@ struct PapyrusFunctionParameter final
     type = ctx->resolveType(type, true);
     defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   }
+
+private:
+  friend IntrusiveLinkedList<PapyrusFunctionParameter>;
+  PapyrusFunctionParameter* next{ nullptr };
 };
 
 }}

@@ -312,9 +312,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       for (size_t i = 0, baseI = 0; i < arguments.size(); i++, baseI++) {
         if (arguments[i]->name != "") {
           hadNamedArgs = true;
-          for (size_t i2 = 0; i2 < function.func->parameters.size(); i2++) {
-            if (idEq(function.func->parameters[i2]->name, arguments[i]->name)) {
-              baseI = i2;
+          for (auto p : function.func->parameters) {
+            if (idEq(p->name, arguments[i]->name)) {
+              baseI = p->index;
               goto ContinueOuterLoop;
             }
           }
@@ -326,35 +326,35 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         newArgs[baseI] = arguments[i];
       }
 
-      for (size_t i = 0; i < newArgs.size(); i++) {
-        if (newArgs[i] == nullptr) {
-          if (function.func->parameters[i]->defaultValue.type == PapyrusValueType::Invalid)
+      for (auto p : function.func->parameters) {
+        if (newArgs[p->index] == nullptr) {
+          if (p->defaultValue.type == PapyrusValueType::Invalid)
             ctx->reportingContext.fatal(location, "Not enough arguments provided.");
-          newArgs[i] = ctx->allocator->make<Parameter>();
-          newArgs[i]->value = ctx->allocator->make<PapyrusLiteralExpression>(location, function.func->parameters[i]->defaultValue);
+          newArgs[p->index] = ctx->allocator->make<Parameter>();
+          newArgs[p->index]->value = ctx->allocator->make<PapyrusLiteralExpression>(location, p->defaultValue);
         }
       }
       arguments = std::move(newArgs);
     }
 
-    for (size_t i = 0; i < arguments.size(); i++) {
-      arguments[i]->value->semantic(ctx);
-      ctx->checkForPoison(arguments[i]->value);
-      switch (function.func->parameters[i]->type.type) {
+    for (auto p : function.func->parameters) {
+      arguments[p->index]->value->semantic(ctx);
+      ctx->checkForPoison(arguments[p->index]->value);
+      switch (p->type.type) {
         case PapyrusType::Kind::CustomEventName:
         case PapyrusType::Kind::ScriptEventName:
         {
-          bool isCustomEvent = function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName;
+          bool isCustomEvent = p->type.type == PapyrusType::Kind::CustomEventName;
 
-          auto le = arguments[i]->value->as<expressions::PapyrusLiteralExpression>();
+          auto le = arguments[p->index]->value->as<expressions::PapyrusLiteralExpression>();
           if (!le || le->value.type != PapyrusValueType::String) {
-            ctx->reportingContext.error(arguments[i]->value->location, "Argument %zu must be string literal.", i);
+            ctx->reportingContext.error(arguments[p->index]->value->location, "Argument %zu must be string literal.", p->index);
             continue;
           }
 
           auto baseType = [&]() -> PapyrusType {
-            if (i != 0)
-              return arguments[i - 1]->value->resultType();
+            if (p->index != 0)
+              return arguments[p->index - 1]->value->resultType();
             if (baseExpression == nullptr)
               return PapyrusType::ResolvedObject(ctx->object->location, ctx->object);
             return baseExpression->resultType();
@@ -370,7 +370,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           }
 
         EventResolutionError:
-          ctx->reportingContext.error(arguments[i]->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.s.to_string().c_str(), baseType.prettyString().c_str());
+          ctx->reportingContext.error(arguments[p->index]->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.s.to_string().c_str(), baseType.prettyString().c_str());
           break;
         }
         default:
@@ -380,13 +380,13 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
 
     // We need the semantic pass to have run for the args, but we can't have them coerced until after
     // we've transformed CustomEventName and ScriptEventName parameters.
-    for (size_t i = 0; i < arguments.size(); i++) {
-      if (function.func->parameters[i]->type.type == PapyrusType::Kind::CustomEventName) {
-        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, PapyrusType::String(arguments[i]->value->location));
-      } else if (function.func->parameters[i]->type.type == PapyrusType::Kind::ScriptEventName) {
-        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, PapyrusType::String(arguments[i]->value->location));
+    for (auto p : function.func->parameters) {
+      if (p->type.type == PapyrusType::Kind::CustomEventName) {
+        arguments[p->index]->value = ctx->coerceExpression(arguments[p->index]->value, PapyrusType::String(arguments[p->index]->value->location));
+      } else if (p->type.type == PapyrusType::Kind::ScriptEventName) {
+        arguments[p->index]->value = ctx->coerceExpression(arguments[p->index]->value, PapyrusType::String(arguments[p->index]->value->location));
       } else {
-        arguments[i]->value = ctx->coerceExpression(arguments[i]->value, function.func->parameters[i]->type);
+        arguments[p->index]->value = ctx->coerceExpression(arguments[p->index]->value, p->type);
       }
     }
 

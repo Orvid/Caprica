@@ -330,7 +330,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
             reportingContext.error(cur.location, "The set function must be named \"Set\"!");
           if (prop->writeFunction->parameters.size() != 1)
             reportingContext.error(cur.location, "The set function must have a single parameter!");
-          if (prop->writeFunction->parameters[0]->type != prop->type)
+          if (prop->writeFunction->parameters.front()->type != prop->type)
             reportingContext.error(cur.location, "The set function's parameter must be the same type as the property!");
           break;
 
@@ -410,11 +410,11 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     do {
       maybeConsume(TokenType::Comma);
 
-      auto param = alloc->make<PapyrusFunctionParameter>(cur.location, expectConsumePapyrusType());
+      auto param = alloc->make<PapyrusFunctionParameter>(cur.location, func->parameters.size(), expectConsumePapyrusType());
       param->name = expectConsumeIdentRef();
       if (maybeConsume(TokenType::Equal))
         param->defaultValue = expectConsumePapyrusValue();
-      func->parameters.emplace_back(param);
+      func->parameters.push_back(param);
     } while (cur.type == TokenType::Comma);
   }
   expectConsume(TokenType::RParen);
