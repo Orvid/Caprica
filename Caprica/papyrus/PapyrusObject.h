@@ -6,6 +6,7 @@
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
 #include <common/EngineLimits.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusCustomEvent.h>
 #include <papyrus/PapyrusProperty.h>
@@ -49,19 +50,19 @@ struct PapyrusObject final
   CapricaFileLocation location;
 
   std::vector<std::pair<CapricaFileLocation, boost::string_ref>> imports{ };
-  std::vector<PapyrusStruct*> structs{ };
-  std::vector<PapyrusVariable*> variables{ };
-  std::vector<PapyrusPropertyGroup*> propertyGroups{ };
-  std::vector<PapyrusState*> states{ };
-  std::vector<PapyrusCustomEvent*> customEvents{ };
+  IntrusiveLinkedList<PapyrusStruct> structs{ };
+  IntrusiveLinkedList<PapyrusVariable> variables{ };
+  IntrusiveLinkedList<PapyrusPropertyGroup> propertyGroups{ };
+  IntrusiveLinkedList<PapyrusState> states{ };
+  IntrusiveLinkedList<PapyrusCustomEvent> customEvents{ };
 
   bool isBetaOnly() const { return userFlags.isBetaOnly; }
   bool isConst() const { return userFlags.isConst; }
   bool isDebugOnly() const { return userFlags.isDebugOnly; }
   bool isNative() const { return userFlags.isNative; }
 
-  explicit PapyrusObject(const CapricaFileLocation& loc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) {
-    rootState = new PapyrusState(location);
+  explicit PapyrusObject(const CapricaFileLocation& loc, allocators::ChainedPool* alloc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) {
+    rootState = alloc->make<PapyrusState>(location);
     states.push_back(rootState);
   }
   PapyrusObject(const PapyrusObject&) = delete;
@@ -101,6 +102,8 @@ struct PapyrusObject final
 
 private:
   friend PapyrusCompilationNode;
+  friend IntrusiveLinkedList<PapyrusObject>;
+  PapyrusObject* next{ nullptr };
 
   PapyrusCompilationNode* compilationNode{ nullptr };
   PapyrusResoultionState resolutionState{ PapyrusResoultionState::Unresolved };

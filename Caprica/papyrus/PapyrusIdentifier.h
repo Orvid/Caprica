@@ -62,11 +62,11 @@ struct PapyrusIdentifier final
   std::shared_ptr<PapyrusType> arrayFuncElementType{ nullptr };
   union
   {
-    PapyrusProperty* prop{ nullptr };
-    PapyrusVariable* var;
-    PapyrusFunctionParameter* param;
-    statements::PapyrusDeclareStatement* declStatement;
-    PapyrusStructMember* structMember;
+    const PapyrusProperty* prop{ nullptr };
+    const PapyrusVariable* var;
+    const PapyrusFunctionParameter* param;
+    const statements::PapyrusDeclareStatement* declStatement;
+    const PapyrusStructMember* structMember;
     const PapyrusFunction* func;
     PapyrusBuiltinArrayFunctionKind arrayFuncKind;
   };
@@ -90,11 +90,11 @@ struct PapyrusIdentifier final
     id.name = nm;
     return id;
   }
-  static PapyrusIdentifier Property(CapricaFileLocation loc, PapyrusProperty* p);
-  static PapyrusIdentifier Variable(CapricaFileLocation loc, PapyrusVariable* v);
-  static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, PapyrusFunctionParameter* p);
-  static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, statements::PapyrusDeclareStatement* s);
-  static PapyrusIdentifier StructMember(CapricaFileLocation loc, PapyrusStructMember* m);
+  static PapyrusIdentifier Property(CapricaFileLocation loc, const PapyrusProperty* p);
+  static PapyrusIdentifier Variable(CapricaFileLocation loc, const PapyrusVariable* v);
+  static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, const PapyrusFunctionParameter* p);
+  static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s);
+  static PapyrusIdentifier StructMember(CapricaFileLocation loc, const PapyrusStructMember* m);
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
   static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType);
 

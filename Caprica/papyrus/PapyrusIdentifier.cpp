@@ -11,27 +11,27 @@
 
 namespace caprica { namespace papyrus {
 
-PapyrusIdentifier PapyrusIdentifier::Property(CapricaFileLocation loc, PapyrusProperty* p) {
+PapyrusIdentifier PapyrusIdentifier::Property(CapricaFileLocation loc, const PapyrusProperty* p) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Property, loc);
   id.prop = p;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::Variable(CapricaFileLocation loc, PapyrusVariable* v) {
+PapyrusIdentifier PapyrusIdentifier::Variable(CapricaFileLocation loc, const PapyrusVariable* v) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Variable, loc);
   id.var = v;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::FunctionParameter(CapricaFileLocation loc, PapyrusFunctionParameter* p) {
+PapyrusIdentifier PapyrusIdentifier::FunctionParameter(CapricaFileLocation loc, const PapyrusFunctionParameter* p) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Parameter, loc);
   id.param = p;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::DeclStatement(CapricaFileLocation loc, statements::PapyrusDeclareStatement* s) {
+PapyrusIdentifier PapyrusIdentifier::DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::DeclareStatement, loc);
   id.declStatement = s;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::StructMember(CapricaFileLocation loc, PapyrusStructMember* m) {
+PapyrusIdentifier PapyrusIdentifier::StructMember(CapricaFileLocation loc, const PapyrusStructMember* m) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::StructMember, loc);
   id.structMember = m;
   return id;
@@ -167,7 +167,7 @@ void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const 
 void PapyrusIdentifier::markRead() {
   switch (type) {
     case PapyrusIdentifierType::Variable:
-      var->referenceState.isRead = true;
+      const_cast<PapyrusVariable*>(var)->referenceState.isRead = true;
       return;
 
     case PapyrusIdentifierType::Property:
@@ -191,7 +191,7 @@ void PapyrusIdentifier::markRead() {
 void PapyrusIdentifier::markWritten() {
   switch (type) {
     case PapyrusIdentifierType::Variable:
-      var->referenceState.isWritten = true;
+      const_cast<PapyrusVariable*>(var)->referenceState.isWritten = true;
       return;
 
     case PapyrusIdentifierType::Property:

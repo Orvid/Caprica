@@ -6,6 +6,7 @@
 
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaReportingContext.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -19,7 +20,7 @@ struct PapyrusScript final
 {
   time_t lastModificationTime{ };
   std::string sourceFileName{ "" };
-  std::vector<PapyrusObject*> objects{ };
+  IntrusiveLinkedList<PapyrusObject> objects{ };
   allocators::ChainedPool* allocator{ nullptr };
 
   explicit PapyrusScript() = default;

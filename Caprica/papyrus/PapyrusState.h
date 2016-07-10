@@ -50,6 +50,10 @@ struct PapyrusState final
 
   void semantic(PapyrusResolutionContext* ctx);
   void semantic2(PapyrusResolutionContext* ctx);
+
+private:
+  friend IntrusiveLinkedList<PapyrusState>;
+  PapyrusState* next{ nullptr };
 };
 
 }}

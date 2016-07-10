@@ -1,9 +1,9 @@
 #pragma once
 
-#include <limits>
 #include <string>
 
 #include <common/CapricaFileLocation.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -46,6 +46,10 @@ struct PapyrusProperty final
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const;
   void semantic(PapyrusResolutionContext* ctx);
   void semantic2(PapyrusResolutionContext* ctx);
+
+private:
+  friend IntrusiveLinkedList<PapyrusProperty>;
+  PapyrusProperty* next{ nullptr };
 };
 
 }}

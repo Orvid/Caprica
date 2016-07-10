@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusStructMember.h>
 
@@ -18,7 +20,7 @@ struct PapyrusObject;
 struct PapyrusStruct final
 {
   boost::string_ref name{ "" };
-  std::vector<PapyrusStructMember*> members{ };
+  IntrusiveLinkedList<PapyrusStructMember> members{ };
   PapyrusObject* parentObject{ nullptr };
 
   CapricaFileLocation location;
@@ -52,6 +54,10 @@ struct PapyrusStruct final
     for (auto m : members)
       m->semantic(ctx);
   }
+
+private:
+  friend IntrusiveLinkedList<PapyrusStruct>;
+  PapyrusStruct* next{ nullptr };
 };
 
 }}

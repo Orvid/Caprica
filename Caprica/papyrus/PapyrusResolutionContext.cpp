@@ -226,7 +226,7 @@ const PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusOb
   return nullptr;
 }
 
-PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const PapyrusObject* parentObj, boost::string_ref name) const {
+const PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const PapyrusObject* parentObj, boost::string_ref name) const {
   for (auto c : parentObj->customEvents) {
     if (idEq(c->name, name))
       return c;
@@ -238,7 +238,7 @@ PapyrusCustomEvent* PapyrusResolutionContext::tryResolveCustomEvent(const Papyru
   return nullptr;
 }
 
-PapyrusState* PapyrusResolutionContext::tryResolveState(boost::string_ref name, const PapyrusObject* parentObj) const {
+const PapyrusState* PapyrusResolutionContext::tryResolveState(boost::string_ref name, const PapyrusObject* parentObj) const {
   if (!parentObj)
     parentObj = object;
 
@@ -253,7 +253,7 @@ PapyrusState* PapyrusResolutionContext::tryResolveState(boost::string_ref name, 
   return nullptr;
 }
 
-static bool tryResolveStruct(const PapyrusObject* object, boost::string_ref structName, PapyrusStruct** ret) {
+static bool tryResolveStruct(const PapyrusObject* object, boost::string_ref structName, const PapyrusStruct** ret) {
   for (auto& s : object->structs) {
     if (idEq(s->name, structName)) {
       *ret = s;
@@ -295,7 +295,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   }*/
 
   if (object) {
-    PapyrusStruct* struc = nullptr;
+    const PapyrusStruct* struc = nullptr;
     if (tryResolveStruct(object, tp.name, &struc))
       return PapyrusType::ResolvedStruct(tp.location, struc);
 
@@ -320,7 +320,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   if (retStructName.size() == 0)
     return PapyrusType::ResolvedObject(tp.location, foundObj);
 
-  PapyrusStruct* resStruct = nullptr;
+  const PapyrusStruct* resStruct = nullptr;
   if (tryResolveStruct(foundObj, retStructName, &resStruct))
     return PapyrusType::ResolvedStruct(tp.location, resStruct);
   reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", retStructName.to_string().c_str(), foundObj->name.to_string().c_str());

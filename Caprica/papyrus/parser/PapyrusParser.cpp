@@ -44,7 +44,7 @@ PapyrusScript* PapyrusParser::parseScript() {
   auto script = alloc->make<PapyrusScript>();
   script->allocator = alloc;
   script->sourceFileName = FSUtils::canonical(filename);
-  script->objects.emplace_back(parseObject(script));
+  script->objects.push_back(parseObject(script));
   return script;
 }
 
@@ -72,11 +72,11 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {
     auto eLoc = cur.location;
-    obj = alloc->make<PapyrusObject>(loc, PapyrusType::Unresolved(eLoc, expectConsumeIdentRef()));
+    obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(eLoc, expectConsumeIdentRef()));
   } else if (idEq(name, "ScriptObject")) {
-    obj = alloc->make<PapyrusObject>(loc, PapyrusType::None(cur.location));
+    obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::None(cur.location));
   } else {
-    obj = alloc->make<PapyrusObject>(loc, PapyrusType::Unresolved(loc, "ScriptObject"));
+    obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "ScriptObject"));
   }
   obj->name = name;
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
@@ -97,21 +97,21 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       case TokenType::kAuto:
         consume();
         expectConsume(TokenType::kState);
-        obj->states.emplace_back(parseState(script, obj, true));
+        obj->states.push_back(parseState(script, obj, true));
         break;
       case TokenType::kState:
         consume();
-        obj->states.emplace_back(parseState(script, obj, false));
+        obj->states.push_back(parseState(script, obj, false));
         break;
 
       case TokenType::kStruct:
         consume();
-        obj->structs.emplace_back(parseStruct(script, obj));
+        obj->structs.push_back(parseStruct(script, obj));
         break;
 
       case TokenType::kGroup:
         consume();
-        obj->propertyGroups.emplace_back(parsePropertyGroup(script, obj));
+        obj->propertyGroups.push_back(parsePropertyGroup(script, obj));
         break;
 
       case TokenType::kCustomEvent: {
@@ -119,7 +119,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         auto ce = alloc->make<PapyrusCustomEvent>(cur.location);
         ce->parentObject = obj;
         ce->name = expectConsumeIdentRef();
-        obj->customEvents.emplace_back(ce);
+        obj->customEvents.push_back(ce);
         expectConsumeEOLs();
         break;
       }
@@ -146,9 +146,9 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
           obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), std::move(tp), TokenType::kEndFunction));
         } else if (cur.type == TokenType::kProperty) {
           consume();
-          obj->getRootPropertyGroup()->properties.emplace_back(parseProperty(script, obj, std::move(tp)));
+          obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, std::move(tp)));
         } else {
-          obj->variables.emplace_back(parseVariable(script, obj, std::move(tp)));
+          obj->variables.push_back(parseVariable(script, obj, std::move(tp)));
         }
         break;
       }
@@ -228,7 +228,7 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
       case TokenType::kString:
       case TokenType::kVar:
       case TokenType::Identifier:
-        struc->members.emplace_back(parseStructMember(script, object, struc, expectConsumePapyrusType()));
+        struc->members.push_back(parseStructMember(script, object, struc, expectConsumePapyrusType()));
         break;
 
       default:
@@ -283,7 +283,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kProperty);
-        group->properties.emplace_back(parseProperty(script, object, std::move(tp)));
+        group->properties.push_back(parseProperty(script, object, std::move(tp)));
         break;
       }
 
@@ -424,7 +424,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
   func->documentationComment = maybeConsumeDocStringRef();
   if (!func->isNative()) {
     while (cur.type != endToken && cur.type != TokenType::END) {
-      func->statements.emplace_back(parseStatement(func));
+      func->statements.push_back(parseStatement(func));
     }
 
     if (cur.type == TokenType::END)

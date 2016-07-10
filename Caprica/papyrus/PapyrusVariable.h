@@ -4,6 +4,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReferenceState.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
@@ -35,6 +36,10 @@ struct PapyrusVariable final
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const;
   void semantic2(PapyrusResolutionContext* ctx);
+
+private:
+  friend IntrusiveLinkedList<PapyrusVariable>;
+  PapyrusVariable* next{ nullptr };
 };
 
 }}

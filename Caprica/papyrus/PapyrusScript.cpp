@@ -41,7 +41,7 @@ pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
     o->buildPex(repCtx, pex);
 
   if (objects.size())
-    EngineLimits::checkLimit(repCtx, objects[0]->location, EngineLimits::Type::PexFile_UserFlagCount, pex->getUserFlagCount());
+    EngineLimits::checkLimit(repCtx, objects.front()->location, EngineLimits::Type::PexFile_UserFlagCount, pex->getUserFlagCount());
   return pex;
 }
 

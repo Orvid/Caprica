@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <common/CapricaFileLocation.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusUserFlags.h>
@@ -19,7 +20,7 @@ struct PapyrusPropertyGroup final
   boost::string_ref name{ "" };
   boost::string_ref documentationComment{ "" };
   PapyrusUserFlags userFlags{ };
-  std::vector<PapyrusProperty*> properties{ };
+  IntrusiveLinkedList<PapyrusProperty> properties{ };
 
   CapricaFileLocation location;
 
@@ -53,6 +54,10 @@ struct PapyrusPropertyGroup final
     for (auto p : properties)
       p->semantic2(ctx);
   }
+
+private:
+  friend IntrusiveLinkedList<PapyrusPropertyGroup>;
+  PapyrusPropertyGroup* next{ nullptr };
 };
 
 }}

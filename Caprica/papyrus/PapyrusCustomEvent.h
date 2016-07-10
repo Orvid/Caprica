@@ -1,9 +1,10 @@
 #pragma once
 
-#include <string>
+#include <boost/utility/string_ref.hpp>
 
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
 
@@ -22,6 +23,10 @@ struct PapyrusCustomEvent final
   ~PapyrusCustomEvent() = default;
 
   void semantic2(PapyrusResolutionContext* ctx);
+
+private:
+  friend IntrusiveLinkedList<PapyrusCustomEvent>;
+  PapyrusCustomEvent* next{ nullptr };
 };
 
 }}

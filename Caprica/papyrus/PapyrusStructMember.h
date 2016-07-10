@@ -3,6 +3,7 @@
 #include <string>
 
 #include <common/CapricaFileLocation.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/PapyrusType.h>
@@ -54,6 +55,10 @@ struct PapyrusStructMember final
       ctx->reportingContext.error(type.location, "Struct members are not allowed to be var.");
     defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   }
+
+private:
+  friend IntrusiveLinkedList<PapyrusStructMember>;
+  PapyrusStructMember* next{ nullptr };
 };
 
 }}

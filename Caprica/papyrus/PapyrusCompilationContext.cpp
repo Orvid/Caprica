@@ -128,7 +128,7 @@ void PapyrusCompilationNode::FileParseJob::run() {
   
   if (parent->loadedScript->objects.size() != 1)
     CapricaReportingContext::logicalFatal("The script had either no objects or more than one!");
-  parent->resolvedObject = parent->loadedScript->objects[0];
+  parent->resolvedObject = parent->loadedScript->objects.front();
 }
 
 void PapyrusCompilationNode::FileSemanticJob::run() {

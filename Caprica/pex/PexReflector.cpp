@@ -2,15 +2,17 @@
 
 #include <boost/utility/string_ref.hpp>
 
+#include <common/allocators/ChainedPool.h>
+
 #include <pex/PexReader.h>
 
 namespace caprica { namespace pex {
 
 using namespace caprica::papyrus;
 
-static PapyrusType reflectType(CapricaFileLocation loc, boost::string_ref name) {
+static PapyrusType reflectType(CapricaFileLocation loc, allocators::ChainedPool* alloc, boost::string_ref name) {
   if (name.size() > 2 && name[name.size() - 2] == '[' && name[name.size() - 1] == ']')
-    return PapyrusType::Array(loc, std::make_shared<PapyrusType>(reflectType(loc, name.substr(0, name.size() - 2))));
+    return PapyrusType::Array(loc, std::make_shared<PapyrusType>(reflectType(loc, alloc, name.substr(0, name.size() - 2))));
 
   if (idEq(name, "bool"))
     return PapyrusType::Bool(loc);
@@ -25,23 +27,23 @@ static PapyrusType reflectType(CapricaFileLocation loc, boost::string_ref name) 
   if (idEq(name, "var"))
     return PapyrusType::Var(loc);
 
-  return PapyrusType::Unresolved(loc, name);
+  return PapyrusType::Unresolved(loc, alloc->allocateString(name));
 }
 
-static PapyrusType reflectType(CapricaFileLocation loc, PexFile* pex, PexString pexName) {
-  return reflectType(loc, pex->getStringValue(pexName));
+static PapyrusType reflectType(CapricaFileLocation loc, allocators::ChainedPool* alloc, PexFile* pex, PexString pexName) {
+  return reflectType(loc, alloc, alloc->allocateString(pex->getStringValue(pexName)));
 }
 
-static PapyrusFunction* reflectFunction(CapricaFileLocation loc, PexFile* pex, PapyrusObject* obj, PexFunction* pFunc, boost::string_ref funcName) {
-  auto func = new PapyrusFunction(loc, reflectType(loc, pex, pFunc->returnTypeName));
+static PapyrusFunction* reflectFunction(CapricaFileLocation loc, allocators::ChainedPool* alloc, PexFile* pex, PapyrusObject* obj, PexFunction* pFunc, boost::string_ref funcName) {
+  auto func = alloc->make<PapyrusFunction>(loc, reflectType(loc, alloc, pex, pFunc->returnTypeName));
   func->parentObject = obj;
   func->name = funcName;
   func->userFlags.isGlobal = pFunc->isGlobal;
   func->userFlags.isNative = pFunc->isNative;
 
   for (auto pp : pFunc->parameters) {
-    auto param = new PapyrusFunctionParameter(loc, reflectType(loc, pex, pp->type));
-    param->name = pex->getStringValue(pp->name);
+    auto param = alloc->make<PapyrusFunctionParameter>(loc, reflectType(loc, alloc, pex, pp->type));
+    param->name = alloc->allocateString(pex->getStringValue(pp->name));
     func->parameters.emplace_back(param);
   }
 
@@ -49,61 +51,63 @@ static PapyrusFunction* reflectFunction(CapricaFileLocation loc, PexFile* pex, P
 }
 
 PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
+  auto alloc = new allocators::ChainedPool(1024 * 4);
   CapricaFileLocation loc{ 0 };
 
-  auto script = new PapyrusScript();
+  auto script = alloc->make<PapyrusScript>();
+  script->allocator = alloc;
   script->sourceFileName = pex->sourceFileName;
   
   for (auto po : pex->objects) {
     PapyrusType baseTp = PapyrusType::None(loc);
     if (pex->getStringValue(po->parentClassName) != "")
-      baseTp = reflectType(loc, pex, po->parentClassName);
-    auto obj = new PapyrusObject(loc, baseTp);
-    obj->name = pex->getStringValue(po->name);
+      baseTp = reflectType(loc, alloc, pex, po->parentClassName);
+    auto obj = alloc->make<PapyrusObject>(loc, alloc, baseTp);
+    obj->name = alloc->allocateString(pex->getStringValue(po->name));
 
     for (auto ps : po->structs) {
-      auto struc = new PapyrusStruct(loc);
+      auto struc = alloc->make<PapyrusStruct>(loc);
       struc->parentObject = obj;
-      struc->name = pex->getStringValue(ps->name);
+      struc->name = alloc->allocateString(pex->getStringValue(ps->name));
       for (auto pm : ps->members) {
-        auto mem = new PapyrusStructMember(loc, reflectType(loc, pex, pm->typeName), struc);
+        auto mem = alloc->make<PapyrusStructMember>(loc, reflectType(loc, alloc, pex, pm->typeName), struc);
         mem->userFlags.isConst = pm->isConst;
-        mem->name = pex->getStringValue(pm->name);
+        mem->name = alloc->allocateString(pex->getStringValue(pm->name));
         struc->members.push_back(mem);
       }
       obj->structs.push_back(struc);
     }
 
     for (auto pp : po->properties) {
-      auto prop = new PapyrusProperty(loc, reflectType(loc, pex, pp->typeName), obj);
-      prop->name = pex->getStringValue(pp->name);
+      auto prop = alloc->make<PapyrusProperty>(loc, reflectType(loc, alloc, pex, pp->typeName), obj);
+      prop->name = alloc->allocateString(pex->getStringValue(pp->name));
       if (pp->isAuto) {
         prop->userFlags.isAuto = true;
       } else {
         if (pp->isReadable) {
-          prop->readFunction = reflectFunction(loc, pex, obj, pp->readFunction, "get");
+          prop->readFunction = reflectFunction(loc, alloc, pex, obj, pp->readFunction, "get");
           prop->readFunction->functionType = PapyrusFunctionType::Getter;
         }
         if (pp->isWritable) {
-          prop->writeFunction = reflectFunction(loc, pex, obj, pp->writeFunction, "set");
+          prop->writeFunction = reflectFunction(loc, alloc, pex, obj, pp->writeFunction, "set");
           prop->writeFunction->functionType = PapyrusFunctionType::Setter;
         }
       }
-      obj->getRootPropertyGroup()->properties.emplace_back(prop);
+      obj->getRootPropertyGroup()->properties.push_back(prop);
     }
 
     for (auto ps : po->states) {
       bool pushState = pex->getStringValue(ps->name) != "";
       PapyrusState* state{ nullptr };
       if (pushState) {
-        state = new PapyrusState(loc);
-        state->name = pex->getStringValue(ps->name);
+        state = alloc->make<PapyrusState>(loc);
+        state->name = alloc->allocateString(pex->getStringValue(ps->name));
       } else {
         state = obj->getRootState();
       }
 
       for (auto pf : ps->functions) {
-        auto f = reflectFunction(loc, pex, obj, pf, pex->getStringValue(pf->name));
+        auto f = reflectFunction(loc, alloc, pex, obj, pf, alloc->allocateString(pex->getStringValue(pf->name)));
         f->functionType = PapyrusFunctionType::Function;
         if (f->name.size() > 2 && idEq(f->name.substr(0, 2), "on"))
           f->functionType = PapyrusFunctionType::Event;
@@ -111,10 +115,10 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       }
       
       if (pushState)
-        obj->states.emplace_back(state);
+        obj->states.push_back(state);
     }
 
-    script->objects.emplace_back(obj);
+    script->objects.push_back(obj);
   }
 
   return script;
