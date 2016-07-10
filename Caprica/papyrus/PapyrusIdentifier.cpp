@@ -36,7 +36,7 @@ PapyrusIdentifier PapyrusIdentifier::StructMember(CapricaFileLocation loc, Papyr
   id.structMember = m;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::Function(CapricaFileLocation loc, PapyrusFunction* f) {
+PapyrusIdentifier PapyrusIdentifier::Function(CapricaFileLocation loc, const PapyrusFunction* f) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Function, loc);
   id.func = f;
   return id;

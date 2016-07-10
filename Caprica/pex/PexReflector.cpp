@@ -107,7 +107,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
         f->functionType = PapyrusFunctionType::Function;
         if (f->name.size() > 2 && idEq(f->name.substr(0, 2), "on"))
           f->functionType = PapyrusFunctionType::Event;
-        state->functions.emplace_back(f);
+        state->functions.push_back(f);
       }
       
       if (pushState)

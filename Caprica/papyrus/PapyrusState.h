@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <common/EngineLimits.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -18,7 +19,7 @@ namespace caprica { namespace papyrus {
 struct PapyrusState final
 {
   boost::string_ref name{ "" };
-  std::vector<PapyrusFunction*> functions{ };
+  IntrusiveLinkedList<PapyrusFunction> functions{ };
 
   CapricaFileLocation location;
 

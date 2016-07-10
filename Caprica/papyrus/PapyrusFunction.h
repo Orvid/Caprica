@@ -5,6 +5,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusFunctionParameter.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -66,6 +67,10 @@ struct PapyrusFunction final
 
   bool hasSameSignature(const PapyrusFunction* other) const;
   std::string prettySignature() const;
+
+private:
+  friend IntrusiveLinkedList<PapyrusFunction>;
+  PapyrusFunction* next{ nullptr };
 };
 
 }}

@@ -4,7 +4,7 @@
 
 namespace caprica { namespace papyrus {
 
-static PapyrusFunction* searchRootStateForFunction(boost::string_ref name, const PapyrusObject* obj) {
+static const PapyrusFunction* searchRootStateForFunction(boost::string_ref name, const PapyrusObject* obj) {
   for (auto f : obj->getRootState()->functions) {
     if (idEq(f->name, name))
       return f;

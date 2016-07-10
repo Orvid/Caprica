@@ -67,7 +67,7 @@ struct PapyrusIdentifier final
     PapyrusFunctionParameter* param;
     statements::PapyrusDeclareStatement* declStatement;
     PapyrusStructMember* structMember;
-    PapyrusFunction* func;
+    const PapyrusFunction* func;
     PapyrusBuiltinArrayFunctionKind arrayFuncKind;
   };
 
@@ -95,7 +95,7 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, PapyrusFunctionParameter* p);
   static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, statements::PapyrusDeclareStatement* s);
   static PapyrusIdentifier StructMember(CapricaFileLocation loc, PapyrusStructMember* m);
-  static PapyrusIdentifier Function(CapricaFileLocation loc, PapyrusFunction* f);
+  static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
   static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType);
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;

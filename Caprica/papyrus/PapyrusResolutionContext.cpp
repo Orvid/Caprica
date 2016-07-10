@@ -214,7 +214,7 @@ CheckDebug:
   }
 }
 
-PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, boost::string_ref name) const {
+const PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, boost::string_ref name) const {
   for (auto f : parentObj->getRootState()->functions) {
     if (idEq(f->name, name) && f->functionType == PapyrusFunctionType::Event)
       return f;
