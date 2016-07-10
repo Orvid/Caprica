@@ -78,6 +78,10 @@ boost::string_ref ChainedPool::allocateString(std::string&& str) {
   return allocateString((char*)str.data(), str.size());
 }
 
+boost::string_ref ChainedPool::allocateString(boost::string_ref str) {
+  return allocateString((char*)str.data(), str.size());
+}
+
 boost::string_ref ChainedPool::allocateString(const char* str, size_t len) {
   auto buf = allocate(len);
   memcpy(buf, str, len);

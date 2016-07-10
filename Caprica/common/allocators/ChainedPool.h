@@ -40,6 +40,7 @@ struct ChainedPool
     return new (buf + sizeof(DestructionNode)) T(std::forward<Args>(args)...);
   }
   boost::string_ref allocateString(std::string&& str);
+  boost::string_ref allocateString(boost::string_ref str);
   boost::string_ref allocateString(const char* str, size_t len);
 
   void reset();
