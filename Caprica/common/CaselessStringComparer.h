@@ -3,7 +3,6 @@
 #include <cctype>
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -28,7 +27,7 @@ bool idEq(const std::string& a, const std::string& b);
 NEVER_INLINE
 bool idEq(boost::string_ref a, boost::string_ref b);
 
-struct CaselessStringHasher final : public std::function<size_t(const std::string&)>
+struct CaselessStringHasher final
 {
   size_t operator()(const char* k) const = delete;
   size_t operator()(const std::string& k) const {
@@ -41,7 +40,7 @@ private:
   static size_t doCaselessHash(const char* k, size_t len);
 };
 
-struct CaselessStringEqual final : public std::function<bool(const std::string&, const std::string&)>
+struct CaselessStringEqual final
 {
   bool operator()(const char* lhs, const char* rhs) const = delete;
   bool operator()(const std::string& lhs, const std::string& rhs) const {
@@ -49,7 +48,7 @@ struct CaselessStringEqual final : public std::function<bool(const std::string&,
   }
 };
 
-struct CaselessPathHasher final : public std::function<size_t(const std::string&)>
+struct CaselessPathHasher final
 {
   size_t operator()(const std::string& k) const {
     return doPathHash(k.c_str(), k.size());
@@ -60,14 +59,14 @@ private:
   static size_t doPathHash(const char* k, size_t len);
 };
 
-struct CaselessPathEqual final : public std::function<bool(const std::string&, const std::string&)>
+struct CaselessPathEqual final
 {
   bool operator()(const std::string& lhs, const std::string& rhs) const {
     return pathEq(lhs, rhs);
   }
 };
 
-struct CaselessIdentifierHasher final : public std::function<size_t(const std::string&)>
+struct CaselessIdentifierHasher final
 {
   size_t operator()(const char* k) const = delete;
   NEVER_INLINE
@@ -76,7 +75,7 @@ struct CaselessIdentifierHasher final : public std::function<size_t(const std::s
   size_t operator()(boost::string_ref k) const;
 };
 
-struct CaselessIdentifierEqual final : public std::function<bool(const std::string&, const std::string&)>
+struct CaselessIdentifierEqual final
 {
   bool operator()(const char* lhs, const char* rhs) const = delete;
   bool operator()(const std::string& lhs, const std::string& rhs) const {
