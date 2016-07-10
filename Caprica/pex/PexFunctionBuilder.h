@@ -6,6 +6,7 @@
 #include <set>
 #include <vector>
 
+#include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
 
@@ -252,7 +253,7 @@ public:
 private:
   PexFile* file;
   CapricaFileLocation currentLocation;
-  std::vector<CapricaFileLocation> instructionLocations{ };
+  allocators::TypedChainedPool<CapricaFileLocation> instructionLocations{ 1024 };
   PexInstructionList instructions{ };
   std::vector<PexLocalVariable*> locals{ };
   std::vector<PexLabel*> labels{ };

@@ -31,7 +31,7 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
 
   func->instructions = std::move(instructions);
   func->locals = std::move(locals);
-  debInfo->instructionLineMap.reserve(instructionLocations.size());
+  debInfo->instructionLineMap.reserve(func->instructions.size());
   size_t line = 0;
   for (auto l : instructionLocations) {
     line = reportingContext.getLocationLine(l, line);
@@ -106,7 +106,7 @@ PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction& instr) {
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
 
-  instructionLocations.emplace_back(currentLocation);
+  instructionLocations.make<CapricaFileLocation>(currentLocation);
   return *this;
 }
 
