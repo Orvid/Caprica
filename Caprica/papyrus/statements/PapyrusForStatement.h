@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
@@ -18,7 +18,7 @@ struct PapyrusForStatement final : public PapyrusStatement
   expressions::PapyrusExpression* initialValue{ nullptr };
   expressions::PapyrusExpression* targetValue{ nullptr };
   expressions::PapyrusExpression* stepValue{ nullptr };
-  std::vector<PapyrusStatement*> body{ };
+  IntrusiveLinkedList<PapyrusStatement> body{ };
 
   explicit PapyrusForStatement(const CapricaFileLocation& loc) : PapyrusStatement(loc) { }
   PapyrusForStatement(const PapyrusForStatement&) = delete;

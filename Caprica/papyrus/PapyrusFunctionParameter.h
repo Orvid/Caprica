@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <boost/utility/string_ref.hpp>
 
 #include <common/CapricaFileLocation.h>
 

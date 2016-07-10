@@ -1,5 +1,7 @@
 #include <papyrus/PapyrusCFG.h>
 
+#include <iostream>
+
 #include <common/CapricaReportingContext.h>
 
 #include <papyrus/statements/PapyrusStatementVisitor.h>
@@ -122,7 +124,7 @@ void PapyrusControlFlowNode::dumpNode(int currentDepth) {
   }
 }
 
-bool PapyrusCFG::processStatements(const std::vector<statements::PapyrusStatement*>& stmts) {
+bool PapyrusCFG::processStatements(const IntrusiveLinkedList<statements::PapyrusStatement>& stmts) {
   bool wasTerminal = false;
   for (auto s : stmts) {
     if (s->buildCFG(*this)) {

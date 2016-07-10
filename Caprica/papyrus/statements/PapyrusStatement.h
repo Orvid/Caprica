@@ -1,6 +1,8 @@
 #pragma once
 
 #include <common/CapricaFileLocation.h>
+#include <common/IntrusiveLinkedList.h>
+
 #include <papyrus/PapyrusCFG.h>
 #include <papyrus/PapyrusResolutionContext.h>
 #include <papyrus/statements/PapyrusStatementVisitor.h>
@@ -23,6 +25,10 @@ struct PapyrusStatement abstract
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;
   virtual void visit(PapyrusStatementVisitor& visitor) abstract;
+
+private:
+  friend IntrusiveLinkedList<PapyrusStatement>;
+  PapyrusStatement* next{ nullptr };
 };
 
 }}}

@@ -453,11 +453,11 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       while (true) {
         auto cond = parseExpression(func);
         expectConsumeEOLs();
-        std::vector<statements::PapyrusStatement*> curStatements{ };
+        IntrusiveLinkedList<statements::PapyrusStatement> curStatements{ };
         while (cur.type != TokenType::kElseIf && cur.type != TokenType::kElse && cur.type != TokenType::kEndIf) {
-          curStatements.emplace_back(parseStatement(func));
+          curStatements.push_back(parseStatement(func));
         }
-        ret->ifBodies.emplace_back(cond, std::move(curStatements));
+        ret->ifBodies.push_back(alloc->make<statements::PapyrusIfStatement::IfBody>(cond, std::move(curStatements)));
         if (cur.type == TokenType::kElseIf) {
           consume();
           continue;
@@ -466,7 +466,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           consume();
           expectConsumeEOLs();
           while (cur.type != TokenType::kEndIf) {
-            ret->elseStatements.emplace_back(parseStatement(func));
+            ret->elseStatements.push_back(parseStatement(func));
           }
         }
         expectConsume(TokenType::kEndIf);
@@ -494,7 +494,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       auto ret = alloc->make<statements::PapyrusDoWhileStatement>(consumeLocation());
       expectConsumeEOLs();
       while (cur.type != TokenType::kLoopWhile)
-        ret->body.emplace_back(parseStatement(func));
+        ret->body.push_back(parseStatement(func));
       expectConsume(TokenType::kLoopWhile);
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
@@ -530,7 +530,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       expectConsumeEOLs();
 
       while (!maybeConsume(TokenType::kEndFor))
-        ret->body.emplace_back(parseStatement(func));
+        ret->body.push_back(parseStatement(func));
       expectConsumeEOLs();
 
       return ret;
@@ -558,7 +558,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       expectConsumeEOLs();
 
       while (!maybeConsume(TokenType::kEndForEach))
-        ret->body.emplace_back(parseStatement(func));
+        ret->body.push_back(parseStatement(func));
       expectConsumeEOLs();
 
       return ret;
@@ -577,10 +577,10 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
             consume();
             auto cond = expectConsumePapyrusValue();
             expectConsumeEOLs();
-            std::vector<statements::PapyrusStatement*> curStatements{ };
+            IntrusiveLinkedList<statements::PapyrusStatement> curStatements{ };
             while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
-              curStatements.emplace_back(parseStatement(func));
-            ret->caseBodies.emplace_back(std::move(cond), std::move(curStatements));
+              curStatements.push_back(parseStatement(func));
+            ret->caseBodies.push_back(alloc->make<statements::PapyrusSwitchStatement::CaseBody>(std::move(cond), std::move(curStatements)));
             break;
           }
 
@@ -592,7 +592,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
             expectConsumeEOLs();
 
             while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
-              ret->defaultStatements.emplace_back(parseStatement(func));
+              ret->defaultStatements.push_back(parseStatement(func));
             break;
           }
 
@@ -613,7 +613,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
       while (cur.type != TokenType::kEndWhile)
-        ret->body.emplace_back(parseStatement(func));
+        ret->body.push_back(parseStatement(func));
       expectConsume(TokenType::kEndWhile);
       expectConsumeEOLs();
       return ret;

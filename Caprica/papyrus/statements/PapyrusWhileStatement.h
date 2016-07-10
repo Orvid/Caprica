@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include <common/CapricaFileLocation.h>
+#include <common/IntrusiveLinkedList.h>
+
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
@@ -14,7 +14,7 @@ namespace caprica { namespace papyrus { namespace statements {
 struct PapyrusWhileStatement final : public PapyrusStatement
 {
   expressions::PapyrusExpression* condition{ nullptr };
-  std::vector<PapyrusStatement*> body{ };
+  IntrusiveLinkedList<PapyrusStatement> body{ };
 
   explicit PapyrusWhileStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusWhileStatement(const PapyrusWhileStatement&) = delete;

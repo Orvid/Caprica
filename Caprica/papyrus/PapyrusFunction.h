@@ -40,7 +40,7 @@ struct PapyrusFunction final
   PapyrusType returnType;
   PapyrusUserFlags userFlags{ };
   std::vector<PapyrusFunctionParameter*> parameters{ };
-  std::vector<statements::PapyrusStatement*> statements{ };
+  IntrusiveLinkedList<statements::PapyrusStatement> statements{ };
   PapyrusObject* parentObject{ nullptr };
   PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
   boost::string_ref remoteEventParent{ "" };

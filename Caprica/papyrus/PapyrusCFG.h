@@ -1,10 +1,10 @@
 #pragma once
 
-#include <iostream>
 #include <stack>
 #include <vector>
 
 #include <common/CapricaReportingContext.h>
+#include <common/IntrusiveLinkedList.h>
 
 namespace caprica { namespace papyrus {
 
@@ -56,9 +56,9 @@ struct PapyrusCFG final
       delete root;
   }
 
-  bool processStatements(const std::vector<statements::PapyrusStatement*>& stmts);
+  bool processStatements(const IntrusiveLinkedList<statements::PapyrusStatement>& stmts);
 
-  bool processCommonLoopBody(const std::vector<statements::PapyrusStatement*>& stmts) {
+  bool processCommonLoopBody(const IntrusiveLinkedList<statements::PapyrusStatement>& stmts) {
     pushBreakTerminal();
     addLeaf();
     bool wasTerminal = processStatements(stmts);

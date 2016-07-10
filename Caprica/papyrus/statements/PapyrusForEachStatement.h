@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusStatement.h>
@@ -13,7 +15,7 @@ struct PapyrusForEachStatement final : public PapyrusStatement
 {
   PapyrusDeclareStatement* declareStatement{ nullptr };
   expressions::PapyrusExpression* expressionToIterate{ nullptr };
-  std::vector<PapyrusStatement*> body{ };
+  IntrusiveLinkedList<PapyrusStatement> body{ };
   PapyrusIdentifier* getCountIdentifier{ nullptr };
   PapyrusIdentifier* getAtIdentifier{ nullptr };
 

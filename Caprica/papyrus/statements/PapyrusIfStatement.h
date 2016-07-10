@@ -1,7 +1,6 @@
 #pragma once
 
-#include <utility>
-#include <vector>
+#include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/statements/PapyrusStatement.h>
@@ -13,8 +12,19 @@ namespace caprica { namespace papyrus { namespace statements {
 
 struct PapyrusIfStatement final : public PapyrusStatement
 {
-  std::vector<std::pair<expressions::PapyrusExpression*, std::vector<PapyrusStatement*>>> ifBodies{ };
-  std::vector<PapyrusStatement*> elseStatements{ };
+  struct IfBody final
+  {
+    expressions::PapyrusExpression* condition{ nullptr };
+    IntrusiveLinkedList<PapyrusStatement> body{ };
+
+    IfBody(expressions::PapyrusExpression* c, IntrusiveLinkedList<PapyrusStatement>&& b) : condition(c), body(std::move(b)) { }
+
+  private:
+    friend IntrusiveLinkedList<IfBody>;
+    IfBody* next{ nullptr };
+  };
+  IntrusiveLinkedList<IfBody> ifBodies{ };
+  IntrusiveLinkedList<PapyrusStatement> elseStatements{ };
 
   explicit PapyrusIfStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusIfStatement(const PapyrusIfStatement&) = delete;
@@ -25,7 +35,7 @@ struct PapyrusIfStatement final : public PapyrusStatement
 
     for (auto p : ifBodies) {
       cfg.addLeaf();
-      isTerminal = cfg.processStatements(p.second) && isTerminal;
+      isTerminal = cfg.processStatements(p->body) && isTerminal;
     }
 
     if (elseStatements.size()) {
@@ -49,10 +59,10 @@ struct PapyrusIfStatement final : public PapyrusStatement
       if (nextCondition)
         bldr << nextCondition;
       bldr >> nextCondition;
-      auto lVal = ifBody.first->generateLoad(file, bldr);
+      auto lVal = ifBody->condition->generateLoad(file, bldr);
       bldr << location;
       bldr << op::jmpf{ lVal, nextCondition };
-      for (auto s : ifBody.second)
+      for (auto s : ifBody->body)
         s->buildPex(file, bldr);
       bldr << location;
       bldr << op::jmp{ afterAll };
@@ -66,11 +76,11 @@ struct PapyrusIfStatement final : public PapyrusStatement
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     for (auto& i : ifBodies) {
-      i.first->semantic(ctx);
-      ctx->checkForPoison(i.first);
-      i.first = ctx->coerceExpression(i.first, PapyrusType::Bool(i.first->location));
+      i->condition->semantic(ctx);
+      ctx->checkForPoison(i->condition);
+      i->condition = ctx->coerceExpression(i->condition, PapyrusType::Bool(i->condition->location));
       ctx->pushLocalVariableScope();
-      for (auto s : i.second)
+      for (auto s : i->body)
         s->semantic(ctx);
       ctx->popLocalVariableScope();
     }
@@ -83,8 +93,8 @@ struct PapyrusIfStatement final : public PapyrusStatement
   virtual void visit(PapyrusStatementVisitor& visitor) override {
     visitor.visit(this);
 
-    for (auto& i : ifBodies) {
-      for (auto s : i.second)
+    for (auto i : ifBodies) {
+      for (auto s : i->body)
         s->visit(visitor);
     }
     for (auto s : elseStatements)
