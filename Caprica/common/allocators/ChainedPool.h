@@ -10,7 +10,7 @@
 
 namespace caprica { namespace allocators {
 
-struct ChainedPool final
+struct ChainedPool
 {
   explicit ChainedPool(size_t hpSize) : heapSize(hpSize), base(hpSize) { }
   ~ChainedPool();
@@ -45,10 +45,7 @@ struct ChainedPool final
   void reset();
   size_t totalAllocatedBytes() const { return totalSize; }
 
-private:
-  friend struct TypedHeapIteratorWrapper;
-  friend struct TypedHeapIterator;
-
+protected:
   struct DestructionNode final
   {
     void(*destructor)(void*){ nullptr };
@@ -72,8 +69,6 @@ private:
     ~Heap();
 
     bool tryAlloc(size_t size, void** retBuf);
-
-    friend struct HeapIterator;
   };
 
   struct HeapIterator final
@@ -87,12 +82,29 @@ private:
     Heap* curHeap{ nullptr };
   };
 
-  template<typename T>
+  size_t heapSize;
+  size_t totalSize{ 0 };
+  Heap* current{ &base };
+  Heap base;
+  DestructionNode* rootDestructorChain{ nullptr };
+  DestructionNode* currentDestructorNode{ nullptr };
+
+  void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
+
+public:
+  HeapIterator begin() const;
+  HeapIterator end() const;
+};
+
+template<typename T>
+struct TypedChainedPool final : public ChainedPool
+{
+private:
   struct TypedHeapIterator final
   {
     size_t index{ 0 };
 
-    TypedHeapIterator<T>& operator ++() {
+    TypedHeapIterator& operator ++() {
       if (curHeap == nullptr)
         return *this;
       index++;
@@ -125,16 +137,16 @@ private:
       return *heapI;
     }
 
-    bool operator ==(const TypedHeapIterator<T>& other) const {
+    bool operator ==(const TypedHeapIterator& other) const {
       return curHeap == other.curHeap && heapI == other.heapI;
     }
 
-    bool operator !=(const TypedHeapIterator<T>& other) const {
+    bool operator !=(const TypedHeapIterator& other) const {
       return !(*this == other);
     }
 
   private:
-    friend TypedHeapIteratorWrapper;
+    friend TypedChainedPool;
 
     Heap* curHeap{ nullptr };
     T* heapI{ nullptr };
@@ -146,41 +158,17 @@ private:
     }
   };
 
-  template<typename T>
-  struct TypedHeapIteratorWrapper final
-  {
-    TypedHeapIterator<T> begin() const {
-      if (!parent->totalSize)
-        return TypedHeapIterator<T>();
-      return TypedHeapIterator<T>(&parent->base);
-    }
-
-    TypedHeapIterator<T> end() const {
-      return TypedHeapIterator<T>();
-    }
-
-  private:
-    friend ChainedPool;
-    ChainedPool* parent;
-    TypedHeapIteratorWrapper(ChainedPool* p) : parent(p) { }
-  };
-
-  size_t heapSize;
-  size_t totalSize{ 0 };
-  Heap* current{ &base };
-  Heap base;
-  DestructionNode* rootDestructorChain{ nullptr };
-  DestructionNode* currentDestructorNode{ nullptr };
-
-  void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
-
 public:
-  HeapIterator begin() const;
-  HeapIterator end() const;
+  TypedChainedPool(size_t heapTcount) : ChainedPool(heapTcount * sizeof(T)) { }
 
-  template<typename T>
-  TypedHeapIteratorWrapper<T> typedIterator() {
-    return TypedHeapIteratorWrapper<T>(this);
+  TypedHeapIterator begin() {
+    if (!totalSize)
+      return TypedHeapIterator();
+    return TypedHeapIterator(&base);
+  }
+
+  TypedHeapIterator end() {
+    return TypedHeapIterator();
   }
 };
 
