@@ -5,13 +5,19 @@ namespace caprica {
 template<typename T>
 struct IntrusiveLinkedList final
 {
+  T* back() { return mBack; }
+  const T* back() const { return mBack; }
+
+  T* front() { return mFront; }
+  const T* front() const { return mFront; }
+
   void push_back(T* val) {
     mSize++;
-    if (front == nullptr) {
-      front = back = val;
+    if (mFront == nullptr) {
+      mFront = mBack = val;
     } else {
-      back->next = val;
-      back = val;
+      mBack->next = val;
+      mBack = val;
     }
   }
 
@@ -19,8 +25,8 @@ struct IntrusiveLinkedList final
 
 private:
   size_t mSize{ 0 };
-  T* front{ nullptr };
-  T* back{ nullptr };
+  T* mFront{ nullptr };
+  T* mBack{ nullptr };
 
   struct ConstIterator final
   {
@@ -57,7 +63,7 @@ private:
     const T* cur{ nullptr };
 
     ConstIterator() = default;
-    ConstIterator(const T* front) : cur(front) { }
+    ConstIterator(const T* mFront) : cur(mFront) { }
   };
 
   struct Iterator final
@@ -95,14 +101,14 @@ private:
     T* cur{ nullptr };
 
     Iterator() = default;
-    Iterator(T* front) : cur(front) { }
+    Iterator(T* mFront) : cur(mFront) { }
   };
 
 public:
   ConstIterator begin() const {
     if (!mSize)
       return ConstIterator();
-    return ConstIterator(front);
+    return ConstIterator(mFront);
   }
 
   ConstIterator end() const {
@@ -112,7 +118,7 @@ public:
   Iterator begin() {
     if (!mSize)
       return Iterator();
-    return Iterator(front);
+    return Iterator(mFront);
   }
 
   Iterator end() {
