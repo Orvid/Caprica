@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <pex/PexAsmWriter.h>
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
@@ -24,9 +26,13 @@ struct PexStructMember final
   PexStructMember(const PexStructMember&) = delete;
   ~PexStructMember() = default;
 
-  static PexStructMember* read(PexReader& rdr);
+  static PexStructMember* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexStructMember>;
+  PexStructMember* next{ nullptr };
 };
 
 }}

@@ -2,21 +2,18 @@
 
 namespace caprica { namespace pex {
 
-PexDebugInfo* PexDebugInfo::read(PexReader& rdr) {
-  auto inf = new PexDebugInfo();
+PexDebugInfo* PexDebugInfo::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto inf = alloc->make<PexDebugInfo>();
   inf->modificationTime = rdr.read<time_t>();
   auto fSize = rdr.read<uint16_t>();
-  inf->functions.reserve(fSize);
   for (size_t i = 0; i < fSize; i++)
-    inf->functions.push_back(PexDebugFunctionInfo::read(rdr));
+    inf->functions.push_back(PexDebugFunctionInfo::read(alloc, rdr));
   auto pgSize = rdr.read<uint16_t>();
-  inf->propertyGroups.reserve(pgSize);
   for (size_t i = 0; i < pgSize; i++)
-    inf->propertyGroups.push_back(PexDebugPropertyGroup::read(rdr));
+    inf->propertyGroups.push_back(PexDebugPropertyGroup::read(alloc, rdr));
   auto soSize = rdr.read<uint16_t>();
-  inf->structOrders.reserve(soSize);
   for (size_t i = 0; i < soSize; i++)
-    inf->structOrders.push_back(PexDebugStructOrder::read(rdr));
+    inf->structOrders.push_back(PexDebugStructOrder::read(alloc, rdr));
   return inf;
 }
 

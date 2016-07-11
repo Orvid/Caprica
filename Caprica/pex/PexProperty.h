@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <pex/PexAsmWriter.h>
 #include <pex/PexFunction.h>
 #include <pex/PexReader.h>
@@ -27,16 +29,15 @@ struct PexProperty final
 
   explicit PexProperty() = default;
   PexProperty(const PexProperty&) = delete;
-  ~PexProperty() {
-    if (readFunction)
-      delete readFunction;
-    if (writeFunction)
-      delete writeFunction;
-  }
+  ~PexProperty() = default;
 
-  static PexProperty* read(PexReader& rdr);
+  static PexProperty* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexProperty>;
+  PexProperty* next{ nullptr };
 };
 
 }}

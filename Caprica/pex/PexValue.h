@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdint>
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <pex/PexAsmWriter.h>
 #include <pex/PexLabel.h>
 #include <pex/PexLocalVariable.h>
@@ -129,6 +131,10 @@ struct PexValue final
   bool operator !=(const PexValue& other) const {
     return !(*this == other);
   }
+
+private:
+  friend IntrusiveLinkedList<PexValue>;
+  PexValue* next{ nullptr };
 };
 
 }}

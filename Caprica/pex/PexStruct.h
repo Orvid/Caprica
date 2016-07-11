@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexReader.h>
@@ -15,18 +15,19 @@ struct PexFile;
 struct PexStruct final
 {
   PexString name{ };
-  std::vector<PexStructMember*> members{ };
+  IntrusiveLinkedList<PexStructMember> members{ };
 
   explicit PexStruct() = default;
   PexStruct(const PexStruct&) = delete;
-  ~PexStruct() {
-    for (auto m : members)
-      delete m;
-  }
+  ~PexStruct() = default;
 
-  static PexStruct* read(PexReader& rdr);
+  static PexStruct* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexStruct>;
+  PexStruct* next{ nullptr };
 };
 
 }}

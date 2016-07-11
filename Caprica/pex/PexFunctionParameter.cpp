@@ -4,8 +4,8 @@
 
 namespace caprica { namespace pex {
 
-PexFunctionParameter* PexFunctionParameter::read(PexReader& rdr) {
-  auto param = new PexFunctionParameter();
+PexFunctionParameter* PexFunctionParameter::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto param = alloc->make<PexFunctionParameter>();
   param->name = rdr.read<PexString>();
   param->type = rdr.read<PexString>();
   return param;

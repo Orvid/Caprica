@@ -6,8 +6,8 @@
 
 namespace caprica { namespace pex {
 
-PexProperty* PexProperty::read(PexReader& rdr) {
-  auto prop = new PexProperty();
+PexProperty* PexProperty::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto prop = alloc->make<PexProperty>();
   prop->name = rdr.read<PexString>();
   prop->typeName = rdr.read<PexString>();
   prop->documentationString = rdr.read<PexString>();
@@ -24,9 +24,9 @@ PexProperty* PexProperty::read(PexReader& rdr) {
     prop->autoVar = rdr.read<PexString>();
   } else {
     if (prop->isReadable)
-      prop->readFunction = PexFunction::read(rdr, true);
+      prop->readFunction = PexFunction::read(alloc, rdr, true);
     if (prop->isWritable)
-      prop->writeFunction = PexFunction::read(rdr, true);
+      prop->writeFunction = PexFunction::read(alloc, rdr, true);
   }
   return prop;
 }

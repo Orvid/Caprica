@@ -35,7 +35,7 @@ struct PapyrusStructMember final
   ~PapyrusStructMember() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {
-    auto member = new pex::PexStructMember();
+    auto member = file->alloc->make<pex::PexStructMember>();
     member->name = file->getString(name);
     member->documentationString = file->getString(documentationString);
     member->typeName = type.buildPex(file);

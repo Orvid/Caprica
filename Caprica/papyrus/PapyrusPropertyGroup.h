@@ -30,7 +30,7 @@ struct PapyrusPropertyGroup final
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
     if (file->debugInfo) {
-      auto pg = new pex::PexDebugPropertyGroup();
+      auto pg = file->alloc->make<pex::PexDebugPropertyGroup>();
       pg->objectName = obj->name;
       pg->groupName = file->getString(name);
       pg->documentationString = file->getString(documentationComment);

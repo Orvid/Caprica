@@ -7,7 +7,9 @@
 #include <utility>
 #include <vector>
 
+#include <common/allocators/ChainedPool.h>
 #include <common/allocators/ReffyStringPool.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugInfo.h>
@@ -24,6 +26,8 @@ namespace pex {
 
 struct PexFile final
 {
+  allocators::ChainedPool* alloc;
+
   uint8_t majorVersion{ 3 };
   uint8_t minorVersion{ 9 };
   uint16_t gameID{ 2 }; // Default to Fallout 4
@@ -32,15 +36,14 @@ struct PexFile final
   std::string userName{ "" };
   std::string computerName{ "" };
   PexDebugInfo* debugInfo{ nullptr };
-  std::vector<PexObject*> objects{ };
+  IntrusiveLinkedList<PexObject> objects{ };
 
-  explicit PexFile();
+  explicit PexFile(allocators::ChainedPool* p);
   PexFile(const PexFile&) = delete;
-  ~PexFile();
 
   void ensureDebugInfo() {
     if (!debugInfo)
-      debugInfo = new PexDebugInfo();
+      debugInfo = alloc->make<PexDebugInfo>();
   }
 
   PexDebugFunctionInfo* tryFindFunctionDebugInfo(const PexObject* object,
@@ -58,11 +61,15 @@ struct PexFile final
   PexUserFlags getUserFlag(PexString name, uint8_t bitNum);
   size_t getUserFlagCount() const noexcept;
 
-  static PexFile* read(PexReader& rdr);
+  static PexFile* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(PexAsmWriter& wtr) const;
 
 private:
+  friend allocators::ChainedPool;
+
+  ~PexFile();
+
   allocators::ReffyStringPool* stringTable;
 
   std::vector<std::pair<PexString, uint8_t>> userFlagTable;

@@ -106,40 +106,40 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 struct callmethod final
 {
   PexValue a1, a2, a3;
-  std::vector<PexValue> variadicArgs;
-  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, std::vector<PexValue>&& varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(std::move(varArgs)) { }
+  IntrusiveLinkedList<PexValue> variadicArgs;
+  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, IntrusiveLinkedList<PexValue>&& varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
 
 struct callparent final
 {
   PexValue a1, a2;
-  std::vector<PexValue> variadicArgs;
-  callparent(PexString function, PexValue::Identifier dest, std::vector<PexValue>&& varArgs) : a1(function), a2(dest), variadicArgs(std::move(varArgs)) { }
+  IntrusiveLinkedList<PexValue> variadicArgs;
+  callparent(PexString function, PexValue::Identifier dest, IntrusiveLinkedList<PexValue>&& varArgs) : a1(function), a2(dest), variadicArgs(std::move(varArgs)) { }
 };
 
 struct callstatic final
 {
   PexValue a1, a2, a3;
-  std::vector<PexValue> variadicArgs;
-  callstatic(PexString type, PexString function, PexValue::Identifier dest, std::vector<PexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
+  IntrusiveLinkedList<PexValue> variadicArgs;
+  callstatic(PexString type, PexString function, PexValue::Identifier dest, IntrusiveLinkedList<PexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
   
 }
 
 struct PexFunctionBuilder final
 {
-  PexFunctionBuilder& operator <<(op::nop&& instr) { return fixup(instructions.emplace_back(PexOpCode::Nop)); }
+  PexFunctionBuilder& operator <<(op::nop&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::Nop)); }
 
 #define OP_ARG1(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1)); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1)); }
 #define OP_ARG2(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2)); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2)); }
 #define OP_ARG3(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3)); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2, instr.a3)); }
 #define OP_ARG4(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4)); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4)); }
 #define OP_ARG5(name, opcode, ...) \
-PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.emplace_back(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5)); }
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5)); }
   OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 #undef OP_ARG1
 #undef OP_ARG2
@@ -148,13 +148,13 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.em
 #undef OP_ARG5
 
   PexFunctionBuilder& operator <<(op::callmethod&& instr) {
-    return fixup(instructions.emplace_back(PexOpCode::CallMethod, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
+    return fixup(alloc->make<PexInstruction>(PexOpCode::CallMethod, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
   }
   PexFunctionBuilder& operator <<(op::callparent&& instr) {
-    return fixup(instructions.emplace_back(PexOpCode::CallParent, instr.a1, instr.a2, std::move(instr.variadicArgs)));
+    return fixup(alloc->make<PexInstruction>(PexOpCode::CallParent, instr.a1, instr.a2, std::move(instr.variadicArgs)));
   }
   PexFunctionBuilder& operator <<(op::callstatic&& instr) {
-    return fixup(instructions.emplace_back(PexOpCode::CallStatic, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
+    return fixup(alloc->make<PexInstruction>(PexOpCode::CallStatic, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
   }
 
   PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
@@ -243,19 +243,20 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(instructions.em
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
 
   explicit PexFunctionBuilder(CapricaReportingContext& repCtx, CapricaFileLocation loc, PexFile* fl) 
-    : reportingContext(repCtx), currentLocation(loc), file(fl) { }
+    : reportingContext(repCtx), currentLocation(loc), file(fl), alloc(fl->alloc) { }
   PexFunctionBuilder(const PexFunctionBuilder&) = delete;
   ~PexFunctionBuilder() = default;
 
 public:
   CapricaReportingContext& reportingContext;
+  allocators::ChainedPool* alloc;
 
 private:
   PexFile* file;
   CapricaFileLocation currentLocation;
   allocators::TypedChainedPool<CapricaFileLocation> instructionLocations{ 1024 };
-  PexInstructionList instructions{ };
-  std::vector<PexLocalVariable*> locals{ };
+  IntrusiveLinkedList<PexInstruction> instructions{ };
+  IntrusiveLinkedList<PexLocalVariable> locals{ };
   std::vector<PexLabel*> labels{ };
   std::vector<PexTemporaryVariableRef*> tempVarRefs{ };
   std::map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
@@ -265,7 +266,7 @@ private:
   std::vector<PexLabel*> curBreakStack{ };
   std::vector<PexLabel*> curContinueStack{ };
 
-  PexFunctionBuilder& fixup(PexInstruction& instr);
+  PexFunctionBuilder& fixup(PexInstruction* instr);
   PexLocalVariable* internalAllocateTempVar(const PexString& typeName);
 };
 

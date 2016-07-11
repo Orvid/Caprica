@@ -2,8 +2,8 @@
 
 namespace caprica { namespace pex {
 
-PexDebugFunctionInfo* PexDebugFunctionInfo::read(PexReader& rdr) {
-  auto fi = new PexDebugFunctionInfo();
+PexDebugFunctionInfo* PexDebugFunctionInfo::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto fi = alloc->make<PexDebugFunctionInfo>();
   fi->objectName = rdr.read<PexString>();
   fi->stateName = rdr.read<PexString>();
   fi->functionName = rdr.read<PexString>();

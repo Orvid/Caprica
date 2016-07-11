@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
@@ -21,9 +23,13 @@ struct PexDebugPropertyGroup final
   PexDebugPropertyGroup(const PexDebugPropertyGroup&) = delete;
   ~PexDebugPropertyGroup() = default;
 
-  static PexDebugPropertyGroup* read(PexReader& rdr);
+  static PexDebugPropertyGroup* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexDebugPropertyGroup>;
+  PexDebugPropertyGroup* next{ nullptr };
 };
 
 }}

@@ -10,21 +10,21 @@
 namespace caprica { namespace papyrus {
 
 void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
-  auto prop = new pex::PexProperty();
+  auto prop = file->alloc->make<pex::PexProperty>();
   prop->name = file->getString(name);
   prop->documentationString = file->getString(documentationComment);
   prop->typeName = type.buildPex(file);
   prop->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Property);
   if (isAuto() && isAutoReadOnly()) {
     prop->isReadable = true;
-    auto func = new pex::PexFunction();
+    auto func = file->alloc->make<pex::PexFunction>();
     func->returnTypeName = prop->typeName;
     func->documentationString = file->getString("");
-    func->instructions.emplace_back(pex::PexOpCode::Return, defaultValue.buildPex(file));
+    func->instructions.push_back(file->alloc->make<pex::PexInstruction>(pex::PexOpCode::Return, defaultValue.buildPex(file)));
     prop->readFunction = func;
 
     if (file->debugInfo) {
-      auto fDebInfo = new pex::PexDebugFunctionInfo();
+      auto fDebInfo = file->alloc->make<pex::PexDebugFunctionInfo>();
       fDebInfo->objectName = obj->name;
       fDebInfo->stateName = file->getString(""); // No state.
       fDebInfo->functionName = prop->name;
@@ -39,7 +39,7 @@ void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
     prop->isAuto = true;
     prop->isReadable = true;
     prop->isWritable = true;
-    auto var = new pex::PexVariable();
+    auto var = file->alloc->make<pex::PexVariable>();
     var->name = file->getString(getAutoVarName());
     var->typeName = prop->typeName;
     var->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Variable);

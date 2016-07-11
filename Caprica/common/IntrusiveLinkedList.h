@@ -30,9 +30,12 @@ private:
 
   struct ConstIterator final
   {
+    size_t index{ 0 };
+
     ConstIterator& operator ++() {
       if (cur == nullptr)
         return *this;
+      index++;
       cur = cur->next;
       return *this;
     }
@@ -68,9 +71,12 @@ private:
 
   struct Iterator final
   {
+    size_t index{ 0 };
+
     Iterator& operator ++() {
       if (cur == nullptr)
         return *this;
+      index++;
       cur = cur->next;
       return *this;
     }

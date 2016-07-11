@@ -66,47 +66,48 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
     return b;
   }
 
-  auto loc = new PexLocalVariable();
+  auto loc = alloc->make<PexLocalVariable>();
   loc->name = file->getString("::temp" + std::to_string(currentTempI++));
   loc->type = typeName;
   tempVarNameTypeMap.emplace(loc->name, loc);
-  locals.emplace_back(loc);
+  locals.push_back(loc);
   return loc;
 }
 
-PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction& instr) {
-  for (auto& v : instr.args) {
+PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
+  for (auto& v : instr->args) {
     if (v.type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
       v = PexValue::Identifier(v.tmpVar->var);
     freeValueIfTemp(v);
   }
-  for (auto& v : instr.variadicArgs) {
-    if (v.type == PexValueType::Invalid)
+  for (auto& v : instr->variadicArgs) {
+    if (v->type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
-    if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
-      v = PexValue::Identifier(v.tmpVar->var);
-    freeValueIfTemp(v);
+    if (v->type == PexValueType::TemporaryVar && v->tmpVar->var)
+      *v = PexValue::Identifier(v->tmpVar->var);
+    freeValueIfTemp(*v);
   }
 
-  auto destIdx = PexInstruction::getDestArgIndexForOpCode(instr.opCode);
-  if (destIdx != -1 && instr.args[destIdx].type == PexValueType::TemporaryVar) {
-    auto loc = internalAllocateTempVar(instr.args[destIdx].tmpVar->type);
-    instr.args[destIdx].tmpVar->var = loc;
-    instr.args[destIdx] = PexValue::Identifier(loc);
+  auto destIdx = PexInstruction::getDestArgIndexForOpCode(instr->opCode);
+  if (destIdx != -1 && instr->args[destIdx].type == PexValueType::TemporaryVar) {
+    auto loc = internalAllocateTempVar(instr->args[destIdx].tmpVar->type);
+    instr->args[destIdx].tmpVar->var = loc;
+    instr->args[destIdx] = PexValue::Identifier(loc);
   }
 
-  for (auto& v : instr.args) {
+  for (auto& v : instr->args) {
     if (v.type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
-  for (auto& v : instr.variadicArgs) {
-    if (v.type == PexValueType::TemporaryVar)
+  for (auto& v : instr->variadicArgs) {
+    if (v->type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
   }
 
   instructionLocations.make<CapricaFileLocation>(currentLocation);
+  instructions.push_back(instr);
   return *this;
 }
 

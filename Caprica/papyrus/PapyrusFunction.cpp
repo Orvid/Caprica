@@ -24,8 +24,8 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
                                             pex::PexObject* obj,
                                             pex::PexState* state,
                                             pex::PexString propName) const {
-  auto func = new pex::PexFunction();
-  auto fDebInfo = new pex::PexDebugFunctionInfo();
+  auto func = file->alloc->make<pex::PexFunction>();
+  auto fDebInfo = file->alloc->make<pex::PexDebugFunctionInfo>();
   fDebInfo->objectName = obj->name;
   switch (functionType) {
     case PapyrusFunctionType::Function:
@@ -68,8 +68,6 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
 
   if (file->debugInfo)
     file->debugInfo->functions.push_back(fDebInfo);
-  else
-    delete fDebInfo;
 
   EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name);
   return func;

@@ -8,8 +8,8 @@
 
 namespace caprica { namespace pex {
 
-PexFunction* PexFunction::read(PexReader& rdr, bool isProperty) {
-  auto func = new PexFunction();
+PexFunction* PexFunction::read(allocators::ChainedPool* alloc, PexReader& rdr, bool isProperty) {
+  auto func = alloc->make<PexFunction>();
   if (!isProperty)
     func->name = rdr.read<PexString>();
   func->returnTypeName = rdr.read<PexString>();
@@ -22,17 +22,14 @@ PexFunction* PexFunction::read(PexReader& rdr, bool isProperty) {
     func->isNative = true;
 
   auto pSize = rdr.read<uint16_t>();
-  func->parameters.reserve(pSize);
   for (size_t i = 0; i < pSize; i++)
-    func->parameters.push_back(PexFunctionParameter::read(rdr));
+    func->parameters.push_back(PexFunctionParameter::read(alloc, rdr));
   auto lSize = rdr.read<uint16_t>();
-  func->locals.reserve(lSize);
   for (size_t i = 0; i < lSize; i++)
-    func->locals.push_back(PexLocalVariable::read(rdr));
+    func->locals.push_back(PexLocalVariable::read(alloc, rdr));
   auto iSize = rdr.read<uint16_t>();
-  func->instructions.reserve(iSize);
   for (size_t i = 0; i < iSize; i++)
-    func->instructions.emplace_back(PexInstruction::read(rdr));
+    func->instructions.push_back(PexInstruction::read(alloc, rdr));
 
   return func;
 }
@@ -133,7 +130,7 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
         }
         for (auto& a : cur->variadicArgs) {
           wtr.write(" ");
-          a.writeAsm(file, wtr);
+          a->writeAsm(file, wtr);
         }
       }
 

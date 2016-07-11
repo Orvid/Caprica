@@ -9,15 +9,12 @@
 namespace caprica { namespace pex {
 
 static allocators::AtomicCachePool<allocators::ReffyStringPool> stringPoolAllocator;
-PexFile::PexFile() {
+PexFile::PexFile(allocators::ChainedPool* p) {
+  alloc = p;
   stringTable = stringPoolAllocator.acquire();
 }
 
 PexFile::~PexFile() {
-  if (debugInfo)
-    delete debugInfo;
-  for (auto o : objects)
-    delete o;
   stringPoolAllocator.release(stringTable);
 }
 
@@ -81,8 +78,8 @@ size_t PexFile::getUserFlagCount() const noexcept {
   return userFlagTable.size();
 }
 
-PexFile* PexFile::read(PexReader& rdr) {
-  auto file = new PexFile();
+PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto file = alloc->make<PexFile>(alloc);
   if (rdr.read<uint32_t>() != 0xFA57C0DE)
     CapricaReportingContext::logicalFatal("Unrecognized magic number!");
   if ((file->majorVersion = rdr.read<uint8_t>()) != 3)
@@ -96,14 +93,13 @@ PexFile* PexFile::read(PexReader& rdr) {
   file->computerName = rdr.read<std::string>();
 
   auto strTableSize = rdr.read<uint16_t>();
-  //file->stringTable.reserve(strTableSize);
   for (size_t i = 0; i < strTableSize; i++) {
     auto str = rdr.read<std::string>();
     file->stringTable->push_back(str);
   }
 
   if (rdr.read<uint8_t>() != 0)
-    file->debugInfo = PexDebugInfo::read(rdr);
+    file->debugInfo = PexDebugInfo::read(alloc, rdr);
 
   auto ufTableSize = rdr.read<uint16_t>();
   file->userFlagTable.reserve(ufTableSize);
@@ -115,9 +111,8 @@ PexFile* PexFile::read(PexReader& rdr) {
   }
 
   auto objTableSize = rdr.read<uint16_t>();
-  file->objects.reserve(objTableSize);
   for (size_t i = 0; i < objTableSize; i++)
-    file->objects.push_back(PexObject::read(rdr));
+    file->objects.push_back(PexObject::read(alloc, rdr));
 
   return file;
 }

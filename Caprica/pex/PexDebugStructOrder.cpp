@@ -2,8 +2,8 @@
 
 namespace caprica { namespace pex {
 
-PexDebugStructOrder* PexDebugStructOrder::read(PexReader& rdr) {
-  auto ord = new PexDebugStructOrder();
+PexDebugStructOrder* PexDebugStructOrder::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto ord = alloc->make<PexDebugStructOrder>();
   ord->objectName = rdr.read<PexString>();
   ord->structName = rdr.read<PexString>();
   auto mSize = rdr.read<uint16_t>();

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
+
+#include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexProperty.h>
@@ -25,27 +26,22 @@ struct PexObject final
   bool isConst{ false };
   PexUserFlags userFlags{ };
   PexString autoStateName{ };
-  std::vector<PexStruct*> structs{ };
-  std::vector<PexVariable*> variables{ };
-  std::vector<PexProperty*> properties{ };
-  std::vector<PexState*> states{ };
+  IntrusiveLinkedList<PexStruct> structs{ };
+  IntrusiveLinkedList<PexVariable> variables{ };
+  IntrusiveLinkedList<PexProperty> properties{ };
+  IntrusiveLinkedList<PexState> states{ };
 
   explicit PexObject() = default;
   PexObject(const PexObject&) = delete;
-  ~PexObject() {
-    for (auto s : structs)
-      delete s;
-    for (auto v : variables)
-      delete v;
-    for (auto p : properties)
-      delete p;
-    for (auto s : states)
-      delete s;
-  }
+  ~PexObject() = default;
 
-  static PexObject* read(PexReader& rdr);
+  static PexObject* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexObject>;
+  PexObject* next{ nullptr };
 };
 
 }}

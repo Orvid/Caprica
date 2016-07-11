@@ -104,10 +104,9 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     };
     auto dest = getDest(bldr, location, function.func->returnType);
 
-    std::vector<pex::PexValue> args;
-    args.reserve(arguments.size());
+    IntrusiveLinkedList<pex::PexValue> args;
     for (auto param : arguments)
-      args.emplace_back(param->value->generateLoad(file, bldr));
+      args.push_back(file->alloc->make<pex::PexValue>(param->value->generateLoad(file, bldr)));
     bldr << location;
     if (function.func->isGlobal()) {
       bldr << op::callstatic{ file->getString(function.func->parentObject->loweredName()), file->getString(function.func->name), dest, std::move(args) };

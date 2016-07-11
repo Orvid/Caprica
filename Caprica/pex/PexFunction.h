@@ -1,9 +1,8 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
-#include <common/allocators/ChainedDestructedPooledAllocator.h>
+#include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugFunctionInfo.h>
@@ -21,8 +20,6 @@ struct PexFile;
 struct PexObject;
 struct PexState;
 
-using PexInstructionList = allocators::ChainedDestructedPooledAllocator<PexInstruction, 128>;
-
 struct PexFunction final
 {
   // If name is invalid, it is assumed this is
@@ -34,22 +31,21 @@ struct PexFunction final
   PexUserFlags userFlags{ };
   bool isNative{ false };
   bool isGlobal{ false };
-  std::vector<PexFunctionParameter*> parameters{ };
-  std::vector<PexLocalVariable*> locals{ };
-  PexInstructionList instructions{ };
+  IntrusiveLinkedList<PexFunctionParameter> parameters{ };
+  IntrusiveLinkedList<PexLocalVariable> locals{ };
+  IntrusiveLinkedList<PexInstruction> instructions{ };
 
   explicit PexFunction() = default;
   PexFunction(const PexFunction&) = delete;
-  ~PexFunction() {
-    for (auto p : parameters)
-      delete p;
-    for (auto l : locals)
-      delete l;
-  }
+  ~PexFunction() = default;
 
-  static PexFunction* read(PexReader& rdr, bool isProperty);
+  static PexFunction* read(allocators::ChainedPool* alloc, PexReader& rdr, bool isProperty);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexFunction>;
+  PexFunction* next{ nullptr };
 };
 
 }}

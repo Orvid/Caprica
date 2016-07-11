@@ -93,7 +93,8 @@ void PapyrusCompilationNode::FileParseJob::run() {
     delete parser;
   } else if (pathEq(ext, ".pex")) {
     pex::PexReader rdr(parent->sourceFilePath);
-    parent->pexFile = pex::PexFile::read(rdr);
+    auto alloc = new allocators::ChainedPool(1024 * 4);
+    parent->pexFile = pex::PexFile::read(alloc, rdr);
     isPexFile = true;
     if (parent->type == NodeType::PexDissassembly)
       return;
@@ -112,7 +113,7 @@ void PapyrusCompilationNode::FileParseJob::run() {
   if (parent->pexFile) {
     parent->loadedScript = pex::PexReflector::reflectScript(parent->pexFile);
     parent->reportingContext.exitIfErrors();
-    delete parent->pexFile;
+    delete parent->pexFile->alloc;
     parent->pexFile = nullptr;
   }
 
@@ -163,7 +164,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
           parent->pexFile->writeAsm(asmWtr);
         }
 
-        delete parent->pexFile;
+        delete parent->pexFile->alloc;
         parent->pexFile = nullptr;
       }
       return;
@@ -173,7 +174,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       parent->pexFile->writeAsm(asmWtr);
-      delete parent->pexFile;
+      delete parent->pexFile->alloc;
       parent->pexFile = nullptr;
       return;
     }
@@ -183,7 +184,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
 
       parent->pexWriter = new pex::PexWriter();
       parent->pexFile->write(*parent->pexWriter);
-      delete parent->pexFile;
+      delete parent->pexFile->alloc;
       parent->pexFile = nullptr;
       return;
     }

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <ctime>
-#include <vector>
+
+#include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexDebugPropertyGroup.h>
@@ -14,22 +15,15 @@ namespace caprica { namespace pex {
 struct PexDebugInfo final
 {
   time_t modificationTime{ };
-  std::vector<PexDebugFunctionInfo*> functions{ };
-  std::vector<PexDebugPropertyGroup*> propertyGroups{ };
-  std::vector<PexDebugStructOrder*> structOrders{ };
+  IntrusiveLinkedList<PexDebugFunctionInfo> functions{ };
+  IntrusiveLinkedList<PexDebugPropertyGroup> propertyGroups{ };
+  IntrusiveLinkedList<PexDebugStructOrder> structOrders{ };
 
   explicit PexDebugInfo() = default;
   PexDebugInfo(const PexDebugInfo&) = delete;
-  ~PexDebugInfo() {
-    for (auto f : functions)
-      delete f;
-    for (auto p : propertyGroups)
-      delete p;
-    for(auto s : structOrders)
-      delete s;
-  }
+  ~PexDebugInfo() = default;
 
-  static PexDebugInfo* read(PexReader& rdr);
+  static PexDebugInfo* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
 };
 

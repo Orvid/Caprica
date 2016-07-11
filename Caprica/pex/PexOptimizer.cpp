@@ -39,7 +39,7 @@ private:
 };
 
 static std::vector<OptInstruction*> buildOptInstructions(const PexDebugFunctionInfo* debInfo,
-                                                         const PexInstructionList& instructions) {
+                                                         IntrusiveLinkedList<PexInstruction>& instructions) {
   std::unordered_map<size_t, OptInstruction*> labelMap;
   for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
     if (cur->isBranch()) {
@@ -152,14 +152,13 @@ void PexOptimizer::optimize(PexFile* file,
       curInstrNum++;
   }
 
-  PexInstructionList newInstructions{ };
-  newInstructions.reserve(curInstrNum);
+  IntrusiveLinkedList<PexInstruction> newInstructions{ };
   std::vector<uint16_t> newLineInfo{ };
   newLineInfo.reserve(curInstrNum);
   for (auto& i : optimizedInstructions) {
     if (i->instr) {
       newLineInfo.push_back(i->lineNumber);
-      newInstructions.emplace_back(std::move(*i->instr));
+      newInstructions.push_back(i->instr);
       if (i->instr->isBranch())
         i->instr->setBranchTarget((int)i->branchTarget->instructionNum - (int)i->instructionNum);
     }

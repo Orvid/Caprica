@@ -47,7 +47,7 @@ struct PapyrusCompilationNode final
     if (loadedScript)
       delete loadedScript;
     if (pexFile)
-      delete pexFile;
+      delete pexFile->alloc;
     if (resolvedObject)
       delete resolvedObject;
     if (resolutionContext)

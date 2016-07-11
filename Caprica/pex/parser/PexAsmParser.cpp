@@ -7,7 +7,8 @@
 namespace caprica { namespace pex { namespace parser {
 
 PexFile* PexAsmParser::parseFile() {
-  auto file = new PexFile();
+  alloc = new allocators::ChainedPool(1024 * 4);
+  auto file = alloc->make<PexFile>(alloc);
 
   while (cur.type != TokenType::END) {
     switch (cur.type) {
@@ -72,7 +73,7 @@ PexFile* PexAsmParser::parseFile() {
             reportingContext.fatal(cur.location, "Expected '.object' got '%s'!", cur.prettyString().c_str());
           consume();
 
-          auto obj = new PexObject();
+          auto obj = alloc->make<PexObject>();
           obj->name = expectConsumePexIdent(file);
           maybeExpectConsumeConstFlag(&obj->isConst);
           if (cur.type != TokenType::EOL)
@@ -105,7 +106,7 @@ PexFile* PexAsmParser::parseFile() {
                     reportingContext.fatal(cur.location, "Expected '.struct' got '%s'!", cur.prettyString().c_str());
                   consume();
 
-                  auto struc = new PexStruct();
+                  auto struc = alloc->make<PexStruct>();
                   struc->name = expectConsumePexIdentEOL(file);
 
                   while (!maybeConsumeTokEOL(TokenType::kEndStruct)) {
@@ -113,7 +114,7 @@ PexFile* PexAsmParser::parseFile() {
                       reportingContext.fatal(cur.location, "Expected '.variable' got '%s'!", cur.prettyString().c_str());
                     consume();
 
-                    auto mem = new PexStructMember();
+                    auto mem = alloc->make<PexStructMember>();
                     mem->name = expectConsumePexIdent(file);
                     mem->typeName = expectConsumePexIdent(file);
                     maybeExpectConsumeConstFlag(&mem->isConst);
@@ -137,9 +138,9 @@ PexFile* PexAsmParser::parseFile() {
                           reportingContext.fatal(cur.location, "Unknown child of .variable '%s'!", cur.prettyString().c_str());
                       }
                     }
-                    struc->members.emplace_back(mem);
+                    struc->members.push_back(mem);
                   }
-                  obj->structs.emplace_back(struc);
+                  obj->structs.push_back(struc);
                 }
                 break;
               }
@@ -153,7 +154,7 @@ PexFile* PexAsmParser::parseFile() {
                     reportingContext.fatal(cur.location, "Expected '.variable' got '%s'!", cur.prettyString().c_str());
                   consume();
 
-                  auto var = new PexVariable();
+                  auto var = alloc->make<PexVariable>();
                   var->name = expectConsumePexIdent(file);
                   var->typeName = expectConsumePexIdent(file);
                   maybeExpectConsumeConstFlag(&var->isConst);
@@ -187,7 +188,7 @@ PexFile* PexAsmParser::parseFile() {
                     reportingContext.fatal(cur.location, "Expected '.property' got '%s'!", cur.prettyString().c_str());
                   consume();
 
-                  auto prop = new PexProperty();
+                  auto prop = alloc->make<PexProperty>();
                   prop->name = expectConsumePexIdent(file);
                   prop->typeName = expectConsumePexIdent(file);
                   if (cur.type != TokenType::EOL) {
@@ -220,7 +221,7 @@ PexFile* PexAsmParser::parseFile() {
 
                         PexDebugFunctionInfo* debInf{ nullptr };
                         if (file->debugInfo) {
-                          debInf = new PexDebugFunctionInfo();
+                          debInf = alloc->make<PexDebugFunctionInfo>();
                           debInf->stateName = file->getString("");
                           debInf->objectName = obj->name;
                           debInf->functionName = prop->name;
@@ -263,7 +264,7 @@ PexFile* PexAsmParser::parseFile() {
                     reportingContext.fatal(cur.location, "Expected '.propertyGroup' got '%s'!", cur.prettyString().c_str());
                   consume();
 
-                  auto group = new PexDebugPropertyGroup();
+                  auto group = alloc->make<PexDebugPropertyGroup>();
                   group->objectName = obj->name;
                   if (cur.type != TokenType::EOL)
                     group->groupName = expectConsumePexIdent(file);
@@ -304,7 +305,7 @@ PexFile* PexAsmParser::parseFile() {
                     reportingContext.fatal(cur.location, "Expected '.state' got '%s'!", cur.prettyString().c_str());
                   consume();
 
-                  auto state = new PexState();
+                  auto state = alloc->make<PexState>();
                   if (cur.type != TokenType::EOL)
                     state->name = expectConsumePexIdent(file);
                   else
@@ -318,7 +319,7 @@ PexFile* PexAsmParser::parseFile() {
 
                     PexDebugFunctionInfo* debInf{ nullptr };
                     if (file->debugInfo) {
-                      debInf = new PexDebugFunctionInfo();
+                      debInf = alloc->make<PexDebugFunctionInfo>();
                       debInf->functionType = PexDebugFunctionType::Normal;
                       debInf->stateName = state->name;
                       debInf->objectName = obj->name;
@@ -354,7 +355,7 @@ PexFile* PexAsmParser::parseFile() {
 }
 
 PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* debInfo, std::string& funcNameOut) {
-  auto func = new PexFunction();
+  auto func = alloc->make<PexFunction>();
   funcNameOut = expectConsumeIdent();
   if (cur.type != TokenType::EOL) {
     auto id = expectConsumeIdent();
@@ -390,7 +391,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
             reportingContext.fatal(cur.location, "Expected '.param' got '%s'!", cur.prettyString().c_str());
           consume();
 
-          auto param = new PexFunctionParameter();
+          auto param = alloc->make<PexFunctionParameter>();
           param->name = expectConsumePexIdent(file);
           param->type = expectConsumePexIdentEOL(file);
           func->parameters.push_back(param);
@@ -406,7 +407,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
             reportingContext.fatal(cur.location, "Expected '.local' got '%s'!", cur.prettyString().c_str());
           consume();
 
-          auto loc = new PexLocalVariable();
+          auto loc = alloc->make<PexLocalVariable>();
           loc->name = expectConsumePexIdent(file);
           loc->type = expectConsumePexIdentEOL(file);
           func->locals.push_back(loc);
@@ -442,7 +443,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.emplace(labName, target = new PexLabel());
-              func->instructions.emplace_back(PexOpCode::Jmp, PexInstructionArgs{ target });
+              func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::Jmp, PexInstructionArgs{ target }));
             } else if (idEq(id, "jumpf")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -452,7 +453,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.emplace(labName, target = new PexLabel());
-              func->instructions.emplace_back(PexOpCode::JmpF, PexInstructionArgs{ val, target });
+              func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::JmpF, PexInstructionArgs{ val, target }));
             } else if (idEq(id, "jumpt")) {
               auto val = expectConsumeValue(file);
               PexLabel* target{ nullptr };
@@ -462,33 +463,33 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
                 target = f->second;
               else
                 labels.emplace(labName, target = new PexLabel());
-              func->instructions.emplace_back(PexOpCode::JmpT, PexInstructionArgs{ val, target });
+              func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::JmpT, PexInstructionArgs{ val, target }));
             } else if (idEq(id, "callmethod")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               auto valC = expectConsumeValue(file);
-              std::vector<PexValue> params;
+              IntrusiveLinkedList<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.emplace_back(expectConsumeValue(file));
+                params.push_back(alloc->make<PexValue>(expectConsumeValue(file)));
               }
-              func->instructions.emplace_back(PexOpCode::CallMethod, PexInstructionArgs{ valA, valB, valC }, std::move(params));
+              func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::CallMethod, PexInstructionArgs{ valA, valB, valC }, std::move(params)));
             } else if (idEq(id, "callparent")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
-              std::vector<PexValue> params;
+              IntrusiveLinkedList<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.emplace_back(expectConsumeValue(file));
+                params.push_back(alloc->make<PexValue>(expectConsumeValue(file)));
               }
-              func->instructions.emplace_back(PexOpCode::CallParent, PexInstructionArgs{ valA, valB }, std::move(params));
+              func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::CallParent, PexInstructionArgs{ valA, valB }, std::move(params)));
             } else if (idEq(id, "callstatic")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               auto valC = expectConsumeValue(file);
-              std::vector<PexValue> params;
+              IntrusiveLinkedList<PexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.emplace_back(expectConsumeValue(file));
+                params.push_back(alloc->make<PexValue>(expectConsumeValue(file)));
               }
-              func->instructions.emplace_back(PexOpCode::CallStatic, PexInstructionArgs{ valA, valB, valC }, std::move(params));
+              func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::CallStatic, PexInstructionArgs{ valA, valB, valC }, std::move(params)));
             } else {
               auto op = PexInstruction::tryParseOpCode(id);
               if (op == PexOpCode::Invalid)
@@ -498,7 +499,7 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
                 params.emplace_back(expectConsumeValue(file));
               }
-              func->instructions.emplace_back(op, std::move(params));
+              func->instructions.push_back(alloc->make<PexInstruction>(op, std::move(params)));
             }
 
             if (maybeConsume(TokenType::LineNumer)) {

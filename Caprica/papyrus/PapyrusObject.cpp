@@ -26,7 +26,7 @@ const PapyrusObject* PapyrusObject::tryGetParentClass() const {
 }
 
 void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const {
-  auto obj = new pex::PexObject();
+  auto obj = file->alloc->make<pex::PexObject>();
   obj->name = file->getString(name);
   if (auto parClass = tryGetParentClass())
     obj->parentClassName = file->getString(parClass->name);

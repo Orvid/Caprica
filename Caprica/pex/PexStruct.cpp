@@ -4,13 +4,12 @@
 
 namespace caprica { namespace pex {
 
-PexStruct* PexStruct::read(PexReader& rdr) {
-  auto struc = new PexStruct();
+PexStruct* PexStruct::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto struc = alloc->make<PexStruct>();
   struc->name = rdr.read<PexString>();
   auto mLen = rdr.read<uint16_t>();
-  struc->members.reserve(mLen);
   for (size_t i = 0; i < mLen; i++)
-    struc->members.push_back(PexStructMember::read(rdr));
+    struc->members.push_back(PexStructMember::read(alloc, rdr));
   return struc;
 }
 

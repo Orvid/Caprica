@@ -6,8 +6,8 @@
 
 namespace caprica { namespace pex {
 
-PexLocalVariable* PexLocalVariable::read(PexReader& rdr) {
-  auto loc = new PexLocalVariable();
+PexLocalVariable* PexLocalVariable::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto loc = alloc->make<PexLocalVariable>();
   loc->name = rdr.read<PexString>();
   loc->type = rdr.read<PexString>();
   return loc;

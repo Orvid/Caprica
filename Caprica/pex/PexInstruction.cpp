@@ -58,24 +58,24 @@ int32_t PexInstruction::getDestArgIndexForOpCode(PexOpCode op) {
   CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
 }
 
-PexInstruction PexInstruction::read(PexReader& rdr) {
-  PexInstruction inst{ };
-  inst.opCode = (PexOpCode)rdr.read<uint8_t>();
+PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto inst = alloc->make<PexInstruction>();
+  inst->opCode = (PexOpCode)rdr.read<uint8_t>();
 
-  switch (inst.opCode) {
+  switch (inst->opCode) {
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
     {
-      inst.args.reserve(3);
+      inst->args.reserve(3);
       for (size_t i = 0; i < 3; i++)
-        inst.args.push_back(rdr.read<PexValue>());
+        inst->args.push_back(rdr.read<PexValue>());
       goto CallCommon;
     }
     case PexOpCode::CallParent:
     {
-      inst.args.reserve(2);
+      inst->args.reserve(2);
       for (size_t i = 0; i < 2; i++)
-        inst.args.push_back(rdr.read<PexValue>());
+        inst->args.push_back(rdr.read<PexValue>());
       goto CallCommon;
     }
     
@@ -84,18 +84,17 @@ PexInstruction PexInstruction::read(PexReader& rdr) {
       auto varVal = rdr.read<PexValue>();
       if (varVal.type != PexValueType::Integer)
         CapricaReportingContext::logicalFatal("The var arg count for call instructions should be an integer!");
-      inst.variadicArgs.reserve(varVal.i);
       for (size_t i = 0; i < varVal.i; i++)
-        inst.variadicArgs.push_back(rdr.read<PexValue>());
+        inst->variadicArgs.push_back(alloc->make<PexValue>(rdr.read<PexValue>()));
       break;
     }
 
     default:
     {
-      auto aCount = getArgCountForOpCode(inst.opCode);
-      inst.args.reserve(aCount);
+      auto aCount = getArgCountForOpCode(inst->opCode);
+      inst->args.reserve(aCount);
       for (size_t i = 0; i < aCount; i++)
-        inst.args.push_back(rdr.read<PexValue>());
+        inst->args.push_back(rdr.read<PexValue>());
       break;
     }
   }
@@ -118,8 +117,8 @@ void PexInstruction::write(PexWriter& wtr) const {
       val.type = PexValueType::Integer;
       val.i = (uint32_t)variadicArgs.size();
       wtr.write<PexValue>(val);
-      for (auto& v : variadicArgs)
-        wtr.write<PexValue>(v);
+      for (auto v : variadicArgs)
+        wtr.write<PexValue>(*v);
       break;
     }
     default:

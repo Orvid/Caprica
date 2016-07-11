@@ -4,8 +4,8 @@
 
 namespace caprica { namespace pex {
 
-PexStructMember* PexStructMember::read(PexReader& rdr) {
-  auto mem = new PexStructMember();
+PexStructMember* PexStructMember::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto mem = alloc->make<PexStructMember>();
   mem->name = rdr.read<PexString>();
   mem->typeName = rdr.read<PexString>();
   mem->userFlags = rdr.read<PexUserFlags>();

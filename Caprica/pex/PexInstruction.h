@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
 
 #include <boost/container/static_vector.hpp>
 
@@ -73,19 +72,19 @@ struct PexInstruction final
 
   PexOpCode opCode{ PexOpCode::Nop };
   PexInstructionArgs args{ };
-  std::vector<PexValue> variadicArgs{ };
+  IntrusiveLinkedList<PexValue> variadicArgs{ };
 
   explicit PexInstruction() = default;
   explicit PexInstruction(PexOpCode op) : opCode(op) { assert(op == PexOpCode::Nop); }
   explicit PexInstruction(PexOpCode op, PexValue arg1) : opCode(op), args({ arg1 }) { }
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2) : opCode(op), args({ arg1, arg2 }) { }
-  explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, std::vector<PexValue>&& varArguments) : opCode(op), args({ arg1, arg2 }), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, IntrusiveLinkedList<PexValue>&& varArguments) : opCode(op), args({ arg1, arg2 }), variadicArgs(std::move(varArguments)) { }
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3) : opCode(op), args({ arg1, arg2, arg3 }) { }
-  explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, std::vector<PexValue>&& varArguments) : opCode(op), args({ arg1, arg2, arg3 }), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, IntrusiveLinkedList<PexValue>&& varArguments) : opCode(op), args({ arg1, arg2, arg3 }), variadicArgs(std::move(varArguments)) { }
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, PexValue arg4) : opCode(op), args({ arg1, arg2, arg3, arg4 }) { }
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, PexValue arg4, PexValue arg5) : opCode(op), args({ arg1, arg2, arg3, arg4, arg5 }) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments) : opCode(op), args(std::move(arguments)) { }
-  explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments, std::vector<PexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments, IntrusiveLinkedList<PexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
   PexInstruction(const PexInstruction&) = default;
   PexInstruction(PexInstruction&&) = default;
   PexInstruction& operator=(const PexInstruction&) = default;
@@ -129,11 +128,15 @@ struct PexInstruction final
   }
   static int32_t getDestArgIndexForOpCode(PexOpCode op);
 
-  static PexInstruction read(PexReader& rdr);
+  static PexInstruction* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
 
   static PexOpCode tryParseOpCode(const std::string& str);
   static std::string opCodeToPexAsm(PexOpCode op);
+
+private:
+  friend IntrusiveLinkedList<PexInstruction>;
+  PexInstruction* next{ nullptr };
 };
 
 }}

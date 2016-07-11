@@ -4,8 +4,8 @@
 
 namespace caprica { namespace pex {
 
-PexDebugPropertyGroup* PexDebugPropertyGroup::read(PexReader& rdr) {
-  auto group = new PexDebugPropertyGroup();
+PexDebugPropertyGroup* PexDebugPropertyGroup::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto group = alloc->make<PexDebugPropertyGroup>();
   group->objectName = rdr.read<PexString>();
   group->groupName = rdr.read<PexString>();
   group->documentationString = rdr.read<PexString>();

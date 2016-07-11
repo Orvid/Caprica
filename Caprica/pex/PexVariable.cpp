@@ -4,8 +4,8 @@
 
 namespace caprica { namespace pex {
 
-PexVariable* PexVariable::read(PexReader& rdr) {
-  auto var = new PexVariable();
+PexVariable* PexVariable::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto var = alloc->make<PexVariable>();
   var->name = rdr.read<PexString>();
   var->typeName = rdr.read<PexString>();
   var->userFlags = rdr.read<PexUserFlags>();

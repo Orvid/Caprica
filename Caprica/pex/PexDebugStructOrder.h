@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
@@ -18,8 +20,12 @@ struct PexDebugStructOrder final
   PexDebugStructOrder(const PexDebugStructOrder&) = delete;
   ~PexDebugStructOrder() = default;
 
-  static PexDebugStructOrder* read(PexReader& rdr);
+  static PexDebugStructOrder* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexDebugStructOrder>;
+  PexDebugStructOrder* next{ nullptr };
 };
 
 }}

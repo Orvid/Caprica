@@ -30,10 +30,10 @@ struct PapyrusStruct final
   ~PapyrusStruct() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
-    auto struc = new pex::PexStruct();
+    auto struc = file->alloc->make<pex::PexStruct>();
     struc->name = file->getString(name);
 
-    auto debInf = new pex::PexDebugStructOrder();
+    auto debInf = file->alloc->make<pex::PexDebugStructOrder>();
     debInf->objectName = obj->name;
     debInf->structName = struc->name;
 
@@ -41,12 +41,10 @@ struct PapyrusStruct final
       m->buildPex(repCtx, file, obj, struc);
       debInf->members.emplace_back(file->getString(m->name));
     }
-    obj->structs.emplace_back(struc);
+    obj->structs.push_back(struc);
     
     if (file->debugInfo)
-      file->debugInfo->structOrders.emplace_back(debInf);
-    else
-      delete debInf;
+      file->debugInfo->structOrders.push_back(debInf);
   }
 
   void semantic(PapyrusResolutionContext* ctx) {

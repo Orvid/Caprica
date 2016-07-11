@@ -4,6 +4,7 @@
 #include <numeric>
 #include <string>
 
+#include <common/allocators/ChainedPool.h>
 #include <common/CapricaReportingContext.h>
 
 #include <pex/PexFile.h>
@@ -20,6 +21,7 @@ struct PexAsmParser final : private PexAsmLexer
   PexFile* parseFile();
 
 private:
+  allocators::ChainedPool* alloc;
   PexFunction* parseFunction(PexFile* file, PexDebugFunctionInfo* debInfo, std::string& funcNameOut);
 
   void expect(TokenType tp) {

@@ -6,8 +6,8 @@
 
 namespace caprica { namespace pex {
 
-PexObject* PexObject::read(PexReader& rdr) {
-  auto obj = new PexObject();
+PexObject* PexObject::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+  auto obj = alloc->make<PexObject>();
   obj->name = rdr.read<PexString>();
   // The size of the object, but we don't care about it.
   rdr.read<uint32_t>();
@@ -17,21 +17,17 @@ PexObject* PexObject::read(PexReader& rdr) {
   obj->userFlags = rdr.read<PexUserFlags>();
   obj->autoStateName = rdr.read<PexString>();
   auto sLen = rdr.read<uint16_t>();
-  obj->structs.reserve(sLen);
   for (size_t i = 0; i < sLen; i++)
-    obj->structs.push_back(PexStruct::read(rdr));
+    obj->structs.push_back(PexStruct::read(alloc, rdr));
   auto vLen = rdr.read<uint16_t>();
-  obj->variables.reserve(vLen);
   for (size_t i = 0; i < vLen; i++)
-    obj->variables.push_back(PexVariable::read(rdr));
+    obj->variables.push_back(PexVariable::read(alloc, rdr));
   auto pLen = rdr.read<uint16_t>();
-  obj->properties.reserve(pLen);
   for (size_t i = 0; i < pLen; i++)
-    obj->properties.push_back(PexProperty::read(rdr));
+    obj->properties.push_back(PexProperty::read(alloc, rdr));
   auto stLen = rdr.read<uint16_t>();
-  obj->states.reserve(stLen);
   for (size_t i = 0; i < stLen; i++)
-    obj->states.push_back(PexState::read(rdr));
+    obj->states.push_back(PexState::read(alloc, rdr));
   return obj;
 }
 

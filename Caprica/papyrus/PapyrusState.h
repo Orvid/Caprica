@@ -28,7 +28,7 @@ struct PapyrusState final
   ~PapyrusState() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
-    auto state = new pex::PexState();
+    auto state = file->alloc->make<pex::PexState>();
     state->name = file->getString(name);
 
     size_t staticFunctionCount = 0;

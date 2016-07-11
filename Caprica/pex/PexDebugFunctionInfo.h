@@ -3,6 +3,8 @@
 #include <ctime>
 #include <vector>
 
+#include <common/IntrusiveLinkedList.h>
+
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
@@ -28,8 +30,12 @@ struct PexDebugFunctionInfo final
   PexDebugFunctionInfo(const PexDebugFunctionInfo&) = delete;
   ~PexDebugFunctionInfo() = default;
 
-  static PexDebugFunctionInfo* read(PexReader& rdr);
+  static PexDebugFunctionInfo* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
+
+private:
+  friend IntrusiveLinkedList<PexDebugFunctionInfo>;
+  PexDebugFunctionInfo* next{ nullptr };
 };
 
 }}
