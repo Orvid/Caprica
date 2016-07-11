@@ -34,7 +34,7 @@ PapyrusObject* PapyrusCompilationNode::awaitSemantic() {
 }
 
 void PapyrusCompilationNode::queueCompile() {
-  jobManager->queueJob(&compileJob);
+  jobManager->queueJob(&writeJob);
 }
 
 void PapyrusCompilationNode::awaitWrite() {
@@ -146,6 +146,8 @@ void PapyrusCompilationNode::FileCompileJob::run() {
     case NodeType::PapyrusCompile: {
       parent->loadedScript->semantic2(parent->resolutionContext);
       parent->reportingContext.exitIfErrors();
+      delete parent->resolutionContext;
+      parent->resolutionContext = nullptr;
 
       if (!disablePexBuild) {
         parent->pexFile = parent->loadedScript->buildPex(parent->reportingContext);

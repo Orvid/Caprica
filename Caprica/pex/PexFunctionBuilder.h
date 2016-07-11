@@ -163,7 +163,7 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
   }
 
   PexLocalVariable* allocateLocal(boost::string_ref name, const papyrus::PapyrusType& tp) {
-    auto loc = new PexLocalVariable();
+    auto loc = alloc->make<PexLocalVariable>();
     loc->name = file->getString(name);
     loc->type = tp.buildPex(file);
     locals.push_back(loc);

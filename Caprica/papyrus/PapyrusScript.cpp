@@ -12,7 +12,7 @@ pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
   auto alloc = new allocators::ChainedPool(1024 * 4);
   auto pex = alloc->make<pex::PexFile>(alloc);
   if (conf::CodeGeneration::emitDebugInfo) {
-    pex->debugInfo = new pex::PexDebugInfo();
+    pex->debugInfo = alloc->make<pex::PexDebugInfo>();
     pex->debugInfo->modificationTime = lastModificationTime;
   }
   pex->compilationTime = time(nullptr);

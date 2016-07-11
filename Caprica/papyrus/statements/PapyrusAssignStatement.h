@@ -76,7 +76,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       ctx->checkForPoison(rValue);
       rValue = ctx->coerceExpression(rValue, lValue->resultType());
     } else {
-      binOpExpression = new expressions::PapyrusBinaryOpExpression(location);
+      binOpExpression = ctx->allocator->make<expressions::PapyrusBinaryOpExpression>(location);
       binOpExpression->left = lValue;
       binOpExpression->right = rValue;
       binOpExpression->operation = [](PapyrusAssignOperatorType op) {
