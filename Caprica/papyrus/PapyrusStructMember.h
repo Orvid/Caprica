@@ -47,12 +47,14 @@ struct PapyrusStructMember final
 
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type, true);
-    if (type.type == PapyrusType::Kind::Array)
-      ctx->reportingContext.error(type.location, "Struct members are not allowed to be arrays.");
-    else if (type.type == PapyrusType::Kind::ResolvedStruct)
-      ctx->reportingContext.error(type.location, "Struct members are not allowed to be other structs.");
-    else if (type.type == PapyrusType::Kind::Var)
-      ctx->reportingContext.error(type.location, "Struct members are not allowed to be var.");
+    if (!conf::Papyrus::enableLanguageExtensions) {
+      if (type.type == PapyrusType::Kind::Array)
+        ctx->reportingContext.error(type.location, "Struct members are not allowed to be arrays.");
+      else if (type.type == PapyrusType::Kind::ResolvedStruct)
+        ctx->reportingContext.error(type.location, "Struct members are not allowed to be other structs.");
+      else if (type.type == PapyrusType::Kind::Var)
+        ctx->reportingContext.error(type.location, "Struct members are not allowed to be var.");
+    }
     defaultValue = ctx->coerceDefaultValue(defaultValue, type);
   }
 
