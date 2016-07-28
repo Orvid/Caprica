@@ -17,15 +17,20 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
 {
   struct Parameter final
   {
+    size_t argIndex{ 0 };
     boost::string_ref name{ "" };
     PapyrusExpression* value{ nullptr };
 
     explicit Parameter() = default;
     Parameter(const Parameter&) = delete;
     ~Parameter() = default;
+
+  private:
+    friend IntrusiveLinkedList<Parameter>;
+    Parameter* next{ nullptr };
   };
   PapyrusIdentifier function;
-  std::vector<Parameter*> arguments{ };
+  IntrusiveLinkedList<Parameter> arguments{ };
 
   explicit PapyrusFunctionCallExpression(CapricaFileLocation loc, PapyrusIdentifier&& f) : PapyrusExpression(loc), function(std::move(f)) { }
   PapyrusFunctionCallExpression(const PapyrusFunctionCallExpression&) = delete;

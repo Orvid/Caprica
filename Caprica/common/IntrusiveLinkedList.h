@@ -110,6 +110,104 @@ private:
     Iterator(T* mFront) : cur(mFront) { }
   };
 
+  template<typename T2>
+  struct LockstepIteratorWrapper;
+  template<typename T2>
+  struct ConstLockstepIteratorWrapper;
+
+  template<typename T2>
+  struct LockstepIterator final
+  {
+    size_t index{ 0 };
+
+    LockstepIterator& operator ++() {
+      if (cur.self == nullptr)
+        return *this;
+      index++;
+      cur.prevSelf = cur.self;
+      cur.prevOther = cur.other;
+      cur.self = cur.self->next;
+      cur.other = cur.other->next;
+      return *this;
+    }
+
+    auto& operator *() {
+      return cur;
+    }
+    const auto& operator *() const {
+      return cur;
+    }
+    auto& operator ->() {
+      return cur;
+    }
+    const auto& operator ->() const {
+      return cur;
+    }
+
+    bool operator ==(const LockstepIterator& other) const {
+      return cur == other.cur;
+    }
+
+    bool operator !=(const LockstepIterator& other) const {
+      return !(*this == other);
+    }
+
+  private:
+    friend LockstepIteratorWrapper<T2>;
+    friend ConstLockstepIteratorWrapper<T2>;
+    struct {
+      T* self{ nullptr };
+      T2* other{ nullptr };
+      T* prevSelf{ nullptr };
+      T2* prevOther{ nullptr };
+    } cur{ };
+
+    LockstepIterator() = default;
+    LockstepIterator(T* selfFront, T2* otherFront) : cur(selfFront, otherFront) { }
+  };
+
+  template<typename T2>
+  struct LockstepIteratorWrapper final
+  {
+    LockstepIterator<T2> begin() {
+      if (!self.size())
+        return LockstepIterator<T2>();
+      return LockstepIterator<T2>(self.mFront, other.mFront);
+    }
+
+    LockstepIterator<T2> end() {
+      return LockstepIterator<T2>();
+    }
+
+  private:
+    friend IntrusiveLinkedList;
+    IntrusiveLinkedList& self;
+    IntrusiveLinkedList<T2>& other;
+
+    LockstepIteratorWrapper(IntrusiveLinkedList& pSelf, IntrusiveLinkedList<T2>& pOther) : self(pSelf), other(pOther) { }
+  };
+
+  template<typename T2>
+  struct ConstLockstepIteratorWrapper final
+  {
+    LockstepIterator<const T2> begin() {
+      if (!self.size())
+        return LockstepIterator<const T2>();
+      return LockstepIterator<const T2>(self.mFront, other.mFront);
+    }
+
+    LockstepIterator<const T2> end() {
+      return LockstepIterator<const T2>();
+    }
+
+  private:
+    friend IntrusiveLinkedList;
+    IntrusiveLinkedList& self;
+    const IntrusiveLinkedList<T2>& other;
+
+    ConstLockstepIteratorWrapper(IntrusiveLinkedList& pSelf, const IntrusiveLinkedList<T2>& pOther) : self(pSelf), other(pOther) { }
+  };
+
 public:
   ConstIterator begin() const {
     if (!mSize)
@@ -129,6 +227,20 @@ public:
 
   Iterator end() {
     return Iterator();
+  }
+
+  template<typename T2>
+  LockstepIteratorWrapper<T2> lockstepIterate(IntrusiveLinkedList<T2>& other) {
+    return LockstepIteratorWrapper<T2>(this, other);
+  }
+
+  template<typename T2>
+  ConstLockstepIteratorWrapper<T2> lockstepIterate(const IntrusiveLinkedList<T2>& other) {
+    return ConstLockstepIteratorWrapper<T2>(this, other);
+  }
+
+  void insertBefore(Iterator loc, T* val) {
+
   }
 };
 

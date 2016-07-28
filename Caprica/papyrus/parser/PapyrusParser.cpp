@@ -1007,7 +1007,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
               expectConsume(TokenType::Equal);
             }
             param->value = parseExpression(func);
-            fCallExpr->arguments.emplace_back(param);
+            fCallExpr->arguments.push_back(param);
           } while (cur.type == TokenType::Comma);
         }
         expectConsume(TokenType::RParen);
