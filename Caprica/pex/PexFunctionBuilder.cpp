@@ -20,13 +20,11 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   for (auto l : labels) {
     if (l->targetIdx == (size_t)-1)
       CapricaReportingContext::logicalFatal("Unused unresolved label!");
-    delete l;
   }
 
   for (auto tmp : tempVarRefs) {
     if (tmp->var == nullptr)
       CapricaReportingContext::logicalFatal("Unresolved tmp var!");
-    delete tmp;
   }
 
   func->instructions = std::move(instructions);

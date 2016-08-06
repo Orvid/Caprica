@@ -190,7 +190,7 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
   }
 
   PexValue::TemporaryVariable allocTemp(const papyrus::PapyrusType& tp) {
-    auto vRef = new PexTemporaryVariableRef(tp.buildPex(file));
+    auto vRef = alloc->make<PexTemporaryVariableRef>(tp.buildPex(file));
     tempVarRefs.push_back(vRef);
     return PexValue::TemporaryVariable(vRef);
   }
@@ -207,7 +207,7 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
   }
 
   PexFunctionBuilder& operator >>(PexLabel*& loc) {
-    loc = new PexLabel();
+    loc = alloc->make<PexLabel>();
     labels.push_back(loc);
     return *this;
   }
