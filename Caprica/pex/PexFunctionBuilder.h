@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include <limits>
-#include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <common/allocators/ChainedPool.h>
@@ -259,9 +259,9 @@ private:
   IntrusiveLinkedList<PexLocalVariable> locals{ };
   std::vector<PexLabel*> labels{ };
   std::vector<PexTemporaryVariableRef*> tempVarRefs{ };
-  std::map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
-  std::set<PexString> longLivedTempVars{ };
-  std::map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };
+  std::unordered_map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
+  std::unordered_set<PexString> longLivedTempVars{ };
+  std::unordered_map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };
   size_t currentTempI = 0;
   std::vector<PexLabel*> curBreakStack{ };
   std::vector<PexLabel*> curContinueStack{ };

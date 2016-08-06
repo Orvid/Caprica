@@ -19,9 +19,28 @@ struct PexString final
     return index < other.index;
   }
 
+  bool operator ==(const PexString& other) const noexcept {
+    return index == other.index;
+  }
+
+  bool operator !=(const PexString& other) const noexcept {
+    return index != other.index;
+  }
+
   bool valid() const noexcept {
     return index != -1;
   }
 };
 
 }}
+
+#include <xstddef>
+namespace std {
+template <>
+struct hash<caprica::pex::PexString>
+{
+  std::size_t operator()(const caprica::pex::PexString& k) const {
+    return std::hash<size_t>()(k.index);
+  }
+};
+}
