@@ -52,6 +52,10 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
       return res.getElementType();
     return PapyrusType::None(location);
   }
+
+  virtual PapyrusArrayIndexExpression* asArrayIndexExpression() override {
+    return this;
+  }
 };
 
 }}}

@@ -38,7 +38,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
       }
       case PapyrusBuiltinArrayFunctionKind::FindStruct:
       {
-        auto memberName = args[0]->value->as<PapyrusLiteralExpression>()->value.buildPex(file);
+        auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
         auto elem = args[1]->value->generateLoad(file, bldr);
         auto idx = args[2]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
@@ -57,7 +57,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
       }
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:
       {
-        auto memberName = args[0]->value->as<PapyrusLiteralExpression>()->value.buildPex(file);
+        auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
         auto elem = args[1]->value->generateLoad(file, bldr);
         auto idx = args[2]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
@@ -120,7 +120,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     bldr << location;
     if (function.func->isGlobal()) {
       bldr << op::callstatic{ file->getString(function.func->parentObject->loweredName()), file->getString(function.func->name), dest, std::move(args) };
-    } else if (base && base->is<PapyrusParentExpression>()) {
+    } else if (base && base->asParentExpression()) {
       bldr << op::callparent{ file->getString(function.func->name), dest, std::move(args) };
     } else if (base) {
       auto bVal = base->generateLoad(file, bldr);
@@ -186,7 +186,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (args[0]->value->resultType().type != PapyrusType::Kind::String)
           ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
         
-        auto memberName = args[0]->value->as<PapyrusLiteralExpression>()->value.s;
+        auto memberName = args[0]->value->asLiteralExpression()->value.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.arrayFuncElementType->resolvedStruct->members) {
           if (idEq(m->name, memberName)) {
@@ -230,7 +230,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (args[0]->value->resultType().type != PapyrusType::Kind::String)
           ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
 
-        auto memberName = args[0]->value->as<PapyrusLiteralExpression>()->value.s;
+        auto memberName = args[0]->value->asLiteralExpression()->value.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.arrayFuncElementType->resolvedStruct->members) {
           if (idEq(m->name, memberName)) {
@@ -380,7 +380,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         {
           bool isCustomEvent = p.other->type.type == PapyrusType::Kind::CustomEventName;
 
-          auto le = p.self->value->as<expressions::PapyrusLiteralExpression>();
+          auto le = p.self->value->asLiteralExpression();
           if (!le || le->value.type != PapyrusValueType::String) {
             ctx->reportingContext.error(p.self->value->location, "Argument %zu must be string literal.", p.other->index);
             continue;
@@ -425,7 +425,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     }
 
     if (function.func->name == "GotoState" && arguments.size() == 1) {
-      auto le = arguments.front()->value->as<PapyrusLiteralExpression>();
+      auto le = arguments.front()->value->asLiteralExpression();
       if (le && le->value.type == PapyrusValueType::String) {
         auto targetStateName = le->value.s;
         if (!ctx->tryResolveState(targetStateName))

@@ -35,6 +35,10 @@ struct PapyrusParentExpression final : public PapyrusExpression
   virtual PapyrusType resultType() const override {
     return type;
   }
+
+  virtual PapyrusParentExpression* asParentExpression() override {
+    return this;
+  }
 };
 
 }}}

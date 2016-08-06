@@ -33,6 +33,10 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
   virtual PapyrusType resultType() const override {
     return identifier.resultType();
   }
+
+  virtual PapyrusIdentifierExpression* asIdentifierExpression() override {
+    return this;
+  }
 };
 
 }}}

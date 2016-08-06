@@ -50,13 +50,13 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     else
       rVal = rValue->generateLoad(file, bldr);
 
-    if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
+    if (auto id = lValue->asIdentifierExpression()) {
       bldr << location;
       id->identifier.generateStore(file, bldr, pex::PexValue::Identifier(file->getString("self")), rVal);
-    } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
+    } else if (auto ai = lValue->asArrayIndexExpression()) {
       bldr << location;
       ai->generateStore(file, bldr, rVal);
-    } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
+    } else if (auto ma = lValue->asMemberAccessExpression()) {
       bldr << location;
       ma->generateStore(file, bldr, rVal);
     } else {
@@ -65,7 +65,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
-    if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
+    if (auto id = lValue->asIdentifierExpression()) {
       id->isAssignmentContext = true;
     }
 
@@ -104,13 +104,13 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       rValue = ctx->coerceExpression(binOpExpression, lValue->resultType());
     }
 
-    if (auto id = lValue->as<expressions::PapyrusIdentifierExpression>()) {
+    if (auto id = lValue->asIdentifierExpression()) {
       id->identifier.ensureAssignable(ctx->reportingContext);
       id->identifier.markWritten();
-    } else if (auto ai = lValue->as<expressions::PapyrusArrayIndexExpression>()) {
+    } else if (auto ai = lValue->asArrayIndexExpression()) {
       // It's valid.
-    } else if (auto ma = lValue->as<expressions::PapyrusMemberAccessExpression>()) {
-      if (auto id = ma->accessExpression->as<expressions::PapyrusIdentifierExpression>())
+    } else if (auto ma = lValue->asMemberAccessExpression()) {
+      if (auto id = ma->accessExpression->asIdentifierExpression())
         id->identifier.ensureAssignable(ctx->reportingContext);
     } else {
       ctx->reportingContext.fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");

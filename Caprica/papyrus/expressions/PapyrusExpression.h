@@ -10,6 +10,14 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
+struct PapyrusArrayIndexExpression;
+struct PapyrusArrayLengthExpression;
+struct PapyrusFunctionCallExpression;
+struct PapyrusIdentifierExpression;
+struct PapyrusLiteralExpression;
+struct PapyrusMemberAccessExpression;
+struct PapyrusParentExpression;
+
 struct PapyrusExpression abstract
 {
   const CapricaFileLocation location;
@@ -22,15 +30,15 @@ struct PapyrusExpression abstract
   virtual void semantic(PapyrusResolutionContext* ctx) abstract;
   virtual PapyrusType resultType() const abstract;
 
-  template<typename T>
-  T* as() {
-    return dynamic_cast<T*>(this);
-  }
-
-  template<typename T>
-  bool is() {
-    return this->as<T>() != nullptr;
-  }
+  // These exist because dynamic_cast is slow.
+  // This list only contains expressions that we actually check for.
+  virtual PapyrusArrayLengthExpression* asArrayLengthExpression() { return nullptr; }
+  virtual PapyrusArrayIndexExpression* asArrayIndexExpression() { return nullptr; }
+  virtual PapyrusFunctionCallExpression* asFunctionCallExpression() { return nullptr; }
+  virtual PapyrusIdentifierExpression* asIdentifierExpression() { return nullptr; }
+  virtual PapyrusLiteralExpression* asLiteralExpression() { return nullptr; }
+  virtual PapyrusMemberAccessExpression* asMemberAccessExpression() { return nullptr; }
+  virtual PapyrusParentExpression* asParentExpression() { return nullptr; }
 };
 
 }}}

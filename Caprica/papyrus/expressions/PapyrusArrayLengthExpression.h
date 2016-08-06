@@ -26,6 +26,10 @@ struct PapyrusArrayLengthExpression final : public PapyrusExpression
   virtual PapyrusType resultType() const override {
     return PapyrusType::Int(location);
   }
+
+  virtual PapyrusArrayLengthExpression* asArrayLengthExpression() override {
+    return this;
+  }
 };
 
 }}}

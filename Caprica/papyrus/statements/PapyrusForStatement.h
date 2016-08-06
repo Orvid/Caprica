@@ -54,7 +54,7 @@ struct PapyrusForStatement final : public PapyrusStatement
     
     pex::PexLocalVariable* sValLoc{ nullptr };
     pex::PexValue sVal;
-    if (stepValue && !stepValue->is<expressions::PapyrusLiteralExpression>()) {
+    if (stepValue && !stepValue->asLiteralExpression()) {
       auto stepValVal = stepValue->generateLoad(file, bldr);
       bldr << location;
       sValLoc = bldr.allocLongLivedTemp(initialValue->resultType());
@@ -72,7 +72,7 @@ struct PapyrusForStatement final : public PapyrusStatement
 
     pex::PexLocalVariable* tValLoc{ nullptr };
     pex::PexValue tVal;
-    if (!targetValue->is<expressions::PapyrusLiteralExpression>()) {
+    if (!targetValue->asLiteralExpression()) {
       tValLoc = bldr.allocLongLivedTemp(targetValue->resultType());
       auto targValVal = targetValue->generateLoad(file, bldr);
       bldr << location;

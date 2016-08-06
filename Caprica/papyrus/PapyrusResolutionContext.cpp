@@ -128,7 +128,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
     case PapyrusType::Kind::ResolvedObject:
     case PapyrusType::Kind::ResolvedStruct:
       // Implicit conversion from None to each of these is allowed, but only for a literal None
-      if (expr->resultType().type == PapyrusType::Kind::None && expr->is<expressions::PapyrusLiteralExpression>()) {
+      if (expr->resultType().type == PapyrusType::Kind::None && expr->asLiteralExpression()) {
         return true;
       }
       // Deliberate Fallthrough
@@ -151,7 +151,7 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
     bool canCast = canImplicitlyCoerceExpression(expr, target);
 
     if (canCast && expr->resultType().type == PapyrusType::Kind::Int && target.type == PapyrusType::Kind::Float) {
-      if (auto le = expr->as<expressions::PapyrusLiteralExpression>()) {
+      if (auto le = expr->asLiteralExpression()) {
         le->value = PapyrusValue::Float(le->value.location, (float)le->value.i);
         return expr;
       }

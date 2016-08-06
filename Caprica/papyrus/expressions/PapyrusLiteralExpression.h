@@ -28,6 +28,10 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
   virtual PapyrusType resultType() const override {
     return value.getPapyrusType();
   }
+
+  virtual PapyrusLiteralExpression* asLiteralExpression() override {
+    return this;
+  }
 };
 
 }}}
