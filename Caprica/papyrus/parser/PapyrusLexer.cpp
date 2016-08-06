@@ -225,6 +225,11 @@ static bool isAsciiAlphaNumeric(int c) {
          (c >= '0' && c <= '9');
 }
 
+ALWAYS_INLINE
+static bool isAsciiDigit(int c) {
+  return c >= '0' && c <= '9';
+}
+
 void PapyrusLexer::consume() {
   CapricaStats::consumedTokenCount++;
   if (peekedTokenCount) {
@@ -280,7 +285,7 @@ StartOver:
     case '-':
       if (peekChar() == '=')
         return setTok(TokenType::MinusEqual, baseLoc, 1);
-      if (isdigit(peekChar()))
+      if (isAsciiDigit(peekChar()))
         goto Number;
       return setTok(TokenType::Minus, baseLoc);
     case '*':
@@ -341,13 +346,13 @@ StartOver:
       }
 
       // Either normal int or float.
-      while (isdigit(peekChar()))
+      while (isAsciiDigit(peekChar()))
         str.push_back((char)getChar());
 
       // It's a float.
       if (peekChar() == '.') {
         str.push_back((char)getChar());
-        while (isdigit(peekChar()))
+        while (isAsciiDigit(peekChar()))
           str.push_back((char)getChar());
 
         // Allow e+ notation.
@@ -357,7 +362,7 @@ StartOver:
             reportingContext.fatal(location, "Unexpected character 'e'!");
           str.push_back('+');
 
-          while (isdigit(peekChar()))
+          while (isAsciiDigit(peekChar()))
             str.push_back((char)getChar());
         }
 
