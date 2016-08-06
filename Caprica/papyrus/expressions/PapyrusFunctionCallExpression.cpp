@@ -329,34 +329,43 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       for (size_t baseI = 0; iter != arguments.end(); baseI++) {
         if (iter->name != "") {
           hadNamedArgs = true;
-          auto newArgsIter = newArgs.begin();
+          auto newArgsIter = newArgs.beginInsertable();
+          size_t newArgIndex = 0;
           for (auto p : function.func->parameters) {
             if (idEq(p->name, iter->name)) {
               auto a = *iter;
-              a->argIndex = p->index;
               ++iter;
+              a->argIndex = p->index;
               newArgs.insertBefore(newArgsIter, a);
               goto ContinueOuterLoop;
             }
-            if (newArgsIter != newArgs.end() && newArgsIter->argIndex <= p->index)
+            if (newArgsIter != newArgs.endInsertable() && newArgsIter->argIndex <= p->index)
               ++newArgsIter;
+            newArgIndex++;
           }
           ctx->reportingContext.fatal(iter->value->location, "Unable to find a parameter named '%s'!", iter->name.to_string().c_str());
         }
         if (hadNamedArgs)
           ctx->reportingContext.fatal(iter->value->location, "No normal arguments are allowed after the first named argument!");
         auto a = *iter;
+        a->argIndex = baseI;
         ++iter;
         newArgs.push_back(a);
       ContinueOuterLoop:
+        continue;
       }
 
+      auto newArgsIter = newArgs.beginInsertable();
       for (auto p : function.func->parameters) {
-        if (newArgs[p->index] == nullptr) {
+        if (newArgsIter == newArgs.endInsertable() || newArgsIter->argIndex != p->index) {
           if (p->defaultValue.type == PapyrusValueType::Invalid)
             ctx->reportingContext.fatal(location, "Not enough arguments provided.");
-          newArgs[p->index] = ctx->allocator->make<Parameter>();
-          newArgs[p->index]->value = ctx->allocator->make<PapyrusLiteralExpression>(location, p->defaultValue);
+          auto newP = ctx->allocator->make<Parameter>();
+          newP->argIndex = p->index;
+          newP->value = ctx->allocator->make<PapyrusLiteralExpression>(location, p->defaultValue);
+          newArgs.insertBefore(newArgsIter, newP);
+        } else {
+          ++newArgsIter;
         }
       }
       arguments = std::move(newArgs);
