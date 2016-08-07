@@ -254,11 +254,11 @@ public:
 private:
   PexFile* file;
   CapricaFileLocation currentLocation;
-  allocators::TypedChainedPool<CapricaFileLocation> instructionLocations{ 1024 };
+  allocators::TypedChainedPool<CapricaFileLocation> instructionLocations{ 512 };
   IntrusiveLinkedList<PexInstruction> instructions{ };
   IntrusiveLinkedList<PexLocalVariable> locals{ };
-  std::vector<PexLabel*> labels{ };
-  std::vector<PexTemporaryVariableRef*> tempVarRefs{ };
+  IntrusiveLinkedList<PexLabel> labels{ };
+  IntrusiveLinkedList<PexTemporaryVariableRef> tempVarRefs{ };
   std::unordered_map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
   std::unordered_set<PexString> longLivedTempVars{ };
   std::unordered_map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };

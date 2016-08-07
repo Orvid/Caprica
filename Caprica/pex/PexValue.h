@@ -34,6 +34,10 @@ struct PexTemporaryVariableRef
   PexLocalVariable* var{ nullptr };
 
   explicit PexTemporaryVariableRef(const PexString& tp) : type(tp) { }
+
+private:
+  friend IntrusiveLinkedList<PexTemporaryVariableRef>;
+  PexTemporaryVariableRef* next{ nullptr };
 };
 
 struct PexValue final

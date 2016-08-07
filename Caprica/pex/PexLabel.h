@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <common/IntrusiveLinkedList.h>
+
 namespace caprica { namespace pex {
 
 struct PexLabel final
@@ -11,6 +13,10 @@ struct PexLabel final
   explicit PexLabel() = default;
   PexLabel(const PexLabel&) = delete;
   ~PexLabel() = default;
+
+private:
+  friend IntrusiveLinkedList<PexLabel>;
+  PexLabel* next{ nullptr };
 };
 
 }}
