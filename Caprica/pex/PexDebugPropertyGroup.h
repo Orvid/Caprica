@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexReader.h>
@@ -17,7 +15,7 @@ struct PexDebugPropertyGroup final
   PexString groupName{ };
   PexString documentationString{ };
   PexUserFlags userFlags{ };
-  std::vector<PexString> properties{ };
+  IntrusiveLinkedList<IntrusivePexString> properties{ };
 
   explicit PexDebugPropertyGroup() = default;
   PexDebugPropertyGroup(const PexDebugPropertyGroup&) = delete;

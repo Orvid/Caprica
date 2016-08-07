@@ -39,7 +39,7 @@ struct PapyrusStruct final
 
     for (auto m : members) {
       m->buildPex(repCtx, file, obj, struc);
-      debInf->members.emplace_back(file->getString(m->name));
+      debInf->members.push_back(file->alloc->make<pex::IntrusivePexString>(file->getString(m->name)));
     }
     obj->structs.push_back(struc);
     

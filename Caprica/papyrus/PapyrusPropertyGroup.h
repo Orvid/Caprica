@@ -36,7 +36,7 @@ struct PapyrusPropertyGroup final
       pg->documentationString = file->getString(documentationComment);
       pg->userFlags = userFlags.buildPex(file);
       for (auto p : properties)
-        pg->properties.push_back(file->getString(p->name));
+        pg->properties.push_back(file->alloc->make<pex::IntrusivePexString>(file->getString(p->name)));
       file->debugInfo->propertyGroups.push_back(pg);
     }
 

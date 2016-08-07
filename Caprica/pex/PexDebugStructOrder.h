@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexReader.h>
@@ -14,7 +12,7 @@ struct PexDebugStructOrder final
 {
   PexString objectName{ };
   PexString structName{ };
-  std::vector<PexString> members{ };
+  IntrusiveLinkedList<IntrusivePexString> members{ };
 
   explicit PexDebugStructOrder() = default;
   PexDebugStructOrder(const PexDebugStructOrder&) = delete;

@@ -284,7 +284,7 @@ PexFile* PexAsmParser::parseFile() {
                         break;
                       case TokenType::kProperty:
                         consume();
-                        group->properties.push_back(expectConsumePexIdentEOL(file));
+                        group->properties.push_back(alloc->make<IntrusivePexString>(expectConsumePexIdentEOL(file)));
                         break;
                       default:
                         reportingContext.fatal(cur.location, "Unknown child of .propertyGroup '%s'!", cur.prettyString().c_str());
