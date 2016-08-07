@@ -9,6 +9,8 @@ CapricaStats::counter_type CapricaStats::peekedTokenCount{ 0 };
 CapricaStats::counter_type CapricaStats::consumedTokenCount{ 0 };
 CapricaStats::counter_type CapricaStats::lexedFilesCount{ 0 };
 CapricaStats::counter_type CapricaStats::inputFileCount{ 0 };
+CapricaStats::counter_type CapricaStats::allocatedHeapCount{ 0 };
+CapricaStats::counter_type CapricaStats::freedHeapCount{ 0 };
 
 template<typename CounterType, typename NopType>
 static std::enable_if_t<!std::is_same<CounterType, NopType>::value> internalOutputStats() {
@@ -22,6 +24,7 @@ static std::enable_if_t<!std::is_same<CounterType, NopType>::value> internalOutp
   };
   std::cout << "Lexed " << s::consumedTokenCount << " tokens of which " << s::peekedTokenCount << " were peeked. (" << perc(s::peekedTokenCount, s::consumedTokenCount) << "%)" << std::endl;
   std::cout << "Lexed " << s::lexedFilesCount << " files so " << (s::lexedFilesCount - s::inputFileCount) << " were lexed twice. Each file was lexed " << tim(s::lexedFilesCount, s::inputFileCount) << " times on average." << std::endl;
+  std::cout << "Allocated " << s::allocatedHeapCount << " heaps and freed " << s::freedHeapCount << " heaps." << std::endl;
 }
 
 template<typename CounterType, typename NopType>

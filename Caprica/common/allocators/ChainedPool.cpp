@@ -1,6 +1,7 @@
 #include <common/allocators/ChainedPool.h>
 
 #include <common/CapricaReportingContext.h>
+#include <common/CapricaStats.h>
 
 namespace caprica { namespace allocators {
 
@@ -13,6 +14,7 @@ ChainedPool::~ChainedPool() {
 }
 
 ChainedPool::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(heapSize) {
+  CapricaStats::allocatedHeapCount++;
   baseAlloc = malloc(heapSize);
   if (!baseAlloc)
     CapricaReportingContext::logicalFatal("Failed to allocate a Heap!");
@@ -20,6 +22,7 @@ ChainedPool::Heap::Heap(size_t heapSize) : allocedHeapSize(heapSize), freeBytes(
 
 ChainedPool::Heap::~Heap() {
   if (baseAlloc) {
+    CapricaStats::freedHeapCount++;
     free(baseAlloc);
     baseAlloc = nullptr;
   }

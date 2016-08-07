@@ -24,6 +24,8 @@ public:
   static counter_type consumedTokenCount;
   static counter_type inputFileCount;
   static counter_type lexedFilesCount;
+  static counter_type allocatedHeapCount;
+  static counter_type freedHeapCount;
 
   static void outputStats();
 };
