@@ -1,10 +1,11 @@
 #pragma once
 
 #include <stack>
-#include <vector>
 
+#include <common/allocators/ChainedPool.h>
 #include <common/CapricaReportingContext.h>
 #include <common/IntrusiveLinkedList.h>
+#include <common/IntrusiveStack.h>
 
 namespace caprica { namespace papyrus {
 
@@ -27,19 +28,19 @@ struct PapyrusControlFlowNode final
 {
   int id{ };
   PapyrusControlFlowNodeEdgeType edgeType{ PapyrusControlFlowNodeEdgeType::None };
-  //std::vector<const statements::PapyrusStatement*> statements{ };
-  std::vector<PapyrusControlFlowNode*> children{ };
+  IntrusiveLinkedList<PapyrusControlFlowNode> children{ };
   PapyrusControlFlowNode* nextSibling{ nullptr };
 
   PapyrusControlFlowNode(int i) : id(i) { }
-  ~PapyrusControlFlowNode() {
-    for (auto c : children)
-      delete c;
-    if (nextSibling)
-      delete nextSibling;
-  }
+  ~PapyrusControlFlowNode() = default;
 
   void dumpNode(int currentDepth);
+
+private:
+  friend IntrusiveLinkedList<PapyrusControlFlowNode>;
+  PapyrusControlFlowNode* next{ nullptr };
+  friend IntrusiveStack<PapyrusControlFlowNode>;
+  PapyrusControlFlowNode* nextInStack{ nullptr };
 };
 
 struct PapyrusCFG final
@@ -48,13 +49,10 @@ struct PapyrusCFG final
   PapyrusControlFlowNode* root{ nullptr };
 
   PapyrusCFG(CapricaReportingContext& repCtx) : reportingContext(repCtx) {
-    root = new PapyrusControlFlowNode(nextNodeID++);
+    root = alloc.make<PapyrusControlFlowNode>(nextNodeID++);
     nodeStack.push(root);
   }
-  ~PapyrusCFG() {
-    if (root)
-      delete root;
-  }
+  ~PapyrusCFG() = default;
 
   bool processStatements(const IntrusiveLinkedList<statements::PapyrusStatement>& stmts);
 
@@ -71,7 +69,7 @@ struct PapyrusCFG final
   }
 
   void appendStatement(const statements::PapyrusStatement* stmt) {
-    //nodeStack.top()->statements.push_back(stmt);
+    // We don't do anything here currently.
   }
 
   void terminateNode(PapyrusControlFlowNodeEdgeType tp) {
@@ -80,28 +78,28 @@ struct PapyrusCFG final
   }
 
   void addLeaf() {
-    auto n = new PapyrusControlFlowNode(nextNodeID++);
+    auto n = alloc.make<PapyrusControlFlowNode>(nextNodeID++);
     nodeStack.top()->children.push_back(n);
     nodeStack.push(n);
   }
 
   void createSibling() {
-    auto n = new PapyrusControlFlowNode(nextNodeID++);
+    auto n = alloc.make<PapyrusControlFlowNode>(nextNodeID++);
     nodeStack.top()->nextSibling = n;
     nodeStack.pop();
     nodeStack.push(n);
   }
 
   void pushBreakTerminal() {
-    breakTargetStack.push(false);
+    breakTargetStack.push(alloc.make<BreakTarget>());
   }
 
   void markBreakTerminal() {
-    breakTargetStack.top() = true;
+    breakTargetStack.top()->isBreakTarget = true;
   }
 
   bool popBreakTerminal() {
-    bool b = breakTargetStack.top();
+    bool b = breakTargetStack.top()->isBreakTarget;
     breakTargetStack.pop();
     return b;
   }
@@ -111,9 +109,19 @@ struct PapyrusCFG final
   }
 
 private:
+  struct BreakTarget final
+  {
+    bool isBreakTarget{ false };
+
+  private:
+    friend IntrusiveStack<BreakTarget>;
+    BreakTarget* nextInStack{ nullptr };
+  };
+
+  allocators::ChainedPool alloc{ 4 * 1024 };
   int nextNodeID{ 0 };
-  std::stack<PapyrusControlFlowNode*> nodeStack{ };
-  std::stack<bool> breakTargetStack{ };
+  IntrusiveStack<PapyrusControlFlowNode> nodeStack{ };
+  IntrusiveStack<BreakTarget> breakTargetStack{ };
 };
 
 }}

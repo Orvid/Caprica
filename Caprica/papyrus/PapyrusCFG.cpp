@@ -36,49 +36,6 @@
 
 namespace caprica { namespace papyrus {
 
-static void writeStatementType(const statements::PapyrusStatement* stmt) {
-  struct NameDumpingStatementVisitor final : statements::PapyrusStatementVisitor
-  {
-    virtual void visit(statements::PapyrusAssignStatement* s) override {
-      std::cout << "Assign";
-    }
-    virtual void visit(statements::PapyrusBreakStatement* s) override {
-      std::cout << "Break";
-    }
-    virtual void visit(statements::PapyrusContinueStatement* s) override {
-      std::cout << "Continue";
-    }
-    virtual void visit(statements::PapyrusDeclareStatement* s) override {
-      std::cout << "Declare";
-    }
-    virtual void visit(statements::PapyrusDoWhileStatement* s) override {
-      std::cout << "DoWhile";
-    }
-    virtual void visit(statements::PapyrusExpressionStatement* s) override {
-      std::cout << "Expression";
-    }
-    virtual void visit(statements::PapyrusForStatement* s) override {
-      std::cout << "For";
-    }
-    virtual void visit(statements::PapyrusForEachStatement* s) override {
-      std::cout << "ForEach";
-    }
-    virtual void visit(statements::PapyrusIfStatement* s) override {
-      std::cout << "If";
-    }
-    virtual void visit(statements::PapyrusReturnStatement* s) override {
-      std::cout << "Return";
-    }
-    virtual void visit(statements::PapyrusSwitchStatement* s) override {
-      std::cout << "Switch";
-    }
-    virtual void visit(statements::PapyrusWhileStatement* s) override {
-      std::cout << "While";
-    }
-  } visitor;
-  ((statements::PapyrusStatement*)stmt)->visit(visitor);
-}
-
 void PapyrusControlFlowNode::dumpNode(int currentDepth) {
   const auto writeIndent = [](int depth) {
     for (int i = 0; i < depth; i++)
@@ -87,12 +44,6 @@ void PapyrusControlFlowNode::dumpNode(int currentDepth) {
 
   writeIndent(currentDepth);
   std::cout << "Node " << id << " " << std::endl;
-  
-  /*for (auto s : statements) {
-    writeIndent(currentDepth + 1);
-    writeStatementType(s);
-    std::cout << std::endl;
-  }*/
 
   if (edgeType != PapyrusControlFlowNodeEdgeType::None) {
     writeIndent(currentDepth + 1);
