@@ -57,17 +57,23 @@ size_t ReffyStringPool::push_back_with_hash(boost::string_ref str, size_t hash, 
 }
 
 size_t ReffyStringPool::hash(boost::string_ref str) {
-  constexpr size_t offsetBasis = 0xcbf29ce484222325ULL;
-  constexpr size_t prime = 0x100000001B3ULL;
   const char* cStr = str.data();
-  const char* eStr = cStr + str.size();
-
-  size_t val = offsetBasis;
-  for (; cStr < eStr; cStr++) {
-    val ^= (size_t)*cStr;
-    val *= prime;
+  size_t lenLeft = str.length();
+  size_t iterCount = lenLeft >> 2;
+  uint32_t val = 0x84222325U;
+  size_t i = iterCount;
+  while (i)
+    val = _mm_crc32_u32(val, ((uint32_t*)cStr)[--i]);
+  if (lenLeft & 2) {
+    val = _mm_crc32_u16(val, *(uint16_t*)(cStr + (iterCount * 4)));
+    // This is duplicated like this because it ends up cost-free when compared to
+    // any other methods.
+    if (lenLeft & 1)
+      val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4) + 2));
+  } else if (lenLeft & 1) {
+    val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4)));
   }
-  return val;
+  return ((size_t)val << 32) | val;
 }
 
 }}
