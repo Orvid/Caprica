@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdlib>
+
 namespace caprica {
 
 // This intentionally uses a different member name
@@ -12,11 +14,14 @@ struct IntrusiveStack final
   void push(T* node) {
     node->nextInStack = root;
     root = node;
+    count++;
   }
 
-  void pop() {
-    T* tmp;
-    tryPop(tmp);
+  T* pop() {
+    T* ret = root;
+    root = root->nextInStack;
+    count--;
+    return ret;
   }
 
   T* top() { return root; }
@@ -26,14 +31,16 @@ struct IntrusiveStack final
     if (!root)
       return false;
 
+    count--;
     ret = root;
     root = root->nextInStack;
     return true;
   }
 
-
+  size_t size() const { return count; }
 
 private:
+  size_t count{ 0 };
   T* root{ nullptr };
 };
 

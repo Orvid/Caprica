@@ -2,6 +2,7 @@
 
 #include <common/allocators/ChainedPool.h>
 #include <common/IntrusiveLinkedList.h>
+#include <common/IntrusiveStack.h>
 
 #include <pex/PexAsmWriter.h>
 #include <pex/PexString.h>
@@ -28,6 +29,8 @@ struct PexLocalVariable final
 private:
   friend IntrusiveLinkedList<PexLocalVariable>;
   PexLocalVariable* next{ nullptr };
+  friend IntrusiveStack<PexLocalVariable>;
+  PexLocalVariable* nextInStack{ nullptr };
 };
 
 }}

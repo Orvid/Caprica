@@ -61,7 +61,7 @@ void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
   detail::TempVarDescriptor* desc;
   if (tempVarMap->tryFind(varName, desc)) {
     if (!desc->isLongLivedTempVar && desc->localVar)
-      tempVarMap->findOrCreate(desc->localVar->type)->freeVars.push_back(desc->localVar);
+      tempVarMap->findOrCreate(desc->localVar->type)->freeVars.push(desc->localVar);
   }
 }
 
@@ -69,9 +69,7 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
   detail::TempVarDescriptor* desc;
   if (tempVarMap->tryFind(typeName, desc)) {
     if (desc->freeVars.size()) {
-      PexLocalVariable* r = desc->freeVars.back();
-      desc->freeVars.pop_back();
-      return r;
+      return desc->freeVars.pop();
     }
   }
 

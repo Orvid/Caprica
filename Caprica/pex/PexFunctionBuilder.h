@@ -9,6 +9,8 @@
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/IntrusiveLinkedList.h>
+#include <common/IntrusiveStack.h>
 
 #include <papyrus/PapyrusType.h>
 
@@ -131,7 +133,7 @@ namespace detail {
 struct TempVarDescriptor final
 {
   // This is only used when the key is a type name
-  std::vector<PexLocalVariable*> freeVars{ };
+  IntrusiveStack<PexLocalVariable> freeVars{ };
 
   // These are only used when the key is a variable name.
   PexLocalVariable* localVar{ nullptr };
