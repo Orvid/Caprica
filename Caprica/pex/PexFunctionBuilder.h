@@ -12,6 +12,7 @@
 
 #include <papyrus/PapyrusType.h>
 
+#include <pex/FixedPexStringMap.h>
 #include <pex/PexDebugFunctionInfo.h>
 #include <pex/PexFunction.h>
 #include <pex/PexInstruction.h>
@@ -126,6 +127,18 @@ struct callstatic final
   
 }
 
+namespace detail {
+struct TempVarDescriptor final
+{
+  // This is only used when the key is a type name
+  std::vector<PexLocalVariable*> freeVars{ };
+
+  // These are only used when the key is a variable name.
+  PexLocalVariable* localVar{ nullptr };
+  bool isLongLivedTempVar{ false };
+};
+}
+
 struct PexFunctionBuilder final
 {
   PexFunctionBuilder& operator <<(op::nop&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::Nop)); }
@@ -180,12 +193,13 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
 
   PexLocalVariable* allocLongLivedTemp(const papyrus::PapyrusType& tp) {
     auto v = internalAllocateTempVar(tp.buildPex(file));
-    longLivedTempVars.insert(v->name);
+    tempVarMap->findOrCreate(v->name)->isLongLivedTempVar = true;
     return v;
   }
 
   void freeLongLivedTemp(PexLocalVariable* loc) {
-    longLivedTempVars.erase(loc->name);
+    assert(tempVarMap->findOrCreate(loc->name)->isLongLivedTempVar);
+    tempVarMap->findOrCreate(loc->name)->isLongLivedTempVar = false;
     return freeValueIfTemp(PexValue::Identifier(loc));
   }
 
@@ -242,8 +256,7 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
   void freeValueIfTemp(const PexValue& v);
   void populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo);
 
-  explicit PexFunctionBuilder(CapricaReportingContext& repCtx, CapricaFileLocation loc, PexFile* fl) 
-    : reportingContext(repCtx), currentLocation(loc), file(fl), alloc(fl->alloc) { }
+  explicit PexFunctionBuilder(CapricaReportingContext& repCtx, CapricaFileLocation loc, PexFile* fl);
   PexFunctionBuilder(const PexFunctionBuilder&) = delete;
   ~PexFunctionBuilder() = default;
 
@@ -259,9 +272,7 @@ private:
   IntrusiveLinkedList<PexLocalVariable> locals{ };
   IntrusiveLinkedList<PexLabel> labels{ };
   IntrusiveLinkedList<PexTemporaryVariableRef> tempVarRefs{ };
-  std::unordered_map<PexString, PexLocalVariable*> tempVarNameTypeMap{ };
-  std::unordered_set<PexString> longLivedTempVars{ };
-  std::unordered_map<PexString, std::vector<PexLocalVariable*>> freeTempVars{ };
+  FixedPexStringMap<detail::TempVarDescriptor>* tempVarMap;
   size_t currentTempI = 0;
   std::vector<PexLabel*> curBreakStack{ };
   std::vector<PexLabel*> curContinueStack{ };

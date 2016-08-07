@@ -1,8 +1,15 @@
 #include <pex/PexFunctionBuilder.h>
 
 #include <common/CapricaReportingContext.h>
+#include <common/allocators/CachePool.h>
 
 namespace caprica { namespace pex {
+
+static thread_local allocators::CachePool<FixedPexStringMap<detail::TempVarDescriptor>> stringMapCache{ };
+PexFunctionBuilder::PexFunctionBuilder(CapricaReportingContext& repCtx, CapricaFileLocation loc, PexFile* fl)
+  : reportingContext(repCtx), currentLocation(loc), file(fl), alloc(fl->alloc) {
+  tempVarMap = stringMapCache.acquire();
+}
 
 void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInfo* debInfo) {
   for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
@@ -37,6 +44,9 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
       reportingContext.fatal(l, "The file has too many lines for the debug info to be able to map correctly!");
     debInfo->instructionLineMap.emplace_back((uint16_t)line);
   }
+
+  stringMapCache.release(tempVarMap);
+  tempVarMap = nullptr;
 }
 
 void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
@@ -48,26 +58,27 @@ void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
   else
     return;
 
-  auto f = tempVarNameTypeMap.find(varName);
-  if (f != tempVarNameTypeMap.end() && !longLivedTempVars.count(varName)) {
-    if (!freeTempVars.count(f->second->type))
-      freeTempVars.emplace(f->second->type, std::vector<PexLocalVariable*>{ });
-    freeTempVars[f->second->type].emplace_back(f->second);
+  detail::TempVarDescriptor* desc;
+  if (tempVarMap->tryFind(varName, desc)) {
+    if (!desc->isLongLivedTempVar && desc->localVar)
+      tempVarMap->findOrCreate(desc->localVar->type)->freeVars.push_back(desc->localVar);
   }
 }
 
 PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& typeName) {
-  auto f = freeTempVars.find(typeName);
-  if (f != freeTempVars.end() && f->second.size()) {
-    PexLocalVariable* b = f->second.back();
-    f->second.pop_back();
-    return b;
+  detail::TempVarDescriptor* desc;
+  if (tempVarMap->tryFind(typeName, desc)) {
+    if (desc->freeVars.size()) {
+      PexLocalVariable* r = desc->freeVars.back();
+      desc->freeVars.pop_back();
+      return r;
+    }
   }
 
   auto loc = alloc->make<PexLocalVariable>();
   loc->name = file->getString("::temp" + std::to_string(currentTempI++));
   loc->type = typeName;
-  tempVarNameTypeMap.emplace(loc->name, loc);
+  tempVarMap->findOrCreate(loc->name)->localVar = loc;
   locals.push_back(loc);
   return loc;
 }
