@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <common/allocators/FileOffsetPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/UtilMacros.h>
 
@@ -30,7 +31,7 @@ struct CapricaReportingContext final
   }
   ~CapricaReportingContext() = default;
 
-  size_t getLocationLine(CapricaFileLocation location, size_t lastLineHint = 0) const;
+  size_t getLocationLine(CapricaFileLocation location, size_t lastLineHint = 0);
   void pushNextLineOffset(CapricaFileLocation location) { lineOffsets.push_back(location.fileOffset); }
   
   NEVER_INLINE
@@ -95,7 +96,7 @@ NEVER_INLINE void warning_W##num##_##id##(CapricaFileLocation location, arg1Type
 #undef DEFINE_WARNING_A3
 
 private:
-  std::vector<size_t> lineOffsets{ };
+  allocators::FileOffsetPool lineOffsets{ };
 
   NEVER_INLINE
   static void pushToErrorStream(std::string&& msg, bool isError = false);
@@ -104,7 +105,7 @@ private:
   NEVER_INLINE
   bool isWarningEnabled(CapricaFileLocation location, size_t warningNumber) const;
   NEVER_INLINE
-  std::string formatLocation(CapricaFileLocation loc) const;
+  std::string formatLocation(CapricaFileLocation loc);
   NEVER_INLINE
   static void maybePushMessage(CapricaReportingContext* ctx, CapricaFileLocation* loc, const char* msgType, size_t warnNum, const std::string& msg, bool forceAsError = false);
 

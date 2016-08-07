@@ -48,15 +48,15 @@ bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation location, siz
   return !conf::Warnings::disableAllWarnings;
 }
 
-size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) const {
+size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) {
   if (!lineOffsets.size())
     CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
   if (lastLineHint != 0) {
-    if (location.fileOffset >= lineOffsets[lastLineHint - 1]) {
+    if (location.fileOffset >= lineOffsets.at(lastLineHint - 1)) {
       return lastLineHint + 1;
     }
     if (lastLineHint + 1 < lineOffsets.size()) {
-      if (location.fileOffset >= lineOffsets[lastLineHint - 1]) {
+      if (location.fileOffset >= lineOffsets.at(lastLineHint - 1)) {
         return lastLineHint + 1;
       }
     }
@@ -67,11 +67,11 @@ size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, si
   return std::distance(lineOffsets.begin(), a);
 }
 
-std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) const {
+std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) {
   std::string ret = filename + " (";
   auto line = getLocationLine(loc);
   ret += std::to_string(line) + ", ";
-  ret += std::to_string(loc.fileOffset - lineOffsets[line - 1] + 1) + ")";
+  ret += std::to_string(loc.fileOffset - lineOffsets.at(line - 1) + 1) + ")";
   return ret;
 }
 
