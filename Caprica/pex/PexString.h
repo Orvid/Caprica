@@ -2,9 +2,11 @@
 
 #include <cstdint>
 
+#include <common/IntrusiveLinkedList.h>
+
 namespace caprica { namespace pex {
 
-struct PexString final
+struct PexString
 {
   size_t index{ (size_t)-1 };
 
@@ -32,15 +34,14 @@ struct PexString final
   }
 };
 
-}}
-
-#include <xstddef>
-namespace std {
-template <>
-struct hash<caprica::pex::PexString>
+struct IntrusivePexString final : public PexString
 {
-  std::size_t operator()(const caprica::pex::PexString& k) const {
-    return std::hash<size_t>()(k.index);
-  }
+  IntrusivePexString(const PexString& str) : PexString(str) { }
+  IntrusivePexString(PexString&& str) : PexString(str) { }
+
+private:
+  friend IntrusiveLinkedList<IntrusivePexString>;
+  IntrusivePexString* next{ nullptr };
 };
-}
+
+}}
