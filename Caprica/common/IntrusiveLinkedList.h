@@ -22,6 +22,25 @@ struct IntrusiveLinkedList final
     }
   }
 
+  void push_front(T* val) {
+    mSize++;
+    if (mFront == nullptr) {
+      mFront = mBack = val;
+    } else {
+      val->next = mFront;
+      mFront = val;
+    }
+  }
+
+  T* pop_front() {
+    mSize--;
+    auto ret = mFront;
+    mFront = ret->next;
+    if (mFront == nullptr)
+      mBack = nullptr;
+    return ret;
+  }
+
   size_t size() const { return mSize; }
 
 private:
