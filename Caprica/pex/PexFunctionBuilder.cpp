@@ -75,8 +75,22 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
     }
   }
 
+  constexpr size_t PrefixLength = 6;
+  char buf[PrefixLength + 5 + 1] = {
+    ':', ':', 't', 'e', 'm', 'p', // strlen() == PrefixLength
+    '\0', '\0', '\0', '\0', '\0', // strlen(UINT16_MAX)
+    '\0' // NUL
+  };
+  if (currentTempI > std::numeric_limits<uint16_t>::max())
+    CapricaReportingContext::logicalFatal("Exceeded the maximum number of temp vars possible in a function!");
+  if (currentTempI > std::numeric_limits<int>::max())
+    CapricaReportingContext::logicalFatal("Exceeded the maximum number of temp vars possible in a function!");
+  if (_itoa_s((int)currentTempI, buf + PrefixLength, sizeof(buf) - PrefixLength, 10) != 0)
+    CapricaReportingContext::logicalFatal("Failed to convert the current temp var index to a string!");
+  currentTempI++;
+
   auto loc = alloc->make<PexLocalVariable>();
-  loc->name = file->getString("::temp" + std::to_string(currentTempI++));
+  loc->name = file->getString(buf);
   loc->type = typeName;
   tempVarMap->findOrCreate(loc->name)->localVar = loc;
   locals.push_back(loc);
