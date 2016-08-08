@@ -59,7 +59,7 @@ struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
   CapricaFileLocation location;
-  std::shared_ptr<PapyrusType> arrayFuncElementType{ nullptr };
+  PapyrusType* arrayFuncElementType{ nullptr };
   union
   {
     const PapyrusProperty* prop{ nullptr };
@@ -96,7 +96,7 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s);
   static PapyrusIdentifier StructMember(CapricaFileLocation loc, const PapyrusStructMember* m);
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
-  static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType);
+  static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
   void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;

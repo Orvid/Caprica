@@ -270,7 +270,7 @@ static bool tryResolveStruct(const PapyrusObject* object, boost::string_ref stru
 PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   if (tp.type != PapyrusType::Kind::Unresolved) {
     if (tp.type == PapyrusType::Kind::Array && tp.getElementType().type == PapyrusType::Kind::Unresolved)
-      return PapyrusType::Array(tp.location, std::make_shared<PapyrusType>(resolveType(tp.getElementType(), lazy)));
+      return PapyrusType::Array(tp.location, allocator->make<PapyrusType>(resolveType(tp.getElementType(), lazy)));
     return tp;
   }
 
@@ -476,7 +476,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.name.to_string().c_str());
     }
-    return PapyrusIdentifier::ArrayFunction(baseType.location, fk, baseType.getElementType());
+    return PapyrusIdentifier::ArrayFunction(baseType.location, fk, allocator->make<PapyrusType>(baseType.getElementType()));
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     if (auto state = baseType.resolvedObject->awaitSemantic()->getRootState()) {
       for (auto& func : state->functions) {

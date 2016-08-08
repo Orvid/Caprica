@@ -32,7 +32,7 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     type = ctx->resolveType(type);
-    type = PapyrusType::Array(type.location, std::make_shared<PapyrusType>(type));
+    type = PapyrusType::Array(type.location, ctx->allocator->make<PapyrusType>(type));
     lengthExpression->semantic(ctx);
     ctx->checkForPoison(lengthExpression);
 

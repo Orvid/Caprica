@@ -77,7 +77,7 @@ struct PapyrusType final
     return pt;
   }
 
-  static PapyrusType Array(CapricaFileLocation loc, std::shared_ptr<PapyrusType> tp) {
+  static PapyrusType Array(CapricaFileLocation loc, PapyrusType* tp) {
     auto pt = PapyrusType(Kind::Array, loc);
     pt.arrayElementType = tp;
     return pt;
@@ -129,7 +129,7 @@ private:
 
   boost::string_ref name{ };
   PoisonKind poisonState{ PoisonKind::None };
-  std::shared_ptr<PapyrusType> arrayElementType{ nullptr };
+  PapyrusType* arrayElementType{ nullptr };
 
   PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 

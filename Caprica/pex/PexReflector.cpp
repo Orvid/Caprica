@@ -12,7 +12,7 @@ using namespace caprica::papyrus;
 
 static PapyrusType reflectType(CapricaFileLocation loc, allocators::ChainedPool* alloc, boost::string_ref name) {
   if (name.size() > 2 && name[name.size() - 2] == '[' && name[name.size() - 1] == ']')
-    return PapyrusType::Array(loc, std::make_shared<PapyrusType>(reflectType(loc, alloc, name.substr(0, name.size() - 2))));
+    return PapyrusType::Array(loc, alloc->make<PapyrusType>(reflectType(loc, alloc, name.substr(0, name.size() - 2))));
 
   if (idEq(name, "bool"))
     return PapyrusType::Bool(loc);

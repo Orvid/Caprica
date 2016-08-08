@@ -41,10 +41,10 @@ PapyrusIdentifier PapyrusIdentifier::Function(CapricaFileLocation loc, const Pap
   id.func = f;
   return id;
 }
-PapyrusIdentifier PapyrusIdentifier::ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, const PapyrusType& elemType) {
+PapyrusIdentifier PapyrusIdentifier::ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::BuiltinArrayFunction, loc);
   id.arrayFuncKind = fk;
-  id.arrayFuncElementType = std::make_shared<PapyrusType>(elemType);
+  id.arrayFuncElementType = elemType;
   return id;
 }
 
