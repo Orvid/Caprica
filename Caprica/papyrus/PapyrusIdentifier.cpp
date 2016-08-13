@@ -13,38 +13,38 @@ namespace caprica { namespace papyrus {
 
 PapyrusIdentifier PapyrusIdentifier::Property(CapricaFileLocation loc, const PapyrusProperty* p) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Property, loc);
-  id.prop = p;
+  id.res.prop = p;
   return id;
 }
 PapyrusIdentifier PapyrusIdentifier::Variable(CapricaFileLocation loc, const PapyrusVariable* v) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Variable, loc);
-  id.var = v;
+  id.res.var = v;
   return id;
 }
 PapyrusIdentifier PapyrusIdentifier::FunctionParameter(CapricaFileLocation loc, const PapyrusFunctionParameter* p) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Parameter, loc);
-  id.param = p;
+  id.res.param = p;
   return id;
 }
 PapyrusIdentifier PapyrusIdentifier::DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::DeclareStatement, loc);
-  id.declStatement = s;
+  id.res.declStatement = s;
   return id;
 }
 PapyrusIdentifier PapyrusIdentifier::StructMember(CapricaFileLocation loc, const PapyrusStructMember* m) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::StructMember, loc);
-  id.structMember = m;
+  id.res.structMember = m;
   return id;
 }
 PapyrusIdentifier PapyrusIdentifier::Function(CapricaFileLocation loc, const PapyrusFunction* f) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Function, loc);
-  id.func = f;
+  id.res.func = f;
   return id;
 }
 PapyrusIdentifier PapyrusIdentifier::ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::BuiltinArrayFunction, loc);
   id.arrayFuncKind = fk;
-  id.arrayFuncElementType = elemType;
+  id.res.arrayFuncElementType = elemType;
   return id;
 }
 
@@ -52,24 +52,24 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isAutoReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (conf::CodeGeneration::enableCKOptimizations && res.prop->isAuto() && !res.prop->isAutoReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
-        return pex::PexValue::Identifier(file->getString(prop->getAutoVarName()));
+        return pex::PexValue::Identifier(file->getString(res.prop->getAutoVarName()));
       } else {
         auto ret = bldr.allocTemp(resultType());
-        bldr << op::propget{ file->getString(prop->name), base, ret };
+        bldr << op::propget{ file->getString(res.prop->name), base, ret };
         return ret;
       }
     case PapyrusIdentifierType::Variable:
-      return pex::PexValue::Identifier(file->getString(var->name));
+      return pex::PexValue::Identifier(file->getString(res.var->name));
     case PapyrusIdentifierType::Parameter:
-      return pex::PexValue::Identifier(file->getString(param->name));
+      return pex::PexValue::Identifier(file->getString(res.param->name));
     case PapyrusIdentifierType::DeclareStatement:
-      return pex::PexValue::Identifier(file->getString(declStatement->name));
+      return pex::PexValue::Identifier(file->getString(res.declStatement->name));
     case PapyrusIdentifierType::StructMember:
     {
       auto ret = bldr.allocTemp(resultType());
-      bldr << op::structget{ ret, base, file->getString(structMember->name) };
+      bldr << op::structget{ ret, base, file->getString(res.structMember->name) };
       return ret;
     }
     case PapyrusIdentifierType::BuiltinStateField:
@@ -88,26 +88,26 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
   namespace op = caprica::pex::op;
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isAutoReadOnly())
+      if (res.prop->isAutoReadOnly())
         bldr.reportingContext.fatal(location, "Attempted to generate a store to a read-only property!");
-      if (conf::CodeGeneration::enableCKOptimizations && prop->isAuto() && !prop->isAutoReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
+      if (conf::CodeGeneration::enableCKOptimizations && res.prop->isAuto() && !res.prop->isAutoReadOnly() && !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)
-        bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->getAutoVarName())), val };
+        bldr << op::assign{ pex::PexValue::Identifier(file->getString(res.prop->getAutoVarName())), val };
       } else {
-        bldr << op::propset{ file->getString(prop->name), base, val };
+        bldr << op::propset{ file->getString(res.prop->name), base, val };
       }
       return;
     case PapyrusIdentifierType::Variable:
-      bldr << op::assign{ pex::PexValue::Identifier(file->getString(var->name)), val };
+      bldr << op::assign{ pex::PexValue::Identifier(file->getString(res.var->name)), val };
       return;
     case PapyrusIdentifierType::Parameter:
-      bldr << op::assign{ pex::PexValue::Identifier(file->getString(prop->name)), val };
+      bldr << op::assign{ pex::PexValue::Identifier(file->getString(res.prop->name)), val };
       return;
     case PapyrusIdentifierType::DeclareStatement:
-      bldr << op::assign{ pex::PexValue::Identifier(file->getString(declStatement->name)), val };
+      bldr << op::assign{ pex::PexValue::Identifier(file->getString(res.declStatement->name)), val };
       return;
     case PapyrusIdentifierType::StructMember:
-      bldr << op::structset{ base, file->getString(structMember->name), val };
+      bldr << op::structset{ base, file->getString(res.structMember->name), val };
       return;
     case PapyrusIdentifierType::BuiltinStateField:
       bldr << op::assign{ pex::PexValue::Identifier(file->getString("::State")), val };
@@ -125,27 +125,27 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
 void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const {
   switch (type) {
     case PapyrusIdentifierType::Property:
-      if (prop->isAutoReadOnly())
-        return repCtx.error(location, "You cannot assign to the read-only property '%s'.", prop->name.to_string().c_str());
-      if (prop->isConst())
-        return repCtx.error(location, "You cannot assign to the const property '%s'.", prop->name.to_string().c_str());
-      if (prop->parent->isConst())
-        return repCtx.error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", prop->name.to_string().c_str(), prop->parent->name.to_string().c_str());
+      if (res.prop->isAutoReadOnly())
+        return repCtx.error(location, "You cannot assign to the read-only property '%s'.", res.prop->name.to_string().c_str());
+      if (res.prop->isConst())
+        return repCtx.error(location, "You cannot assign to the const property '%s'.", res.prop->name.to_string().c_str());
+      if (res.prop->parent->isConst())
+        return repCtx.error(location, "You cannot assign to the '%s' property because the parent script '%s' is marked as const.", res.prop->name.to_string().c_str(), res.prop->parent->name.to_string().c_str());
       return;
     case PapyrusIdentifierType::Variable:
-      if (var->isConst())
-        return repCtx.error(location, "You cannot assign to the const variable '%s'.", var->name.to_string().c_str());
-      if (var->parent->isConst())
-        return repCtx.error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", var->name.to_string().c_str(), var->parent->name.to_string().c_str());
+      if (res.var->isConst())
+        return repCtx.error(location, "You cannot assign to the const variable '%s'.", res.var->name.to_string().c_str());
+      if (res.var->parent->isConst())
+        return repCtx.error(location, "You cannot assign to the variable '%s' because the parent script '%s' is marked as const.", res.var->name.to_string().c_str(), res.var->parent->name.to_string().c_str());
       return;
     case PapyrusIdentifierType::StructMember:
-      if (structMember->isConst())
-        return repCtx.error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", structMember->name.to_string().c_str(), structMember->parent->name.to_string().c_str());
+      if (res.structMember->isConst())
+        return repCtx.error(location, "You cannot assign to the '%s' member of a '%s' struct because it is marked as const.", res.structMember->name.to_string().c_str(), res.structMember->parent->name.to_string().c_str());
       return;
 
     case PapyrusIdentifierType::DeclareStatement:
-      if (declStatement->isConst)
-        return repCtx.error(location, "You cannot assign to the const local variable '%s'.", declStatement->name.to_string().c_str());
+      if (res.declStatement->isConst)
+        return repCtx.error(location, "You cannot assign to the const local variable '%s'.", res.declStatement->name.to_string().c_str());
       return;
 
     case PapyrusIdentifierType::Parameter:
@@ -167,7 +167,7 @@ void PapyrusIdentifier::ensureAssignable(CapricaReportingContext& repCtx) const 
 void PapyrusIdentifier::markRead() {
   switch (type) {
     case PapyrusIdentifierType::Variable:
-      const_cast<PapyrusVariable*>(var)->referenceState.isRead = true;
+      const_cast<PapyrusVariable*>(res.var)->referenceState.isRead = true;
       return;
 
     case PapyrusIdentifierType::Property:
@@ -191,7 +191,7 @@ void PapyrusIdentifier::markRead() {
 void PapyrusIdentifier::markWritten() {
   switch (type) {
     case PapyrusIdentifierType::Variable:
-      const_cast<PapyrusVariable*>(var)->referenceState.isWritten = true;
+      const_cast<PapyrusVariable*>(res.var)->referenceState.isWritten = true;
       return;
 
     case PapyrusIdentifierType::Property:
@@ -216,15 +216,15 @@ void PapyrusIdentifier::markWritten() {
 PapyrusType PapyrusIdentifier::resultType() const {
   switch (type) {
     case PapyrusIdentifierType::Property:
-      return prop->type;
+      return res.prop->type;
     case PapyrusIdentifierType::Variable:
-      return var->type;
+      return res.var->type;
     case PapyrusIdentifierType::Parameter:
-      return param->type;
+      return res.param->type;
     case PapyrusIdentifierType::DeclareStatement:
-      return declStatement->type;
+      return res.declStatement->type;
     case PapyrusIdentifierType::StructMember:
-      return structMember->type;
+      return res.structMember->type;
     case PapyrusIdentifierType::BuiltinStateField:
       return PapyrusType::String(location);
 

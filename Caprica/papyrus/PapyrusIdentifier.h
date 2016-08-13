@@ -60,7 +60,7 @@ struct PapyrusIdentifier final
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
   PapyrusBuiltinArrayFunctionKind arrayFuncKind{ PapyrusBuiltinArrayFunctionKind::Unknown };
   CapricaFileLocation location;
-  union
+  union ResolvedTargets
   {
     const PapyrusProperty* prop{ nullptr };
     const PapyrusVariable* var;
@@ -69,7 +69,7 @@ struct PapyrusIdentifier final
     const PapyrusStructMember* structMember;
     const PapyrusFunction* func;
     PapyrusType* arrayFuncElementType;
-  };
+  } res;
 
   PapyrusIdentifier() = delete;
   PapyrusIdentifier(const PapyrusIdentifier&) = default;

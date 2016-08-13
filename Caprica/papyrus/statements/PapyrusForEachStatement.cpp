@@ -25,7 +25,7 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
   if (expressionToIterate->resultType().type == PapyrusType::Kind::Array)
     bldr << op::arraylength{ cTemp, iterVal };
   else
-    bldr << op::callmethod{ file->getString(getCountIdentifier->func->name), iterVal, cTemp, { } };
+    bldr << op::callmethod{ file->getString(getCountIdentifier->res.func->name), iterVal, cTemp, { } };
   auto bTemp = bldr.allocTemp(PapyrusType::Bool(location));
   bldr << op::cmplt{ bTemp, counter, cTemp };
   bldr << op::jmpf{ bTemp, afterAll };
@@ -37,7 +37,7 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
   else {
     IntrusiveLinkedList<pex::PexValue> args;
     args.push_back(file->alloc->make<pex::PexValue>(counter));
-    bldr << op::callmethod{ file->getString(getAtIdentifier->func->name), iterVal, loc, std::move(args) };
+    bldr << op::callmethod{ file->getString(getAtIdentifier->res.func->name), iterVal, loc, std::move(args) };
   }
 
   for (auto s : body)
@@ -67,8 +67,8 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
         ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetCount or GetSize.", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
-      if (gCountId.func->returnType.type != PapyrusType::Kind::Int) {
-        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' because GetCount has a return type of '%s', expected 'Int'!", tp.prettyString().c_str(), gCountId.func->returnType.prettyString().c_str());
+      if (gCountId.res.func->returnType.type != PapyrusType::Kind::Int) {
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' because GetCount has a return type of '%s', expected 'Int'!", tp.prettyString().c_str(), gCountId.res.func->returnType.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       this->getCountIdentifier = new PapyrusIdentifier(gCountId);
@@ -78,17 +78,17 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
         ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as it does not implement GetAt!", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
-      if (gAtId.func->parameters.size() != 1) {
+      if (gAtId.res.func->parameters.size() != 1) {
         ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function does not accept exactly one parameter!", tp.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
-      if (gAtId.func->parameters.front()->type != gCountId.func->returnType) {
-        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function has one parameter, but it is of type '%s', not 'Int'!", tp.prettyString().c_str(), gAtId.func->parameters.front()->type.prettyString().c_str());
+      if (gAtId.res.func->parameters.front()->type != gCountId.res.func->returnType) {
+        ctx->reportingContext.error(tp.location, "Unable to iterate over a value of type '%s' as its GetAt function has one parameter, but it is of type '%s', not 'Int'!", tp.prettyString().c_str(), gAtId.res.func->parameters.front()->type.prettyString().c_str());
         return PapyrusType::None(tp.location);
       }
       this->getAtIdentifier = new PapyrusIdentifier(gAtId);
 
-      return gAtId.func->returnType;
+      return gAtId.res.func->returnType;
     } else {
       ctx->reportingContext.error(tp.location, "Cannot iterate over a value of type '%s'!", tp.prettyString().c_str());
       return PapyrusType::None(tp.location);
