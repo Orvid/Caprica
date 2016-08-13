@@ -107,7 +107,7 @@ PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
     if (v->type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
     if (v->type == PexValueType::TemporaryVar && v->val.tmpVar->var)
-      *v = PexValue::Identifier(v->val.tmpVar->var);
+      *v = PexValue(PexValue::Identifier(v->val.tmpVar->var));
     freeValueIfTemp(*v);
   }
 

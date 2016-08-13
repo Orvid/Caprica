@@ -85,7 +85,7 @@ PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& 
       if (varVal.type != PexValueType::Integer)
         CapricaReportingContext::logicalFatal("The var arg count for call instructions should be an integer!");
       for (size_t i = 0; i < varVal.val.i; i++)
-        inst->variadicArgs.push_back(alloc->make<PexValue>(rdr.read<PexValue>()));
+        inst->variadicArgs.push_back(alloc->make<IntrusivePexValue>(rdr.read<PexValue>()));
       break;
     }
 

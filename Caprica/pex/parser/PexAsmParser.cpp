@@ -468,26 +468,26 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               auto valC = expectConsumeValue(file);
-              IntrusiveLinkedList<PexValue> params;
+              IntrusiveLinkedList<IntrusivePexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(alloc->make<PexValue>(expectConsumeValue(file)));
+                params.push_back(alloc->make<IntrusivePexValue>(expectConsumeValue(file)));
               }
               func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::CallMethod, PexInstructionArgs{ valA, valB, valC }, std::move(params)));
             } else if (idEq(id, "callparent")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
-              IntrusiveLinkedList<PexValue> params;
+              IntrusiveLinkedList<IntrusivePexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(alloc->make<PexValue>(expectConsumeValue(file)));
+                params.push_back(alloc->make<IntrusivePexValue>(expectConsumeValue(file)));
               }
               func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::CallParent, PexInstructionArgs{ valA, valB }, std::move(params)));
             } else if (idEq(id, "callstatic")) {
               auto valA = expectConsumeValue(file);
               auto valB = expectConsumeValue(file);
               auto valC = expectConsumeValue(file);
-              IntrusiveLinkedList<PexValue> params;
+              IntrusiveLinkedList<IntrusivePexValue> params;
               while (cur.type != TokenType::LineNumer && cur.type != TokenType::EOL && cur.type != TokenType::END) {
-                params.push_back(alloc->make<PexValue>(expectConsumeValue(file)));
+                params.push_back(alloc->make<IntrusivePexValue>(expectConsumeValue(file)));
               }
               func->instructions.push_back(alloc->make<PexInstruction>(PexOpCode::CallStatic, PexInstructionArgs{ valA, valB, valC }, std::move(params)));
             } else {

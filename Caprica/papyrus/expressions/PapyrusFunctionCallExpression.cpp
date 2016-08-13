@@ -114,9 +114,9 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     };
     auto dest = getDest(bldr, location, function.res.func->returnType);
 
-    IntrusiveLinkedList<pex::PexValue> args;
+    IntrusiveLinkedList<pex::IntrusivePexValue> args;
     for (auto param : arguments)
-      args.push_back(file->alloc->make<pex::PexValue>(param->value->generateLoad(file, bldr)));
+      args.push_back(file->alloc->make<pex::IntrusivePexValue>(param->value->generateLoad(file, bldr)));
     bldr << location;
     if (function.res.func->isGlobal()) {
       bldr << op::callstatic{ file->getString(function.res.func->parentObject->loweredName()), file->getString(function.res.func->name), dest, std::move(args) };

@@ -35,8 +35,8 @@ void PapyrusForEachStatement::buildPex(pex::PexFile* file, pex::PexFunctionBuild
   if (expressionToIterate->resultType().type == PapyrusType::Kind::Array)
     bldr << op::arraygetelement{ loc, iterVal, counter };
   else {
-    IntrusiveLinkedList<pex::PexValue> args;
-    args.push_back(file->alloc->make<pex::PexValue>(counter));
+    IntrusiveLinkedList<pex::IntrusivePexValue> args;
+    args.push_back(file->alloc->make<pex::IntrusivePexValue>(counter));
     bldr << op::callmethod{ file->getString(getAtIdentifier->res.func->name), iterVal, loc, std::move(args) };
   }
 

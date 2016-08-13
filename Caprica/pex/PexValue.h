@@ -40,7 +40,7 @@ private:
   PexTemporaryVariableRef* next{ nullptr };
 };
 
-struct PexValue final
+struct PexValue
 {
   PexValueType type{ PexValueType::None };
   union ValueData
@@ -143,10 +143,16 @@ struct PexValue final
   bool operator !=(const PexValue& other) const {
     return !(*this == other);
   }
+};
+
+struct IntrusivePexValue final : public PexValue
+{
+  IntrusivePexValue(const PexValue& str) : PexValue(str) { }
+  IntrusivePexValue(PexValue&& str) : PexValue(str) { }
 
 private:
-  friend IntrusiveLinkedList<PexValue>;
-  PexValue* next{ nullptr };
+  friend IntrusiveLinkedList<IntrusivePexValue>;
+  IntrusivePexValue* next{ nullptr };
 };
 
 }}

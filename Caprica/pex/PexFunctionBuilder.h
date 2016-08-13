@@ -109,22 +109,22 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
 struct callmethod final
 {
   PexValue a1, a2, a3;
-  IntrusiveLinkedList<PexValue> variadicArgs;
-  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, IntrusiveLinkedList<PexValue>&& varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(std::move(varArgs)) { }
+  IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
+  callmethod(PexString function, PexValue baseObj, PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(function), a2(baseObj), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
 
 struct callparent final
 {
   PexValue a1, a2;
-  IntrusiveLinkedList<PexValue> variadicArgs;
-  callparent(PexString function, PexValue::Identifier dest, IntrusiveLinkedList<PexValue>&& varArgs) : a1(function), a2(dest), variadicArgs(std::move(varArgs)) { }
+  IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
+  callparent(PexString function, PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(function), a2(dest), variadicArgs(std::move(varArgs)) { }
 };
 
 struct callstatic final
 {
   PexValue a1, a2, a3;
-  IntrusiveLinkedList<PexValue> variadicArgs;
-  callstatic(PexString type, PexString function, PexValue::Identifier dest, IntrusiveLinkedList<PexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
+  IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
+  callstatic(PexString type, PexString function, PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
   
 }
