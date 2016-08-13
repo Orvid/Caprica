@@ -39,44 +39,49 @@ struct PapyrusValue final
   // This is intended purely for initializing values that may not
   // be filled to defaults, and doesn't track a location.
   struct Default final { };
-  struct None final
-  {
-    CapricaFileLocation location;
-
-    explicit None(CapricaFileLocation loc) : location(loc) { }
-    None(const None&) = delete;
-    ~None() = default;
-  };
-  struct Integer final
-  {
-    int32_t i;
-    CapricaFileLocation location;
-
-    explicit Integer(CapricaFileLocation loc, int32_t val) : location(loc), i(val) { }
-    Integer(const Integer&) = delete;
-    ~Integer() = default;
-  };
-  struct Float final
-  {
-    float f;
-    CapricaFileLocation location;
-
-    explicit Float(CapricaFileLocation loc, float val) : location(loc), f(val) { }
-    Float(const Float&) = delete;
-    ~Float() = default;
-  };
 
   PapyrusValue() = delete;
   explicit PapyrusValue(CapricaFileLocation loc) : location(loc) { }
   PapyrusValue(const Default& other) : type(PapyrusValueType::Invalid), location(0) { }
-  PapyrusValue(const None& other) : type(PapyrusValueType::None), location(other.location) { }
-  PapyrusValue(const Integer& other) : type(PapyrusValueType::Integer), location(other.location), i(other.i) { }
-  PapyrusValue(const Float& other) : type(PapyrusValueType::Float), location(other.location), f(other.f) { }
   PapyrusValue(const PapyrusValue& other) = default;
   PapyrusValue(PapyrusValue&& other) = default;
   PapyrusValue& operator =(const PapyrusValue&) = default;
   PapyrusValue& operator =(PapyrusValue&&) = default;
   ~PapyrusValue() = default;
+
+  static PapyrusValue None(CapricaFileLocation loc) {
+    auto val = PapyrusValue(loc);
+    val.type = PapyrusValueType::None;
+    return val;
+  }
+
+  static PapyrusValue Bool(CapricaFileLocation loc, bool b) {
+    auto val = PapyrusValue(loc);
+    val.type = PapyrusValueType::Bool;
+    val.b = b;
+    return val;
+  }
+
+  static PapyrusValue String(CapricaFileLocation loc, boost::string_ref s) {
+    auto val = PapyrusValue(loc);
+    val.type = PapyrusValueType::String;
+    val.s = s;
+    return val;
+  }
+
+  static PapyrusValue Integer(CapricaFileLocation loc, int32_t i) {
+    auto val = PapyrusValue(loc);
+    val.type = PapyrusValueType::Integer;
+    val.i = i;
+    return val;
+  }
+
+  static PapyrusValue Float(CapricaFileLocation loc, float f) {
+    auto val = PapyrusValue(loc);
+    val.type = PapyrusValueType::Float;
+    val.f = f;
+    return val;
+  }
 
   pex::PexValue buildPex(pex::PexFile* file) const {
     pex::PexValue pe;
