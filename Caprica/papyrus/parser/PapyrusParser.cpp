@@ -785,11 +785,11 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
         op = expressions::PapyrusBinaryOperatorType::Add;
         goto OperatorCommon;
       case TokenType::Integer:
-        if (cur.iValue >= 0)
+        if (cur.val.i >= 0)
           goto Return;
         goto DumbNegativesCommon;
       case TokenType::Float:
-        if (cur.fValue >= 0)
+        if (cur.val.f >= 0)
           goto Return;
         goto DumbNegativesCommon;
       case TokenType::Minus:
@@ -1074,12 +1074,12 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
   switch (cur.type) {
     case TokenType::Float:
       val.type = PapyrusValueType::Float;
-      val.f = cur.fValue;
+      val.f = cur.val.f;
       consume();
       return val;
     case TokenType::Integer:
       val.type = PapyrusValueType::Integer;
-      val.i = cur.iValue;
+      val.i = cur.val.i;
       consume();
       return val;
     case TokenType::String:

@@ -343,7 +343,7 @@ StartOver:
         
         auto i = std::stoul(str, nullptr, 16);
         setTok(TokenType::Integer, baseLoc);
-        cur.iValue = (int32_t)i;
+        cur.val.i = (int32_t)i;
         return;
       }
 
@@ -370,7 +370,7 @@ StartOver:
 
         auto f = std::stof(str);
         setTok(TokenType::Float, baseLoc);
-        cur.fValue = f;
+        cur.val.f = f;
         return;
       }
 
@@ -379,14 +379,14 @@ StartOver:
         try {
           auto i = std::stoul(str);
           setTok(TokenType::Integer, baseLoc);
-          cur.iValue = (int32_t)i;
+          cur.val.i = (int32_t)i;
           return;
         } catch (std::out_of_range oor) { }
       }
       // It's very definitely a float, and a very large one at that.
       auto f = std::stof(str);
       setTok(TokenType::Float, baseLoc);
-      cur.fValue = f;
+      cur.val.f = f;
       return;
     }
 

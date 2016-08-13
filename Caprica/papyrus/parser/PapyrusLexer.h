@@ -132,9 +132,12 @@ struct PapyrusLexer
   struct Token final
   {
     TokenType type{ TokenType::Unknown };
+    union InnerValue
+    {
+      int32_t i;
+      float f;
+    } val;
     CapricaFileLocation location{ };
-    int32_t iValue{ };
-    float fValue{ };
     boost::string_ref sValue{ };
 
     explicit Token(TokenType tp) : type(tp) { }
@@ -151,9 +154,9 @@ struct PapyrusLexer
         case TokenType::String:
           return "String(\"" + sValue.to_string() + "\")";
         case TokenType::Integer:
-          return "Integer(" + std::to_string(iValue) + ")";
+          return "Integer(" + std::to_string(val.i) + ")";
         case TokenType::Float:
-          return "Float(" + std::to_string(fValue) + ")";
+          return "Float(" + std::to_string(val.f) + ")";
         default:
           return prettyTokenType(type);
       }
