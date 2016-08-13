@@ -8,6 +8,8 @@
 
 #include <boost/utility/string_ref.hpp>
 
+#include <common/identifier_ref.h>
+
 namespace caprica { namespace allocators {
 
 struct ChainedPool
@@ -42,6 +44,7 @@ struct ChainedPool
   boost::string_ref allocateString(std::string&& str);
   boost::string_ref allocateString(boost::string_ref str);
   boost::string_ref allocateString(const char* str, size_t len);
+  identifier_ref allocateIdentifier(const char* str, size_t len);
 
   void reset();
   size_t totalAllocatedBytes() const { return totalSize; }
