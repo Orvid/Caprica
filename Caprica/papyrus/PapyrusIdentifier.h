@@ -25,7 +25,7 @@ struct PapyrusVariable;
 namespace expressions { struct PapyrusMemberAccessExpression; }
 namespace statements { struct PapyrusDeclareStatement; }
 
-enum class PapyrusIdentifierType
+enum class PapyrusIdentifierType : uint16_t
 {
   Unresolved,
 
@@ -39,7 +39,7 @@ enum class PapyrusIdentifierType
   BuiltinStateField,
 };
 
-enum class PapyrusBuiltinArrayFunctionKind
+enum class PapyrusBuiltinArrayFunctionKind : uint16_t
 {
   Unknown = 0,
 
@@ -58,8 +58,8 @@ enum class PapyrusBuiltinArrayFunctionKind
 struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
+  PapyrusBuiltinArrayFunctionKind arrayFuncKind{ PapyrusBuiltinArrayFunctionKind::Unknown };
   CapricaFileLocation location;
-  PapyrusType* arrayFuncElementType{ nullptr };
   union
   {
     const PapyrusProperty* prop{ nullptr };
@@ -68,12 +68,12 @@ struct PapyrusIdentifier final
     const statements::PapyrusDeclareStatement* declStatement;
     const PapyrusStructMember* structMember;
     const PapyrusFunction* func;
-    PapyrusBuiltinArrayFunctionKind arrayFuncKind;
+    PapyrusType* arrayFuncElementType;
   };
 
   PapyrusIdentifier() = delete;
-  PapyrusIdentifier(const PapyrusIdentifier& other) = default;
-  PapyrusIdentifier(PapyrusIdentifier&& other) = default;
+  PapyrusIdentifier(const PapyrusIdentifier&) = default;
+  PapyrusIdentifier(PapyrusIdentifier&&) = default;
   PapyrusIdentifier& operator =(const PapyrusIdentifier&) = default;
   PapyrusIdentifier& operator =(PapyrusIdentifier&&) = default;
   ~PapyrusIdentifier() = default;
