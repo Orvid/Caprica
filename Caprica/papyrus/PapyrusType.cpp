@@ -32,13 +32,13 @@ std::string PapyrusType::prettyString() const {
     case Kind::ScriptEventName:
       return "ScriptEventName";
     case Kind::Array:
-      return arrayElementType->prettyString() + "[]";
+      return resolved.arrayElementType->prettyString() + "[]";
     case Kind::Unresolved:
       return "unresolved(" + name.to_string() + ")";
     case Kind::ResolvedObject:
-      return resolvedObject->name.to_string();
+      return resolved.obj->name.to_string();
     case Kind::ResolvedStruct:
-      return "struct " + resolvedStruct->parentObject->name.to_string() + "." + resolvedStruct->name.to_string();
+      return "struct " + resolved.struc->parentObject->name.to_string() + "." + resolved.struc->name.to_string();
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
@@ -60,14 +60,14 @@ std::string PapyrusType::getTypeString() const {
     case Kind::Var:
       return "Var";
     case Kind::Array:
-      return arrayElementType->getTypeString() + "[]";
+      return resolved.arrayElementType->getTypeString() + "[]";
     case Kind::Unresolved:
       return name.to_string();
     case Kind::ResolvedObject:
-      return resolvedObject->loweredName().to_string();
+      return resolved.obj->loweredName().to_string();
     case Kind::ResolvedStruct:
     {
-      auto name = resolvedStruct->parentObject->name.to_string() + "#" + resolvedStruct->name.to_string();
+      auto name = resolved.struc->parentObject->name.to_string() + "#" + resolved.struc->name.to_string();
       identifierToLower(name);
       return name;
     }
@@ -88,23 +88,23 @@ bool PapyrusType::operator !=(const PapyrusType& other) const {
       case Kind::ScriptEventName:
         return false;
       case Kind::Array:
-        return *arrayElementType != *other.arrayElementType;
+        return *resolved.arrayElementType != *other.resolved.arrayElementType;
       case Kind::Unresolved:
         return !idEq(name, other.name);
       case Kind::ResolvedStruct:
-        if (resolvedStruct == other.resolvedStruct)
+        if (resolved.struc == other.resolved.struc)
           return false;
-        if (idEq(resolvedStruct->name, other.resolvedStruct->name)) {
+        if (idEq(resolved.struc->name, other.resolved.struc->name)) {
           // Parent objects will never be the same in this case.
-          assert(resolvedStruct->parentObject);
-          assert(other.resolvedStruct->parentObject);
-          return !idEq(resolvedStruct->parentObject->name, other.resolvedStruct->parentObject->name);
+          assert(resolved.struc->parentObject);
+          assert(other.resolved.struc->parentObject);
+          return !idEq(resolved.struc->parentObject->name, other.resolved.struc->parentObject->name);
         }
         return true;
       case Kind::ResolvedObject:
-        if (resolvedObject == other.resolvedObject)
+        if (resolved.obj == other.resolved.obj)
           return false;
-        return !idEq(resolvedObject->name, other.resolvedObject->name);
+        return !idEq(resolved.obj->name, other.resolved.obj->name);
     }
     CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind while comparing!");
   }

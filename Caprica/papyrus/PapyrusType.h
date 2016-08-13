@@ -49,12 +49,14 @@ struct PapyrusType final
   struct Default final { };
 
   Kind type{ Kind::None };
+  PoisonKind poisonState{ PoisonKind::None };
   CapricaFileLocation location{ };
-  union
+  union ResolvedData
   {
-    const PapyrusStruct* resolvedStruct{ nullptr };
-    const PapyrusObject* resolvedObject;
-  };
+    const PapyrusStruct* struc{ nullptr };
+    const PapyrusObject* obj;
+    const PapyrusType* arrayElementType;
+  } resolved;
 
   PapyrusType() = delete;
   PapyrusType(const Default& other) : type(Kind::Unresolved) { }
@@ -79,7 +81,7 @@ struct PapyrusType final
 
   static PapyrusType Array(CapricaFileLocation loc, PapyrusType* tp) {
     auto pt = PapyrusType(Kind::Array, loc);
-    pt.arrayElementType = tp;
+    pt.resolved.arrayElementType = tp;
     return pt;
   }
 
@@ -96,12 +98,12 @@ struct PapyrusType final
   static PapyrusType Var(CapricaFileLocation loc) { return PapyrusType(Kind::Var, loc); }
   static PapyrusType ResolvedObject(CapricaFileLocation loc, const PapyrusObject* obj) {
     auto pt = PapyrusType(Kind::ResolvedObject, loc);
-    pt.resolvedObject = obj;
+    pt.resolved.obj = obj;
     return pt;
   }
   static PapyrusType ResolvedStruct(CapricaFileLocation loc, const PapyrusStruct* struc) {
     auto pt = PapyrusType(Kind::ResolvedStruct, loc);
-    pt.resolvedStruct = struc;
+    pt.resolved.struc = struc;
     return pt;
   }
 
@@ -111,7 +113,7 @@ struct PapyrusType final
 
   const PapyrusType& getElementType() const& {
     assert(type == Kind::Array);
-    return *arrayElementType;
+    return *resolved.arrayElementType;
   }
 
   std::string prettyString() const;
@@ -128,8 +130,6 @@ private:
   friend struct PapyrusResolutionContext;
 
   boost::string_ref name{ };
-  PoisonKind poisonState{ PoisonKind::None };
-  PapyrusType* arrayElementType{ nullptr };
 
   PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 

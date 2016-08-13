@@ -20,7 +20,7 @@ void PapyrusVariable::semantic2(PapyrusResolutionContext* ctx) {
   if (ctx->object->isConst() && !isConst())
     ctx->reportingContext.error(location, "You cannot define a non-const variable in a const script.");
   type = ctx->resolveType(type);
-  if (type.type == PapyrusType::Kind::ResolvedObject && type.resolvedObject->isConst())
+  if (type.type == PapyrusType::Kind::ResolvedObject && type.resolved.obj->isConst())
     ctx->reportingContext.error(location, "You cannot define a variable with the type of a Const script.");
   defaultValue = ctx->coerceDefaultValue(defaultValue, type);
 }

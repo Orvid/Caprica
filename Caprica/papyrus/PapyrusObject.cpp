@@ -20,7 +20,7 @@ const PapyrusObject* PapyrusObject::tryGetParentClass() const {
   if (parentClass.type != PapyrusType::Kind::None) {
     if (parentClass.type != PapyrusType::Kind::ResolvedObject)
       CapricaReportingContext::logicalFatal("Something is wrong here, this should already have been resolved!");
-    return parentClass.resolvedObject;
+    return parentClass.resolved.obj;
   }
   return nullptr;
 }

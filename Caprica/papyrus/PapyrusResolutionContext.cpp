@@ -71,11 +71,11 @@ bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const P
 
     case PapyrusType::Kind::ResolvedObject:
       if (src.type == PapyrusType::Kind::ResolvedObject)
-        return isObjectSomeParentOf(dest.resolvedObject, src.resolvedObject);
+        return isObjectSomeParentOf(dest.resolved.obj, src.resolved.obj);
       return false;
     case PapyrusType::Kind::Array:
       if (src.type == PapyrusType::Kind::Array && src.getElementType().type == PapyrusType::Kind::ResolvedObject && dest.getElementType().type == PapyrusType::Kind::ResolvedObject) {
-        return isObjectSomeParentOf(dest.getElementType().resolvedObject, src.getElementType().resolvedObject);
+        return isObjectSomeParentOf(dest.getElementType().resolved.obj, src.getElementType().resolved.obj);
       }
       return false;
 
@@ -105,7 +105,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
       return src.type != PapyrusType::Kind::None;
     case PapyrusType::Kind::ResolvedObject:
       if (src.type == PapyrusType::Kind::ResolvedObject)
-        return isObjectSomeParentOf(src.resolvedObject, dest.resolvedObject);
+        return isObjectSomeParentOf(src.resolved.obj, dest.resolved.obj);
       return false;
     case PapyrusType::Kind::Var:
       return src.type != PapyrusType::Kind::None && src.type != PapyrusType::Kind::Array;
@@ -400,21 +400,21 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
     return ident;
 
   if (baseType.type == PapyrusType::Kind::ResolvedStruct) {
-    baseType.resolvedStruct->parentObject->awaitSemantic();
-    for (auto& sm : baseType.resolvedStruct->members) {
+    baseType.resolved.struc->parentObject->awaitSemantic();
+    for (auto& sm : baseType.resolved.struc->members) {
       if (idEq(sm->name, ident.name))
         return PapyrusIdentifier::StructMember(ident.location, sm);
     }
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
-    for (auto& propGroup : baseType.resolvedObject->awaitSemantic()->propertyGroups) {
+    for (auto& propGroup : baseType.resolved.obj->awaitSemantic()->propertyGroups) {
       for (auto& prop : propGroup->properties) {
         if (idEq(prop->name, ident.name))
           return PapyrusIdentifier::Property(ident.location, prop);
       }
     }
 
-    if (auto parentClass = baseType.resolvedObject->tryGetParentClass())
-      return tryResolveMemberIdentifier(baseType.resolvedObject->parentClass, ident);
+    if (auto parentClass = baseType.resolved.obj->tryGetParentClass())
+      return tryResolveMemberIdentifier(baseType.resolved.obj->parentClass, ident);
   }
 
   return ident;
@@ -478,7 +478,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, allocator->make<PapyrusType>(baseType.getElementType()));
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
-    if (auto state = baseType.resolvedObject->awaitSemantic()->getRootState()) {
+    if (auto state = baseType.resolved.obj->awaitSemantic()->getRootState()) {
       for (auto& func : state->functions) {
         if (idEq(func->name, ident.name)) {
           if (!wantGlobal && func->isGlobal())
@@ -488,8 +488,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       }
     }
 
-    if (auto parentClass = baseType.resolvedObject->tryGetParentClass())
-      return tryResolveFunctionIdentifier(baseType.resolvedObject->parentClass, ident, wantGlobal);
+    if (auto parentClass = baseType.resolved.obj->tryGetParentClass())
+      return tryResolveFunctionIdentifier(baseType.resolved.obj->parentClass, ident, wantGlobal);
   }
 
   return ident;

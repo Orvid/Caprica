@@ -188,14 +188,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         
         auto memberName = args[0]->value->asLiteralExpression()->value.s;
         PapyrusType elemType = PapyrusType::Default();
-        for (auto m : function.res.arrayFuncElementType->resolvedStruct->members) {
+        for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
           if (idEq(m->name, memberName)) {
             elemType = m->type;
             break;
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolvedStruct->name.to_string().c_str());
+          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
         args[1]->value = ctx->coerceExpression(args[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -232,14 +232,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
 
         auto memberName = args[0]->value->asLiteralExpression()->value.s;
         PapyrusType elemType = PapyrusType::Default();
-        for (auto m : function.res.arrayFuncElementType->resolvedStruct->members) {
+        for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
           if (idEq(m->name, memberName)) {
             elemType = m->type;
             break;
           }
         }
         if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolvedStruct->name.to_string().c_str());
+          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
         args[1]->value = ctx->coerceExpression(args[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -396,9 +396,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           if (baseType.type != PapyrusType::Kind::ResolvedObject)
             goto EventResolutionError;
 
-          if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolvedObject, le->value.s)) {
+          if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolved.obj, le->value.s)) {
             continue;
-          } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolvedObject, le->value.s)) {
+          } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolved.obj, le->value.s)) {
             le->value.s = ctx->allocator->allocateString(ev->parentObject->name.to_string() + "_" + le->value.s.to_string());
             continue;
           }
