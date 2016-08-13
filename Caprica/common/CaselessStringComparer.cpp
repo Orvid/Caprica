@@ -159,7 +159,7 @@ size_t CaselessPathHasher::doPathHash(const char* k, size_t len) {
 
 template<bool isNullTerminated>
 ALWAYS_INLINE
-static size_t doIdentifierHash(const char* s, size_t len) {
+uint32_t CaselessIdentifierHasher::hash(const char* s, size_t len) {
   const char* cStr = s;
 
   size_t lenLeft = len;
@@ -183,17 +183,22 @@ static size_t doIdentifierHash(const char* s, size_t len) {
   } else if (!isNullTerminated && (lenLeft & 1)) {
     val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4)) | (uint8_t)0x20);
   }
-  return ((size_t)val << 32) | val;
+  return val;
 }
+
+template uint32_t CaselessIdentifierHasher::hash<true>(const char*, size_t);
+template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size_t);
 
 NEVER_INLINE
 size_t CaselessIdentifierHasher::operator()(const std::string& k) const {
-  return doIdentifierHash<true>(k.c_str(), k.size());
+  auto r = CaselessIdentifierHasher::hash<true>(k.c_str(), k.size());
+  return ((size_t)r << 32) | r;
 }
 
 NEVER_INLINE
 size_t CaselessIdentifierHasher::operator()(boost::string_ref k) const {
-  return doIdentifierHash<false>(k.data(), k.size());
+  auto r = CaselessIdentifierHasher::hash<false>(k.data(), k.size());
+  return ((size_t)r << 32) | r;
 }
 
 

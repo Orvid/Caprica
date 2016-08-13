@@ -10,6 +10,7 @@
 
 #include <boost/utility/string_ref.hpp>
 
+#include <common/identifier_ref.h>
 #include <common/UtilMacros.h>
 
 namespace caprica {
@@ -26,6 +27,8 @@ NEVER_INLINE
 bool idEq(const std::string& a, const std::string& b);
 NEVER_INLINE
 bool idEq(boost::string_ref a, boost::string_ref b);
+ALWAYS_INLINE
+bool idEq(const identifier_ref& a, const identifier_ref& b) { return a.identifierEquals(b); }
 
 struct CaselessStringHasher final
 {
@@ -68,12 +71,17 @@ struct CaselessPathEqual final
 
 struct CaselessIdentifierHasher final
 {
+  template<bool isNullTerminated>
+  static uint32_t hash(const char* s, size_t len);
+
   size_t operator()(const char* k) const = delete;
   NEVER_INLINE
   size_t operator()(const std::string& k) const;
   NEVER_INLINE
   size_t operator()(boost::string_ref k) const;
 };
+extern template uint32_t CaselessIdentifierHasher::hash<true>(const char*, size_t);
+extern template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size_t);
 
 struct CaselessIdentifierEqual final
 {
