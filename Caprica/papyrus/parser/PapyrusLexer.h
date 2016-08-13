@@ -220,6 +220,13 @@ private:
   }
 
   ALWAYS_INLINE
+  void advanceChars(int distance) {
+    location.fileOffset += distance;
+    strmI += distance;
+    strm += distance;
+  }
+
+  ALWAYS_INLINE
   int peekChar() {
     if (strmI + 1 > strmLen)
       return -1;

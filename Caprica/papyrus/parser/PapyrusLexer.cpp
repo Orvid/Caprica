@@ -10,6 +10,8 @@
 
 #include <common/CaselessStringComparer.h>
 
+#include <nmmintrin.h>
+
 namespace caprica { namespace papyrus { namespace parser {
 
 static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
@@ -451,8 +453,28 @@ StartOver:
         getChar();
       }
 
-      while (isAsciiAlphaNumeric(peekChar()) || peekChar() == '_' || peekChar() == ':')
-        getChar();
+      static const __m128i identifierChars = {
+        'a', 'z', 'A', 'Z',
+        '0', '9',
+        '_', '_', ':', ':',
+        '\0',
+      };
+
+      int idx = 0;
+      do {
+        // Don't you just love SSE 4.2?
+        // This scans 16 characters at a
+        // time for the first one that
+        // isn't in the identifier set.
+        idx = _mm_cmpistri(
+          identifierChars,
+          _mm_loadu_si128((__m128i*)strm),
+          _SIDD_UBYTE_OPS |
+          _SIDD_CMP_RANGES |
+          _SIDD_NEGATIVE_POLARITY |
+          _SIDD_LEAST_SIGNIFICANT);
+        advanceChars(idx);
+      } while (idx == 16);
 
       if (conf::Papyrus::allowDecompiledStructNameRefs && peekChar() == '#') {
         getChar();

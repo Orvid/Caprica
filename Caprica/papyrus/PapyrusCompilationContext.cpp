@@ -48,13 +48,15 @@ void PapyrusCompilationNode::FileReadJob::run() {
       std::cout << "Compiling " << parent->reportedName << std::endl;
   }
   if (parent->filesize < std::numeric_limits<uint32_t>::max()) {
-    auto buf = readAllocator.allocate(parent->filesize);
+    auto buf = readAllocator.allocate(parent->filesize + 1);
     auto fd = _open(parent->sourceFilePath.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
     if (fd != -1) {
       auto len = _read(fd, (void*)buf, (uint32_t)parent->filesize);
       parent->readFileData = boost::string_ref(buf, len);
       if (_eof(fd) == 1) {
         _close(fd);
+        // Need this to be null terminated.
+        buf[parent->filesize] = '\0';
         return;
       }
       _close(fd);
@@ -77,6 +79,7 @@ void PapyrusCompilationNode::FileReadJob::run() {
       strStream << inFile.rdbuf();
       str += strStream.str();
     }
+    str += '\0';
     parent->ownedReadFileData = std::move(str);
     parent->readFileData = parent->ownedReadFileData;
   }
