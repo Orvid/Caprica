@@ -93,19 +93,19 @@ struct PapyrusValue final
         return pe;
       case PapyrusValueType::String:
         pe.type = pex::PexValueType::String;
-        pe.s = file->getString(s);
+        pe.val.s = file->getString(s);
         return pe;
       case PapyrusValueType::Integer:
         pe.type = pex::PexValueType::Integer;
-        pe.i = i;
+        pe.val.i = i;
         return pe;
       case PapyrusValueType::Float:
         pe.type = pex::PexValueType::Float;
-        pe.f = f;
+        pe.val.f = f;
         return pe;
       case PapyrusValueType::Bool:
         pe.type = pex::PexValueType::Bool;
-        pe.b = b;
+        pe.val.b = b;
         return pe;
     }
     CapricaReportingContext::logicalFatal("Unknown PapyrusValueType!");

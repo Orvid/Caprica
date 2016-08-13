@@ -104,11 +104,11 @@ struct PexInstruction final
     if (opCode == PexOpCode::Jmp) {
       assert(args.size() == 1);
       assert(args[0].type == PexValueType::Integer);
-      return args[0].i;
+      return args[0].val.i;
     } else if (opCode == PexOpCode::JmpT || opCode == PexOpCode::JmpF) {
       assert(args.size() == 2);
       assert(args[1].type == PexValueType::Integer);
-      return args[1].i;
+      return args[1].val.i;
     }
     CapricaReportingContext::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
   }
@@ -117,11 +117,11 @@ struct PexInstruction final
     if (opCode == PexOpCode::Jmp) {
       assert(args.size() == 1);
       assert(args[0].type == PexValueType::Integer);
-      args[0].i = target;
+      args[0].val.i = target;
     } else if (opCode == PexOpCode::JmpT || opCode == PexOpCode::JmpF) {
       assert(args.size() == 2);
       assert(args[1].type == PexValueType::Integer);
-      args[1].i = target;
+      args[1].val.i = target;
     } else {
       CapricaReportingContext::logicalFatal("Attempted to get the branch target of a non-branch opcode!");
     }

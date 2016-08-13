@@ -84,7 +84,7 @@ PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& 
       auto varVal = rdr.read<PexValue>();
       if (varVal.type != PexValueType::Integer)
         CapricaReportingContext::logicalFatal("The var arg count for call instructions should be an integer!");
-      for (size_t i = 0; i < varVal.i; i++)
+      for (size_t i = 0; i < varVal.val.i; i++)
         inst->variadicArgs.push_back(alloc->make<PexValue>(rdr.read<PexValue>()));
       break;
     }
@@ -115,7 +115,7 @@ void PexInstruction::write(PexWriter& wtr) const {
       assert(variadicArgs.size() <= std::numeric_limits<uint32_t>::max());
       PexValue val{ };
       val.type = PexValueType::Integer;
-      val.i = (uint32_t)variadicArgs.size();
+      val.val.i = (uint32_t)variadicArgs.size();
       wtr.write<PexValue>(val);
       for (auto v : variadicArgs)
         wtr.write<PexValue>(*v);

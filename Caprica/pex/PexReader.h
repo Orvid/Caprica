@@ -50,16 +50,16 @@ struct PexReader final : public CapricaBinaryReader
         return val;
       case PexValueType::Identifier:
       case PexValueType::String:
-        val.s = read<PexString>();
+        val.val.s = read<PexString>();
         return val;
       case PexValueType::Integer:
-        val.i = (int32_t)read<uint32_t>();
+        val.val.i = (int32_t)read<uint32_t>();
         return val;
       case PexValueType::Float:
-        val.f = read<float>();
+        val.val.f = read<float>();
         return val;
       case PexValueType::Bool:
-        val.b = read<uint8_t>() ? true : false;
+        val.val.b = read<uint8_t>() ? true : false;
         return val;
 
       case PexValueType::Label:

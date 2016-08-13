@@ -43,7 +43,7 @@ private:
 struct PexValue final
 {
   PexValueType type{ PexValueType::None };
-  union
+  union ValueData
   {
     PexString s;
     int32_t i;
@@ -51,7 +51,15 @@ struct PexValue final
     bool b;
     PexLabel* l;
     PexTemporaryVariableRef* tmpVar;
-  };
+
+    ValueData() : tmpVar(nullptr) { }
+    ValueData(PexString str) : s(str) { }
+    ValueData(int32_t it) : i(it) { }
+    ValueData(float fl) : f(fl) { }
+    ValueData(bool bl) : b(bl) { }
+    ValueData(PexLabel* label) : l(label) { }
+    ValueData(PexTemporaryVariableRef* ref) : tmpVar(ref) { }
+  } val;
 
   struct TemporaryVariable
   {
@@ -76,9 +84,9 @@ struct PexValue final
 
     static Identifier fromVar(const PexValue& var) {
       if (var.type == PexValueType::TemporaryVar)
-        return Identifier(var.tmpVar);
+        return Identifier(var.val.tmpVar);
       assert(var.type == PexValueType::Identifier);
-      return Identifier(var.s);
+      return Identifier(var.val.s);
     }
   };
   struct Integer
@@ -109,18 +117,18 @@ struct PexValue final
   struct Invalid { };
 
   explicit PexValue() { };
-  PexValue(PexLabel* lab) : type(PexValueType::Label), l(lab) { }
-  PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), s(var->name) { }
-  PexValue(const TemporaryVariable& val) : type(PexValueType::TemporaryVar), tmpVar(val.var) { }
-  PexValue(const Identifier& id) : type(PexValueType::Identifier), s(id.name) {
+  PexValue(PexLabel* lab) : type(PexValueType::Label), val(lab) { }
+  PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), val(var->name) { }
+  PexValue(const TemporaryVariable& val) : type(PexValueType::TemporaryVar), val(val.var) { }
+  PexValue(const Identifier& id) : type(PexValueType::Identifier), val(id.name) {
     if (id.tmpVar != nullptr) {
       type = PexValueType::TemporaryVar;
-      tmpVar = id.tmpVar;
+      val.tmpVar = id.tmpVar;
     }
   }
-  PexValue(const Integer& val) : type(PexValueType::Integer), i(val.i) { }
-  PexValue(const Float& val) : type(PexValueType::Float), f(val.f) { }
-  PexValue(const Bool& val) : type(PexValueType::Bool), b(val.b) { }
+  PexValue(const Integer& val) : type(PexValueType::Integer), val(val.i) { }
+  PexValue(const Float& val) : type(PexValueType::Float), val(val.f) { }
+  PexValue(const Bool& val) : type(PexValueType::Bool), val(val.b) { }
   PexValue(const None& val) : type(PexValueType::None) { }
   PexValue(const Invalid& val) : type(PexValueType::Invalid) { }
   PexValue(const PexValue&) = default;

@@ -105,9 +105,9 @@ struct PapyrusForStatement final : public PapyrusStatement
       bldr << op::cmpgte{ bTemp, loadedCounter, tVal };
       bldr << aComp;
     } else {
-      if ((sVal.type == pex::PexValueType::Integer && sVal.i > 0) || (sVal.type == pex::PexValueType::Float && sVal.f > 0))
+      if ((sVal.type == pex::PexValueType::Integer && sVal.val.i > 0) || (sVal.type == pex::PexValueType::Float && sVal.val.f > 0))
         bldr << op::cmplte{ bTemp, loadedCounter, tVal };
-      else if ((sVal.type == pex::PexValueType::Integer && sVal.i < 0) || (sVal.type == pex::PexValueType::Float && sVal.f < 0))
+      else if ((sVal.type == pex::PexValueType::Integer && sVal.val.i < 0) || (sVal.type == pex::PexValueType::Float && sVal.val.f < 0))
         bldr << op::cmpgte{ bTemp, loadedCounter, tVal };
       else
         bldr.reportingContext.fatal(location, "Attempted to step by a literal 0!");

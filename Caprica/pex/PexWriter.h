@@ -43,16 +43,16 @@ struct PexWriter final : public CapricaBinaryWriter
         return;
       case PexValueType::Identifier:
       case PexValueType::String:
-        write<PexString>(val.s);
+        write<PexString>(val.val.s);
         return;
       case PexValueType::Integer:
-        write<uint32_t>((uint32_t)val.i);
+        write<uint32_t>((uint32_t)val.val.i);
         return;
       case PexValueType::Float:
-        write<float>(val.f);
+        write<float>(val.val.f);
         return;
       case PexValueType::Bool:
-        write<uint8_t>(val.b ? 0x01 : 0x00);
+        write<uint8_t>(val.val.b ? 0x01 : 0x00);
         return;
 
       case PexValueType::Label:

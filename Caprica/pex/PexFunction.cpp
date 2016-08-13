@@ -118,11 +118,11 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
       wtr.write(PexInstruction::opCodeToPexAsm(cur->opCode));
 
       if (cur->opCode == PexOpCode::Jmp) {
-        wtr.write(" label%llu", labelMap[(size_t)(cur->args[0].i + cur.index)]);
+        wtr.write(" label%llu", labelMap[(size_t)(cur->args[0].val.i + cur.index)]);
       } else if (cur->opCode == PexOpCode::JmpT || cur->opCode == PexOpCode::JmpF) {
         wtr.write(" ");
         cur->args[0].writeAsm(file, wtr);
-        wtr.write(" label%llu", labelMap[(size_t)(cur->args[1].i + cur.index)]);
+        wtr.write(" label%llu", labelMap[(size_t)(cur->args[1].val.i + cur.index)]);
       } else {
         for (auto& a : cur->args) {
           wtr.write(" ");

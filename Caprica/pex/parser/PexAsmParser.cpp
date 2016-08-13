@@ -520,11 +520,11 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
         for (auto cur = func->instructions.begin(), end = func->instructions.end(); cur != end; ++cur) {
           for (auto& arg : cur->args) {
             if (arg.type == PexValueType::Label) {
-              if (arg.l->targetIdx == (size_t)-1)
+              if (arg.val.l->targetIdx == (size_t)-1)
                 CapricaReportingContext::logicalFatal("Unresolved label!");
-              auto newVal = arg.l->targetIdx - cur.index;
+              auto newVal = arg.val.l->targetIdx - cur.index;
               arg.type = PexValueType::Integer;
-              arg.i = (int32_t)newVal;
+              arg.val.i = (int32_t)newVal;
             }
           }
         }
@@ -550,16 +550,16 @@ PexValue PexAsmParser::expectConsumeValue(PexFile* file) {
   switch (cur.type) {
     case TokenType::Float:
       val.type = PexValueType::Float;
-      val.f = cur.fValue;
+      val.val.f = cur.fValue;
       consume();
       return val;
     case TokenType::Integer:
       val.type = PexValueType::Integer;
-      val.i = expectConsumeInteger();
+      val.val.i = expectConsumeInteger();
       return val;
     case TokenType::String:
       val.type = PexValueType::String;
-      val.s = file->getString(cur.sValue);
+      val.val.s = file->getString(cur.sValue);
       consume();
       return val;
     case TokenType::Identifier:
@@ -570,15 +570,15 @@ PexValue PexAsmParser::expectConsumeValue(PexFile* file) {
         return val;
       } else if (idEq(str, "true")) {
         val.type = PexValueType::Bool;
-        val.b = true;
+        val.val.b = true;
         return val;
       } else if (idEq(str, "false")) {
         val.type = PexValueType::Bool;
-        val.b = false;
+        val.val.b = false;
         return val;
       } else {
         val.type = PexValueType::Identifier;
-        val.s = file->getString(str);
+        val.val.s = file->getString(str);
         return val;
       }
     }

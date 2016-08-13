@@ -15,11 +15,11 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
   for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
     for (auto& arg : cur->args) {
       if (arg.type == PexValueType::Label) {
-        if (arg.l->targetIdx == (size_t)-1)
+        if (arg.val.l->targetIdx == (size_t)-1)
           CapricaReportingContext::logicalFatal("Unresolved label!");
-        auto newVal = arg.l->targetIdx - cur.index;
+        auto newVal = arg.val.l->targetIdx - cur.index;
         arg.type = PexValueType::Integer;
-        arg.i = (int32_t)newVal;
+        arg.val.i = (int32_t)newVal;
       }
     }
   }
@@ -52,9 +52,9 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
 void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
   PexString varName;
   if (v.type == PexValueType::Identifier)
-    varName = v.s;
-  else if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
-    varName = v.tmpVar->var->name;
+    varName = v.val.s;
+  else if (v.type == PexValueType::TemporaryVar && v.val.tmpVar->var)
+    varName = v.val.tmpVar->var->name;
   else
     return;
 
@@ -99,22 +99,22 @@ PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
   for (auto& v : instr->args) {
     if (v.type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
-    if (v.type == PexValueType::TemporaryVar && v.tmpVar->var)
-      v = PexValue::Identifier(v.tmpVar->var);
+    if (v.type == PexValueType::TemporaryVar && v.val.tmpVar->var)
+      v = PexValue::Identifier(v.val.tmpVar->var);
     freeValueIfTemp(v);
   }
   for (auto& v : instr->variadicArgs) {
     if (v->type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
-    if (v->type == PexValueType::TemporaryVar && v->tmpVar->var)
-      *v = PexValue::Identifier(v->tmpVar->var);
+    if (v->type == PexValueType::TemporaryVar && v->val.tmpVar->var)
+      *v = PexValue::Identifier(v->val.tmpVar->var);
     freeValueIfTemp(*v);
   }
 
   auto destIdx = PexInstruction::getDestArgIndexForOpCode(instr->opCode);
   if (destIdx != -1 && instr->args[destIdx].type == PexValueType::TemporaryVar) {
-    auto loc = internalAllocateTempVar(instr->args[destIdx].tmpVar->type);
-    instr->args[destIdx].tmpVar->var = loc;
+    auto loc = internalAllocateTempVar(instr->args[destIdx].val.tmpVar->type);
+    instr->args[destIdx].val.tmpVar->var = loc;
     instr->args[destIdx] = PexValue::Identifier(loc);
   }
 

@@ -12,19 +12,19 @@ void PexValue::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
       wtr.write("None");
       return;
     case PexValueType::Identifier:
-      wtr.write("%s", file->getStringValue(s).to_string().c_str());
+      wtr.write("%s", file->getStringValue(val.s).to_string().c_str());
       return;
     case PexValueType::String:
-      wtr.write("\"%s\"", PexAsmWriter::escapeString(file->getStringValue(s).to_string()).c_str());
+      wtr.write("\"%s\"", PexAsmWriter::escapeString(file->getStringValue(val.s).to_string()).c_str());
       return;
     case PexValueType::Integer:
-      wtr.write("%i", (int)i);
+      wtr.write("%i", (int)val.i);
       return;
     case PexValueType::Float:
-      wtr.write("%f", f);
+      wtr.write("%f", val.f);
       return;
     case PexValueType::Bool:
-      if (b)
+      if (val.b)
         wtr.write("True");
       else
         wtr.write("False");
@@ -46,13 +46,13 @@ bool PexValue::operator ==(const PexValue& other) const {
       return true;
     case PexValueType::String:
     case PexValueType::Identifier:
-      return s.index == other.s.index;
+      return val.s.index == other.val.s.index;
     case PexValueType::Integer:
-      return i == other.i;
+      return val.i == other.val.i;
     case PexValueType::Float:
-      return f == other.f;
+      return val.f == other.val.f;
     case PexValueType::Bool:
-      return b == other.b;
+      return val.b == other.val.b;
     case PexValueType::Label:
     case PexValueType::TemporaryVar:
     case PexValueType::Invalid:
