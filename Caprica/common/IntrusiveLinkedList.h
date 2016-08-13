@@ -5,6 +5,13 @@ namespace caprica {
 template<typename T>
 struct IntrusiveLinkedList final
 {
+  IntrusiveLinkedList() = default;
+  IntrusiveLinkedList(const IntrusiveLinkedList&) = delete;
+  IntrusiveLinkedList(IntrusiveLinkedList&&) = default;
+  IntrusiveLinkedList& operator =(const IntrusiveLinkedList&) = delete;
+  IntrusiveLinkedList& operator =(IntrusiveLinkedList&&) = default;
+  ~IntrusiveLinkedList() = default;
+
   T* back() { return mBack; }
   const T* back() const { return mBack; }
 
