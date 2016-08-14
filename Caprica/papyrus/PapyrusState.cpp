@@ -5,10 +5,9 @@
 namespace caprica { namespace papyrus {
 
 static const PapyrusFunction* searchRootStateForFunction(const identifier_ref& name, const PapyrusObject* obj) {
-  for (auto f : obj->getRootState()->functions) {
-    if (idEq(f.second->name, name))
-      return f.second;
-  }
+  auto f = obj->getRootState()->functions.find(name);
+  if (f != obj->getRootState()->functions.end())
+    return f->second;
 
   if (auto parentObj = obj->tryGetParentClass())
     return searchRootStateForFunction(name, parentObj);
