@@ -89,24 +89,6 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal = false) const;
 
   template<typename T>
-  void ensureNamesAreUnique(const caseless_unordered_identifier_ref_map<T*>& nameset, const char* typeOfName) {
-    // If there's nothing in it, or only one thing,
-    // it will always be unique.
-    if (nameset.size() > 1) {
-      caseless_unordered_identifier_ref_set foundNames{ };
-      foundNames.reserve(nameset.size());
-      for (auto member : nameset) {
-        // TODO: Output location of first name.
-        auto f = foundNames.find(member.second->name);
-        if (f != foundNames.end()) {
-          reportingContext.error(member.second->location, "A %s named '%s' was already defined in this scope.", typeOfName, member.second->name.to_string().c_str());
-        } else {
-          foundNames.insert(member.second->name);
-        }
-      }
-    }
-  }
-  template<typename T>
   void ensureNamesAreUnique(const IntrusiveLinkedList<T>& nameset, const char* typeOfName) {
     // If there's nothing in it, or only one thing,
     // it will always be unique.
