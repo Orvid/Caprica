@@ -4,9 +4,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <boost/filesystem.hpp>
-#include <boost/range/adaptor/reversed.hpp>
-
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
 #include <common/FSUtils.h>
