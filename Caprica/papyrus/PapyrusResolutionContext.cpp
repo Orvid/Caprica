@@ -328,12 +328,14 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
 
 void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
   for (auto is : localVariableScopeStack) {
-    if (is.count(local->name)) {
-      reportingContext.error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.to_string().c_str());
-      return;
+    for (auto n : is->locals) {
+      if (idEq(n->name, local->name)) {
+        reportingContext.error(local->location, "Attempted to redefined '%s' which was already defined in a parent scope!", local->name.to_string().c_str());
+        return;
+      }
     }
   }
-  localVariableScopeStack.back().emplace(local->name, local);
+  localVariableScopeStack.top()->locals.push_back(allocator->make<LocalScopeVariableNode>(local->name, local));
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
@@ -348,10 +350,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
     return ident;
 
   // This handles local var resolution.
-  for (auto& stack : boost::adaptors::reverse(localVariableScopeStack)) {
-    auto f = stack.find(ident.res.name);
-    if (f != stack.end()) {
-      return PapyrusIdentifier::DeclStatement(ident.location, f->second);
+  for (auto stack : localVariableScopeStack) {
+    for (auto n : stack->locals) {
+      if (idEq(n->name, ident.res.name)) {
+        return PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement);
+      }
     }
   }
 

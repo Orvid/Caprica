@@ -9,6 +9,7 @@
 #include <common/CaselessStringComparer.h>
 #include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
+#include <common/IntrusiveStack.h>
 
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
 
@@ -56,8 +57,8 @@ struct PapyrusResolutionContext final
   void checkForPoison(const expressions::PapyrusExpression* expr) const;
   void checkForPoison(const PapyrusType& type) const;
 
-  void pushLocalVariableScope() { localVariableScopeStack.emplace_back(); }
-  void popLocalVariableScope() { localVariableScopeStack.pop_back(); }
+  void pushLocalVariableScope() { localVariableScopeStack.push(allocator->make<LocalScopeStackNode>()); }
+  void popLocalVariableScope() { localVariableScopeStack.pop(); }
 
   bool canBreak() const { return currentBreakScopeDepth > 0; }
   void pushBreakScope() { currentBreakScopeDepth++; }
@@ -111,7 +112,25 @@ struct PapyrusResolutionContext final
   PapyrusResolutionContext(const PapyrusResolutionContext&) = delete;
   ~PapyrusResolutionContext() = default;
 private:
-  std::vector<caseless_unordered_identifier_ref_map<statements::PapyrusDeclareStatement*>> localVariableScopeStack{ };
+  struct LocalScopeVariableNode final
+  {
+    identifier_ref name{ };
+    statements::PapyrusDeclareStatement* declareStatement{ nullptr };
+
+    LocalScopeVariableNode(const identifier_ref& nm, statements::PapyrusDeclareStatement* decl) : name(nm), declareStatement(decl) { }
+  private:
+    friend IntrusiveLinkedList<LocalScopeVariableNode>;
+    LocalScopeVariableNode* next{ nullptr };
+  };
+  struct LocalScopeStackNode final
+  {
+    IntrusiveLinkedList<LocalScopeVariableNode> locals{ };
+
+  private:
+    friend IntrusiveStack<LocalScopeStackNode>;
+    LocalScopeStackNode* nextInStack{ nullptr };
+  };
+  IntrusiveStack<LocalScopeStackNode> localVariableScopeStack{ };
   std::vector<PapyrusCompilationNode*> importedNodes{ };
   size_t currentBreakScopeDepth{ 0 };
   size_t currentContinueScopeDepth{ 0 };
