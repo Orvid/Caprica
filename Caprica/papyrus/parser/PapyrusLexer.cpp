@@ -483,7 +483,7 @@ StartOver:
           getChar();
       }
 
-      boost::string_ref str{ baseStrm, (size_t)(strm - baseStrm) };
+      identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
       auto f = keywordMap.find(str);
       if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
@@ -495,7 +495,7 @@ StartOver:
       }
 
       setTok(TokenType::Identifier, baseLoc);
-      cur.sValue = str;
+      cur.val.s = str;
       return;
     }
 
@@ -524,7 +524,7 @@ StartOver:
         }
         charsRequired++;
       }
-      boost::string_ref str{ baseStrm, (size_t)(strm - baseStrm) };
+      identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() != '"')
         reportingContext.fatal(location, "Unclosed string!");
@@ -556,9 +556,9 @@ StartOver:
             buf[i++] = baseStrm[i2++];
           }
         }
-        cur.sValue = boost::string_ref(buf, charsRequired);
+        cur.val.s = identifier_ref(buf, charsRequired);
       } else {
-        cur.sValue = alloc->allocateString(str.data(), str.size());
+        cur.val.s = alloc->allocateIdentifier(str.data(), str.size());
       }
       return;
     }
@@ -615,7 +615,7 @@ StartOver:
           // we don't care, they both get written as-is.
         }
       }
-      boost::string_ref str{ baseStrm, (size_t)(strm - baseStrm) };
+      identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() == -1)
         reportingContext.fatal(location, "Unexpected EOF before the end of a documentation comment!");
@@ -624,7 +624,7 @@ StartOver:
       setTok(TokenType::DocComment, baseLoc);
       // Trim trailing whitespace.
       auto lPos = str.find_last_not_of(" \t\n\v\f\r");
-      if (lPos != boost::string_ref::npos && lPos != str.size() + 1 && lPos + 1 != str.size()) {
+      if (lPos != identifier_ref::npos && lPos != str.size() + 1 && lPos + 1 != str.size()) {
         charsRequired -= str.size() - (lPos + 1);
         str = str.substr(0, lPos + 1);
       }
@@ -639,9 +639,9 @@ StartOver:
             buf[i++] = baseStrm[i2++];
           }
         }
-        cur.sValue = boost::string_ref(buf, charsRequired);
+        cur.val.s = identifier_ref(buf, charsRequired);
       } else {
-        cur.sValue = alloc->allocateString(str.data(), str.size());
+        cur.val.s = alloc->allocateIdentifier(str.data(), str.size());
       }
       return;
     }

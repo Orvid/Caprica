@@ -6,6 +6,7 @@
 
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaReportingContext.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusObject.h>

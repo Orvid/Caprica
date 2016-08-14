@@ -4,10 +4,9 @@
 #include <memory>
 #include <string>
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/identifier_ref.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexString.h>
@@ -73,7 +72,7 @@ struct PapyrusType final
     pt.name = nm;
     return pt;
   }
-  static PapyrusType Unresolved(CapricaFileLocation loc, boost::string_ref nm) {
+  static PapyrusType Unresolved(CapricaFileLocation loc, const identifier_ref& nm) {
     auto pt = PapyrusType(Kind::Unresolved, loc);
     pt.name = nm;
     return pt;
@@ -129,7 +128,7 @@ struct PapyrusType final
 private:
   friend struct PapyrusResolutionContext;
 
-  boost::string_ref name{ };
+  identifier_ref name{ };
 
   PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 

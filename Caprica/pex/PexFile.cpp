@@ -50,13 +50,13 @@ const PexDebugFunctionInfo* PexFile::tryFindFunctionDebugInfo(const PexObject* o
   return ((PexFile*)this)->tryFindFunctionDebugInfo(object, state, function, propertyName, functionType);
 }
 
-PexString PexFile::getString(boost::string_ref str) {
+PexString PexFile::getString(const identifier_ref& str) {
   auto ret = PexString();
   ret.index = stringTable->lookup(str);
   return ret;
 }
 
-boost::string_ref PexFile::getStringValue(const PexString& str) const {
+identifier_ref PexFile::getStringValue(const PexString& str) const {
   return stringTable->byIndex(str.index);
 }
 
@@ -123,13 +123,13 @@ void PexFile::write(PexWriter& wtr) const {
   wtr.write<uint8_t>(minorVersion);
   wtr.write<uint16_t>(gameID);
   wtr.write<time_t>(compilationTime);
-  wtr.write<boost::string_ref>(sourceFileName);
-  wtr.write<boost::string_ref>(userName);
-  wtr.write<boost::string_ref>(computerName);
+  wtr.write<identifier_ref>(sourceFileName);
+  wtr.write<identifier_ref>(userName);
+  wtr.write<identifier_ref>(computerName);
 
   wtr.boundWrite<uint16_t>(stringTable->size());
   for (size_t i = 0; i < stringTable->size(); i++)
-    wtr.write<boost::string_ref>(stringTable->byIndex(i));
+    wtr.write<identifier_ref>(stringTable->byIndex(i));
 
   if (debugInfo) {
     wtr.write<uint8_t>(0x01);

@@ -9,6 +9,7 @@
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 #include <common/IntrusiveStack.h>
 
@@ -177,7 +178,7 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
     return *this;
   }
 
-  PexLocalVariable* allocateLocal(boost::string_ref name, const papyrus::PapyrusType& tp) {
+  PexLocalVariable* allocateLocal(const identifier_ref& name, const papyrus::PapyrusType& tp) {
     auto loc = alloc->make<PexLocalVariable>();
     loc->name = file->getString(name);
     loc->type = tp.buildPex(file);

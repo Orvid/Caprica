@@ -79,7 +79,7 @@ pex::PexValue PapyrusIdentifier::generateLoad(pex::PexFile* file, pex::PexFuncti
     case PapyrusIdentifierType::BuiltinArrayFunction:
       CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
-      bldr.reportingContext.fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", name.to_string().c_str());
+      bldr.reportingContext.fatal(location, "Attempted to generate a load of an unresolved identifier '%s'!", res.name.to_string().c_str());
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }
@@ -117,7 +117,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file, pex::PexFunctionBuilde
     case PapyrusIdentifierType::BuiltinArrayFunction:
       CapricaReportingContext::logicalFatal("Invalid PapyrusIdentifierType!");
     case PapyrusIdentifierType::Unresolved:
-      bldr.reportingContext.fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", name.to_string().c_str());
+      bldr.reportingContext.fatal(location, "Attempted to generate a store to an unresolved identifier '%s'!", res.name.to_string().c_str());
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusIdentifierType!");
 }

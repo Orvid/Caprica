@@ -9,6 +9,7 @@
 
 #include <common/allocators/ChainedPool.h>
 #include <common/allocators/ReffyStringPool.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexAsmWriter.h>
@@ -56,8 +57,8 @@ struct PexFile final
                                                        const PexFunction* function,
                                                        const std::string& propertyName,
                                                        PexDebugFunctionType functionType) const;
-  PexString getString(boost::string_ref str);
-  boost::string_ref getStringValue(const PexString& str) const;
+  PexString getString(const identifier_ref& str);
+  identifier_ref getStringValue(const PexString& str) const;
   PexUserFlags getUserFlag(PexString name, uint8_t bitNum);
   size_t getUserFlagCount() const noexcept;
 

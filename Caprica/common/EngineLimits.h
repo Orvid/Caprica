@@ -1,9 +1,8 @@
 #pragma once
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
+#include <common/identifier_ref.h>
 
 namespace caprica {
 
@@ -22,7 +21,7 @@ struct EngineLimits final
     PexState_FunctionCount,
   };
 
-  static void checkLimit(CapricaReportingContext& repCtx, CapricaFileLocation location, Type tp, size_t value, boost::string_ref referenceName = "") {
+  static void checkLimit(CapricaReportingContext& repCtx, CapricaFileLocation location, Type tp, size_t value, identifier_ref referenceName = "") {
     const auto exceedsLimit = [](size_t value, size_t max) {
       return max != 0 && value > max;
     };

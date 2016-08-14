@@ -62,9 +62,9 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression
       if (auto id = baseExpression->asIdentifierExpression()) {
         id->identifier = ctx->tryResolveIdentifier(id->identifier);
         if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
-          auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.name));
+          auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.res.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject)
-            ctx->reportingContext.fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.name.to_string().c_str());
+            ctx->reportingContext.fatal(baseExpression->location, "Unresolved identifier '%s'!", id->identifier.res.name.to_string().c_str());
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function, true);
           fc->semantic(ctx);
           return;

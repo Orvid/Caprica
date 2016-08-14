@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
@@ -19,7 +17,7 @@ struct PapyrusObject;
 
 struct PapyrusStruct final
 {
-  boost::string_ref name{ "" };
+  identifier_ref name{ "" };
   IntrusiveLinkedList<PapyrusStructMember> members{ };
   PapyrusObject* parentObject{ nullptr };
 

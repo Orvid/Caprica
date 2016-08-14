@@ -11,6 +11,7 @@
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
 #include <common/FSUtils.h>
+#include <common/identifier_ref.h>
 #include <common/UtilMacros.h>
 
 namespace caprica { namespace papyrus { namespace parser {
@@ -134,11 +135,13 @@ struct PapyrusLexer
     TokenType type{ TokenType::Unknown };
     union InnerValue
     {
+      identifier_ref s;
       int32_t i;
       float f;
+
+      InnerValue() : s() { }
     } val;
     CapricaFileLocation location{ };
-    boost::string_ref sValue{ };
 
     explicit Token(TokenType tp) : type(tp) { }
     Token(const Token&) = delete;
@@ -150,9 +153,9 @@ struct PapyrusLexer
     std::string prettyString() const {
       switch (type) {
         case TokenType::Identifier:
-          return "Identifier(" + sValue.to_string() + ")";
+          return "Identifier(" + val.s.to_string() + ")";
         case TokenType::String:
-          return "String(\"" + sValue.to_string() + "\")";
+          return "String(\"" + val.s.to_string() + "\")";
         case TokenType::Integer:
           return "Integer(" + std::to_string(val.i) + ")";
         case TokenType::Float:

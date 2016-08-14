@@ -2,10 +2,9 @@
 
 #include <string>
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/identifier_ref.h>
 
 #include <papyrus/PapyrusType.h>
 
@@ -62,13 +61,16 @@ struct PapyrusIdentifier final
   CapricaFileLocation location;
   union ResolvedTargets
   {
-    const PapyrusProperty* prop{ nullptr };
+    identifier_ref name{ };
+    const PapyrusProperty* prop;
     const PapyrusVariable* var;
     const PapyrusFunctionParameter* param;
     const statements::PapyrusDeclareStatement* declStatement;
     const PapyrusStructMember* structMember;
     const PapyrusFunction* func;
     PapyrusType* arrayFuncElementType;
+
+    ResolvedTargets() : name() { }
   } res;
 
   PapyrusIdentifier() = delete;
@@ -82,12 +84,12 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier Unresolved(CapricaFileLocation loc, std::string&& nm) = delete;
   static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const char* nm) {
     auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
-    id.name = nm;
+    id.res.name = nm;
     return id;
   }
-  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, boost::string_ref nm) {
+  static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const identifier_ref& nm) {
     auto id = PapyrusIdentifier(PapyrusIdentifierType::Unresolved, loc);
-    id.name = nm;
+    id.res.name = nm;
     return id;
   }
   static PapyrusIdentifier Property(CapricaFileLocation loc, const PapyrusProperty* p);
@@ -108,8 +110,6 @@ struct PapyrusIdentifier final
 private:
   friend expressions::PapyrusMemberAccessExpression;
   friend PapyrusResolutionContext;
-
-  boost::string_ref name{ };
 
   PapyrusIdentifier(PapyrusIdentifierType k, CapricaFileLocation loc) : type(k), location(loc) { }
 };

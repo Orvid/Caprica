@@ -84,17 +84,17 @@ private:
   }
 
   ALWAYS_INLINE
-  boost::string_ref expectConsumeIdentRef() {
+  identifier_ref expectConsumeIdentRef() {
     expect(TokenType::Identifier);
-    auto str = cur.sValue;
+    auto str = cur.val.s;
     consume();
     return str;
   }
 
   ALWAYS_INLINE
-  boost::string_ref maybeConsumeDocStringRef() {
+  identifier_ref maybeConsumeDocStringRef() {
     if (cur.type == TokenType::DocComment) {
-      auto str = cur.sValue;
+      auto str = cur.val.s;
       consume();
       expectConsumeEOLs();
       return str;

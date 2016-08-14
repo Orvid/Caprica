@@ -2,9 +2,8 @@
 
 #include <cstdint>
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/CapricaFileLocation.h>
+#include <common/identifier_ref.h>
 
 #include <papyrus/PapyrusType.h>
 
@@ -28,13 +27,15 @@ struct PapyrusValue final
 {
   PapyrusValueType type{ PapyrusValueType::None };
   CapricaFileLocation location;
-  boost::string_ref s;
-  union
+  union Data
   {
+    identifier_ref s;
     int32_t i;
     float f;
     bool b;
-  };
+
+    Data() : s() { }
+  } val;
 
   // This is intended purely for initializing values that may not
   // be filled to defaults, and doesn't track a location.
@@ -58,28 +59,28 @@ struct PapyrusValue final
   static PapyrusValue Bool(CapricaFileLocation loc, bool b) {
     auto val = PapyrusValue(loc);
     val.type = PapyrusValueType::Bool;
-    val.b = b;
+    val.val.b = b;
     return val;
   }
 
-  static PapyrusValue String(CapricaFileLocation loc, boost::string_ref s) {
+  static PapyrusValue String(CapricaFileLocation loc, const identifier_ref& s) {
     auto val = PapyrusValue(loc);
     val.type = PapyrusValueType::String;
-    val.s = s;
+    val.val.s = s;
     return val;
   }
 
   static PapyrusValue Integer(CapricaFileLocation loc, int32_t i) {
     auto val = PapyrusValue(loc);
     val.type = PapyrusValueType::Integer;
-    val.i = i;
+    val.val.i = i;
     return val;
   }
 
   static PapyrusValue Float(CapricaFileLocation loc, float f) {
     auto val = PapyrusValue(loc);
     val.type = PapyrusValueType::Float;
-    val.f = f;
+    val.val.f = f;
     return val;
   }
 
@@ -93,19 +94,19 @@ struct PapyrusValue final
         return pe;
       case PapyrusValueType::String:
         pe.type = pex::PexValueType::String;
-        pe.val.s = file->getString(s);
+        pe.val.s = file->getString(val.s);
         return pe;
       case PapyrusValueType::Integer:
         pe.type = pex::PexValueType::Integer;
-        pe.val.i = i;
+        pe.val.i = val.i;
         return pe;
       case PapyrusValueType::Float:
         pe.type = pex::PexValueType::Float;
-        pe.val.f = f;
+        pe.val.f = val.f;
         return pe;
       case PapyrusValueType::Bool:
         pe.type = pex::PexValueType::Bool;
-        pe.val.b = b;
+        pe.val.b = val.b;
         return pe;
     }
     CapricaReportingContext::logicalFatal("Unknown PapyrusValueType!");

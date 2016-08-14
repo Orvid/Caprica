@@ -136,7 +136,7 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
   if (auto parent = tryGetParentClass())
     parent->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
 
-  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const char* otherType, boost::string_ref identName) {
+  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const char* otherType, const identifier_ref& identName) {
     if (isParent)
       repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType, identName.to_string().c_str());
     else
@@ -149,7 +149,7 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
       if (f != identMap.end())
         doError(repCtx, p->location, f->second.first, f->second.second, p->name);
       else
-        identMap.insert({ p->name, std::make_pair(checkInheritedOnly, "property") });
+        identMap.emplace(p->name, std::make_pair(checkInheritedOnly, "property"));
     }
   }
 
@@ -158,7 +158,7 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
     if (f != identMap.end())
       doError(repCtx, s->location, f->second.first, f->second.second, s->name);
     else
-      identMap.insert({ s->name, std::make_pair(checkInheritedOnly, "struct") });
+      identMap.emplace(s->name, std::make_pair(checkInheritedOnly, "struct"));
   }
 
   /* Custom events are currently allowed to have the same names as properties -_-...
@@ -177,7 +177,7 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
       if (f != identMap.end())
         doError(repCtx, v->location, f->second.first, f->second.second, v->name);
       else
-        identMap.insert({ v->name, std::make_pair(checkInheritedOnly, "variable") });
+        identMap.emplace(v->name, std::make_pair(checkInheritedOnly, "variable"));
     }
   }
 }

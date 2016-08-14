@@ -1,9 +1,7 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include <common/EngineLimits.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusFunction.h>
@@ -18,7 +16,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusState final
 {
-  boost::string_ref name{ "" };
+  identifier_ref name{ "" };
   IntrusiveLinkedList<PapyrusFunction> functions{ };
 
   CapricaFileLocation location;

@@ -261,16 +261,16 @@ struct PapyrusNamespace final
       c.second->awaitCompile();
   }
 
-  void createNamespace(boost::string_ref curPiece, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
+  void createNamespace(const identifier_ref& curPiece, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
     if (curPiece == "") {
       objects = std::move(map);
       return;
     }
 
-    boost::string_ref curSearchPiece = curPiece;
-    boost::string_ref nextSearchPiece = "";
+    identifier_ref curSearchPiece = curPiece;
+    identifier_ref nextSearchPiece = "";
     auto loc = curPiece.find(':');
-    if (loc != boost::string_ref::npos) {
+    if (loc != identifier_ref::npos) {
       curSearchPiece = curPiece.substr(0, loc);
       nextSearchPiece = curPiece.substr(loc + 1);
     }
@@ -286,16 +286,16 @@ struct PapyrusNamespace final
     f->second->createNamespace(nextSearchPiece, std::move(map));
   }
 
-  bool tryFindNamespace(boost::string_ref curPiece, PapyrusNamespace const** ret) const {
+  bool tryFindNamespace(const identifier_ref& curPiece, PapyrusNamespace const** ret) const {
     if (curPiece == "") {
       *ret = this;
       return true;
     }
 
-    boost::string_ref curSearchPiece = curPiece;
-    boost::string_ref nextSearchPiece = "";
+    identifier_ref curSearchPiece = curPiece;
+    identifier_ref nextSearchPiece = "";
     auto loc = curPiece.find(':');
-    if (loc != boost::string_ref::npos) {
+    if (loc != identifier_ref::npos) {
       curSearchPiece = curPiece.substr(0, loc);
       nextSearchPiece = curPiece.substr(loc + 1);
     }
@@ -307,9 +307,9 @@ struct PapyrusNamespace final
     return false;
   }
 
-  bool tryFindType(boost::string_ref typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) const {
+  bool tryFindType(const identifier_ref& typeName, PapyrusCompilationNode** retNode, identifier_ref* retStructName) const {
     auto loc = typeName.find(':');
-    if (loc == boost::string_ref::npos) {
+    if (loc == identifier_ref::npos) {
       auto f2 = objects.find(typeName);
       if (f2 != objects.end()) {
         *retNode = f2->second;
@@ -330,7 +330,7 @@ struct PapyrusNamespace final
 
     // subName is still partially qualified, so it can't
     // be referencing a struct in this namespace.
-    if (subName.find(':') != boost::string_ref::npos)
+    if (subName.find(':') != identifier_ref::npos)
       return false;
 
     // It is a struct reference.
@@ -361,7 +361,7 @@ void PapyrusCompilationContext::doCompile(CapricaJobManager* jobManager) {
   jobManager->enjoin();
 }
 
-bool PapyrusCompilationContext::tryFindType(boost::string_ref baseNamespace, boost::string_ref typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName) {
+bool PapyrusCompilationContext::tryFindType(const identifier_ref& baseNamespace, const identifier_ref& typeName, PapyrusCompilationNode** retNode, identifier_ref* retStructName) {
   const PapyrusNamespace* curNamespace = nullptr;
   if (!rootNamespace.tryFindNamespace(baseNamespace, &curNamespace))
     return false;

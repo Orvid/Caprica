@@ -5,6 +5,7 @@
 #include <common/CapricaJobManager.h>
 #include <common/CaselessStringComparer.h>
 #include <common/FSUtils.h>
+#include <common/identifier_ref.h>
 
 #include <papyrus/PapyrusScript.h>
 
@@ -25,7 +26,7 @@ struct PapyrusCompilationNode final
     PexReflection,
   };
 
-  boost::string_ref baseName;
+  identifier_ref baseName;
 
   PapyrusCompilationNode() = delete;
   PapyrusCompilationNode(CapricaJobManager* mgr, NodeType compileType, std::string&& sourcePath,
@@ -113,7 +114,7 @@ struct PapyrusCompilationContext final
   static void awaitRead();
   static void doCompile(CapricaJobManager* jobManager);
   static void pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map);
-  static bool tryFindType(boost::string_ref baseNamespace, boost::string_ref typeName, PapyrusCompilationNode** retNode, boost::string_ref* retStructName);
+  static bool tryFindType(const identifier_ref& baseNamespace, const identifier_ref& typeName, PapyrusCompilationNode** retNode, identifier_ref* retStructName);
 };
 
 }}

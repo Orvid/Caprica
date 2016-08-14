@@ -91,6 +91,14 @@ boost::string_ref ChainedPool::allocateString(const char* str, size_t len) {
   return boost::string_ref(buf, len);
 }
 
+identifier_ref ChainedPool::allocateIdentifier(std::string&& str) {
+  return allocateIdentifier((char*)str.data(), str.size());
+}
+
+identifier_ref ChainedPool::allocateIdentifier(const identifier_ref& str) {
+  return allocateIdentifier((char*)str.data(), str.size());
+}
+
 identifier_ref ChainedPool::allocateIdentifier(const char* str, size_t len) {
   auto buf = allocate(len);
   memcpy(buf, str, len);

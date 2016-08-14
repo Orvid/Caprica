@@ -16,14 +16,15 @@
 
 namespace caprica { namespace FSUtils {
 
-boost::string_ref basenameAsRef(boost::string_ref file) {
+identifier_ref basenameAsRef(const identifier_ref& file) {
   auto pos = file.find_last_of("\\/");
-  if (pos != boost::string_ref::npos)
-    file = file.substr(pos + 1);
-  auto pos2 = file.rfind('.');
-  if (pos2 != boost::string_ref::npos)
-    return file.substr(0, pos2);
-  return file;
+  auto fil = file;
+  if (pos != identifier_ref::npos)
+    fil = file.substr(pos + 1);
+  auto pos2 = fil.rfind('.');
+  if (pos2 != identifier_ref::npos)
+    return fil.substr(0, pos2);
+  return fil;
 }
 
 boost::string_ref extensionAsRef(boost::string_ref file) {
@@ -40,10 +41,10 @@ boost::string_ref filenameAsRef(boost::string_ref file) {
   return file;
 }
 
-boost::string_ref parentPathAsRef(boost::string_ref file) {
+identifier_ref parentPathAsRef(const identifier_ref& file) {
   auto pos = file.find_last_of("\\/");
-  if (pos != boost::string_ref::npos)
-    file = file.substr(0, pos);
+  if (pos != identifier_ref::npos)
+    return file.substr(0, pos);
   return file;
 }
 

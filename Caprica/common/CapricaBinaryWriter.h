@@ -83,6 +83,13 @@ struct CapricaBinaryWriter
       append(val.data(), val.size());
   }
 
+  template<>
+  void write(identifier_ref val) {
+    boundWrite<uint16_t>(val.size());
+    if (val.size())
+      append(val.data(), val.size());
+  }
+
 protected:
   allocators::ChainedPool strm{ 1024 * 4 };
 

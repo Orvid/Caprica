@@ -5,6 +5,7 @@
 
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusFunctionParameter.h>
@@ -35,16 +36,16 @@ enum class PapyrusFunctionType
 
 struct PapyrusFunction final
 {
-  boost::string_ref name{ "" };
-  boost::string_ref documentationComment{ "" };
+  identifier_ref name{ "" };
+  identifier_ref documentationComment{ "" };
   PapyrusType returnType;
   PapyrusUserFlags userFlags{ };
   IntrusiveLinkedList<PapyrusFunctionParameter> parameters{ };
   IntrusiveLinkedList<statements::PapyrusStatement> statements{ };
   PapyrusObject* parentObject{ nullptr };
   PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
-  boost::string_ref remoteEventParent{ "" };
-  boost::string_ref remoteEventName{ "" };
+  identifier_ref remoteEventParent{ "" };
+  identifier_ref remoteEventName{ "" };
 
   CapricaFileLocation location;
 

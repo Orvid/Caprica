@@ -117,7 +117,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
     }
 
     if (conf::Debug::debugControlFlowGraph) {
-      std::cout << "CFG for " << name << ":" << std::endl;
+      //std::cout << "CFG for " << name << ":" << std::endl;
       cfg.dumpGraph();
     }
   }
@@ -135,7 +135,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
       int i = 0;
       auto baseName = s->name;
       while (allLocalNames.count(s->name))
-        s->name = ctx->allocator->allocateString("::mangled_" + baseName.to_string() + "_" + std::to_string(i++));
+        s->name = ctx->allocator->allocateIdentifier("::mangled_" + baseName.to_string() + "_" + std::to_string(i++));
       allLocalNames.insert(s->name);
     }
   } visitor(ctx);

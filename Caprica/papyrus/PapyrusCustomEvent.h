@@ -1,9 +1,8 @@
 #pragma once
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
@@ -14,7 +13,7 @@ struct PapyrusObject;
 
 struct PapyrusCustomEvent final
 {
-  boost::string_ref name{ };
+  identifier_ref name{ };
   PapyrusObject* parentObject{ nullptr };
   CapricaFileLocation location;
 

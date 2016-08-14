@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <common/identifier_ref.h>
 
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
@@ -14,7 +14,7 @@ namespace caprica { namespace papyrus { namespace statements {
 struct PapyrusDeclareStatement final : public PapyrusStatement
 {
   PapyrusType type;
-  boost::string_ref name{ "" };
+  identifier_ref name{ "" };
   bool isAuto{ false };
   bool isConst{ false };
   expressions::PapyrusExpression* initialValue{ nullptr };

@@ -19,6 +19,9 @@ void identifierToLower(std::string& str);
 
 bool caselessEq(boost::string_ref a, boost::string_ref b);
 bool pathEq(boost::string_ref a, boost::string_ref b);
+bool pathEq(boost::string_ref a, const identifier_ref& b);
+bool pathEq(const identifier_ref& a, const identifier_ref& b);
+bool pathEq(boost::string_ref a, const char* b);
 
 bool idEq(const char* a, const char* b);
 bool idEq(const char* a, const std::string& b);
@@ -65,7 +68,7 @@ private:
 struct CaselessPathEqual final
 {
   bool operator()(const std::string& lhs, const std::string& rhs) const {
-    return pathEq(lhs, rhs);
+    return pathEq(boost::string_ref(lhs), boost::string_ref(rhs));
   }
 };
 
@@ -90,6 +93,9 @@ extern template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size
 
 struct CaselessIdentifierEqual final
 {
+  template<bool isNullTerminated>
+  static bool equal(const char* a, const char* b, size_t len);
+
   bool operator()(const char* lhs, const char* rhs) const = delete;
   bool operator()(const std::string& lhs, const std::string& rhs) const {
     return idEq(lhs, rhs);
@@ -101,6 +107,8 @@ struct CaselessIdentifierEqual final
     return idEq(lhs, rhs);
   }
 };
+extern template bool CaselessIdentifierEqual::equal<true>(const char*, const char*, size_t);
+extern template bool CaselessIdentifierEqual::equal<false>(const char*, const char*, size_t);
 
 // These aren't as restricted as identifiers, but must be in the base-ascii
 // range, and must not contain control characters.

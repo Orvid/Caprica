@@ -44,6 +44,8 @@ struct ChainedPool
   boost::string_ref allocateString(std::string&& str);
   boost::string_ref allocateString(boost::string_ref str);
   boost::string_ref allocateString(const char* str, size_t len);
+  identifier_ref allocateIdentifier(std::string&& str);
+  identifier_ref allocateIdentifier(const identifier_ref& str);
   identifier_ref allocateIdentifier(const char* str, size_t len);
 
   void reset();

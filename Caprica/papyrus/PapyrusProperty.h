@@ -3,6 +3,7 @@
 #include <string>
 
 #include <common/CapricaFileLocation.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusFunction.h>
@@ -18,8 +19,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusProperty final
 {
-  boost::string_ref name{ "" };
-  boost::string_ref documentationComment{ "" };
+  identifier_ref name{ "" };
+  identifier_ref documentationComment{ "" };
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
   PapyrusFunction* readFunction{ nullptr };

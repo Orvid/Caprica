@@ -48,12 +48,12 @@ PapyrusScript* PapyrusParser::parseScript() {
   return script;
 }
 
-static bool doesScriptNameMatchNextPartOfDir(boost::string_ref curPath, boost::string_ref curName) {
+static bool doesScriptNameMatchNextPartOfDir(const identifier_ref& curPath, const identifier_ref& curName) {
   auto idx = curName.rfind(':');
-  if (idx != boost::string_ref::npos) {
+  if (idx != identifier_ref::npos) {
     auto namePiece = curName.substr(idx + 1);
     auto basePath = FSUtils::basenameAsRef(curPath);
-    if (!pathEq(namePiece, basePath))
+    if (!pathEq(basePath, namePiece))
       return false;
     return doesScriptNameMatchNextPartOfDir(FSUtils::parentPathAsRef(curPath), curName.substr(0, idx));
   }
@@ -402,7 +402,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObje
     func->functionType = PapyrusFunctionType::RemoteEvent;
     func->remoteEventParent = func->name;
     func->remoteEventName = expectConsumeIdentRef();
-    func->name = alloc->allocateString("::remote_" + func->remoteEventParent.to_string() + "_" + func->remoteEventName.to_string());
+    func->name = alloc->allocateIdentifier("::remote_" + func->remoteEventParent.to_string() + "_" + func->remoteEventName.to_string());
   }
   expectConsume(TokenType::LParen);
 
@@ -1074,17 +1074,17 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
   switch (cur.type) {
     case TokenType::Float:
       val.type = PapyrusValueType::Float;
-      val.f = cur.val.f;
+      val.val.f = cur.val.f;
       consume();
       return val;
     case TokenType::Integer:
       val.type = PapyrusValueType::Integer;
-      val.i = cur.val.i;
+      val.val.i = cur.val.i;
       consume();
       return val;
     case TokenType::String:
       val.type = PapyrusValueType::String;
-      val.s = cur.sValue;
+      val.val.s = cur.val.s;
       consume();
       return val;
     case TokenType::kNone:
@@ -1093,12 +1093,12 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
       return val;
     case TokenType::kTrue:
       val.type = PapyrusValueType::Bool;
-      val.b = true;
+      val.val.b = true;
       consume();
       return val;
     case TokenType::kFalse:
       val.type = PapyrusValueType::Bool;
-      val.b = false;
+      val.val.b = false;
       consume();
       return val;
 
@@ -1142,7 +1142,7 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
       case TokenType::Identifier:
       case TokenType::kDefault: {
         auto loc = cur.location;
-        auto str = cur.sValue.to_string();
+        auto str = cur.val.s.to_string();
         if (cur.type == TokenType::kDefault)
           str = "default";
 

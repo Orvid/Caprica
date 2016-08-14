@@ -8,6 +8,8 @@
 
 namespace caprica {
 
+// Yes, the name is identifier_ref, but it is used to hold
+// normal string refs as well.
 struct identifier_ref final
 {
   static constexpr size_t npos = size_t(-1);

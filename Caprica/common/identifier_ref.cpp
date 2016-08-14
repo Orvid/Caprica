@@ -46,13 +46,16 @@ bool identifier_ref::identifierEquals(const identifier_ref& s) const {
     return false;
   if (identifierHash() != s.identifierHash())
     return false;
-  return memcmp(mData, s.mData, mLength) == 0;
+  return CaselessIdentifierEqual::equal<false>(mData, s.mData, mLength);
 }
 
 uint32_t identifier_ref::identifierHash() const {
   if (mCaselessHash != 0)
     return mCaselessHash;
-  return mCaselessHash = CaselessIdentifierHasher::hash<false>(mData, mLength);
+  mCaselessHash = CaselessIdentifierHasher::hash<false>(mData, mLength);
+  if (!mCaselessHash)
+    mCaselessHash = 1;
+  return mCaselessHash;
 }
 bool identifier_ref::equals(const identifier_ref& s) const {
   if (mLength != s.mLength)

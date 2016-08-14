@@ -46,6 +46,21 @@ bool pathEq(boost::string_ref a, boost::string_ref b) {
   return caselessEq(a, b);
 }
 
+bool pathEq(boost::string_ref a, const char* b) {
+  // TODO: Ensure in lower-ascii range.
+  return caselessEq(a, boost::string_ref(b));
+}
+
+bool pathEq(boost::string_ref a, const identifier_ref& b) {
+  // TODO: Ensure in lower-ascii range.
+  return caselessEq(a, boost::string_ref(b.data(), b.size()));
+}
+
+bool pathEq(const identifier_ref& a, const identifier_ref& b) {
+  // TODO: Ensure in lower-ascii range.
+  return caselessEq(boost::string_ref(a.data(), a.size()), boost::string_ref(b.data(), b.size()));
+}
+
 alignas(128) static const __m128i spaces{
   ' ', ' ', ' ', ' ',
   ' ', ' ', ' ', ' ',
@@ -55,20 +70,18 @@ alignas(128) static const __m128i spaces{
 
 template<bool isNullTerminated>
 ALWAYS_INLINE
-static bool idEq(const char* a, size_t aLen, const char* b, size_t bLen) {
+bool CaselessIdentifierEqual::equal(const char* a, const char* b, size_t len) {
   // This uses the SSE2 instructions movdqa, movdqu, pcmpeqb, por, pmovmskb,
   // and is safe to use on any 64-bit CPU.
   // This returns via goto's because of how MSVC does codegen.
-  if (aLen != bLen)
-    goto ReturnFalse;
   if (a == b)
     goto ReturnTrue;
   const char* __restrict strA = a;
   const int64_t strBOff = b - a;
-  size_t lenLeft = aLen;
+  size_t lenLeft = len;
   if (isNullTerminated) {
     // We know the string is null-terminated, so we can align to 2.
-    lenLeft = ((aLen + 1) & 0xFFFFFFFFFFFFFFFEULL);
+    lenLeft = ((len + 1) & 0xFFFFFFFFFFFFFFFEULL);
   }
   while (lenLeft >= 16) {
     auto vA = _mm_or_si128(_mm_loadu_si128((__m128i*)strA), spaces);
@@ -105,6 +118,15 @@ ReturnTrue:
   return true;
 ReturnFalse:
   return false;
+}
+template bool CaselessIdentifierEqual::equal<true>(const char*, const char*, size_t);
+template bool CaselessIdentifierEqual::equal<false>(const char*, const char*, size_t);
+
+template<bool isNullTerminated>
+static bool idEq(const char* a, size_t sA, const char* b, size_t sB) {
+  if (sA != sB)
+    return false;
+  return CaselessIdentifierEqual::equal<isNullTerminated>(a, b, sB);
 }
 
 bool idEq(const char* a, const char* b) {

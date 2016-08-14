@@ -186,7 +186,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (args[0]->value->resultType().type != PapyrusType::Kind::String)
           ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
         
-        auto memberName = args[0]->value->asLiteralExpression()->value.s;
+        auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
           if (idEq(m->name, memberName)) {
@@ -230,7 +230,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (args[0]->value->resultType().type != PapyrusType::Kind::String)
           ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
 
-        auto memberName = args[0]->value->asLiteralExpression()->value.s;
+        auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
           if (idEq(m->name, memberName)) {
@@ -396,15 +396,15 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           if (baseType.type != PapyrusType::Kind::ResolvedObject)
             goto EventResolutionError;
 
-          if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolved.obj, le->value.s)) {
+          if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolved.obj, le->value.val.s)) {
             continue;
-          } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolved.obj, le->value.s)) {
-            le->value.s = ctx->allocator->allocateString(ev->parentObject->name.to_string() + "_" + le->value.s.to_string());
+          } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolved.obj, le->value.val.s)) {
+            le->value.val.s = ctx->allocator->allocateIdentifier(ev->parentObject->name.to_string() + "_" + le->value.val.s.to_string());
             continue;
           }
 
         EventResolutionError:
-          ctx->reportingContext.error(p.self->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.s.to_string().c_str(), baseType.prettyString().c_str());
+          ctx->reportingContext.error(p.self->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.val.s.to_string().c_str(), baseType.prettyString().c_str());
           break;
         }
         default:
@@ -427,7 +427,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     if (function.res.func->name == "GotoState" && arguments.size() == 1) {
       auto le = arguments.front()->value->asLiteralExpression();
       if (le && le->value.type == PapyrusValueType::String) {
-        auto targetStateName = le->value.s;
+        auto targetStateName = le->value.val.s;
         if (!ctx->tryResolveState(targetStateName))
           ctx->reportingContext.warning_W4003_State_Doesnt_Exist(le->location, targetStateName.to_string().c_str());
       }

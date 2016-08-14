@@ -18,7 +18,7 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   struct Parameter final
   {
     size_t argIndex{ 0 };
-    boost::string_ref name{ "" };
+    identifier_ref name{ "" };
     PapyrusExpression* value{ nullptr };
 
     explicit Parameter() = default;

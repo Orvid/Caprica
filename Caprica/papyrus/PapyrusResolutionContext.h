@@ -1,14 +1,13 @@
 #pragma once
 
 #include <cstring>
-#include <map>
-#include <string>
 #include <vector>
 #include <unordered_set>
 
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
@@ -44,7 +43,7 @@ struct PapyrusResolutionContext final
   // a pex file.
   bool isPexResolution{ false };
 
-  void addImport(const CapricaFileLocation& location, boost::string_ref import);
+  void addImport(const CapricaFileLocation& location, const identifier_ref& import);
   void clearImports() { importedNodes.clear(); }
 
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
@@ -78,9 +77,9 @@ struct PapyrusResolutionContext final
 
   void addLocalVariable(statements::PapyrusDeclareStatement* ident);
 
-  const PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, boost::string_ref name) const;
-  const PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, boost::string_ref name) const;
-  const PapyrusState* tryResolveState(boost::string_ref name, const PapyrusObject* parentObj = nullptr) const;
+  const PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, const identifier_ref& name) const;
+  const PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, const identifier_ref& name) const;
+  const PapyrusState* tryResolveState(const identifier_ref& name, const PapyrusObject* parentObj = nullptr) const;
   PapyrusType resolveType(PapyrusType tp, bool lazy = false);
   PapyrusIdentifier resolveIdentifier(const PapyrusIdentifier& ident) const;
   PapyrusIdentifier tryResolveIdentifier(const PapyrusIdentifier& ident) const;

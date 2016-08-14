@@ -1,9 +1,7 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include <common/CapricaFileLocation.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusProperty.h>
@@ -17,8 +15,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusPropertyGroup final
 {
-  boost::string_ref name{ "" };
-  boost::string_ref documentationComment{ "" };
+  identifier_ref name{ "" };
+  identifier_ref documentationComment{ "" };
   PapyrusUserFlags userFlags{ };
   IntrusiveLinkedList<PapyrusProperty> properties{ };
 

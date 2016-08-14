@@ -6,6 +6,7 @@
 #include <common/CapricaFileLocation.h>
 #include <common/CaselessStringComparer.h>
 #include <common/EngineLimits.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusCustomEvent.h>
@@ -41,15 +42,15 @@ enum class PapyrusResoultionState
 
 struct PapyrusObject final
 {
-  boost::string_ref name{ "" };
-  boost::string_ref documentationString{ "" };
+  identifier_ref name{ "" };
+  identifier_ref documentationString{ "" };
   PapyrusUserFlags userFlags{ };
   PapyrusType parentClass;
   PapyrusState* autoState{ nullptr };
   
   CapricaFileLocation location;
 
-  std::vector<std::pair<CapricaFileLocation, boost::string_ref>> imports{ };
+  std::vector<std::pair<CapricaFileLocation, identifier_ref>> imports{ };
   IntrusiveLinkedList<PapyrusStruct> structs{ };
   IntrusiveLinkedList<PapyrusVariable> variables{ };
   IntrusiveLinkedList<PapyrusPropertyGroup> propertyGroups{ };
@@ -72,7 +73,7 @@ struct PapyrusObject final
   const PapyrusState* getRootState() const { return rootState; }
   PapyrusState* getRootState() { return rootState; }
 
-  boost::string_ref loweredName() const {
+  identifier_ref loweredName() const {
     if (lowerName.size() == name.size())
       return lowerName;
     lowerName = name.to_string();
@@ -80,10 +81,10 @@ struct PapyrusObject final
     return lowerName;
   }
 
-  boost::string_ref getNamespaceName() const {
+  identifier_ref getNamespaceName() const {
     auto pos = name.rfind(':');
-    if (pos != boost::string_ref::npos)
-      return boost::string_ref(name).substr(0, pos);
+    if (pos != identifier_ref::npos)
+      return identifier_ref(name).substr(0, pos);
     return "";
   }
 

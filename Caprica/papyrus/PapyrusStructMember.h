@@ -1,8 +1,7 @@
 #pragma once
 
-#include <string>
-
 #include <common/CapricaFileLocation.h>
+#include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusResolutionContext.h>
@@ -19,8 +18,8 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusStructMember final
 {
-  boost::string_ref name{ "" };
-  boost::string_ref documentationString{ "" };
+  identifier_ref name{ "" };
+  identifier_ref documentationString{ "" };
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
   PapyrusValue defaultValue{ PapyrusValue::Default() };
