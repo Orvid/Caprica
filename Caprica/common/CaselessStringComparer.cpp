@@ -201,6 +201,4 @@ size_t CaselessIdentifierHasher::operator()(boost::string_ref k) const {
   return ((size_t)r << 32) | r;
 }
 
-
-
 }

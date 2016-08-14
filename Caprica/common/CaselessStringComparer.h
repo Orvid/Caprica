@@ -79,6 +79,11 @@ struct CaselessIdentifierHasher final
   size_t operator()(const std::string& k) const;
   NEVER_INLINE
   size_t operator()(boost::string_ref k) const;
+
+  size_t operator()(const identifier_ref& k) const {
+    uint32_t r = k.identifierHash();
+    return ((size_t)r << 32) | r;
+  }
 };
 extern template uint32_t CaselessIdentifierHasher::hash<true>(const char*, size_t);
 extern template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size_t);
@@ -90,6 +95,9 @@ struct CaselessIdentifierEqual final
     return idEq(lhs, rhs);
   }
   bool operator()(boost::string_ref lhs, boost::string_ref rhs) const {
+    return idEq(lhs, rhs);
+  }
+  bool operator()(const identifier_ref& lhs, const identifier_ref& rhs) const {
     return idEq(lhs, rhs);
   }
 };
@@ -105,10 +113,10 @@ template<typename V>
 using caseless_unordered_path_map = typename std::unordered_map<std::string, V, CaselessPathHasher, CaselessPathEqual>;
 
 using caseless_unordered_identifier_set = std::unordered_set<std::string, CaselessIdentifierHasher, CaselessIdentifierEqual>;
-using caseless_unordered_identifier_ref_set = std::unordered_set<boost::string_ref, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+using caseless_unordered_identifier_ref_set = std::unordered_set<identifier_ref, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 template<typename V>
 using caseless_unordered_identifier_map = typename std::unordered_map<std::string, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 template<typename V>
-using caseless_unordered_identifier_ref_map = typename std::unordered_map<boost::string_ref, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+using caseless_unordered_identifier_ref_map = typename std::unordered_map<identifier_ref, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 
 }

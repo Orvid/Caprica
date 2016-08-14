@@ -44,15 +44,16 @@ identifier_ref identifier_ref::substr(size_t pos, size_t n) const {
 bool identifier_ref::identifierEquals(const identifier_ref& s) const {
   if (mLength != s.mLength)
     return false;
-  if (mCaselessHash == 0)
-    mCaselessHash = CaselessIdentifierHasher::hash<false>(mData, mLength);
-  if (s.mCaselessHash == 0)
-    s.mCaselessHash = CaselessIdentifierHasher::hash<false>(s.mData, s.mLength);
-  if (mCaselessHash != s.mCaselessHash)
+  if (identifierHash() != s.identifierHash())
     return false;
   return memcmp(mData, s.mData, mLength) == 0;
 }
 
+uint32_t identifier_ref::identifierHash() const {
+  if (mCaselessHash != 0)
+    return mCaselessHash;
+  return mCaselessHash = CaselessIdentifierHasher::hash<false>(mData, mLength);
+}
 bool identifier_ref::equals(const identifier_ref& s) const {
   if (mLength != s.mLength)
     return false;
@@ -137,6 +138,10 @@ size_t identifier_ref::find_last_not_of(char c) const {
       return reverse_distance(this->crbegin(), iter);
   }
   return npos;
+}
+
+std::string identifier_ref::to_string() const {
+  return std::string(mData, mLength);
 }
 
 size_t identifier_ref::reverse_distance(std::reverse_iterator<const char*> first, std::reverse_iterator<const char*> last) const {

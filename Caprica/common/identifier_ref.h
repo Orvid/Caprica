@@ -44,6 +44,7 @@ struct identifier_ref final
   void clear();
   identifier_ref substr(size_t pos, size_t n = npos) const;
   bool identifierEquals(const identifier_ref& s) const;
+  uint32_t identifierHash() const;
   bool equals(const identifier_ref& s) const;
   bool starts_with(char c) const;
   bool starts_with(const identifier_ref& s) const;
@@ -61,6 +62,9 @@ struct identifier_ref final
   size_t find_first_not_of(char c) const;
   size_t find_last_not_of(const identifier_ref& s) const;
   size_t find_last_not_of(char c) const;
+
+  std::string to_string() const;
+
 
 private:
   const char* mData{ nullptr };
