@@ -4,7 +4,7 @@
 
 namespace caprica { namespace allocators {
 
-size_t ReffyStringPool::lookup(boost::string_ref str) {
+size_t ReffyStringPool::lookup(const identifier_ref& str) {
   auto h = hash(str);
   auto entry = find(str, h);
   if (entry->generationNum == generationNumber)
@@ -12,13 +12,13 @@ size_t ReffyStringPool::lookup(boost::string_ref str) {
   return push_back_with_hash(str, h, entry);
 }
 
-boost::string_ref ReffyStringPool::byIndex(size_t v) const {
+identifier_ref ReffyStringPool::byIndex(size_t v) const {
   assert(v < count);
   auto h = strings[v];
-  return boost::string_ref((const char*)(h + 1), h->length);
+  return identifier_ref((const char*)(h + 1), h->length);
 }
 
-void ReffyStringPool::push_back(boost::string_ref str) {
+void ReffyStringPool::push_back(const identifier_ref& str) {
   auto h = hash(str);
   push_back_with_hash(str, h, find(str, h));
 }
@@ -31,7 +31,7 @@ void ReffyStringPool::reset() {
   alloc.reset();
 }
 
-ReffyStringPool::HashEntry* ReffyStringPool::find(boost::string_ref str, size_t hash) {
+ReffyStringPool::HashEntry* ReffyStringPool::find(const identifier_ref& str, size_t hash) {
   HashEntry* entry = &hashtable[hash & mask];
   while (entry->generationNum == generationNumber) {
     if (entry->upperHash == (uint16_t)(hash >> 16) && str == byIndex(entry->stringIndex))
@@ -42,7 +42,7 @@ ReffyStringPool::HashEntry* ReffyStringPool::find(boost::string_ref str, size_t 
   return entry;
 }
 
-size_t ReffyStringPool::push_back_with_hash(boost::string_ref str, size_t hash, HashEntry* entry) {
+size_t ReffyStringPool::push_back_with_hash(const identifier_ref& str, size_t hash, HashEntry* entry) {
   auto hdr = (StringHeader*)alloc.allocate(sizeof(StringHeader) + str.size());
   hdr->length = (uint16_t)str.size();
   hdr->data = (const char*)(hdr + 1);
@@ -56,9 +56,9 @@ size_t ReffyStringPool::push_back_with_hash(boost::string_ref str, size_t hash, 
   return ret;
 }
 
-size_t ReffyStringPool::hash(boost::string_ref str) {
+size_t ReffyStringPool::hash(const identifier_ref& str) {
   const char* cStr = str.data();
-  size_t lenLeft = str.length();
+  size_t lenLeft = str.size();
   size_t iterCount = lenLeft >> 2;
   uint32_t val = 0x84222325U;
   size_t i = iterCount;

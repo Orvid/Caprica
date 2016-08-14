@@ -3,9 +3,8 @@
 #include <stdint.h>
 #include <limits>
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/allocators/ChainedPool.h>
+#include <common/identifier_ref.h>
 
 namespace caprica { namespace allocators {
 
@@ -15,9 +14,9 @@ struct ReffyStringPool final
 
   ReffyStringPool() = default;
 
-  size_t lookup(boost::string_ref str);
-  boost::string_ref byIndex(size_t v) const;
-  void push_back(boost::string_ref str);
+  size_t lookup(const identifier_ref& str);
+  identifier_ref byIndex(size_t v) const;
+  void push_back(const identifier_ref& str);
   void reset();
   size_t size() const { return count; };
 
@@ -41,9 +40,9 @@ private:
   StringHeader* strings[MaxCapacity]{ };
   HashEntry hashtable[MaxCapacity]{ };
 
-  HashEntry* find(boost::string_ref str, size_t hash);
-  size_t push_back_with_hash(boost::string_ref str, size_t hash, HashEntry* entry);
-  static size_t hash(boost::string_ref str);
+  HashEntry* find(const identifier_ref& str, size_t hash);
+  size_t push_back_with_hash(const identifier_ref& str, size_t hash, HashEntry* entry);
+  static size_t hash(const identifier_ref& str);
 };
 
 }}
