@@ -6,6 +6,8 @@
 #include <iterator>
 #include <string>
 
+#include <common/UtilMacros.h>
+
 namespace caprica {
 
 // Yes, the name is identifier_ref, but it is used to hold
@@ -15,7 +17,9 @@ struct identifier_ref final
   static constexpr size_t npos = size_t(-1);
 
   constexpr identifier_ref() = default;
+  ALWAYS_INLINE
   identifier_ref(const char* str) : identifier_ref(str, strlen(str)) { }
+  ALWAYS_INLINE
   identifier_ref(const std::string& str) : identifier_ref(str.data(), str.size()) { }
   constexpr identifier_ref(const char* str, size_t length) : mData(str), mLength(length) { }
   constexpr identifier_ref(const identifier_ref& rhs) = default;
