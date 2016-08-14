@@ -89,7 +89,7 @@ struct PapyrusResolutionContext final
   PapyrusIdentifier tryResolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal = false) const;
 
   template<typename T>
-  void ensureNamesAreUnique(const std::vector<T*>& nameset, const char* typeOfName) {
+  void ensureNamesAreUnique(const caseless_unordered_identifier_ref_map<T*>& nameset, const char* typeOfName) {
     // If there's nothing in it, or only one thing,
     // it will always be unique.
     if (nameset.size() > 1) {
@@ -97,11 +97,11 @@ struct PapyrusResolutionContext final
       foundNames.reserve(nameset.size());
       for (auto member : nameset) {
         // TODO: Output location of first name.
-        auto f = foundNames.find(member->name);
+        auto f = foundNames.find(member.second->name);
         if (f != foundNames.end()) {
-          reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName, member->name.to_string().c_str());
+          reportingContext.error(member.second->location, "A %s named '%s' was already defined in this scope.", typeOfName, member.second->name.to_string().c_str());
         } else {
-          foundNames.insert(member->name);
+          foundNames.insert(member.second->name);
         }
       }
     }

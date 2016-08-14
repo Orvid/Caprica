@@ -124,14 +124,18 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         break;
       }
 
-      case TokenType::kEvent:
+      case TokenType::kEvent: {
         consume();
-        obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndEvent));
+        auto f = parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndEvent);
+        obj->getRootState()->functions.emplace(f->name, f);
         break;
-      case TokenType::kFunction:
+      }
+      case TokenType::kFunction: {
         consume();
-        obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction));
+        auto f = parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction);
+        obj->getRootState()->functions.emplace(f->name, f);
         break;
+      }
 
       case TokenType::kBool:
       case TokenType::kFloat:
@@ -143,7 +147,8 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         auto tp = expectConsumePapyrusType();
         if (cur.type == TokenType::kFunction) {
           consume();
-          obj->getRootState()->functions.push_back(parseFunction(script, obj, obj->getRootState(), std::move(tp), TokenType::kEndFunction));
+          auto f = parseFunction(script, obj, obj->getRootState(), std::move(tp), TokenType::kEndFunction);
+          obj->getRootState()->functions.emplace(f->name, f);
         } else if (cur.type == TokenType::kProperty) {
           consume();
           obj->getRootPropertyGroup()->properties.push_back(parseProperty(script, obj, std::move(tp)));
@@ -178,14 +183,18 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
         expectConsumeEOLs();
         goto Return;
 
-      case TokenType::kEvent:
+      case TokenType::kEvent: {
         consume();
-        state->functions.push_back(parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndEvent));
+        auto f = parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndEvent);
+        state->functions.emplace(f->name, f);
         break;
-      case TokenType::kFunction:
+      }
+      case TokenType::kFunction: {
         consume();
-        state->functions.push_back(parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndFunction));
+        auto f = parseFunction(script, object, state, PapyrusType::None(cur.location), TokenType::kEndFunction);
+        state->functions.emplace(f->name, f);
         break;
+      }
 
       case TokenType::kBool:
       case TokenType::kFloat:
@@ -196,7 +205,8 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kFunction);
-        state->functions.push_back(parseFunction(script, object, state, std::move(tp), TokenType::kEndFunction));
+        auto f = parseFunction(script, object, state, std::move(tp), TokenType::kEndFunction);
+        state->functions.emplace(f->name, f);
         break;
       }
 

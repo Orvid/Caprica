@@ -1,5 +1,6 @@
 #pragma once
 
+#include <common/CaselessStringComparer.h>
 #include <common/EngineLimits.h>
 #include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
@@ -17,7 +18,7 @@ namespace caprica { namespace papyrus {
 struct PapyrusState final
 {
   identifier_ref name{ "" };
-  IntrusiveLinkedList<PapyrusFunction> functions{ };
+  caseless_unordered_identifier_ref_map<PapyrusFunction*> functions{ };
 
   CapricaFileLocation location;
 
@@ -30,10 +31,10 @@ struct PapyrusState final
     state->name = file->getString(name);
 
     size_t staticFunctionCount = 0;
-    for (auto f : functions) {
-      if (f->isGlobal())
+    for (auto& f : functions) {
+      if (f.second->isGlobal())
         staticFunctionCount++;
-      state->functions.push_back(f->buildPex(repCtx, file, obj, state, pex::PexString()));
+      state->functions.push_back(f.second->buildPex(repCtx, file, obj, state, pex::PexString()));
     }
 
     if (name == "") {

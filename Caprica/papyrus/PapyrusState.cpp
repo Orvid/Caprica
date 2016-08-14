@@ -6,8 +6,8 @@ namespace caprica { namespace papyrus {
 
 static const PapyrusFunction* searchRootStateForFunction(const identifier_ref& name, const PapyrusObject* obj) {
   for (auto f : obj->getRootState()->functions) {
-    if (idEq(f->name, name))
-      return f;
+    if (idEq(f.second->name, name))
+      return f.second;
   }
 
   if (auto parentObj = obj->tryGetParentClass())
@@ -18,7 +18,7 @@ static const PapyrusFunction* searchRootStateForFunction(const identifier_ref& n
 void PapyrusState::semantic(PapyrusResolutionContext* ctx) {
   ctx->state = this;
   for (auto f : functions)
-    f->semantic(ctx);
+    f.second->semantic(ctx);
   ctx->state = nullptr;
 }
 
@@ -31,27 +31,26 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
       ctx->reportingContext.error(location, "Named states aren't allowed on Native scripts.");
 
     for (auto f : functions) {
-      auto baseFunc = searchRootStateForFunction(f->name, ctx->object);
+      auto baseFunc = searchRootStateForFunction(f.second->name, ctx->object);
       if (!baseFunc)
-        ctx->reportingContext.error(f->location, "Function '%s' cannot be defined in state '%s' without also being defined in the empty state!", f->name.to_string().c_str(), name.to_string().c_str());
-      else if (!baseFunc->hasSameSignature(f))
-        ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) in the '%s' state doesn't match the signature in the root state. The expected signature is '%s'.", f->name.to_string().c_str(), f->prettySignature().c_str(), name.to_string().c_str(), baseFunc->prettySignature().c_str());
+        ctx->reportingContext.error(f.second->location, "Function '%s' cannot be defined in state '%s' without also being defined in the empty state!", f.second->name.to_string().c_str(), name.to_string().c_str());
+      else if (!baseFunc->hasSameSignature(f.second))
+        ctx->reportingContext.error(f.second->location, "The signature of the '%s' function (%s) in the '%s' state doesn't match the signature in the root state. The expected signature is '%s'.", f.second->name.to_string().c_str(), f.second->prettySignature().c_str(), name.to_string().c_str(), baseFunc->prettySignature().c_str());
     }
   }
 
   if (auto parentClass = ctx->object->tryGetParentClass()) {
     for (auto f : functions) {
-      auto baseFunc = searchRootStateForFunction(f->name, parentClass);
-      if (f->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative())
-        ctx->reportingContext.error(f->location, "Non-native scripts cannot define new events.");
-      if (baseFunc && !baseFunc->hasSameSignature(f))
-        ctx->reportingContext.error(f->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f->name.to_string().c_str(), f->prettySignature().c_str(), baseFunc->parentObject->name.to_string().c_str(), baseFunc->prettySignature().c_str());
+      auto baseFunc = searchRootStateForFunction(f.second->name, parentClass);
+      if (f.second->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative())
+        ctx->reportingContext.error(f.second->location, "Non-native scripts cannot define new events.");
+      if (baseFunc && !baseFunc->hasSameSignature(f.second))
+        ctx->reportingContext.error(f.second->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f.second->name.to_string().c_str(), f.second->prettySignature().c_str(), baseFunc->parentObject->name.to_string().c_str(), baseFunc->prettySignature().c_str());
     }
   }
 
-  ctx->ensureNamesAreUnique(functions, "function");
   for (auto f : functions)
-    f->semantic2(ctx);
+    f.second->semantic2(ctx);
   ctx->state = nullptr;
 }
 

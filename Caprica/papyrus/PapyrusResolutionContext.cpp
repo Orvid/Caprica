@@ -215,9 +215,9 @@ CheckDebug:
 }
 
 const PapyrusFunction* PapyrusResolutionContext::tryResolveEvent(const PapyrusObject* parentObj, const identifier_ref& name) const {
-  for (auto f : parentObj->getRootState()->functions) {
-    if (idEq(f->name, name) && f->functionType == PapyrusFunctionType::Event)
-      return f;
+  auto func = parentObj->getRootState()->functions.find(name);
+  if (func != parentObj->getRootState()->functions.end() && func->second->functionType == PapyrusFunctionType::Event) {
+    return func->second;
   }
 
   if (auto parentClass = parentObj->tryGetParentClass())
@@ -434,20 +434,20 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
 
   if (baseType.type == PapyrusType::Kind::None) {
     if (auto state = object->getRootState()) {
-      for (auto& func : state->functions) {
-        if (idEq(func->name, ident.res.name)) {
-          if (wantGlobal && !func->isGlobal())
-            reportingContext.error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->name.to_string().c_str());
-          return PapyrusIdentifier::Function(ident.location, func);
-        }
+      auto func = state->functions.find(ident.res.name);
+      if (func != state->functions.end()) {
+        if (wantGlobal && !func->second->isGlobal())
+          reportingContext.error(ident.location, "You cannot call non-global functions from within a global function. '%s' is not a global function.", func->second->name.to_string().c_str());
+        return PapyrusIdentifier::Function(ident.location, func->second);
       }
     }
 
     for (auto node : importedNodes) {
       if (auto state = node->awaitSemantic()->getRootState()) {
-        for (auto& func : state->functions) {
-          if (func->isGlobal() && idEq(func->name, ident.res.name))
-            return PapyrusIdentifier::Function(ident.location, func);
+        auto func = state->functions.find(ident.res.name);
+        if (func != state->functions.end()) {
+          if (func->second->isGlobal() && idEq(func->second->name, ident.res.name))
+            return PapyrusIdentifier::Function(ident.location, func->second);
         }
       }
     }
@@ -479,12 +479,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, allocator->make<PapyrusType>(baseType.getElementType()));
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {
     if (auto state = baseType.resolved.obj->awaitSemantic()->getRootState()) {
-      for (auto& func : state->functions) {
-        if (idEq(func->name, ident.res.name)) {
-          if (!wantGlobal && func->isGlobal())
-            reportingContext.error(ident.location, "You cannot call the global function '%s' on an object.", func->name.to_string().c_str());
-          return PapyrusIdentifier::Function(ident.location, func);
-        }
+      auto func = state->functions.find(ident.res.name);
+      if (func != state->functions.end()) {
+        if (!wantGlobal && func->second->isGlobal())
+          reportingContext.error(ident.location, "You cannot call the global function '%s' on an object.", func->second->name.to_string().c_str());
+        return PapyrusIdentifier::Function(ident.location, func->second);
       }
     }
 
