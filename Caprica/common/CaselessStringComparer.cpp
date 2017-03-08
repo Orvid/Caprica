@@ -204,8 +204,9 @@ uint32_t CaselessIdentifierHasher::hash(const char* s, size_t len) {
       if (lenLeft & 1)
         val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4) + 2) | (uint8_t)0x20);
     }
-  } else if (!isNullTerminated && (lenLeft & 1)) {
-    val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4)) | (uint8_t)0x20);
+  } else if (!isNullTerminated) {
+    if (lenLeft & 1)
+      val = _mm_crc32_u8(val, *(uint8_t*)(cStr + (iterCount * 4)) | (uint8_t)0x20);
   }
   return val;
 }
