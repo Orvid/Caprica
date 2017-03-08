@@ -1,5 +1,7 @@
 #include <common/CaselessStringComparer.h>
 
+#include <intrin.h>
+
 namespace caprica {
 
 alignas(128) const uint64_t charToLowerMap[] = {
