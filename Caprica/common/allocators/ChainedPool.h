@@ -29,7 +29,7 @@ struct ChainedPool
     __assume(buf != nullptr);
     auto node = (DestructionNode*)buf;
     node->destructor = [](void* val) {
-      ((T*)val)->T::~T();
+      ((T*)val)->~T();
     };
     node->next = nullptr;
     if (!rootDestructorChain) {
