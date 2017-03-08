@@ -68,7 +68,7 @@ struct PapyrusCFG final
     return isTerminal;
   }
 
-  void appendStatement(const statements::PapyrusStatement* stmt) {
+  void appendStatement(const statements::PapyrusStatement*) {
     // We don't do anything here currently.
   }
 

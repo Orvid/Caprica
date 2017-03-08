@@ -20,7 +20,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
   PapyrusSelfExpression(const PapyrusSelfExpression&) = delete;
   virtual ~PapyrusSelfExpression() override = default;
 
-  virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
+  virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder&) const override {
     return pex::PexValue::Identifier(file->getString("self"));
   }
 

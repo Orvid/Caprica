@@ -23,7 +23,7 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
     return value.buildPex(file);
   }
 
-  virtual void semantic(PapyrusResolutionContext* ctx) override { }
+  virtual void semantic(PapyrusResolutionContext*) override { }
 
   virtual PapyrusType resultType() const override {
     return value.getPapyrusType();

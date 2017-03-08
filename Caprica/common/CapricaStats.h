@@ -11,7 +11,7 @@ private:
     size_t val;
 
     NopIncStruct& operator++(int) { return *this; }
-    NopIncStruct& operator=(size_t other) { return *this; }
+    NopIncStruct& operator=(size_t) { return *this; }
   };
 
 

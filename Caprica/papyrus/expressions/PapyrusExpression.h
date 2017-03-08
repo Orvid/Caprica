@@ -26,9 +26,9 @@ struct PapyrusExpression abstract
   PapyrusExpression(const PapyrusExpression&) = delete;
   virtual ~PapyrusExpression() = default;
 
-  virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
-  virtual void semantic(PapyrusResolutionContext* ctx) abstract;
-  virtual PapyrusType resultType() const abstract;
+  virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const = 0;
+  virtual void semantic(PapyrusResolutionContext* ctx) = 0;
+  virtual PapyrusType resultType() const = 0;
 
   // These exist because dynamic_cast is slow.
   // This list only contains expressions that we actually check for.

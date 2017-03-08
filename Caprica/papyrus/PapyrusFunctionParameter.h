@@ -30,7 +30,7 @@ struct PapyrusFunctionParameter final
   PapyrusFunctionParameter(const PapyrusFunctionParameter&) = delete;
   ~PapyrusFunctionParameter() = default;
 
-  void buildPex(pex::PexFile* file, pex::PexObject* obj, pex::PexFunction* func) const {
+  void buildPex(pex::PexFile* file, pex::PexObject*, pex::PexFunction* func) const {
     auto param = file->alloc->make<pex::PexFunctionParameter>();
     param->name = file->getString(name);
     param->type = type.buildPex(file);

@@ -29,14 +29,16 @@ void CapricaReportingContext::exitIfErrors() {
   }
 }
 
-bool CapricaReportingContext::isWarningError(CapricaFileLocation location, size_t warningNumber) const {
+bool CapricaReportingContext::isWarningError(CapricaFileLocation /* location */, size_t warningNumber) const {
+  // TODO: Support disabling warnings for specific sections of code.
   if (warningNumber >= 2000 && warningNumber <= 2200) {
     return !conf::EngineLimits::ignoreLimits && conf::Warnings::warningsToIgnore.count(warningNumber) == 0;
   }
   return conf::Warnings::treatWarningsAsErrors || conf::Warnings::warningsToHandleAsErrors.count(warningNumber);
 }
 
-bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation location, size_t warningNumber) const {
+bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation /* location */, size_t warningNumber) const {
+  // TODO: Support disabling warnings for specific sections of code.
   if (conf::Warnings::warningsToHandleAsErrors.count(warningNumber))
     return true;
   if (conf::Warnings::warningsToEnable.count(warningNumber))

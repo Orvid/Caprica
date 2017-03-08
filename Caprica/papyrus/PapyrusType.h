@@ -58,7 +58,7 @@ struct PapyrusType final
   } resolved;
 
   PapyrusType() = delete;
-  PapyrusType(const Default& other) : type(Kind::Unresolved) { }
+  PapyrusType(const Default&) : type(Kind::Unresolved) { }
   PapyrusType(const PapyrusType& other) = default;
   PapyrusType(PapyrusType&& other) = default;
   PapyrusType& operator =(const PapyrusType&) = default;

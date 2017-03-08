@@ -15,7 +15,7 @@ struct PapyrusArrayLengthExpression final : public PapyrusExpression
   PapyrusArrayLengthExpression(const PapyrusArrayLengthExpression&) = delete;
   virtual ~PapyrusArrayLengthExpression() override = default;
 
-  virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
+  virtual pex::PexValue generateLoad(pex::PexFile*, pex::PexFunctionBuilder&) const override {
     CapricaReportingContext::logicalFatal("This shouldn't be called!");
   }
 

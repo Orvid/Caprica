@@ -144,7 +144,7 @@ struct TempVarDescriptor final
 
 struct PexFunctionBuilder final
 {
-  PexFunctionBuilder& operator <<(op::nop&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::Nop)); }
+  PexFunctionBuilder& operator <<(op::nop&&) { return fixup(alloc->make<PexInstruction>(PexOpCode::Nop)); }
 
 #define OP_ARG1(name, opcode, ...) \
 PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1)); }

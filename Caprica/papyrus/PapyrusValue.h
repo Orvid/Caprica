@@ -43,7 +43,7 @@ struct PapyrusValue final
 
   PapyrusValue() = delete;
   explicit PapyrusValue(CapricaFileLocation loc) : location(loc) { }
-  PapyrusValue(const Default& other) : type(PapyrusValueType::Invalid), location(0) { }
+  PapyrusValue(const Default&) : type(PapyrusValueType::Invalid), location(0) { }
   PapyrusValue(const PapyrusValue& other) = default;
   PapyrusValue(PapyrusValue&& other) = default;
   PapyrusValue& operator =(const PapyrusValue&) = default;

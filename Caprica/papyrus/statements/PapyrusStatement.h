@@ -21,10 +21,10 @@ struct PapyrusStatement abstract
   PapyrusStatement(const PapyrusStatement&) = delete;
   virtual ~PapyrusStatement() = default;
 
-  virtual bool buildCFG(PapyrusCFG& cfg) const abstract;
-  virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const abstract;
-  virtual void semantic(PapyrusResolutionContext* ctx) abstract;
-  virtual void visit(PapyrusStatementVisitor& visitor) abstract;
+  virtual bool buildCFG(PapyrusCFG& cfg) const = 0;
+  virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const = 0;
+  virtual void semantic(PapyrusResolutionContext* ctx) = 0;
+  virtual void visit(PapyrusStatementVisitor& visitor) = 0;
 
 private:
   friend IntrusiveLinkedList<PapyrusStatement>;

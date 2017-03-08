@@ -110,7 +110,8 @@ private:
 
   template<typename... Args>
   static std::string formatString(const std::string& msg, Args&&... args) {
-    if (sizeof...(args)) {
+    constexpr bool hasArgs = sizeof...(args) != 0;
+    if (hasArgs) {
       size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);
       std::snprintf(buf.get(), size, msg.c_str(), args...);

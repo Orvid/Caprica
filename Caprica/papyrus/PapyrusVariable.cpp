@@ -4,7 +4,7 @@
 
 namespace caprica { namespace papyrus {
 
-void PapyrusVariable::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
+void PapyrusVariable::buildPex(CapricaReportingContext&, pex::PexFile* file, pex::PexObject* obj) const {
   auto var = file->alloc->make<pex::PexVariable>();
   var->name = file->getString(name);
   var->typeName = type.buildPex(file);

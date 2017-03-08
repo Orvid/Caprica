@@ -129,8 +129,8 @@ struct PexValue
   PexValue(const Integer& val) : type(PexValueType::Integer), val(val.i) { }
   PexValue(const Float& val) : type(PexValueType::Float), val(val.f) { }
   PexValue(const Bool& val) : type(PexValueType::Bool), val(val.b) { }
-  PexValue(const None& val) : type(PexValueType::None) { }
-  PexValue(const Invalid& val) : type(PexValueType::Invalid) { }
+  PexValue(const None&) : type(PexValueType::None) { }
+  PexValue(const Invalid&) : type(PexValueType::Invalid) { }
   PexValue(const PexValue&) = default;
   PexValue(PexValue&& other) = default;
   PexValue& operator =(const PexValue&) = default;

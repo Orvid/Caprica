@@ -33,7 +33,7 @@ struct PapyrusStructMember final
   PapyrusStructMember(const PapyrusStructMember&) = delete;
   ~PapyrusStructMember() = default;
 
-  void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj, pex::PexStruct* struc) const {
+  void buildPex(CapricaReportingContext&, pex::PexFile* file, pex::PexObject*, pex::PexStruct* struc) const {
     auto member = file->alloc->make<pex::PexStructMember>();
     member->name = file->getString(name);
     member->documentationString = file->getString(documentationString);

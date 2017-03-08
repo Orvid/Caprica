@@ -19,7 +19,7 @@ struct PapyrusBreakStatement final : public PapyrusStatement
     return true;
   }
 
-  virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
+  virtual void buildPex(pex::PexFile*, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     bldr << op::jmp{ bldr.currentBreakTarget() };
   }

@@ -21,7 +21,7 @@ struct CapricaJob abstract
   void await();
 
 protected:
-  virtual void run() abstract = 0;
+  virtual void run() = 0;
 
 private:
   std::atomic<bool> hasRan{ false };
