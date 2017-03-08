@@ -146,10 +146,10 @@ public:
     }
 
     size_t& operator [](size_t idx) {
-      return data[curIndex];
+      return data[idx];
     }
     const size_t& operator [](size_t idx) const {
-      return data[curIndex];
+      return data[idx];
     }
     size_t& operator *() {
       return data[curIndex];
