@@ -41,7 +41,6 @@ static bool addFilesFromDirectory(const std::string& f, bool recursive, const st
   // last write time, and filesize, all without any extra processing.
   auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{ };
-  size_t fCount = 0;
   dirs.push_back("\\");
   while (dirs.size()) {
     HANDLE hFind;
@@ -350,7 +349,7 @@ static bool parseArgs(int argc, char* argv[], caprica::CapricaJobManager* jobMan
       }
     }
   } catch (const std::exception& ex) {
-    if (ex.what() != "")
+    if (ex.what() != std::string(""))
       std::cout << ex.what() << std::endl;
     return false;
   }
@@ -389,7 +388,7 @@ int main(int argc, char* argv[])
       caprica::CapricaStats::outputStats();
     }
   } catch (const std::runtime_error& ex) {
-    if (ex.what() != "")
+    if (ex.what() != std::string(""))
       std::cout << ex.what() << std::endl;
     caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
