@@ -250,7 +250,7 @@ Return:
   return struc;
 }
 
-PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType&& tp) {
+PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript*, PapyrusObject*, PapyrusStruct* struc, PapyrusType&& tp) {
   auto mem = alloc->make<PapyrusStructMember>(cur.location, std::move(tp), struc);
   mem->name = expectConsumeIdentRef();
 
@@ -277,7 +277,6 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
   group->documentationComment = maybeConsumeDocStringRef();
 
   while (true) {
-    bool isConst = false;
     switch (cur.type) {
       case TokenType::kEndGroup:
         consume();
@@ -383,7 +382,7 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
   return prop;
 }
 
-PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type) {
+PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript*, PapyrusObject* object, PapyrusType&& type) {
   auto var = alloc->make<PapyrusVariable>(cur.location, std::move(type), object);
   var->name = expectConsumeIdentRef();
 
@@ -398,7 +397,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript* script, PapyrusObje
   return var;
 }
 
-PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType&& returnType, TokenType endToken) {
+PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript*, PapyrusObject* object, PapyrusState*, PapyrusType&& returnType, TokenType endToken) {
   auto func = alloc->make<PapyrusFunction>(cur.location, std::move(returnType));
   if (endToken == TokenType::kEndFunction)
     func->functionType = PapyrusFunctionType::Function;
@@ -1117,7 +1116,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
   }
 }
 
-PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location) {
+PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations validLocs) {
   PapyrusUserFlags flags;
   while (cur.type != TokenType::END) {
     switch (cur.type) {
@@ -1157,7 +1156,7 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
           str = "default";
 
         auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
-        if (!flg.isValidOn(location))
+        if (!flg.isValidOn(validLocs))
           reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
 
         PapyrusUserFlags newFlag;
