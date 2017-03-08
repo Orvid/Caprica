@@ -118,7 +118,8 @@ private:
   template<typename... Args>
   NEVER_INLINE
   static std::string formatString(const char* msg, Args&&... args) {
-    if (sizeof...(args)) {
+    constexpr bool haveArgs = sizeof...(args) != 0;
+    if (haveArgs) {
       size_t size = std::snprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);
       std::snprintf(buf.get(), size, msg, std::forward<Args>(args)...);
