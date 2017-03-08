@@ -155,7 +155,7 @@ StartOver:
     {
       std::ostringstream str;
       while (isalpha(peekChar()))
-        str.put(getChar());
+        str.put(char(getChar()));
       auto ident = str.str();
       auto f = dotIdentifierMap.find(ident);
       if (f == dotIdentifierMap.end())
@@ -176,13 +176,13 @@ StartOver:
     case '9':
     {
       std::ostringstream str;
-      str.put(c);
+      str.put(char(c));
 
       // It's hex.
       if (c == '0' && peekChar() == 'x') {
-        str.put(getChar());
+        str.put(char(getChar()));
         while (isxdigit(peekChar()))
-          str.put(getChar());
+          str.put(char(getChar()));
         
         auto i = std::stoul(str.str(), nullptr, 16);
         auto tok = Token(TokenType::Integer, baseLoc);
@@ -192,23 +192,23 @@ StartOver:
 
       // Either normal int or float.
       while (isdigit(peekChar()))
-        str.put(getChar());
+        str.put(char(getChar()));
 
       // It's a float.
       if (peekChar() == '.') {
-        str.put(getChar());
+        str.put(char(getChar()));
         while (isdigit(peekChar()))
-          str.put(getChar());
+          str.put(char(getChar()));
 
         // Allow e+ notation.
         if (peekChar() == 'e') {
-          str.put(getChar());
+          str.put(char(getChar()));
           if (getChar() != '+')
             reportingContext.fatal(location, "Unexpected character 'e'!");
           str.put('+');
 
           while (isdigit(peekChar()))
-            str.put(getChar());
+            str.put(char(getChar()));
         }
 
         auto f = std::stof(str.str());
@@ -279,11 +279,11 @@ StartOver:
     case 'Z':
     {
       std::ostringstream str;
-      str.put(c);
+      str.put(char(c));
 
       // We allow the characters for types in this as well.
       while (isalnum(peekChar()) || peekChar() == '_' || peekChar() == ':' || peekChar() == '#' || peekChar() == '[' || peekChar() == ']')
-        str.put(getChar());
+        str.put(char(getChar()));
 
       auto ident = str.str();
       auto tok = Token(TokenType::Identifier, baseLoc);
@@ -318,7 +318,7 @@ StartOver:
               reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
           }
         } else {
-          str.put(getChar());
+          str.put(char(getChar()));
         }
       }
 

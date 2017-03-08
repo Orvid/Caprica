@@ -79,10 +79,10 @@ StartOver:
     case '9':
     {
       std::string str;
-      str.append(1, c);
+      str.append(1, char(c));
 
       while (isdigit(peekChar()))
-        str.append(1, getChar());
+        str.append(1, char(getChar()));
 
       auto i = std::stoul(str);
       auto tok = Token(TokenType::Integer, baseLoc);
@@ -144,10 +144,10 @@ StartOver:
     case 'Z':
     {
       std::string str;
-      str.append(1, c);
+      str.append(1, char(c));
 
       while (isalpha(peekChar()))
-        str.append(1, getChar());
+        str.append(1, char(getChar()));
 
       auto f = keywordMap.find(str);
       if (f != keywordMap.end())
