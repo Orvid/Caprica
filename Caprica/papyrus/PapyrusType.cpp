@@ -67,9 +67,9 @@ std::string PapyrusType::getTypeString() const {
       return resolved.obj->loweredName().to_string();
     case Kind::ResolvedStruct:
     {
-      auto name = resolved.struc->parentObject->name.to_string() + "#" + resolved.struc->name.to_string();
-      identifierToLower(name);
-      return name;
+      auto typeName = resolved.struc->parentObject->name.to_string() + "#" + resolved.struc->name.to_string();
+      identifierToLower(typeName);
+      return typeName;
     }
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");

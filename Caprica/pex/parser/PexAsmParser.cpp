@@ -517,12 +517,12 @@ PexFunction* PexAsmParser::parseFunction(PexFile* file, PexDebugFunctionInfo* de
           }
         }
 
-        for (auto cur = func->instructions.begin(), end = func->instructions.end(); cur != end; ++cur) {
-          for (auto& arg : cur->args) {
+        for (auto curInstr = func->instructions.begin(), end = func->instructions.end(); curInstr != end; ++curInstr) {
+          for (auto& arg : curInstr->args) {
             if (arg.type == PexValueType::Label) {
               if (arg.val.l->targetIdx == (size_t)-1)
                 CapricaReportingContext::logicalFatal("Unresolved label!");
-              auto newVal = arg.val.l->targetIdx - cur.index;
+              auto newVal = arg.val.l->targetIdx - curInstr.index;
               arg.type = PexValueType::Integer;
               arg.val.i = (int32_t)newVal;
             }

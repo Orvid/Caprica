@@ -110,8 +110,8 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     } else if (auto ai = lValue->asArrayIndexExpression()) {
       // It's valid.
     } else if (auto ma = lValue->asMemberAccessExpression()) {
-      if (auto id = ma->accessExpression->asIdentifierExpression())
-        id->identifier.ensureAssignable(ctx->reportingContext);
+      if (auto ident = ma->accessExpression->asIdentifierExpression())
+        ident->identifier.ensureAssignable(ctx->reportingContext);
     } else {
       ctx->reportingContext.fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
     }

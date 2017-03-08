@@ -207,11 +207,11 @@ void PapyrusCompilationNode::FileWriteJob::run() {
     case NodeType::PasCompile:
     case NodeType::PapyrusCompile: {
       if (!conf::Performance::performanceTestMode) {
-        auto baseName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
+        auto baseFileName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
         auto containingDir = boost::filesystem::path(parent->outputDirectory);
         if (!boost::filesystem::exists(containingDir))
           boost::filesystem::create_directories(containingDir);
-        std::ofstream destFile{ parent->outputDirectory + "\\" + baseName + ".pex", std::ifstream::binary };
+        std::ofstream destFile{ parent->outputDirectory + "\\" + baseFileName + ".pex", std::ifstream::binary };
         destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         parent->pexWriter->applyToBuffers([&](const char* data, size_t size) {
           destFile.write(data, size);
