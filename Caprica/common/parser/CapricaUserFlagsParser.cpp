@@ -27,7 +27,9 @@ void CapricaUserFlagsParser::parseUserFlags(CapricaUserFlagsDefinition& def) {
         reportingContext.error(flag.location, "The child flags have no valid locations in common.");
     } else {
       expect(TokenType::Integer);
-      flag.bitIndex = cur.iValue;
+      if (cur.iValue < 0 || cur.iValue > 31)
+        reportingContext.error(cur.location, "The bit index must be greater than zero and less than 31.");
+      flag.bitIndex = uint8_t(cur.iValue);
       consume();
 
       if (maybeConsume(TokenType::LCurly)) {
