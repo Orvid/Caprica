@@ -28,10 +28,10 @@ bool CapricaJob::tryRun() {
   return true;
 }
 
-void CapricaJobManager::startup(size_t workerCount) {
+void CapricaJobManager::startup(size_t initialWorkerCount) {
   defaultJob.await();
 
-  for (size_t i = 0; i < workerCount; i++) {
+  for (size_t i = 0; i < initialWorkerCount; i++) {
     std::thread thr{ [this] { this->workerMain(); } };
     thr.detach();
   }
