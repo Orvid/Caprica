@@ -1,5 +1,7 @@
-CMakeCache.txt
-CMakeFiles
-Makefile
-cmake_install.cmake
-install_manifest.txt
+.vs/
+*.db
+*.vcxproj.user
+
+Caprica/bin/*
+Caprica/obj/*
+Caprica/tmp/*

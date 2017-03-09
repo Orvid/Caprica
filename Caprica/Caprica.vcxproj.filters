@@ -1,0 +1,505 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="common\CapricaConfig.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\CapricaUserFlagsDefinition.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\parser\CapricaUserFlagsLexer.cpp">
+      <Filter>common\parser</Filter>
+    </ClCompile>
+    <ClCompile Include="common\parser\CapricaUserFlagsParser.cpp">
+      <Filter>common\parser</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="papyrus\expressions\PapyrusCastExpression.cpp">
+      <Filter>papyrus\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\expressions\PapyrusFunctionCallExpression.cpp">
+      <Filter>papyrus\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusFunction.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusIdentifier.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusResolutionContext.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusScript.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusState.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusType.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\parser\PapyrusParser.cpp">
+      <Filter>papyrus\parser</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\statements\PapyrusForEachStatement.cpp">
+      <Filter>papyrus\statements</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\parser\PexAsmLexer.cpp">
+      <Filter>pex\parser</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\parser\PexAsmParser.cpp">
+      <Filter>pex\parser</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexDebugFunctionInfo.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexDebugInfo.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexDebugPropertyGroup.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexDebugStructOrder.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexFile.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexFunction.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexFunctionBuilder.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexFunctionParameter.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexInstruction.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexLocalVariable.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexObject.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexProperty.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexReflector.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexState.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexStruct.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexStructMember.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexValue.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexVariable.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="common\allocators\AtomicChainedPool.cpp">
+      <Filter>common\allocators</Filter>
+    </ClCompile>
+    <ClCompile Include="common\allocators\ChainedPool.cpp">
+      <Filter>common\allocators</Filter>
+    </ClCompile>
+    <ClCompile Include="common\allocators\ReffyStringPool.cpp">
+      <Filter>common\allocators</Filter>
+    </ClCompile>
+    <ClCompile Include="common\CapricaJobManager.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\CapricaReportingContext.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\CapricaStats.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\CaselessStringComparer.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\FSUtils.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\identifier_ref.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusCFG.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusCompilationContext.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusCustomEvent.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusObject.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusProperty.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusUserFlags.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\PapyrusVariable.cpp">
+      <Filter>papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="pex\PexOptimizer.cpp">
+      <Filter>pex</Filter>
+    </ClCompile>
+    <ClCompile Include="papyrus\parser\PapyrusLexer.cpp">
+      <Filter>papyrus\parser</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common\CapricaConfig.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaFileLocation.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaUserFlagsDefinition.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CaselessStringComparer.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\parser\CapricaUserFlagsLexer.h">
+      <Filter>common\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="common\parser\CapricaUserFlagsParser.h">
+      <Filter>common\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="common\UtilMacros.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusArrayIndexExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusArrayLengthExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusBinaryOpExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusCastExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusFunctionCallExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusIdentifierExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusIsExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusLiteralExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusMemberAccessExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusNewArrayExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusNewStructExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusParentExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusSelfExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\expressions\PapyrusUnaryOpExpression.h">
+      <Filter>papyrus\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusFunction.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusFunctionParameter.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusIdentifier.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusObject.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusProperty.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusPropertyGroup.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusResolutionContext.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusScript.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusState.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusStruct.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusStructMember.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusType.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusUserFlags.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusValue.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusVariable.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\parser\PapyrusLexer.h">
+      <Filter>papyrus\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\parser\PapyrusParser.h">
+      <Filter>papyrus\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusAssignStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusBreakStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusContinueStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusDeclareStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusDoWhileStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusExpressionStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusForEachStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusForStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusIfStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusReturnStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusStatementVisitor.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusSwitchStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\statements\PapyrusWhileStatement.h">
+      <Filter>papyrus\statements</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\parser\PexAsmLexer.h">
+      <Filter>pex\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\parser\PexAsmParser.h">
+      <Filter>pex\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexAsmWriter.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexDebugFunctionInfo.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexDebugInfo.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexDebugPropertyGroup.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexDebugStructOrder.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexFile.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexFunction.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexFunctionBuilder.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexFunctionParameter.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexInstruction.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexLabel.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexLocalVariable.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexObject.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexProperty.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexReader.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexReflector.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexState.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexString.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexStruct.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexStructMember.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexUserFlags.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexValue.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexVariable.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexWriter.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\AtomicChainedPool.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\CachePool.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\ChainedDestructedPooledAllocator.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\ChainedPool.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\AtomicCachePool.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\FileOffsetPool.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\allocators\ReffyStringPool.h">
+      <Filter>common\allocators</Filter>
+    </ClInclude>
+    <ClInclude Include="common\AtomicStack.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaBinaryReader.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaBinaryWriter.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaJobManager.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaReferenceState.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaReportingContext.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\CapricaStats.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\EngineLimits.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\FSUtils.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\identifier_ref.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\IntrusiveLinkedList.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\IntrusiveStack.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusCFG.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusCompilationContext.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="papyrus\PapyrusCustomEvent.h">
+      <Filter>papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\FixedPexStringMap.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+    <ClInclude Include="pex\PexOptimizer.h">
+      <Filter>pex</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="common\parser">
+      <UniqueIdentifier>{B03B2FDC-486A-44DB-A095-B975A18D2DAA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pex\parser">
+      <UniqueIdentifier>{A87CD390-982C-4BAF-8D60-D659B132F342}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{7B9F89B8-02AE-4875-85E9-51E39F302719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="papyrus">
+      <UniqueIdentifier>{BF63CA13-E225-4170-88AE-905A4AA8FFFC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pex">
+      <UniqueIdentifier>{496D8541-7098-4E50-B5AA-34E9B6AF0B09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="papyrus\expressions">
+      <UniqueIdentifier>{BEA5556D-3100-487F-90AE-15C55BC71E90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="papyrus\parser">
+      <UniqueIdentifier>{319EF27A-72EA-43E7-B87D-F81445534AB0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="papyrus\statements">
+      <UniqueIdentifier>{DC1924B7-7E7B-48C5-9E77-7CF406EC888E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\allocators">
+      <UniqueIdentifier>{3e7c3c7b-4f90-4208-b126-f19f2d30bbf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api">
+      <UniqueIdentifier>{4b69a451-366e-4782-85f8-c0663b180fc9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
