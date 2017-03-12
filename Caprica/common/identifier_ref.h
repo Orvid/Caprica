@@ -5,6 +5,7 @@
 
 #include <iterator>
 #include <string>
+#include <string_view>
 
 #include <common/UtilMacros.h>
 
@@ -21,6 +22,8 @@ struct identifier_ref final
   identifier_ref(const char* str) : identifier_ref(str, strlen(str)) { }
   ALWAYS_INLINE
   identifier_ref(const std::string& str) : identifier_ref(str.data(), str.size()) { }
+  ALWAYS_INLINE
+  identifier_ref(std::string_view str) : identifier_ref(str.data(), str.size()) { }
   constexpr identifier_ref(const char* str, size_t length) : mData(str), mLength(length) { }
   constexpr identifier_ref(const identifier_ref& rhs) = default;
   constexpr identifier_ref(identifier_ref&& rhs) = default;

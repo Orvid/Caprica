@@ -16,34 +16,34 @@ namespace filesystem = std::experimental::filesystem;
 
 namespace caprica { namespace FSUtils {
 
-identifier_ref basenameAsRef(const identifier_ref& file) {
+std::string_view basenameAsRef(std::string_view file) {
   auto pos = file.find_last_of("\\/");
   auto fil = file;
-  if (pos != identifier_ref::npos)
+  if (pos != std::string_view::npos)
     fil = file.substr(pos + 1);
   auto pos2 = fil.rfind('.');
-  if (pos2 != identifier_ref::npos)
+  if (pos2 != std::string_view::npos)
     return fil.substr(0, pos2);
   return fil;
 }
 
-boost::string_ref extensionAsRef(boost::string_ref file) {
+std::string_view extensionAsRef(std::string_view file) {
   auto pos = file.rfind('.');
-  if (pos != boost::string_ref::npos)
+  if (pos != std::string_view::npos)
     return file.substr(pos);
   return "";
 }
 
-boost::string_ref filenameAsRef(boost::string_ref file) {
+std::string_view filenameAsRef(std::string_view file) {
   auto pos = file.find_last_of("\\/");
-  if (pos != boost::string_ref::npos)
+  if (pos != std::string_view::npos)
     return file.substr(pos + 1);
   return file;
 }
 
-identifier_ref parentPathAsRef(const identifier_ref& file) {
+std::string_view parentPathAsRef(std::string_view file) {
   auto pos = file.find_last_of("\\/");
-  if (pos != identifier_ref::npos)
+  if (pos != std::string_view::npos)
     return file.substr(0, pos);
   return file;
 }

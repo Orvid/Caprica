@@ -4,9 +4,8 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
-
-#include <boost/utility/string_ref.hpp>
 
 #include <common/identifier_ref.h>
 
@@ -41,9 +40,9 @@ struct ChainedPool
     }
     return new (buf + sizeof(DestructionNode)) T(std::forward<Args>(args)...);
   }
-  boost::string_ref allocateString(std::string&& str);
-  boost::string_ref allocateString(boost::string_ref str);
-  boost::string_ref allocateString(const char* str, size_t len);
+  std::string_view allocateString(std::string&& str);
+  std::string_view allocateString(std::string_view str);
+  std::string_view allocateString(const char* str, size_t len);
   identifier_ref allocateIdentifier(std::string&& str);
   identifier_ref allocateIdentifier(const identifier_ref& str);
   identifier_ref allocateIdentifier(const char* str, size_t len);

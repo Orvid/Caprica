@@ -3,8 +3,7 @@
 #include <cstring>
 #include <functional>
 #include <string>
-
-#include <boost/utility/string_ref.hpp>
+#include <string_view>
 
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaFileLocation.h>
@@ -168,7 +167,7 @@ struct PapyrusLexer
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file, boost::string_ref data)
+  explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file, std::string_view data)
     : filename(file),
       reportingContext(repCtx),
       alloc(new allocators::ChainedPool(1024 * 4))

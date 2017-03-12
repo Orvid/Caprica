@@ -1,7 +1,5 @@
 #include <pex/PexReflector.h>
 
-#include <boost/utility/string_ref.hpp>
-
 #include <common/allocators/ChainedPool.h>
 
 #include <pex/PexReader.h>

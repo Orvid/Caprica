@@ -5,10 +5,9 @@
 #include <cstring>
 #include <map>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <boost/utility/string_ref.hpp>
 
 #include <common/identifier_ref.h>
 #include <common/UtilMacros.h>
@@ -17,11 +16,11 @@ namespace caprica {
 
 void identifierToLower(std::string& str);
 
-bool caselessEq(boost::string_ref a, boost::string_ref b);
-bool pathEq(boost::string_ref a, boost::string_ref b);
-bool pathEq(boost::string_ref a, const identifier_ref& b);
+bool caselessEq(std::string_view a, std::string_view b);
+bool pathEq(std::string_view a, std::string_view b);
+bool pathEq(std::string_view a, const identifier_ref& b);
 bool pathEq(const identifier_ref& a, const identifier_ref& b);
-bool pathEq(boost::string_ref a, const char* b);
+bool pathEq(std::string_view a, const char* b);
 
 bool idEq(const char* a, const char* b);
 bool idEq(const char* a, const std::string& b);
@@ -29,7 +28,7 @@ bool idEq(const std::string& a, const char* b);
 NEVER_INLINE
 bool idEq(const std::string& a, const std::string& b);
 NEVER_INLINE
-bool idEq(boost::string_ref a, boost::string_ref b);
+bool idEq(std::string_view a, std::string_view b);
 ALWAYS_INLINE
 bool idEq(const identifier_ref& a, const identifier_ref& b) { return a.identifierEquals(b); }
 
@@ -68,7 +67,7 @@ private:
 struct CaselessPathEqual final
 {
   bool operator()(const std::string& lhs, const std::string& rhs) const {
-    return pathEq(boost::string_ref(lhs), boost::string_ref(rhs));
+    return pathEq(std::string_view(lhs), std::string_view(rhs));
   }
 };
 
@@ -81,7 +80,7 @@ struct CaselessIdentifierHasher final
   NEVER_INLINE
   size_t operator()(const std::string& k) const;
   NEVER_INLINE
-  size_t operator()(boost::string_ref k) const;
+  size_t operator()(std::string_view k) const;
 
   size_t operator()(const identifier_ref& k) const {
     uint32_t r = k.identifierHash();
@@ -100,7 +99,7 @@ struct CaselessIdentifierEqual final
   bool operator()(const std::string& lhs, const std::string& rhs) const {
     return idEq(lhs, rhs);
   }
-  bool operator()(boost::string_ref lhs, boost::string_ref rhs) const {
+  bool operator()(std::string_view lhs, std::string_view rhs) const {
     return idEq(lhs, rhs);
   }
   bool operator()(const identifier_ref& lhs, const identifier_ref& rhs) const {

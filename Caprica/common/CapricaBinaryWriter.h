@@ -3,8 +3,7 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
-
-#include <boost/utility/string_ref.hpp>
+#include <string_view>
 
 #include <common/FSUtils.h>
 #include <common/allocators/ChainedPool.h>
@@ -77,7 +76,7 @@ struct CapricaBinaryWriter
   }
 
   template<>
-  void write(boost::string_ref val) {
+  void write(std::string_view val) {
     boundWrite<uint16_t>(val.size());
     if (val.size())
       append(val.data(), val.size());

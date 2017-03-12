@@ -49,7 +49,7 @@ void PapyrusCompilationNode::FileReadJob::run() {
     auto fd = _open(parent->sourceFilePath.c_str(), _O_BINARY | _O_RDONLY | _O_SEQUENTIAL);
     if (fd != -1) {
       auto len = _read(fd, (void*)buf, (uint32_t)parent->filesize);
-      parent->readFileData = boost::string_ref(buf, len);
+      parent->readFileData = std::string_view(buf, len);
       if (_eof(fd) == 1) {
         _close(fd);
         // Need this to be null terminated.
@@ -160,7 +160,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
         parent->pexFile->write(*parent->pexWriter);
 
         if (conf::Debug::dumpPexAsm) {
-          std::ofstream asmStrm(parent->outputDirectory + "\\" + parent->baseName.to_string() + ".pas", std::ofstream::binary);
+          std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas", std::ofstream::binary);
           asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
           pex::PexAsmWriter asmWtr(asmStrm);
           parent->pexFile->writeAsm(asmWtr);
@@ -172,7 +172,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       return;
     }
     case NodeType::PexDissassembly: {
-      std::ofstream asmStrm(parent->outputDirectory + "\\" + parent->baseName.to_string() + ".pas", std::ofstream::binary);
+      std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas", std::ofstream::binary);
       asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
       parent->pexFile->writeAsm(asmWtr);
@@ -204,7 +204,7 @@ void PapyrusCompilationNode::FileWriteJob::run() {
     case NodeType::PasCompile:
     case NodeType::PapyrusCompile: {
       if (!conf::Performance::performanceTestMode) {
-        auto baseFileName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
+        auto baseFileName = std::string(FSUtils::basenameAsRef(parent->sourceFilePath));
         auto containingDir = std::experimental::filesystem::path(parent->outputDirectory);
         if (!std::experimental::filesystem::exists(containingDir))
           std::experimental::filesystem::create_directories(containingDir);

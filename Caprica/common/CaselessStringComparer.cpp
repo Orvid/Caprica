@@ -27,7 +27,7 @@ void identifierToLower(std::string& str) {
   }
 }
 
-bool caselessEq(boost::string_ref a, boost::string_ref b) {
+bool caselessEq(std::string_view a, std::string_view b) {
   if (a.size() != b.size())
     return false;
   const char* __restrict strA = a.data();
@@ -43,24 +43,24 @@ bool caselessEq(boost::string_ref a, boost::string_ref b) {
   return true;
 }
 
-bool pathEq(boost::string_ref a, boost::string_ref b) {
+bool pathEq(std::string_view a, std::string_view b) {
   // TODO: Ensure in lower-ascii range.
   return caselessEq(a, b);
 }
 
-bool pathEq(boost::string_ref a, const char* b) {
+bool pathEq(std::string_view a, const char* b) {
   // TODO: Ensure in lower-ascii range.
-  return caselessEq(a, boost::string_ref(b));
+  return caselessEq(a, std::string_view(b));
 }
 
-bool pathEq(boost::string_ref a, const identifier_ref& b) {
+bool pathEq(std::string_view a, const identifier_ref& b) {
   // TODO: Ensure in lower-ascii range.
-  return caselessEq(a, boost::string_ref(b.data(), b.size()));
+  return caselessEq(a, std::string_view(b.data(), b.size()));
 }
 
 bool pathEq(const identifier_ref& a, const identifier_ref& b) {
   // TODO: Ensure in lower-ascii range.
-  return caselessEq(boost::string_ref(a.data(), a.size()), boost::string_ref(b.data(), b.size()));
+  return caselessEq(std::string_view(a.data(), a.size()), std::string_view(b.data(), b.size()));
 }
 
 alignas(128) static const __m128i spaces{
@@ -145,7 +145,7 @@ bool idEq(const std::string& a, const std::string& b) {
   return idEq<true>(a.c_str(), a.size(), b.c_str(), b.size());
 }
 NEVER_INLINE
-bool idEq(boost::string_ref a, boost::string_ref b) {
+bool idEq(std::string_view a, std::string_view b) {
   return idEq<false>(a.data(), a.size(), b.data(), b.size());
 }
 
@@ -221,7 +221,7 @@ size_t CaselessIdentifierHasher::operator()(const std::string& k) const {
 }
 
 NEVER_INLINE
-size_t CaselessIdentifierHasher::operator()(boost::string_ref k) const {
+size_t CaselessIdentifierHasher::operator()(std::string_view k) const {
   auto r = CaselessIdentifierHasher::hash<false>(k.data(), k.size());
   return ((size_t)r << 32) | r;
 }

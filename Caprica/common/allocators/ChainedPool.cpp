@@ -77,18 +77,18 @@ Again:
   return (char*)ret;
 }
 
-boost::string_ref ChainedPool::allocateString(std::string&& str) {
+std::string_view ChainedPool::allocateString(std::string&& str) {
   return allocateString((char*)str.data(), str.size());
 }
 
-boost::string_ref ChainedPool::allocateString(boost::string_ref str) {
+std::string_view ChainedPool::allocateString(std::string_view str) {
   return allocateString((char*)str.data(), str.size());
 }
 
-boost::string_ref ChainedPool::allocateString(const char* str, size_t len) {
+std::string_view ChainedPool::allocateString(const char* str, size_t len) {
   auto buf = allocate(len);
   memcpy(buf, str, len);
-  return boost::string_ref(buf, len);
+  return std::string_view(buf, len);
 }
 
 identifier_ref ChainedPool::allocateIdentifier(std::string&& str) {

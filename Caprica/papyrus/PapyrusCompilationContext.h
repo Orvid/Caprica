@@ -26,7 +26,7 @@ struct PapyrusCompilationNode final
     PexReflection,
   };
 
-  identifier_ref baseName;
+  std::string_view baseName;
 
   PapyrusCompilationNode() = delete;
   PapyrusCompilationNode(CapricaJobManager* mgr, NodeType compileType, std::string&& sourcePath,
@@ -74,7 +74,7 @@ private:
   std::string reportedName;
   std::string outputDirectory;
   std::string sourceFilePath;
-  boost::string_ref readFileData{ };
+  std::string_view readFileData{ };
   std::string ownedReadFileData{ };
   pex::PexWriter* pexWriter{ nullptr };
   PapyrusScript* loadedScript{ nullptr };

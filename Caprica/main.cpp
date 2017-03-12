@@ -61,7 +61,7 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
     }
 
     do {
-      boost::string_ref filenameRef = data.cFileName;
+      std::string_view filenameRef = data.cFileName;
       if (filenameRef != "." && filenameRef != "..") {
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
           if (recursive) {
@@ -104,7 +104,7 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
                 return ull.QuadPart;
               }(data.nFileSizeLow, data.nFileSizeHigh)
             );
-            namespaceMap.emplace(node->baseName, node);
+            namespaceMap.emplace(caprica::identifier_ref(node->baseName), node);
           }
         }
       }

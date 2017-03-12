@@ -47,7 +47,7 @@ PapyrusScript* PapyrusParser::parseScript() {
   return script;
 }
 
-static bool doesScriptNameMatchNextPartOfDir(const identifier_ref& curPath, const identifier_ref& curName) {
+static bool doesScriptNameMatchNextPartOfDir(std::string_view curPath, const identifier_ref& curName) {
   auto idx = curName.rfind(':');
   if (idx != identifier_ref::npos) {
     auto namePiece = curName.substr(idx + 1);
@@ -66,7 +66,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   expectConsume(TokenType::kScriptName);
   auto name = expectConsumeIdentRef();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
-    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.to_string().c_str(), FSUtils::basenameAsRef(script->sourceFileName).to_string().c_str());
+    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.to_string().c_str(), std::string(FSUtils::basenameAsRef(script->sourceFileName)).c_str());
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {

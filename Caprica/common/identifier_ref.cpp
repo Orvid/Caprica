@@ -25,7 +25,7 @@ static Iterator find_not_of(Iterator first, Iterator last, const char* sData, si
 
 const char& identifier_ref::at(size_t pos) const {
   if (pos >= mLength)
-    std::out_of_range("boost::string_ref::at");
+    std::out_of_range("identifier_ref::at");
   return mData[pos];
 }
 
@@ -35,7 +35,7 @@ void identifier_ref::clear() {
 
 identifier_ref identifier_ref::substr(size_t pos, size_t n) const {
   if (pos > size())
-    throw std::out_of_range("string_ref::substr");
+    throw std::out_of_range("identifier_ref::substr");
   if (n == npos || pos + n > size())
     n = size() - pos;
   return identifier_ref(data() + pos, n);

@@ -1,5 +1,6 @@
 #include <common/CapricaReportingContext.h>
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 
