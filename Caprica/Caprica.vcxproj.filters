@@ -158,6 +158,7 @@
     <ClCompile Include="papyrus\parser\PapyrusLexer.cpp">
       <Filter>papyrus\parser</Filter>
     </ClCompile>
+    <ClCompile Include="main_options.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\CapricaConfig.h">
