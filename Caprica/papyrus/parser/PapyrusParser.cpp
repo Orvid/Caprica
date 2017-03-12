@@ -1,8 +1,7 @@
 #include <papyrus/parser/PapyrusParser.h>
 
+#include <filesystem>
 #include <vector>
-
-#include <boost/filesystem.hpp>
 
 #include <common/CaselessStringComparer.h>
 #include <common/FSUtils.h>
@@ -67,7 +66,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   expectConsume(TokenType::kScriptName);
   auto name = expectConsumeIdentRef();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
-    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.to_string().c_str(), boost::filesystem::basename(script->sourceFileName).c_str());
+    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.to_string().c_str(), FSUtils::basenameAsRef(script->sourceFileName).to_string().c_str());
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {

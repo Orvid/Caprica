@@ -2,11 +2,8 @@
 
 #include <io.h>
 #include <fcntl.h>
-
+#include <filesystem>
 #include <iostream>
-
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <common/CapricaConfig.h>
 #include <common/allocators/AtomicChainedPool.h>
@@ -208,9 +205,9 @@ void PapyrusCompilationNode::FileWriteJob::run() {
     case NodeType::PapyrusCompile: {
       if (!conf::Performance::performanceTestMode) {
         auto baseFileName = FSUtils::basenameAsRef(parent->sourceFilePath).to_string();
-        auto containingDir = boost::filesystem::path(parent->outputDirectory);
-        if (!boost::filesystem::exists(containingDir))
-          boost::filesystem::create_directories(containingDir);
+        auto containingDir = std::experimental::filesystem::path(parent->outputDirectory);
+        if (!std::experimental::filesystem::exists(containingDir))
+          std::experimental::filesystem::create_directories(containingDir);
         std::ofstream destFile{ parent->outputDirectory + "\\" + baseFileName + ".pex", std::ifstream::binary };
         destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         parent->pexWriter->applyToBuffers([&](const char* data, size_t size) {

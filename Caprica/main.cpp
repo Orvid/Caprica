@@ -4,8 +4,6 @@
 #include <ostream>
 #include <string>
 
-#include <boost/filesystem.hpp>
-
 #include <common/CapricaConfig.h>
 #include <common/CapricaJobManager.h>
 #include <common/CapricaReportingContext.h>

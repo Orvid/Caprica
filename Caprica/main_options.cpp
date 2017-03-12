@@ -1,16 +1,18 @@
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <common/CapricaConfig.h>
 #include <common/FSUtils.h>
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <utility>
 
 namespace conf = caprica::conf;
 namespace po = boost::program_options;
+namespace filesystem = std::experimental::filesystem;
 
 namespace caprica {
 struct CapricaJobManager;
@@ -39,7 +41,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("import,i", po::value<std::vector<std::string>>()->composing(), "Set the compiler's import directories.")
       ("flags,f", po::value<std::string>(), "Set the file defining the user flags.")
       ("optimize,O", po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false), "Enable optimizations.")
-      ("output,o", po::value<std::string>()->default_value(boost::filesystem::current_path().string()), "Set the directory to save compiler output to.")
+      ("output,o", po::value<std::string>()->default_value(filesystem::current_path().string()), "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::General::compileInParallel)->default_value(false), "Compile files in parallel.")
       ("recurse,r", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false), "Recursively compile all scripts in the directories passed.")
       ("release", po::bool_switch(&conf::CodeGeneration::disableDebugCode)->default_value(false), "Don't generate DebugOnly code.")
@@ -114,15 +116,15 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     po::notify(vm);
 
     auto confFilePath = vm["config-file"].as<std::string>();
-    auto progamBasePath = boost::filesystem::absolute(boost::filesystem::path(argv[0]).parent_path()).string();
+    auto progamBasePath = filesystem::absolute(filesystem::path(argv[0]).parent_path()).string();
     bool loadedConfigFile = false;
-    if (boost::filesystem::exists(progamBasePath + "\\" + confFilePath)) {
+    if (filesystem::exists(progamBasePath + "\\" + confFilePath)) {
       loadedConfigFile = true;
       std::ifstream ifs(progamBasePath + "\\" + confFilePath);
       po::store(po::parse_config_file(ifs, commandLineDesc), vm);
       po::notify(vm);
     }
-    if (boost::filesystem::exists(confFilePath) && _stricmp(boost::filesystem::current_path().string().c_str(), progamBasePath.c_str())) {
+    if (filesystem::exists(confFilePath) && _stricmp(filesystem::current_path().string().c_str(), progamBasePath.c_str())) {
       loadedConfigFile = true;
       std::ifstream ifs(progamBasePath + "\\" + confFilePath);
       po::store(po::parse_config_file(ifs, commandLineDesc), vm);
@@ -180,7 +182,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       auto dirs = vm["import"].as<std::vector<std::string>>();
       conf::Papyrus::importDirectories.reserve(dirs.size());
       for (auto& d : dirs) {
-        if (!boost::filesystem::exists(d)) {
+        if (!filesystem::exists(d)) {
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
         }
@@ -189,23 +191,23 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     auto baseOutputDir = vm["output"].as<std::string>();
-    if (!boost::filesystem::exists(baseOutputDir))
-      boost::filesystem::create_directories(baseOutputDir);
+    if (!filesystem::exists(baseOutputDir))
+      filesystem::create_directories(baseOutputDir);
     baseOutputDir = FSUtils::canonical(baseOutputDir);
 
     if (vm.count("flags")) {
       const auto findFlags = [progamBasePath, baseOutputDir](const std::string& flagsPath) -> std::string {
-        if (boost::filesystem::exists(flagsPath))
+        if (filesystem::exists(flagsPath))
           return flagsPath;
 
         for (auto& i : conf::Papyrus::importDirectories) {
-          if (boost::filesystem::exists(i + "\\" + flagsPath))
+          if (filesystem::exists(i + "\\" + flagsPath))
             return i + "\\" + flagsPath;
         }
 
-        if (boost::filesystem::exists(baseOutputDir + "\\" + flagsPath))
+        if (filesystem::exists(baseOutputDir + "\\" + flagsPath))
           return baseOutputDir + "\\" + flagsPath;
-        if (boost::filesystem::exists(progamBasePath + "\\" + flagsPath))
+        if (filesystem::exists(progamBasePath + "\\" + flagsPath))
           return progamBasePath + "\\" + flagsPath;
 
         return "";
@@ -223,11 +225,11 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
 
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     for (auto& f : filesPassed) {
-      if (!boost::filesystem::exists(f)) {
+      if (!filesystem::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
         return false;
       }
-      if (boost::filesystem::is_directory(f)) {
+      if (filesystem::is_directory(f)) {
         if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, jobManager))
           return false;
       } else {

@@ -4,15 +4,15 @@
 #include <fcntl.h>
 
 #include <cstring>
+#include <filesystem>
 #include <future>
 #include <sstream>
-
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <common/CapricaConfig.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
+
+namespace filesystem = std::experimental::filesystem;
 
 namespace caprica { namespace FSUtils {
 
@@ -59,12 +59,12 @@ std::string canonical(const std::string& path) {
       return path;
     }
   }
-  static boost::filesystem::path currentDirectory = boost::filesystem::current_path();
-  auto absPath = boost::filesystem::absolute(path, currentDirectory);
+  static filesystem::path currentDirectory = filesystem::current_path();
+  auto absPath = filesystem::absolute(path, currentDirectory);
   if (conf::Performance::resolveSymlinks) {
-    return boost::filesystem::canonical(absPath).make_preferred().string();
+    return filesystem::canonical(absPath).make_preferred().string();
   } else {
-    boost::filesystem::path result;
+    filesystem::path result;
     for (auto it = absPath.begin(); it != absPath.end(); ++it) {
       if (!wcscmp(it->c_str(), L"..")) {
         // /a/b/../.. is not /a/b/.. under most circumstances
