@@ -156,7 +156,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <Optimization>Full</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -294,10 +294,7 @@
     <ClCompile Include="common\FSUtils.cpp" />
     <ClCompile Include="common\identifier_ref.cpp" />
     <ClCompile Include="main_options.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</RuntimeTypeInfo>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="papyrus\PapyrusCFG.cpp" />
     <ClCompile Include="papyrus\PapyrusCompilationContext.cpp" />
@@ -311,13 +308,7 @@
     <ClCompile Include="common\CapricaUserFlagsDefinition.cpp" />
     <ClCompile Include="common\parser\CapricaUserFlagsLexer.cpp" />
     <ClCompile Include="common\parser\CapricaUserFlagsParser.cpp" />
-    <ClCompile Include="main.cpp">
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</RuntimeTypeInfo>
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RuntimeTypeInfo>
-    </ClCompile>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="papyrus\expressions\PapyrusCastExpression.cpp" />
     <ClCompile Include="papyrus\expressions\PapyrusFunctionCallExpression.cpp" />
     <ClCompile Include="papyrus\PapyrusFunction.cpp" />
