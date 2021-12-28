@@ -3,6 +3,7 @@
 #include <fstream>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 #include <common/CapricaConfig.h>
 #include <common/CapricaJobManager.h>
@@ -62,7 +63,7 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
 
     do {
       std::string_view filenameRef = data.cFileName;
-      if (filenameRef != "." && filenameRef != "..") {
+      if (filenameRef != std::string_view(".") && filenameRef != std::string_view("..")) {
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
           if (recursive) {
             if (curDir == "\\")
