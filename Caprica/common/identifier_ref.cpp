@@ -17,7 +17,7 @@ static Iterator find_not_of(Iterator first, Iterator last, const char* sData, si
   if (!sLength)
     return first;
   for (; first != last; ++first) {
-    if (std::memchr(sData, (int)sLength, *first) == 0)
+    if (std::memchr(sData, *first, (int)sLength) == 0)
       return first;
   }
   return last;
