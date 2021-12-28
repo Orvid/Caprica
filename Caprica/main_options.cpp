@@ -69,7 +69,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("dump-asm", po::bool_switch(&conf::Debug::dumpPexAsm)->default_value(false), "Dump the PEX assembly code for the input files.")
       ("enable-ck-optimizations", po::value<bool>(&conf::CodeGeneration::enableCKOptimizations)->default_value(true), "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
       ("enable-debug-info", po::value<bool>(&conf::CodeGeneration::emitDebugInfo)->default_value(true), "Enable the generation of debug info. Disabling this will result in Property Groups not showing up in the Creation Kit for the compiled script. This also removes the line number and struct order information.")
-      ("enable-language-extensions", po::value<bool>(&conf::Papyrus::enableLanguageExtensions)->default_value(true), "Enable Caprica's extensions to the Papyrus language.")
+      ("enable-language-extensions", po::value<bool>(&conf::Papyrus::enableLanguageExtensions)->default_value(false), "Enable Caprica's extensions to the Papyrus language.")
       ("resolve-symlinks", po::value<bool>(&conf::Performance::resolveSymlinks)->default_value(false), "Fully resolve symlinks when determining file paths.")
       ;
 
