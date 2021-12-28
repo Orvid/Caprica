@@ -36,7 +36,7 @@ namespace caprica { namespace pex {
   ARG3(idiv, IDiv, 0, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(fdiv, FDiv, 0, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(imod, IMod, 0, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
-  ARG2(not, Not, 0, PexValue::Identifier, dest, PexValue, src) \
+  ARG2(_not, Not, 0, PexValue::Identifier, dest, PexValue, src) \
   ARG2(ineg, INeg, 0, PexValue::Identifier, dest, PexValue, src) \
   ARG2(fneg, FNeg, 0, PexValue::Identifier, dest, PexValue, src) \
   ARG2(assign, Assign, 0, PexValue::Identifier, dest, PexValue, src) \

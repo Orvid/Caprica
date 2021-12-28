@@ -73,7 +73,7 @@ struct PapyrusBinaryOpExpression final : public PapyrusExpression
           return dest;
         case PapyrusBinaryOperatorType::CmpNeq:
           bldr << op::cmpeq{ dest, lVal, rVal };
-          bldr << op::not{ dest, dest };
+          bldr << op::_not{ dest, dest };
           return dest;
         case PapyrusBinaryOperatorType::CmpLt:
           bldr << op::cmplt{ dest, lVal, rVal };

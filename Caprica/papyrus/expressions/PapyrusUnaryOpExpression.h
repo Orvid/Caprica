@@ -40,7 +40,7 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
           bldr.reportingContext.fatal(location, "You can only negate integers and floats!");
         return dest;
       case PapyrusUnaryOperatorType::Not:
-        bldr << op::not{ dest, iVal };
+        bldr << op::_not{ dest, iVal };
         return dest;
       
       case PapyrusUnaryOperatorType::None:
