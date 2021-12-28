@@ -20,7 +20,9 @@ struct FileOffsetPool final
 
   void flatten() {
     if (mSize != flattenedTreeSize) {
-        flattenedTree = (size_t*)realloc(flattenedTree, sizeof(size_t) * mSize);
+      auto f = (size_t*)realloc(flattenedTree, sizeof(size_t) * mSize);
+      assert(f != nullptr);
+      flattenedTree = f;
 
       auto curFlatTree = &flattenedTree[flattenedTreeSize];
       // We also reset the tree as we go.
@@ -41,6 +43,7 @@ struct FileOffsetPool final
     mSize++;
     if (current->nextDataIndex >= HeapSize) {
       auto newHeap = (Heap*)malloc(sizeof(Heap));
+      assert(newHeap != nullptr);
       newHeap->nextDataIndex = 0;
       newHeap->next = nullptr;
       current->next = newHeap;
