@@ -77,7 +77,7 @@ bool CaselessIdentifierEqual::equal(const char* a, const char* b, size_t len) {
   // and is safe to use on any 64-bit CPU.
   // This returns via goto's because of how MSVC does codegen.
   if (a == b)
-    goto ReturnTrue;
+    return true;
   const char* __restrict strA = a;
   const int64_t strBOff = b - a;
   size_t lenLeft = len;
@@ -89,37 +89,34 @@ bool CaselessIdentifierEqual::equal(const char* a, const char* b, size_t len) {
     auto vA = _mm_or_si128(_mm_loadu_si128((__m128i*)strA), spaces);
     auto vB = _mm_or_si128(_mm_loadu_si128((__m128i*)(strA + strBOff)), spaces);
     if (_mm_movemask_epi8(_mm_cmpeq_epi8(vA, vB)) != 0xFFFF)
-      goto ReturnFalse;
+      return false;
     strA += 16;
     lenLeft -= 16;
   }
   // We don't need to adjust the lenLeft for each of these.
   if (lenLeft & 8) {
     if ((*(uint64_t*)strA | 0x2020202020202020ULL) != (*(uint64_t*)(strA + strBOff) | 0x2020202020202020ULL))
-      goto ReturnFalse;
+      return false;
     strA += 8;
   }
   if (lenLeft & 4) {
     if ((*(uint32_t*)strA | 0x20202020U) != (*(uint32_t*)(strA + strBOff) | 0x20202020U))
-      goto ReturnFalse;
+      return false;
     strA += 4;
   }
   if (lenLeft & 2) {
     if ((*(uint16_t*)strA | 0x2020) != (*(uint16_t*)(strA + strBOff) | 0x2020))
-      goto ReturnFalse;
+      return false;
     if (!isNullTerminated)
       strA += 2;
   }
   if (!isNullTerminated) {
     if (lenLeft & 1) {
       if ((*(uint8_t*)strA | 0x20) != (*(uint8_t*)(strA + strBOff) | 0x20))
-        goto ReturnFalse;
+        return false;
     }
   }
-ReturnTrue:
   return true;
-ReturnFalse:
-  return false;
 }
 template bool CaselessIdentifierEqual::equal<true>(const char*, const char*, size_t);
 template bool CaselessIdentifierEqual::equal<false>(const char*, const char*, size_t);
