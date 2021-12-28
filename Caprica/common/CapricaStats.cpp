@@ -14,7 +14,9 @@ CapricaStats::counter_type CapricaStats::freedHeapCount{ 0 };
 
 template<typename CounterType, typename NopType>
 static std::enable_if_t<!std::is_same<CounterType, NopType>::value> internalOutputStats() {
-  using s = CapricaStats;
+  // This forces the print lines below to be delay typed, so that they only try to print
+  // when the counters are set to a type that actually counts.
+  using s = typename std::enable_if<!std::is_same<CounterType, NopType>::value, CapricaStats>::type;
   using counter_type = CounterType;
   const auto perc = [](const counter_type& a, const counter_type& b) -> double {
     return ((double)a / (double)b) * 100;
