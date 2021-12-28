@@ -61,7 +61,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
     if (pex->getStringValue(po->parentClassName) != "")
       baseTp = reflectType(loc, alloc, pex, po->parentClassName);
     auto obj = alloc->make<PapyrusObject>(loc, alloc, baseTp);
-    obj->name = alloc->allocateIdentifier(pex->getStringValue(po->name));
+    obj->setName(alloc->allocateIdentifier(pex->getStringValue(po->name)));
 
     for (auto ps : po->structs) {
       auto struc = alloc->make<PapyrusStruct>(loc);

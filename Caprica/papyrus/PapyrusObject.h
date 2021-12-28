@@ -73,11 +73,13 @@ struct PapyrusObject final
   const PapyrusState* getRootState() const { return rootState; }
   PapyrusState* getRootState() { return rootState; }
 
-  identifier_ref loweredName() const {
-    if (lowerName.size() == name.size())
-      return lowerName;
+  void setName(identifier_ref nm) {
+    name = nm;
     lowerName = name.to_string();
     identifierToLower(lowerName);
+  }
+
+  identifier_ref loweredName() const {
     return lowerName;
   }
 
@@ -110,7 +112,7 @@ private:
   PapyrusResoultionState resolutionState{ PapyrusResoultionState::Unresolved };
   PapyrusState* rootState{ nullptr };
   PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
-  mutable std::string lowerName{ };
+  std::string lowerName{ };
 
   void checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap, bool checkInheritedOnly) const;
 };

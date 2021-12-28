@@ -77,7 +77,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   } else {
     obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "ScriptObject"));
   }
-  obj->name = name;
+  obj->setName(name);
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocStringRef();
