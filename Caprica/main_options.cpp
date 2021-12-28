@@ -12,7 +12,7 @@
 
 namespace conf = caprica::conf;
 namespace po = boost::program_options;
-namespace filesystem = std::experimental::filesystem;
+namespace filesystem = std::filesystem;
 
 namespace caprica {
 struct CapricaJobManager;

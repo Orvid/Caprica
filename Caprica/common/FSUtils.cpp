@@ -12,8 +12,6 @@
 #include <common/CapricaReportingContext.h>
 #include <common/CaselessStringComparer.h>
 
-namespace filesystem = std::experimental::filesystem;
-
 namespace caprica { namespace FSUtils {
 
 std::string_view basenameAsRef(std::string_view file) {
@@ -59,12 +57,11 @@ std::string canonical(const std::string& path) {
       return path;
     }
   }
-  static filesystem::path currentDirectory = filesystem::current_path();
-  auto absPath = filesystem::absolute(path, currentDirectory);
+  auto absPath = std::filesystem::absolute(path);
   if (conf::Performance::resolveSymlinks) {
-    return filesystem::canonical(absPath).make_preferred().string();
+    return std::filesystem::canonical(absPath).make_preferred().string();
   } else {
-    filesystem::path result;
+    std::filesystem::path result;
     for (auto it = absPath.begin(); it != absPath.end(); ++it) {
       if (!wcscmp(it->c_str(), L"..")) {
         // /a/b/../.. is not /a/b/.. under most circumstances
