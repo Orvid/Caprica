@@ -404,9 +404,6 @@
     <ClInclude Include="common\allocators\CachePool.h">
       <Filter>common\allocators</Filter>
     </ClInclude>
-    <ClInclude Include="common\allocators\ChainedDestructedPooledAllocator.h">
-      <Filter>common\allocators</Filter>
-    </ClInclude>
     <ClInclude Include="common\allocators\ChainedPool.h">
       <Filter>common\allocators</Filter>
     </ClInclude>
