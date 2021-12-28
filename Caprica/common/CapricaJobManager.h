@@ -38,6 +38,8 @@ private:
 struct CapricaJobManager final
 {
   void startup(size_t workerCount);
+  // Wait for all workers to shutdown
+  void awaitShutdown();
   bool tryDeque(CapricaJob** retJob);
   void queueJob(CapricaJob* job);
 

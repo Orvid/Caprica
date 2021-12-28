@@ -37,6 +37,14 @@ void CapricaJobManager::startup(size_t initialWorkerCount) {
   }
 }
 
+void CapricaJobManager::awaitShutdown() {
+  std::mutex notARealMutex{ };
+  while (workerCount != 0) {
+    std::unique_lock<std::mutex> lk{ notARealMutex };
+    queueCondition.wait_for(lk, std::chrono::milliseconds(20), [&] { return workerCount == 0; });
+  }
+}
+
 bool CapricaJobManager::tryDeque(CapricaJob** retJob) {
   auto fron = front.load(std::memory_order_consume);
   if (!fron)
@@ -113,7 +121,7 @@ StartOver:
   {
     std::unique_lock<std::mutex> lk{ notARealMutex };
     waiterCount++;
-    queueCondition.wait(lk, waitCallback);
+    queueCondition.wait_for(lk, std::chrono::milliseconds(100), waitCallback);
     waiterCount--;
     goto StartOver;
   }

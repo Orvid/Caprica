@@ -131,11 +131,13 @@ void parseUserFlags(std::string&& flagsPath) {
 int main(int argc, char* argv[])
 {
   caprica::CapricaJobManager jobManager{ };
-  jobManager.startup((uint32_t)std::thread::hardware_concurrency());
   auto startParse = std::chrono::high_resolution_clock::now();
   if (!caprica::parseCommandLineArguments(argc, argv, &jobManager)) {
     caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
+  }
+  if (conf::General::compileInParallel) {
+    jobManager.startup((uint32_t)std::thread::hardware_concurrency());
   }
   auto endParse = std::chrono::high_resolution_clock::now();
   if (conf::Performance::dumpTiming)
@@ -165,6 +167,7 @@ int main(int argc, char* argv[])
     return -1;
   }
 
+  jobManager.awaitShutdown();
   return 0;
 }
 
