@@ -21,7 +21,7 @@ struct PexAsmParser final : private PexAsmLexer
   PexFile* parseFile();
 
 private:
-  allocators::ChainedPool* alloc;
+  allocators::ChainedPool* alloc{ nullptr };
   PexFunction* parseFunction(PexFile* file, PexDebugFunctionInfo* debInfo, std::string& funcNameOut);
 
   void expect(TokenType tp) {
@@ -70,7 +70,7 @@ private:
 
   std::string expectConsumeIdent() {
     expect(TokenType::Identifier);
-    auto val = cur.sValue;
+    auto val = std::move(cur.sValue);
     consume();
     return val;
   }
@@ -101,7 +101,7 @@ private:
 
   std::string expectConsumeString() {
     expect(TokenType::String);
-    auto val = cur.sValue;
+    auto val = std::move(cur.sValue);
     consume();
     return val;
   }
