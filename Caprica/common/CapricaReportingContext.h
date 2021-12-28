@@ -65,11 +65,11 @@ struct CapricaReportingContext final
   }
 
 #define DEFINE_WARNING_A1(num, id, msg, arg1Type, arg1Name) \
-NEVER_INLINE void warning_W##num##_##id##(CapricaFileLocation location, arg1Type arg1Name) { warning(location, num, msg, arg1Name); }
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name) { warning(location, num, msg, arg1Name); }
 #define DEFINE_WARNING_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \
-NEVER_INLINE void warning_W##num##_##id##(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name) { warning(location, num, msg, arg1Name, arg2Name); }
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name) { warning(location, num, msg, arg1Name, arg2Name); }
 #define DEFINE_WARNING_A3(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name, arg3Type, arg3Name) \
-NEVER_INLINE void warning_W##num##_##id##(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name, arg3Type arg3Name) { warning(location, num, msg, arg1Name, arg2Name, arg3Name); }
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name, arg3Type arg3Name) { warning(location, num, msg, arg1Name, arg2Name, arg3Name); }
 
   // Warnings 2000-2200 are for engine imposed limitations.
   DEFINE_WARNING_A2(2001, EngineLimits_ArrayLength, "Attempting to create an array with %zu elements, but the engine limit is %zu elements.", size_t, count, size_t, engineMax)
