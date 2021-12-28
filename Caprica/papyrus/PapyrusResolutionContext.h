@@ -48,9 +48,9 @@ struct PapyrusResolutionContext final
   void clearImports() { importedNodes.clear(); }
 
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
-  static bool canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest);
-  static bool canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest);
-  static bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target);
+  bool canExplicitlyCast(CapricaFileLocation loc, const PapyrusType& src, const PapyrusType& dest) const;
+  bool canImplicitlyCoerce(CapricaFileLocation loc, const PapyrusType& src, const PapyrusType& dest) const;
+  bool canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const;
   expressions::PapyrusExpression* coerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const;
   PapyrusValue coerceDefaultValue(const PapyrusValue& val, const PapyrusType& target) const;
 

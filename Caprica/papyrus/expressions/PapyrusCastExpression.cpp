@@ -20,8 +20,8 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
   if (innerExpression->resultType() == targetType)
     ctx->reportingContext.warning_W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
 
-  if (!PapyrusResolutionContext::canExplicitlyCast(innerExpression->resultType(), targetType)) {
-    if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(innerExpression, targetType))
+  if (!ctx->canExplicitlyCast(innerExpression->location, innerExpression->resultType(), targetType)) {
+    if (!ctx->canImplicitlyCoerceExpression(innerExpression, targetType))
       ctx->reportingContext.error(location, "Cannot convert from '%s' to '%s'!", innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
   }
 }

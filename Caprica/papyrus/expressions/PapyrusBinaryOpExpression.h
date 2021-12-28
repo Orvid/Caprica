@@ -223,7 +223,7 @@ private:
       left = ctx->coerceExpression(left, PapyrusType::Float(left->location));
       right = ctx->coerceExpression(right, PapyrusType::Float(right->location));
     } else {
-      if (!PapyrusResolutionContext::canImplicitlyCoerceExpression(right, left->resultType()))
+      if (!ctx->canImplicitlyCoerceExpression(right, left->resultType()))
         left = ctx->coerceExpression(left, right->resultType());
       else
         right = ctx->coerceExpression(right, left->resultType());

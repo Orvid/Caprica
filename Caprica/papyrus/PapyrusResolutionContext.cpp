@@ -45,8 +45,8 @@ bool PapyrusResolutionContext::isObjectSomeParentOf(const PapyrusObject* child, 
   return false;
 }
 
-bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const PapyrusType& dest) {
-  if (canImplicitlyCoerce(src, dest))
+bool PapyrusResolutionContext::canExplicitlyCast(CapricaFileLocation loc, const PapyrusType& src, const PapyrusType& dest) const {
+  if (canImplicitlyCoerce(loc, src, dest))
     return true;
 
   if (src.type == PapyrusType::Kind::Var)
@@ -89,9 +89,14 @@ bool PapyrusResolutionContext::canExplicitlyCast(const PapyrusType& src, const P
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
-bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const PapyrusType& dest) {
+bool PapyrusResolutionContext::canImplicitlyCoerce(CapricaFileLocation loc, const PapyrusType& src, const PapyrusType& dest) const {
   if (src == dest)
     return true;
+
+  if (src.type == PapyrusType::Kind::None) {
+    reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
+    return true;
+  }
 
   switch (dest.type) {
     case PapyrusType::Kind::Bool:
@@ -118,7 +123,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(const PapyrusType& src, const
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
-bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) {
+bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::PapyrusExpression* expr, const PapyrusType& target) const {
   switch (target.type) {
     case PapyrusType::Kind::Var:
     case PapyrusType::Kind::Array:
@@ -128,7 +133,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
       if (expr->resultType().type == PapyrusType::Kind::None && expr->asLiteralExpression()) {
         return true;
       }
-      // Deliberate Fallthrough
+      return canImplicitlyCoerce(expr->location, expr->resultType(), target);
 
     case PapyrusType::Kind::Bool:
     case PapyrusType::Kind::Int:
@@ -138,7 +143,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerceExpression(expressions::Papyru
     case PapyrusType::Kind::ScriptEventName:
     case PapyrusType::Kind::Unresolved:
     case PapyrusType::Kind::None:
-      return canImplicitlyCoerce(expr->resultType(), target);
+      return canImplicitlyCoerce(expr->location, expr->resultType(), target);
   }
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
@@ -197,7 +202,7 @@ void PapyrusResolutionContext::checkForPoison(const PapyrusType& type) const {
       goto CheckDebug;
     if (object != nullptr && object->isBetaOnly())
       goto CheckDebug;
-    reportingContext.error(type.location, "You cannot use the return value of a BetaOnly function in a non-BetaOnly context!");
+    reportingContext.warning_W1001_Strict_Poison_BetaOnly(type.location);
     return;
   }
 CheckDebug:
@@ -206,7 +211,7 @@ CheckDebug:
       return;
     if (object != nullptr && object->isDebugOnly())
       return;
-    reportingContext.error(type.location, "You cannot use the return value of a DebugOnly function in a non-DebugOnly context!");
+    reportingContext.warning_W1002_Strict_Poison_DebugOnly(type.location);
     return;
   }
 }
@@ -357,7 +362,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
 
   if (function) {
     if ((idEq(function->name, "getstate") || idEq(function->name, "gotostate")) && idEq(ident.res.name, "__state")) {
-      auto i = ident;
+      PapyrusIdentifier i = ident;
       i.type = PapyrusIdentifierType::BuiltinStateField;
       return i;
     }

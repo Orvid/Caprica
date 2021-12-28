@@ -64,6 +64,8 @@ struct CapricaReportingContext final
     throw std::runtime_error("");
   }
 
+#define DEFINE_WARNING_A0(num, id, msg) \
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location) { warning(location, num, msg); }
 #define DEFINE_WARNING_A1(num, id, msg, arg1Type, arg1Name) \
 NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name) { warning(location, num, msg, arg1Name); }
 #define DEFINE_WARNING_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \
@@ -71,7 +73,13 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
 #define DEFINE_WARNING_A3(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name, arg3Type, arg3Name) \
 NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name, arg3Type arg3Name) { warning(location, num, msg, arg1Name, arg2Name, arg3Name); }
 
-  // Warnings 2000-2200 are for engine imposed limitations.
+  // Warnings 1000-1999 are for warnings that really should be errors but can't be because the base game triggers them.
+  DEFINE_WARNING_A1(1000, Strict_Not_All_Control_Paths_Return, "Not all control paths of '%s' return a value.", const char*, functionName)
+  DEFINE_WARNING_A0(1001, Strict_Poison_BetaOnly, "The return value of a BetaOnly function cannot be used in a non-BetaOnly context.")
+  DEFINE_WARNING_A0(1002, Strict_Poison_DebugOnly, "The return value of a DebugOnly function cannot be used in a non-DebugOnly context.")
+  DEFINE_WARNING_A1(1003, Strict_None_Implicit_Conversion, "None cannot be implicitly converted to '%s'.", const char*, destTypeName)
+
+  // Warnings 2000-2199 are for engine imposed limitations.
   DEFINE_WARNING_A2(2001, EngineLimits_ArrayLength, "Attempting to create an array with %zu elements, but the engine limit is %zu elements.", size_t, count, size_t, engineMax)
   DEFINE_WARNING_A2(2002, EngineLimits_PexFile_UserFlagCount, "There are %zu distinct user flags defined, but the engine limit is %zu flags.", size_t, count, size_t, engineMax)
   DEFINE_WARNING_A3(2003, EngineLimits_PexFunction_ParameterCount, "There are %zu parameters declared for the '%s' function, but the engine limit is %zu parameters.", size_t, count, const char*, functionName, size_t, engineMax)

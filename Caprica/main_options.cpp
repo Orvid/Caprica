@@ -52,6 +52,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("disable-warning", po::value<std::vector<size_t>>()->composing(), "Disable a specific warning.")
       ("config-file", po::value<std::string>()->default_value("caprica.cfg"), "Load additional options from a config file.")
       ("quiet,q", po::bool_switch(&conf::General::quietCompile)->default_value(false), "Do not report progress, only failures.")
+      ("strict", po::value<bool>()->default_value(false)->implicit_value(true), "Enable strict checking of control flow, poisoning, and more sane implicit conversions. It is strongly recommended to enable these.")
       ;
 
     po::options_description champollionCompatDesc("Champollion Compatibility");
@@ -59,6 +60,13 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("champollion-compat", po::value<bool>()->default_value(true)->implicit_value(true), "Enable a few options that make it easier to compile Papyrus code decompiled by Champollion.")
       ("allow-compiler-identifiers", po::bool_switch(&conf::Papyrus::allowCompilerIdentifiers)->default_value(false), "Allow identifiers to be prefixed with ::, which is normally reserved for compiler identifiers.")
       ("allow-decompiled-struct-references", po::bool_switch(&conf::Papyrus::allowDecompiledStructNameRefs)->default_value(false), "Allow the name of structs to be prefixed with the containing object name, followed by a #, then the name of the struct.")
+      ;
+
+    po::options_description strictChecksDesc("Strict Compilation Checks");
+    strictChecksDesc.add_options()
+      ("require-all-paths-return", po::bool_switch()->default_value(false), "Require all control paths to return a value")
+      ("ensure-betaonly-debugonly-dont-escape", po::bool_switch()->default_value(false), "Ensure values returned from BetaOnly and DebugOnly functions don't escape, as that will cause invalid code generation.")
+      ("disable-implicit-conversion-from-none", po::bool_switch()->default_value(false), "Disable implicit conversion from None in most situations where the use of None likely wasn't the author's intention.")
       ;
 
     po::options_description advancedDesc("Advanced");
@@ -105,7 +113,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     visibleDesc.add(desc).add(champollionCompatDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
-    commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc);
+    commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc).add(strictChecksDesc);
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv)
@@ -115,7 +123,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
               .run(), vm);
     po::notify(vm);
 
-    auto confFilePath = vm["config-file"].as<std::string>();
+    std::string confFilePath = vm["config-file"].as<std::string>();
     auto progamBasePath = filesystem::absolute(filesystem::path(argv[0]).parent_path()).string();
     bool loadedConfigFile = false;
     if (filesystem::exists(progamBasePath + "\\" + confFilePath)) {
@@ -166,8 +174,28 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
     }
 
+    if (vm["strict"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1000);
+      conf::Warnings::warningsToHandleAsErrors.insert(1001);
+      conf::Warnings::warningsToHandleAsErrors.insert(1002);
+      conf::Warnings::warningsToHandleAsErrors.insert(1003);
+    }
+
+    if (vm["require-all-paths-return"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1000);
+    }
+
+    if (vm["ensure-betaonly-debugonly-dont-escape"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1001);
+      conf::Warnings::warningsToHandleAsErrors.insert(1002);
+    }
+
+    if (vm["disable-implicit-conversion-from-none"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1003);
+    }
+
     if (vm.count("disable-warning")) {
-      auto warnsIgnored = vm["disable-warning"].as<std::vector<size_t>>();
+      std::vector<size_t> warnsIgnored = vm["disable-warning"].as<std::vector<size_t>>();
       conf::Warnings::warningsToIgnore.reserve(warnsIgnored.size());
       for (auto f : warnsIgnored) {
         if (conf::Warnings::warningsToIgnore.count(f)) {
@@ -190,7 +218,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
     }
 
-    auto baseOutputDir = vm["output"].as<std::string>();
+    std::string baseOutputDir = vm["output"].as<std::string>();
     if (!filesystem::exists(baseOutputDir))
       filesystem::create_directories(baseOutputDir);
     baseOutputDir = FSUtils::canonical(baseOutputDir);
@@ -233,7 +261,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, jobManager))
           return false;
       } else {
-        auto ext = FSUtils::extensionAsRef(f);
+        std::string_view ext = FSUtils::extensionAsRef(f);
         if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex")) {
           std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
