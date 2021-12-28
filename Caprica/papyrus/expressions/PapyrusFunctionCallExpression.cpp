@@ -299,7 +299,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     }
     ctx->reportingContext.logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
   } else {
-    assert(function.func != nullptr);
+    assert(function.res.func != nullptr);
 
     if (function.res.func->returnType.isPoisoned(PapyrusType::PoisonKind::Beta)) {
       if (ctx->function == nullptr || !ctx->function->isBetaOnly()) {
@@ -347,10 +347,13 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         }
         if (hadNamedArgs)
           ctx->reportingContext.fatal(iter->value->location, "No normal arguments are allowed after the first named argument!");
-        auto a = *iter;
-        a->argIndex = baseI;
-        ++iter;
-        newArgs.push_back(a);
+
+        {
+          auto a = *iter;
+          a->argIndex = baseI;
+          ++iter;
+          newArgs.push_back(a);
+        }
       ContinueOuterLoop:
         continue;
       }
