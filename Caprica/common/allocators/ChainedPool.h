@@ -18,7 +18,7 @@ struct ChainedPool
 
   char* allocate(size_t size);
   template<typename T, typename... Args>
-  T* make(Args&&... args) {
+  __declspec(allocator) T* make(Args&&... args) {
     if (std::is_trivially_destructible<T>::value) {
       auto t = allocate(sizeof(T));
       __assume(t != nullptr);
