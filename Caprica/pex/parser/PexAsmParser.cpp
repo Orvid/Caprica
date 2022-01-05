@@ -21,7 +21,7 @@ PexFile* PexAsmParser::parseFile() {
           switch (cur.type) {
             case TokenType::kSource:
               consume();
-              file->sourceFileName = expectConsumeStringEOL();
+              file->sourceFileName = alloc->allocateString(expectConsumeStringEOL());
               break;
             case TokenType::kModifyTime:
               consume();

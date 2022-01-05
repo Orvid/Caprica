@@ -41,6 +41,13 @@ struct PexAsmWriter final
   }
 
   template<>
+  void writeKV(const char* key, std::string_view val) {
+    ensureIndent();
+    strm << '.' << key << " \"" << escapeString(std::string(val)) << "\"";
+    writeln();
+  }
+
+  template<>
   void writeKV(const char* key, PexUserFlags val) {
     ensureIndent();
     strm << '.' << key << " " << val.data;

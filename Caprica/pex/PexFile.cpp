@@ -88,7 +88,7 @@ PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
     CapricaReportingContext::logicalFatal("We currently only support minor version 9!");
   file->gameID = rdr.read<uint16_t>();
   file->compilationTime = rdr.read<time_t>();
-  file->sourceFileName = rdr.read<std::string>();
+  file->sourceFileName = alloc->allocateString(rdr.read<std::string>());
   file->userName = rdr.read<std::string>();
   file->computerName = rdr.read<std::string>();
 
@@ -152,7 +152,7 @@ void PexFile::write(PexWriter& wtr) const {
 void PexFile::writeAsm(PexAsmWriter& wtr) const {
   wtr.writeln(".info");
   wtr.ident++;
-  wtr.writeKV<std::string>("source", sourceFileName);
+  wtr.writeKV<std::string_view>("source", sourceFileName);
   if (debugInfo)
     wtr.writeKV<time_t>("modifyTime", debugInfo->modificationTime);
   else

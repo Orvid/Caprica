@@ -33,7 +33,7 @@ struct PexFile final
   uint8_t minorVersion{ 9 };
   uint16_t gameID{ 2 }; // Default to Fallout 4
   time_t compilationTime{ };
-  std::string sourceFileName{ "" };
+  std::string_view sourceFileName{ "" };
   std::string userName{ "" };
   std::string computerName{ "" };
   PexDebugInfo* debugInfo{ nullptr };

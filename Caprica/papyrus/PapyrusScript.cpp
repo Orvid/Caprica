@@ -16,7 +16,7 @@ pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
     pex->debugInfo->modificationTime = lastModificationTime;
   }
   pex->compilationTime = time(nullptr);
-  pex->sourceFileName = sourceFileName;
+  pex->sourceFileName = pex->alloc->allocateString(sourceFileName);
 
   static std::string computerName = []() -> std::string {
     char compNameBuf[MAX_COMPUTERNAME_LENGTH + 1];
