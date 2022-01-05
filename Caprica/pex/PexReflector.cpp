@@ -81,6 +81,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
       prop->name = alloc->allocateIdentifier(pex->getStringValue(pp->name));
       if (pp->isAuto) {
         prop->userFlags.isAuto = true;
+        prop->buildAutoVarName(alloc);
       } else {
         if (pp->isReadable) {
           prop->readFunction = reflectFunction(loc, alloc, pex, obj, pp->readFunction, "get");

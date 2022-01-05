@@ -5,6 +5,7 @@
 #include <common/CapricaFileLocation.h>
 #include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
+#include <common/LargelyBufferedString.h>
 
 #include <papyrus/PapyrusFunction.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -20,6 +21,7 @@ namespace caprica { namespace papyrus {
 struct PapyrusProperty final
 {
   identifier_ref name{ "" };
+  identifier_ref autoVarName{ "" };
   identifier_ref documentationComment{ "" };
   PapyrusType type;
   PapyrusUserFlags userFlags{ };
@@ -40,8 +42,10 @@ struct PapyrusProperty final
   PapyrusProperty(const PapyrusProperty&) = delete;
   ~PapyrusProperty() = default;
 
-  std::string getAutoVarName() const {
-    return "::" + name.to_string() + "_var";
+  void buildAutoVarName(allocators::ChainedPool* alloc) {
+    LargelyBufferedString buf{ "::" };
+    buf.append(name).append("_var");
+    this->autoVarName = alloc->allocateIdentifier(buf.data(), buf.size());
   }
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const;

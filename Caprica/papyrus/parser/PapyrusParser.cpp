@@ -323,7 +323,9 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
   expectConsumeEOLs();
   prop->documentationComment = maybeConsumeDocStringRef();
 
-  if (isFullProp) {
+  if (!isFullProp) {
+    prop->buildAutoVarName(alloc);
+  } else {
     for (int i = 0; i < 2; i++) {
       switch (cur.type) {
         case TokenType::kFunction:

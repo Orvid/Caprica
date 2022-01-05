@@ -40,7 +40,7 @@ void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
     prop->isReadable = true;
     prop->isWritable = true;
     auto var = file->alloc->make<pex::PexVariable>();
-    var->name = file->getString(getAutoVarName());
+    var->name = file->getString(autoVarName);
     var->typeName = prop->typeName;
     var->userFlags = userFlags.buildPex(file, CapricaUserFlagsDefinition::ValidLocations::Variable);
     var->defaultValue = defaultValue.buildPex(file);
