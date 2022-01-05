@@ -7,8 +7,8 @@
 
 #include <common/CapricaConfig.h>
 #include <common/CapricaStats.h>
-
 #include <common/CaselessStringComparer.h>
+#include <common/LargelyBufferedString.h>
 
 #include <nmmintrin.h>
 
@@ -332,7 +332,7 @@ StartOver:
     case '8':
     case '9':
     {
-      std::string str;
+      LargelyBufferedString str;
       str.push_back((char)c);
 
       // It's hex.
@@ -341,7 +341,8 @@ StartOver:
         while (isxdigit(peekChar()))
           str.push_back((char)getChar());
         
-        auto i = std::stoul(str, nullptr, 16);
+        str.push_back('\0');
+        auto i = std::strtoul(str.data(), nullptr, 16);
         setTok(TokenType::Integer, baseLoc);
         cur.val.i = (int32_t)i;
         return;
@@ -368,23 +369,27 @@ StartOver:
             str.push_back((char)getChar());
         }
 
-        auto f = std::stof(str);
+        str.push_back('\0');
+        auto f = std::strtof(str.data(), nullptr);
         setTok(TokenType::Float, baseLoc);
         cur.val.f = f;
         return;
       }
 
-      if (str.size() < 8 || (str.size() == 8 && str[0] <= '4')) {
+      if (str.size() < 8 || (str.size() == 8 && str.data()[0] <= '4')) {
         // It is probably an integer, but maybe not.
         try {
-          auto i = std::stoul(str);
+          str.push_back('\0');
+          auto i = std::strtoul(str.data(), nullptr, 0);
           setTok(TokenType::Integer, baseLoc);
           cur.val.i = (int32_t)i;
           return;
         } catch (std::out_of_range oor) { }
+      } else {
+        str.push_back('\0');
       }
       // It's very definitely a float, and a very large one at that.
-      auto f = std::stof(str);
+      auto f = std::strtof(str.data(), nullptr);
       setTok(TokenType::Float, baseLoc);
       cur.val.f = f;
       return;
