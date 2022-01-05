@@ -19,12 +19,14 @@ alignas(128) const uint64_t charToLowerMap[] = {
   'x', 'y', 'z', '{', '|', '}', '~'
 };
 
-void identifierToLower(std::string& str) {
-  char* data = (char*)str.c_str();
-  auto end = str.size();
-  for (size_t i = 0; i < end; i++) {
+void identifierToLower(char* data, size_t size) {
+  for (size_t i = 0; i < size; i++) {
     *data = (char)(charToLowerMap - 0x20)[*data];
   }
+}
+
+void identifierToLower(std::string& str) {
+  identifierToLower(str.data(), str.size());
 }
 
 bool caselessEq(std::string_view a, std::string_view b) {

@@ -14,6 +14,7 @@
 
 namespace caprica {
 
+void identifierToLower(char* data, size_t size);
 void identifierToLower(std::string& str);
 
 bool caselessEq(std::string_view a, std::string_view b);
