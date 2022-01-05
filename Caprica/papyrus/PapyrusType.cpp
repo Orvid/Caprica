@@ -43,32 +43,32 @@ std::string PapyrusType::prettyString() const {
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
-std::string PapyrusType::getTypeString() const {
+LargelyBufferedString& PapyrusType::getTypeStringAsRef(LargelyBufferedString& buf) const {
   switch (type) {
     case Kind::None:
-      return "None";
+      return buf.append("None");
     case Kind::Bool:
-      return "Bool";
+      return buf.append("Bool");
     case Kind::Float:
-      return "Float";
+      return buf.append("Float");
     case Kind::Int:
-      return "Int";
+      return buf.append("Int");
     case Kind::String:
     case Kind::CustomEventName: // These are both really strings.
     case Kind::ScriptEventName:
-      return "String";
+      return buf.append("String");
     case Kind::Var:
-      return "Var";
+      return buf.append("Var");
     case Kind::Array:
-      return resolved.arrayElementType->getTypeString() + "[]";
+      return resolved.arrayElementType->getTypeStringAsRef(buf).append("[]");
     case Kind::Unresolved:
-      return name.to_string();
+      return buf.append(name);
     case Kind::ResolvedObject:
-      return resolved.obj->loweredName().to_string();
+      return buf.append(resolved.obj->loweredName());
     case Kind::ResolvedStruct:
     {
-      auto typeName = resolved.struc->parentObject->name.to_string() + "#" + resolved.struc->name.to_string();
-      identifierToLower(typeName);
+      auto& typeName = buf.append(resolved.struc->parentObject->name).append("#").append(resolved.struc->name);
+      identifierToLower(typeName.data(), typeName.size());
       return typeName;
     }
   }

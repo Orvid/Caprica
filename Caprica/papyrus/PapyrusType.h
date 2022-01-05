@@ -7,6 +7,7 @@
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
 #include <common/identifier_ref.h>
+#include <common/LargelyBufferedString.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexString.h>
@@ -107,7 +108,9 @@ struct PapyrusType final
   }
 
   pex::PexString buildPex(pex::PexFile* file) const {
-    return file->getString(getTypeString());
+    LargelyBufferedString buf;
+    getTypeStringAsRef(buf);
+    return file->getString(buf.string_view());
   }
 
   const PapyrusType& getElementType() const& {
@@ -132,7 +135,7 @@ private:
 
   PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 
-  std::string getTypeString() const;
+  LargelyBufferedString& getTypeStringAsRef(LargelyBufferedString& buf) const;
 };
 
 inline auto operator ~(PapyrusType::PoisonKind a) {
