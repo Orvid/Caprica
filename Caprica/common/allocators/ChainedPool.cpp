@@ -118,9 +118,18 @@ void ChainedPool::reset() {
 
   current = &base;
   auto c = current;
+  auto prev = current;
   while (c && c->freeBytes != c->allocedHeapSize) {
-    c->freeBytes = c->allocedHeapSize;
-    c = c->next;
+    if (c->allocedHeapSize != this->heapSize) {
+      prev->next = c->next;
+      c->next = nullptr;
+      delete c;
+      c = prev->next;
+    } else {
+      c->freeBytes = c->allocedHeapSize;
+      prev = c;
+      c = c->next;
+    }
   }
 }
 
@@ -130,10 +139,15 @@ void* ChainedPool::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
   if (!hp->tryAlloc(firstAllocSize, &ret))
     CapricaReportingContext::logicalFatal("Failed while allocating a Heap!");
 
-  auto curHp = current;
-  while (curHp->next)
-    curHp = curHp->next;
-  curHp->next = hp;
+  if (newHeapSize == firstAllocSize) {
+    hp->next = base.next;
+    base.next = hp;
+  } else {
+    auto curHp = current;
+    while (curHp->next)
+      curHp = curHp->next;
+    curHp->next = hp;
+  }
   return ret;
 }
 
