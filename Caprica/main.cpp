@@ -49,6 +49,7 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> namespaceMap{ };
+    namespaceMap.reserve(8000);
     std::string curDirFull;
     if (curDir == "\\")
       curDirFull = absBaseDir;
