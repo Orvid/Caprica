@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
   }
   auto endParse = std::chrono::high_resolution_clock::now();
   if (conf::Performance::dumpTiming)
-    std::cout << "Parse: " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms" << std::endl;
+    std::cout << "Command Line Arg Parse: " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms" << std::endl;
 
   auto startRead = std::chrono::high_resolution_clock::now();
   if (conf::Performance::performanceTestMode) {
