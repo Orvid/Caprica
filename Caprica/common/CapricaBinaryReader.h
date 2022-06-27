@@ -23,7 +23,7 @@ struct CapricaBinaryReader
 
   template<typename T>
   T read() {
-    static_assert(false, "Invalid type passed to read!");
+    static_assert(std::is_same_v<T, void>, "Invalid type passed to read!");
   }
 
   template<>

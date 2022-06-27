@@ -31,7 +31,7 @@ struct CapricaBinaryWriter
 
   template<typename T>
   void write(T val) {
-    static_assert(false, "Invalid type passed to write!");
+    static_assert(std::is_same_v<T, void>, "Invalid type passed to write!");
   }
 
   template<>
@@ -93,6 +93,8 @@ protected:
   allocators::ChainedPool strm{ 1024 * 4 };
 
   void append(const char* __restrict a, size_t size) {
+    // ChainedPool will re-order large allocations, so disallow them.
+    assert(size < 4096);
     memcpy(strm.allocate(size), a, size);
   }
 };

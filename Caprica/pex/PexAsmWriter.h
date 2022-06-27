@@ -22,7 +22,7 @@ struct PexAsmWriter final
 
   template<typename T>
   void writeKV(const char* key, T val) {
-    static_assert(false, "Unknown type for the value!");
+    static_assert(std::is_same_v<T, void>, "Unknown type for the value!");
   }
 
   template<>
