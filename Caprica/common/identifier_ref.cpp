@@ -25,7 +25,7 @@ static Iterator find_not_of(Iterator first, Iterator last, const char* sData, si
 
 const char& identifier_ref::at(size_t pos) const {
   if (pos >= mLength)
-    std::out_of_range("identifier_ref::at");
+    throw std::out_of_range("identifier_ref::at");
   return mData[pos];
 }
 
