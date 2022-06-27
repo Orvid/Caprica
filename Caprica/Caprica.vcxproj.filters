@@ -467,6 +467,9 @@
     <ClInclude Include="pex\PexOptimizer.h">
       <Filter>pex</Filter>
     </ClInclude>
+    <ClInclude Include="common\LargelyBufferedString.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="common\parser">
