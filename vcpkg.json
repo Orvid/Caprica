@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "caprica",
+  "version-semver": "0.0.1",
+  "port-version": 0,
+  "description": "An MIT licensed compiler for the Papyrus scripting language used by the Creation Engine.",
+  "homepage": "https://github.com/Orvid/Caprica",
+  "license": "MIT",
+  "supports": "x64",
+  "dependencies": [
+    "boost-container"
+  ],
+  "features": {
+    "standalone": {
+      "description": "Build as a standalone program",
+      "dependencies": [
+        "boost-filesystem",
+        "boost-program-options"
+      ]
+    }
+  },
+  "default-features": ["standalone"],
+  "builtin-baseline": "4cb4a5c5ddcb9de0c83c85837ee6974c8333f032"
+}

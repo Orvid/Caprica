@@ -1,7 +1,12 @@
 .vs/
+.vscode/
+.idea/
 *.db
 *.vcxproj.user
 
 Caprica/bin/*
 Caprica/obj/*
 Caprica/tmp/*
+build/
+cmake-build-*
+
