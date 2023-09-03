@@ -62,12 +62,12 @@ LargelyBufferedString& PapyrusType::getTypeStringAsRef(LargelyBufferedString& bu
     case Kind::Array:
       return resolved.arrayElementType->getTypeStringAsRef(buf).append("[]");
     case Kind::Unresolved:
-      return buf.append(name);
+      return buf.append(name.to_string_view());
     case Kind::ResolvedObject:
-      return buf.append(resolved.obj->loweredName());
+      return buf.append(resolved.obj->loweredName().to_string_view());
     case Kind::ResolvedStruct:
     {
-      auto& typeName = buf.append(resolved.struc->parentObject->name).append("#").append(resolved.struc->name);
+      auto& typeName = buf.append(resolved.struc->parentObject->name.to_string_view()).append("#").append(resolved.struc->name.to_string_view());
       identifierToLower(typeName.data(), typeName.size());
       return typeName;
     }

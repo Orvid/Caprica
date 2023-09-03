@@ -23,6 +23,7 @@ struct LargelyBufferedString {
     this->append(view);
   }
 
+
   LargelyBufferedString& append(std::string_view view) {
     if (oolBuf != nullptr) {
       oolBuf->append(view);

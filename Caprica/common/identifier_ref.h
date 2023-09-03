@@ -73,6 +73,7 @@ struct identifier_ref final
   size_t find_last_not_of(char c) const;
 
   std::string to_string() const;
+  std::string_view to_string_view() const;
 
 
 private:

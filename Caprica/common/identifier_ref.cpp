@@ -147,6 +147,10 @@ std::string identifier_ref::to_string() const {
   return std::string(mData, mLength);
 }
 
+std::string_view identifier_ref::to_string_view() const {
+    return std::string_view(mData, mLength);
+}
+
 size_t identifier_ref::reverse_distance(std::reverse_iterator<const char*> first, std::reverse_iterator<const char*> last) const {
   return mLength - 1 - std::distance(first, last);
 }
