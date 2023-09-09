@@ -44,7 +44,7 @@ struct PapyrusProperty final
 
   void buildAutoVarName(allocators::ChainedPool* alloc) {
     LargelyBufferedString buf{ "::" };
-    buf.append(name).append("_var");
+    buf.append(name.to_string_view()).append("_var");
     this->autoVarName = alloc->allocateIdentifier(buf.data(), buf.size());
   }
 
