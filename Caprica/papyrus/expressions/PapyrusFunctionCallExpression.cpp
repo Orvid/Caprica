@@ -101,6 +101,17 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         bldr << op::arrayremovelast{ bVal };
         return pex::PexValue::Invalid();
       }
+      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs:
+      {
+        auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
+        auto elem = args[1]->value->generateLoad(file, bldr);
+        auto idx = args[2]->value->generateLoad(file, bldr);
+        auto cnt = args[3]->value->generateLoad(file, bldr);
+        auto dest = bldr.allocTemp(resultType());
+        bldr << location;
+        bldr << op::arraygetallmatchingstructs{ bVal, dest, memberName, elem, idx, cnt };
+        return dest;
+      }
       case PapyrusBuiltinArrayFunctionKind::Unknown:
         break;
     }
@@ -294,6 +305,38 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       case PapyrusBuiltinArrayFunctionKind::RemoveLast:
         getArgs("RemoveLast", 0);
         return;
+      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs:
+      {
+        getArgs("GetMatchingStructs", 3, 4);
+        if (args[0]->value->resultType().type != PapyrusType::Kind::String)
+          ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
+
+        auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
+        PapyrusType elemType = PapyrusType::Default();
+        for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
+          if (idEq(m->name, memberName)) {
+            elemType = m->type;
+            break;
+          }
+        }
+        if (elemType.type == PapyrusType::Kind::None)
+          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        args[1]->value = ctx->coerceExpression(args[1]->value, elemType);
+
+        args[2]->value = ctx->coerceExpression(args[2]->value, PapyrusType::Int(args[2]->value->location));
+        if (arguments.size() == 3) {
+          auto p = ctx->allocator->make<Parameter>();
+          p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, -1));
+          arguments.push_back(p);
+        } else {
+          if (args[3]->name != "" && !idEq(args[3]->name, "aiCount")) {
+            ctx->reportingContext.error(args[3]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!",
+                                        args[3]->name.to_string().c_str());
+          }
+          args[3]->value = ctx->coerceExpression(args[3]->value, PapyrusType::Int(args[3]->value->location));
+        }
+        return;
+      }
       case PapyrusBuiltinArrayFunctionKind::Unknown:
         break;
     }
@@ -446,6 +489,9 @@ PapyrusType PapyrusFunctionCallExpression::resultType() const {
       case PapyrusBuiltinArrayFunctionKind::RFind:
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:
         return PapyrusType::Int(location);
+      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs: {
+        return PapyrusType::Array(location, function.res.arrayFuncElementType);
+      } break;
       default:
         return PapyrusType::None(location);
     }

@@ -17,12 +17,14 @@ static size_t getArgCountForOpCode(PexOpCode op) {
 #define OP_ARG3(name, opcode, ...) case PexOpCode::opcode: return 3;
 #define OP_ARG4(name, opcode, ...) case PexOpCode::opcode: return 4;
 #define OP_ARG5(name, opcode, ...) case PexOpCode::opcode: return 5;
-    OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#define OP_ARG6(name, opcode, ...) case PexOpCode::opcode: return 6;
+OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+#undef OP_ARG6
     case PexOpCode::Invalid:
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
@@ -46,12 +48,14 @@ int32_t PexInstruction::getDestArgIndexForOpCode(PexOpCode op) {
 #define OP_ARG3(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG4(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG5(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-      OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#define OP_ARG6(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+      OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+#undef OP_ARG6
     case PexOpCode::Invalid:
       break;
   }
@@ -175,6 +179,10 @@ static const caseless_unordered_identifier_map<PexOpCode> opCodeNameMap{
   { "arrayremovelastelement", PexOpCode::ArrayRemoveLast },
   { "arrayremoveelements", PexOpCode::ArrayRemove },
   { "arrayclearelements", PexOpCode::ArrayClear },
+  { "arraygetallmatchingstructs", PexOpCode::ArrayGetAllMatchingStructs },
+  { "lockguards", PexOpCode::LockGuards },
+  { "unlockguards", PexOpCode::UnlockGuards },
+  { "trylockguards", PexOpCode::TryLockGuards },
 };
 
 PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
@@ -234,6 +242,10 @@ static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap{
   { PexOpCode::ArrayRemoveLast, "ARRAYREMOVELASTELEMENT" },
   { PexOpCode::ArrayRemove, "ARRAYREMOVEELEMENTS" },
   { PexOpCode::ArrayClear, "ARRAYCLEARELEMENTS" },
+  { PexOpCode::ArrayGetAllMatchingStructs, "ARRAYGETALLMATCHINGSTRUCTS" },
+  { PexOpCode::LockGuards, "LOCKGUARDS" },
+  { PexOpCode::UnlockGuards, "UNLOCKGUARDS" },
+  { PexOpCode::TryLockGuards, "TRYLOCKGUARDS" },
 };
 
 std::string PexInstruction::opCodeToPexAsm(PexOpCode op) {

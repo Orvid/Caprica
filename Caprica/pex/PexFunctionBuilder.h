@@ -26,7 +26,7 @@
 namespace caprica { namespace pex {
 
 // We use this rather than repeating this information in multiple places.
-#define OPCODES(ARG1, ARG2, ARG3, ARG4, ARG5) \
+#define OPCODES(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) \
   ARG3(iadd, IAdd, 0, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(fadd, FAdd, 0, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
   ARG3(isub, ISub, 0, PexValue::Identifier, dest, PexValue, arg1, PexValue, arg2) \
@@ -70,6 +70,7 @@ namespace caprica { namespace pex {
   ARG1(arrayremovelast, ArrayRemoveLast, -1, PexValue::Identifier, arr) \
   ARG3(arrayremove, ArrayRemove, -1, PexValue::Identifier, baseObj, PexValue, index, PexValue, count) \
   ARG1(arrayclear, ArrayClear, -1, PexValue::Identifier, arr) \
+  ARG6(arraygetallmatchingstructs, ArrayGetAllMatchingStructs, 1, PexValue::Identifier, baseObj, PexValue::Identifier, dest, PexValue, memberName, PexValue, valueToSearchFor, PexValue, startIndex, PexValue, count) \
 
 namespace op {
 
@@ -100,12 +101,18 @@ struct name final { \
   PexValue a1, a2, a3, a4, a5; \
   name(argType1 argName1, argType2 argName2, argType3 argName3, argType4 argName4, argType5 argName5) : a1(argName1), a2(argName2), a3(argName3), a4(argName4), a5(argName5) { } \
 };
-OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#define OP_ARG6(name, opcode, destArgIdx, argType1, argName1, argType2, argName2, argType3, argName3, argType4, argName4, argType5, argName5, argType6, argName6) \
+struct name final { \
+  PexValue a1, a2, a3, a4, a5, a6; \
+  name(argType1 argName1, argType2 argName2, argType3 argName3, argType4 argName4, argType5 argName5, argType6 argName6) : a1(argName1), a2(argName2), a3(argName3), a4(argName4), a5(argName5), a6(argName6) { } \
+};
+OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+#undef OP_ARG6
 
 struct callmethod final
 {
@@ -127,6 +134,23 @@ struct callstatic final
   IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
   callstatic(PexString type, PexString function, PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
+struct lock final
+{
+    IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
+    lock(IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : variadicArgs(std::move(varArgs)) { }
+};
+struct unlock final
+{
+    IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
+    unlock(IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : variadicArgs(std::move(varArgs)) { }
+};
+struct trylock final
+{
+    PexValue a1;
+    IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
+    trylock(PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(dest), variadicArgs(std::move(varArgs)) { }
+};
+
   
 }
 
@@ -156,12 +180,15 @@ PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<Pex
 PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4)); }
 #define OP_ARG5(name, opcode, ...) \
 PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5)); }
-  OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#define OP_ARG6(name, opcode, ...) \
+PexFunctionBuilder& operator <<(op::name&& instr) { return fixup(alloc->make<PexInstruction>(PexOpCode::opcode, instr.a1, instr.a2, instr.a3, instr.a4, instr.a5, instr.a6)); }
+OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+#undef OP_ARG6
 
   PexFunctionBuilder& operator <<(op::callmethod&& instr) {
     return fixup(alloc->make<PexInstruction>(PexOpCode::CallMethod, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));

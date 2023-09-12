@@ -30,6 +30,7 @@
 #include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusForEachStatement.h>
 #include <papyrus/statements/PapyrusIfStatement.h>
+#include <papyrus/statements/PapyrusLockStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
 #include <papyrus/statements/PapyrusSwitchStatement.h>
 #include <papyrus/statements/PapyrusWhileStatement.h>

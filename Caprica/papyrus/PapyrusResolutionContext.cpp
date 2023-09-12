@@ -478,6 +478,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       fk = PapyrusBuiltinArrayFunctionKind::Remove;
     } else if (idEq(ident.res.name, "removelast")) {
       fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
+    } else if (idEq(ident.res.name, "getmatchingstructs")) {
+      fk = PapyrusBuiltinArrayFunctionKind::GetMatchingStructs;
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.res.name.to_string().c_str());
     }

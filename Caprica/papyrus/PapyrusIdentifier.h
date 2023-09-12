@@ -52,6 +52,8 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   Insert,
   Remove,
   RemoveLast,
+  // Fallout 76, Starfield
+  GetMatchingStructs,
 };
 
 struct PapyrusIdentifier final
