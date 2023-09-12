@@ -103,8 +103,8 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   // TODO: Starfield: reevaluate when CK comes out
   // Warnings 6001-7000 are for warning about use of experimental syntax subject to change.
   DEFINE_WARNING_A0(6001, Experimental_Syntax_ArrayGetAllMatchingStructs, "The syntax of the 'ArrayGetAllMatchingStructs' function is experimental and subject to change.")
-  DEFINE_WARNING_A0(6002, Experimental_Syntax_Lock, "The syntax for Lock/EndLock is experimental and subject to change.")
-  DEFINE_WARNING_A0(6003, Experimental_Syntax_TryLock, "The syntax for TryLock/EndLock is experimental and subject to change.")
+  DEFINE_WARNING_A0(6002, Experimental_Syntax_Lock, "The syntax for Guard/EndGuard is experimental and subject to change.")
+  DEFINE_WARNING_A0(6003, Experimental_Syntax_TryLock, "The syntax for TryGuard/EndGuard is experimental and subject to change.")
 
 
 #undef DEFINE_WARNING_A1

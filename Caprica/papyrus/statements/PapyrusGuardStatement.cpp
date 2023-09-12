@@ -1,20 +1,19 @@
-#include <papyrus/statements/PapyrusTryLockStatement.h>
-
+#include <papyrus/statements/PapyrusGuardStatement.h>
 
 namespace caprica { namespace papyrus { namespace statements {
-
-
-struct PapyrusTryLockStatementBodyVisitor : public PapyrusSelectiveStatementVisitor {
-    const PapyrusTryLockStatement *m_ThisTryLockStatement{nullptr};
-    IntrusiveLinkedList<PapyrusReturnStatement> m_ReturnStatements{};
+struct PapyrusGuardStatementBodyVisitor : public PapyrusSelectiveStatementVisitor {
+    const PapyrusGuardStatement *m_ThisGuardStatement{nullptr};
     bool m_InvalidNestedLocks{false};
-    PapyrusTryLockStatementBodyVisitor(const PapyrusTryLockStatement *thisLockStatement) : m_ThisTryLockStatement(thisLockStatement) {}
-    virtual void visit(PapyrusTryLockStatement *tls) override{
+
+    PapyrusGuardStatementBodyVisitor(const PapyrusGuardStatement *thisLockStatement)
+            : m_ThisGuardStatement(thisLockStatement) {}
+
+    virtual void visit(PapyrusGuardStatement *ls) override {
       m_InvalidNestedLocks = true;
 // TODO: Starfield, verify: Fairly certain that nested locks are not allowed due to statements in the binary, need to verify once CK comes out
-//      for (auto s: tls->lockParams) {
-//        assert(m_ThisTryLockStatement);
-//        for (auto p : m_ThisTryLockStatement->lockParams) {
+//      for (auto s: ls->lockParams) {
+//        assert(m_ThisGuardStatement);
+//        for (auto p: m_ThisGuardStatement->lockParams) {
 //          // TODO: Check against the guard pointer?
 //          if (s->name == p->name) {
 //            m_InvalidNestedLocks = true;
@@ -24,15 +23,15 @@ struct PapyrusTryLockStatementBodyVisitor : public PapyrusSelectiveStatementVisi
     }
 };
 
-void PapyrusTryLockStatement::semantic(PapyrusResolutionContext *ctx) {
-  for (auto lockparam : lockParams)
+void PapyrusGuardStatement::semantic(PapyrusResolutionContext *ctx) {
+  for (auto lockparam: lockParams)
     lockparam->semantic(ctx);
   ctx->pushLocalVariableScope();
   for (auto s: body) {
     s->semantic(ctx);
   }
   ctx->popLocalVariableScope();
-  auto visitor = PapyrusTryLockStatementBodyVisitor(this);
+  auto visitor = PapyrusGuardStatementBodyVisitor(this);
   for (auto s: body) {
     s->visit(visitor);
   }
@@ -41,6 +40,4 @@ void PapyrusTryLockStatement::semantic(PapyrusResolutionContext *ctx) {
     ctx->reportingContext.fatal(location, "Nested locks are not allowed");
   }
 }
-
 }}}
-

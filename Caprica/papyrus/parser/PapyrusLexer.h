@@ -128,9 +128,8 @@ enum class TokenType : int32_t
 
   // Starfield keywords
   kGuard,
-  kLock,
-  kEndLock,
-  kTryLock
+  kEndGuard,
+  kTryGuard
 };
 
 struct PapyrusLexer

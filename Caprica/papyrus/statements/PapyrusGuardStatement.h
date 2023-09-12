@@ -12,17 +12,17 @@
 
 
 namespace caprica { namespace papyrus { namespace statements {
-struct PapyrusLockStatementBodyVisitor;
-struct PapyrusLockStatement;
+struct PapyrusGuardStatementBodyVisitor;
+struct PapyrusGuardStatement;
 
 
-struct PapyrusLockStatement final : public PapyrusStatement
+struct PapyrusGuardStatement final : public PapyrusStatement
 {
   IntrusiveLinkedList<PapyrusStatement> body{ };
   IntrusiveLinkedList<PapyrusLockParameter> lockParams{};
-  explicit PapyrusLockStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
-  PapyrusLockStatement(const PapyrusLockStatement&) = delete;
-  virtual ~PapyrusLockStatement() override = default;
+  explicit PapyrusGuardStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
+  PapyrusGuardStatement(const PapyrusGuardStatement&) = delete;
+  virtual ~PapyrusGuardStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     bool isTerminal = true;

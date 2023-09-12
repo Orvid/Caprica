@@ -32,10 +32,10 @@
 #include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusForEachStatement.h>
 #include <papyrus/statements/PapyrusIfStatement.h>
-#include <papyrus/statements/PapyrusLockStatement.h>
+#include <papyrus/statements/PapyrusGuardStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
 #include <papyrus/statements/PapyrusSwitchStatement.h>
-#include <papyrus/statements/PapyrusTryLockStatement.h>
+#include <papyrus/statements/PapyrusTryGuardStatement.h>
 #include <papyrus/statements/PapyrusWhileStatement.h>
 
 
@@ -467,14 +467,14 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kLock:
+    case TokenType::kGuard:
     {
       reportingContext.warning_W6002_Experimental_Syntax_Lock(cur.location);
 
-      auto ret = alloc->make<statements::PapyrusLockStatement>(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusGuardStatement>(consumeLocation());
 
       if (cur.type == TokenType::EOL) {
-        reportingContext.fatal(cur.location, "Syntax error: Lock statement with no guards specified!");
+        reportingContext.fatal(cur.location, "Syntax error: Guard statement with no guards specified!");
       }
       size_t idx = 0;
       do {
@@ -484,17 +484,17 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         ret->lockParams.push_back(guard);
       } while (cur.type == TokenType::Comma);
       expectConsumeEOLs();
-      while (!maybeConsume(TokenType::kEndLock))
+      while (!maybeConsume(TokenType::kEndGuard))
         ret->body.push_back(parseStatement(func));
       expectConsumeEOLs();
       return ret;
     }
-    case TokenType::kTryLock:
+    case TokenType::kTryGuard:
     {
       reportingContext.warning_W6003_Experimental_Syntax_TryLock(cur.location);
-      auto ret = alloc->make<statements::PapyrusTryLockStatement>(consumeLocation());
+      auto ret = alloc->make<statements::PapyrusTryGuardStatement>(consumeLocation());
       if (cur.type == TokenType::EOL) {
-        reportingContext.fatal(cur.location, "Syntax error: Lock statement with no guards specified!");
+        reportingContext.fatal(cur.location, "Syntax error: TryGuard statement with no guards specified!");
       }
       size_t idx = 0;
       do {
@@ -504,7 +504,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         ret->lockParams.push_back(guard);
       } while (cur.type == TokenType::Comma);
       expectConsumeEOLs();
-      while (!maybeConsume(TokenType::kEndLock))
+      while (!maybeConsume(TokenType::kEndGuard))
         ret->body.push_back(parseStatement(func));
       expectConsumeEOLs();
       return ret;
