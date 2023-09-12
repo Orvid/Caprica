@@ -469,6 +469,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     case TokenType::kLock:
     {
+      reportingContext.warning_W6002_Experimental_Syntax_Lock(cur.location);
+
       auto ret = alloc->make<statements::PapyrusLockStatement>(consumeLocation());
 
       if (cur.type == TokenType::EOL) {
@@ -489,6 +491,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     }
     case TokenType::kTryLock:
     {
+      reportingContext.warning_W6003_Experimental_Syntax_TryLock(cur.location);
       auto ret = alloc->make<statements::PapyrusTryLockStatement>(consumeLocation());
       if (cur.type == TokenType::EOL) {
         reportingContext.fatal(cur.location, "Syntax error: Lock statement with no guards specified!");

@@ -190,15 +190,14 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
     }
   }
   // TODO: Make this configurable for Starfield
-  if (!checkInheritedOnly) {
-    // guards
-    for (auto g : guards){
-      auto f = identMap.find(g->name);
-      if (f != identMap.end())
-        doError(repCtx, g->location, f->second.first, f->second.second, g->name);
-      else
-        identMap.emplace(g->name, std::make_pair(checkInheritedOnly, "guard"));
-    }
+  // TODO: Starfield: Verify that guards in child classes are not allowed to have the same name as guards in parent classes.
+  // guards
+  for (auto g : guards){
+    auto f = identMap.find(g->name);
+    if (f != identMap.end())
+      doError(repCtx, g->location, f->second.first, f->second.second, g->name);
+    else
+      identMap.emplace(g->name, std::make_pair(checkInheritedOnly, "guard"));
   }
 }
 

@@ -100,6 +100,13 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_A1(4006, Script_Variable_Only_Written, "The script variable '%s' is only ever written to.", const char*, variableName)
   DEFINE_WARNING_A1(4007, Script_Variable_Initialized_Never_Used, "The script variable '%s' is initialized but is never used.", const char*, variableName)
 
+  // TODO: Starfield: reevaluate when CK comes out
+  // Warnings 6001-7000 are for warning about use of experimental syntax subject to change.
+  DEFINE_WARNING_A0(6001, Experimental_Syntax_ArrayGetAllMatchingStructs, "The syntax of the 'ArrayGetAllMatchingStructs' function is experimental and subject to change.")
+  DEFINE_WARNING_A0(6002, Experimental_Syntax_Lock, "The syntax for Lock/EndLock is experimental and subject to change.")
+  DEFINE_WARNING_A0(6003, Experimental_Syntax_TryLock, "The syntax for TryLock/EndLock is experimental and subject to change.")
+
+
 #undef DEFINE_WARNING_A1
 #undef DEFINE_WARNING_A2
 #undef DEFINE_WARNING_A3

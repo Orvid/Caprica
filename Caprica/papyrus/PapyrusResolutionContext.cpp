@@ -432,6 +432,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
           return PapyrusIdentifier::Property(ident.location, prop);
       }
     }
+    //TODO: Starfield: Verify that child classes cannot use guards inherited from parent classes.
 
     if (auto parentClass = baseType.resolved.obj->tryGetParentClass())
       return tryResolveMemberIdentifier(baseType.resolved.obj->parentClass, ident);
@@ -495,6 +496,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
     } else if (idEq(ident.res.name, "getmatchingstructs")) {
       fk = PapyrusBuiltinArrayFunctionKind::GetMatchingStructs;
+      reportingContext.warning_W6001_Experimental_Syntax_ArrayGetAllMatchingStructs(ident.location);
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.res.name.to_string().c_str());
     }
