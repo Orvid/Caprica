@@ -68,6 +68,8 @@ namespace EngineLimits {
   extern size_t maxUserFlags;
   // The maximum number of variables in a single object. 0 means no limit.
   extern size_t maxVariablesPerObject;
+  // The maximum number of guards in a single object. 0 means no limit.
+  extern size_t maxGuardsPerObject;
 }
 
 // Options directly related to the Papyrus language.

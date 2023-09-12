@@ -16,6 +16,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusFunction;
 struct PapyrusFunctionParameter;
+struct PapyrusGuard;
 struct PapyrusProperty;
 struct PapyrusResolutionContext;
 struct PapyrusStructMember;
@@ -29,6 +30,7 @@ enum class PapyrusIdentifierType : uint16_t
   Unresolved,
 
   Property,
+  Guard,
   Variable,
   Parameter,
   DeclareStatement,
@@ -65,6 +67,7 @@ struct PapyrusIdentifier final
   {
     identifier_ref name{ };
     const PapyrusProperty* prop;
+    const PapyrusGuard* guard;
     const PapyrusVariable* var;
     const PapyrusFunctionParameter* param;
     const statements::PapyrusDeclareStatement* declStatement;
@@ -95,6 +98,7 @@ struct PapyrusIdentifier final
     return id;
   }
   static PapyrusIdentifier Property(CapricaFileLocation loc, const PapyrusProperty* p);
+  static PapyrusIdentifier Guard(CapricaFileLocation loc, const PapyrusGuard* g);
   static PapyrusIdentifier Variable(CapricaFileLocation loc, const PapyrusVariable* v);
   static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, const PapyrusFunctionParameter* p);
   static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s);

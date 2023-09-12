@@ -28,6 +28,7 @@ namespace EngineLimits {
   size_t maxArrayLength{ 0 };
   size_t maxFunctionsInEmptyStatePerObject{ 0 };
   size_t maxFunctionsPerState{ 0 };
+  size_t maxGuardsPerObject{ 0 };
   size_t maxInitialValuesPerObject{ 0 };
   size_t maxNamedStatesPerObject{ 0 };
   size_t maxParametersPerFunction{ 0 };

@@ -78,6 +78,7 @@ struct PapyrusResolutionContext final
 
   void addLocalVariable(statements::PapyrusDeclareStatement* ident);
 
+  const PapyrusGuard* tryResolveGuard(const PapyrusObject* object, const identifier_ref& guardName);
   const PapyrusFunction* tryResolveEvent(const PapyrusObject* parentObj, const identifier_ref& name) const;
   const PapyrusCustomEvent* tryResolveCustomEvent(const PapyrusObject* parentObj, const identifier_ref& name) const;
   const PapyrusState* tryResolveState(const identifier_ref& name, const PapyrusObject* parentObj = nullptr) const;

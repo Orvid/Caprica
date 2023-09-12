@@ -134,21 +134,21 @@ struct callstatic final
   IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
   callstatic(PexString type, PexString function, PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(type), a2(function), a3(dest), variadicArgs(std::move(varArgs)) { }
 };
-struct lock final
+struct lockguards final
 {
     IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
-    lock(IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : variadicArgs(std::move(varArgs)) { }
+    lockguards(IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : variadicArgs(std::move(varArgs)) { }
 };
-struct unlock final
+struct unlockguards final
 {
     IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
-    unlock(IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : variadicArgs(std::move(varArgs)) { }
+    unlockguards(IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : variadicArgs(std::move(varArgs)) { }
 };
-struct trylock final
+struct trylockguards final
 {
     PexValue a1;
     IntrusiveLinkedList<IntrusivePexValue> variadicArgs;
-    trylock(PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(dest), variadicArgs(std::move(varArgs)) { }
+    trylockguards(PexValue::Identifier dest, IntrusiveLinkedList<IntrusivePexValue>&& varArgs) : a1(dest), variadicArgs(std::move(varArgs)) { }
 };
 
   
@@ -199,6 +199,16 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
   PexFunctionBuilder& operator <<(op::callstatic&& instr) {
     return fixup(alloc->make<PexInstruction>(PexOpCode::CallStatic, instr.a1, instr.a2, instr.a3, std::move(instr.variadicArgs)));
   }
+  PexFunctionBuilder& operator <<(op::lockguards&& instr) {
+    return fixup(alloc->make<PexInstruction>(PexOpCode::LockGuards, std::move(instr.variadicArgs)));
+  }
+  PexFunctionBuilder& operator <<(op::unlockguards&& instr) {
+    return fixup(alloc->make<PexInstruction>(PexOpCode::UnlockGuards, std::move(instr.variadicArgs)));
+  }
+  PexFunctionBuilder& operator <<(op::trylockguards&& instr) {
+    return fixup(alloc->make<PexInstruction>(PexOpCode::TryLockGuards, instr.a1, std::move(instr.variadicArgs)));
+  }
+
 
   PexFunctionBuilder& operator <<(CapricaFileLocation loc) {
     currentLocation = loc;
@@ -260,6 +270,23 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
     return curBreakStack.back();
   }
 
+  void pushLockScope(IntrusiveLinkedList<pex::IntrusivePexValue>&& guards) {
+    curLockStack.push_back(std::move(guards));
+  }
+
+  void popLockScope() {
+    curLockStack.pop_back();
+  }
+  void generateUnlockGuardsForCurrentLockScope() {
+    if (curLockStack.size() == 0)
+      return;
+    // iterate over the lock scope in reverse
+    for (auto it = curLockStack.rbegin(); it != curLockStack.rend(); ++it) {
+      auto& guards = *it;
+      *this << op::unlockguards{ std::move(guards) };
+    }
+  }
+
   void pushBreakScope(PexLabel* destLabel) {
     curBreakStack.push_back(destLabel);
   }
@@ -306,6 +333,7 @@ private:
   size_t currentTempI = 0;
   std::vector<PexLabel*> curBreakStack{ };
   std::vector<PexLabel*> curContinueStack{ };
+  std::vector<IntrusiveLinkedList<pex::IntrusivePexValue>> curLockStack {};
 
   PexFunctionBuilder& fixup(PexInstruction* instr);
   PexLocalVariable* internalAllocateTempVar(const PexString& typeName);

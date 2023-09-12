@@ -29,6 +29,9 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
     case PexOpCode::CallParent:
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
+    case PexOpCode::TryLockGuards:
       break;
   }
   CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
@@ -37,12 +40,16 @@ OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 int32_t PexInstruction::getDestArgIndexForOpCode(PexOpCode op) {
   switch (op) {
     case PexOpCode::Nop:
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
       return -1;
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
       return 2;
     case PexOpCode::CallParent:
       return 1;
+    case PexOpCode::TryLockGuards:
+      return 0;
 #define OP_ARG1(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG2(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG3(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
@@ -67,6 +74,17 @@ PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& 
   inst->opCode = (PexOpCode)rdr.read<uint8_t>();
 
   switch (inst->opCode) {
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
+    {
+      goto CallCommon;
+    }
+    case PexOpCode::TryLockGuards:
+    {
+      inst->args.reserve(1);
+      inst->args.push_back(rdr.read<PexValue>());
+      goto CallCommon;
+    }
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
     {
@@ -112,6 +130,9 @@ void PexInstruction::write(PexWriter& wtr) const {
     wtr.write<PexValue>(a);
 
   switch (opCode) {
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
+    case PexOpCode::TryLockGuards:
     case PexOpCode::CallMethod:
     case PexOpCode::CallParent:
     case PexOpCode::CallStatic:

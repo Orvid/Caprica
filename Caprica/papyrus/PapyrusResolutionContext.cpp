@@ -255,6 +255,16 @@ const PapyrusState* PapyrusResolutionContext::tryResolveState(const identifier_r
   return nullptr;
 }
 
+const PapyrusGuard* PapyrusResolutionContext::tryResolveGuard(const PapyrusObject* parentObject, const identifier_ref& guardName) {
+  // TODO: Starfield: Verify that guards are not inherited and limited to the current parentObject.
+  for (auto &s: parentObject->guards) {
+    if (idEq(s->name, guardName)) {
+      return s;
+    }
+  }
+  return nullptr;
+}
+
 static bool tryResolveStruct(const PapyrusObject* object, const identifier_ref& structName, const PapyrusStruct** ret) {
   for (auto& s : object->structs) {
     if (idEq(s->name, structName)) {
@@ -377,6 +387,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
     for (auto v : object->variables) {
       if (idEq(v->name, ident.res.name))
         return PapyrusIdentifier::Variable(ident.location, v);
+    }
+
+    for (auto g : object->guards) {
+      if (idEq(g->name, ident.res.name))
+        return PapyrusIdentifier::Guard(ident.location, g);
     }
 
     for (auto pg : object->propertyGroups) {

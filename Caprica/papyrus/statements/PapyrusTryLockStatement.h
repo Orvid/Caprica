@@ -12,17 +12,15 @@
 
 
 namespace caprica { namespace papyrus { namespace statements {
-struct PapyrusLockStatementBodyVisitor;
-struct PapyrusLockStatement;
 
 
-struct PapyrusLockStatement final : public PapyrusStatement
+struct PapyrusTryLockStatement final : public PapyrusStatement
 {
   IntrusiveLinkedList<PapyrusStatement> body{ };
   IntrusiveLinkedList<PapyrusLockParameter> lockParams{};
-  explicit PapyrusLockStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
-  PapyrusLockStatement(const PapyrusLockStatement&) = delete;
-  virtual ~PapyrusLockStatement() override = default;
+  explicit PapyrusTryLockStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
+  PapyrusTryLockStatement(const PapyrusTryLockStatement&) = delete;
+  virtual ~PapyrusTryLockStatement() override = default;
 
   virtual bool buildCFG(PapyrusCFG& cfg) const override {
     bool isTerminal = true;
@@ -37,14 +35,20 @@ struct PapyrusLockStatement final : public PapyrusStatement
     return isTerminal;
   }
 
+  // TODO: Not sure if this is at all correct
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     IntrusiveLinkedList<pex::IntrusivePexValue> args;
     for (auto guard : lockParams){
       args.push_back(file->alloc->make<pex::IntrusivePexValue>(pex::PexValue(file->getString(guard->name))));
     }
+    pex::PexLabel* afterAll;
+    bldr >> afterAll;
+
+    auto tlTemp = bldr.allocTemp(PapyrusType::Bool(location));
     bldr << location;
-    bldr << op::lockguards{ std::move(args) };
+    bldr << op::trylockguards{ tlTemp, std::move(args) };
+    bldr << op::jmpf( tlTemp , afterAll);
     bldr.pushLockScope(std::move(args));
     for (auto s : body) {
       s->buildPex(file, bldr);
@@ -52,6 +56,7 @@ struct PapyrusLockStatement final : public PapyrusStatement
     bldr.popLockScope();
     bldr << location;
     bldr << op::unlockguards{ std::move(args) };
+    bldr << afterAll;
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override;

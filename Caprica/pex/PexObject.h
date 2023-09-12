@@ -5,6 +5,7 @@
 #include <common/IntrusiveLinkedList.h>
 
 #include <pex/PexAsmWriter.h>
+#include <pex/PexGuard.h>
 #include <pex/PexProperty.h>
 #include <pex/PexReader.h>
 #include <pex/PexState.h>
@@ -30,6 +31,7 @@ struct PexObject final
   IntrusiveLinkedList<PexVariable> variables{ };
   IntrusiveLinkedList<PexProperty> properties{ };
   IntrusiveLinkedList<PexState> states{ };
+  IntrusiveLinkedList<PexGuard> guards{ };
 
   explicit PexObject() = default;
   PexObject(const PexObject&) = delete;

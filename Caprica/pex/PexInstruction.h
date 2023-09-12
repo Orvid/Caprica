@@ -91,7 +91,10 @@ struct PexInstruction final
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, PexValue arg4, PexValue arg5, PexValue arg6) : opCode(op), args({ arg1, arg2, arg3, arg4, arg5, arg6 }) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments) : opCode(op), args(std::move(arguments)) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
-  PexInstruction(const PexInstruction&) = default;
+  explicit PexInstruction(PexOpCode op, PexValue arg1, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args({ arg1 }), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args(), variadicArgs(std::move(varArguments)) { }
+
+    PexInstruction(const PexInstruction&) = default;
   PexInstruction(PexInstruction&&) = default;
   PexInstruction& operator=(const PexInstruction&) = default;
   PexInstruction& operator=(PexInstruction&&) = default;

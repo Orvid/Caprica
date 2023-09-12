@@ -111,6 +111,12 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kStep, "Step" },
   { TokenType::kSwitch, "Switch" },
   { TokenType::kTo, "To" },
+
+  // TODO: VERIFY STARFIELD SYNTAX!
+  { TokenType::kGuard, "Guard" },
+  { TokenType::kLock, "Lock" },
+  { TokenType::kEndLock, "EndLock" },
+  { TokenType::kTryLock, "TryLock" },
 };
 
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
@@ -199,6 +205,11 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "true", TokenType::kTrue },
   { "var", TokenType::kVar },
   { "while", TokenType::kWhile },
+  // TODO: VERIFY STARFIELD SYNTAX!
+  { "guard", TokenType::kGuard },
+  { "lock", TokenType::kLock },
+  { "endlock", TokenType::kEndLock },
+  { "trylock", TokenType::kTryLock },
 };
 
 // Language extension keywords

@@ -22,6 +22,10 @@ PexObject* PexObject::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   auto vLen = rdr.read<uint16_t>();
   for (size_t i = 0; i < vLen; i++)
     obj->variables.push_back(PexVariable::read(alloc, rdr));
+  // TODO: Make this configurable for Starfield
+  auto gLen = rdr.read<uint16_t>();
+  for (size_t i = 0; i < gLen; i++)
+    obj->guards.push_back(PexGuard::read(alloc, rdr));
   auto pLen = rdr.read<uint16_t>();
   for (size_t i = 0; i < pLen; i++)
     obj->properties.push_back(PexProperty::read(alloc, rdr));
@@ -47,6 +51,10 @@ void PexObject::write(PexWriter& wtr) const {
   wtr.boundWrite<uint16_t>(variables.size());
   for (auto v : variables)
     v->write(wtr);
+  // TODO: Make this configurable for Starfield
+  wtr.boundWrite<uint16_t>(guards.size());
+  for (auto g : guards)
+    g->write(wtr);
   wtr.boundWrite<uint16_t>(properties.size());
   for (auto p : properties)
     p->write(wtr);
@@ -80,6 +88,14 @@ void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
     v->writeAsm(file, wtr);
   wtr.ident--;
   wtr.writeln(".endVariableTable");
+
+  // TODO: Make this configurable for Starfield
+  wtr.writeln(".guardTable");
+  wtr.ident++;
+  for (auto g : guards)
+    g->writeAsm(file, wtr);
+  wtr.ident--;
+  wtr.writeln(".endGuardTable");
 
   wtr.writeln(".propertyTable");
   wtr.ident++;

@@ -10,6 +10,7 @@
 #include <common/IntrusiveLinkedList.h>
 
 #include <papyrus/PapyrusCustomEvent.h>
+#include <papyrus/PapyrusGuard.h>
 #include <papyrus/PapyrusProperty.h>
 #include <papyrus/PapyrusPropertyGroup.h>
 #include <papyrus/PapyrusResolutionContext.h>
@@ -53,6 +54,7 @@ struct PapyrusObject final
   std::vector<std::pair<CapricaFileLocation, identifier_ref>> imports{ };
   IntrusiveLinkedList<PapyrusStruct> structs{ };
   IntrusiveLinkedList<PapyrusVariable> variables{ };
+  IntrusiveLinkedList<PapyrusGuard> guards{ };
   IntrusiveLinkedList<PapyrusPropertyGroup> propertyGroups{ };
   IntrusiveLinkedList<PapyrusState> states{ };
   IntrusiveLinkedList<PapyrusCustomEvent> customEvents{ };

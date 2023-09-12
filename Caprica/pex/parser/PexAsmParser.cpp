@@ -178,6 +178,21 @@ PexFile* PexAsmParser::parseFile() {
                 }
                 break;
               }
+              case TokenType::kGuardTable:
+              {
+                consume();
+                expectConsumeEOL();
+                while (!maybeConsumeTokEOL(TokenType::kEndGuardTable)) {
+                  if (cur.type != TokenType::kGuard)
+                    reportingContext.fatal(cur.location, "Expected '.guard' got '%s'!", cur.prettyString().c_str());
+                  consume();
+
+                  auto guard = alloc->make<PexGuard>();
+                  guard->name = expectConsumePexIdent(file);
+                  obj->guards.push_back(guard);
+                }
+                break;
+              }
               case TokenType::kPropertyTable:
               {
                 consume();
