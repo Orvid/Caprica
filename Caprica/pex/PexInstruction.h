@@ -69,11 +69,13 @@ enum class PexOpCode : uint8_t
   MAXOPCODE
 };
 
-using PexInstructionArgs = boost::container::static_vector<caprica::pex::PexValue, 5>;
+#define MAX_OPCODE_RAW_ARGS 6
+
+using PexInstructionArgs = boost::container::static_vector<caprica::pex::PexValue, MAX_OPCODE_RAW_ARGS>;
 
 struct PexInstruction final
 {
-  static constexpr size_t kMaxRawArgs = 5;
+  static constexpr size_t kMaxRawArgs = MAX_OPCODE_RAW_ARGS;
 
   PexOpCode opCode{ PexOpCode::Nop };
   PexInstructionArgs args{ };

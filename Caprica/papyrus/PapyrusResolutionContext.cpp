@@ -72,7 +72,8 @@ bool PapyrusResolutionContext::canExplicitlyCast(CapricaFileLocation loc, const 
       return false;
     case PapyrusType::Kind::Array:
       if (src.type == PapyrusType::Kind::Array && src.getElementType().type == PapyrusType::Kind::ResolvedObject && dest.getElementType().type == PapyrusType::Kind::ResolvedObject) {
-        return isObjectSomeParentOf(dest.getElementType().resolved.obj, src.getElementType().resolved.obj);
+        // TODO: New in starfield, downcasting arrays of objects is allowed if explicit (VERIFY)
+        return isObjectSomeParentOf(dest.getElementType().resolved.obj, src.getElementType().resolved.obj) || isObjectSomeParentOf(src.getElementType().resolved.obj, dest.getElementType().resolved.obj);
       }
       return false;
 

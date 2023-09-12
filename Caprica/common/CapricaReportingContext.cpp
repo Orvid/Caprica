@@ -65,8 +65,12 @@ size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, si
     }
   }
   auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.fileOffset);
-  if (a == lineOffsets.end())
-    CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+  if (a == lineOffsets.end()) {
+    // TODO: Fix line offsets during parsing for reals, remove this hack
+    //maybePushMessage(this, nullptr, "Warning:", 0, formatString("Unable to locate line at offset %zu, using last known line %zu...", location.fileOffset, lineOffsets.size()), true);
+    return lineOffsets.size();
+    //CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+  }
   return std::distance(lineOffsets.begin(), a);
 }
 

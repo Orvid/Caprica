@@ -11,16 +11,16 @@ struct PapyrusTryGuardStatementBodyVisitor : public PapyrusSelectiveStatementVis
     PapyrusTryGuardStatementBodyVisitor(const PapyrusTryGuardStatement *thisLockStatement) : m_ThisTryGuardStatement(thisLockStatement) {}
     void visit(PapyrusTryGuardStatement *tls) override{
       m_InvalidNestedLocks = true;
-// TODO: Starfield, verify: Fairly certain that nested locks are not allowed due to statements in the binary, need to verify once CK comes out
-//      for (auto s: tls->lockParams) {
-//        assert(m_ThisTryGuardStatement);
-//        for (auto p : m_ThisTryGuardStatement->lockParams) {
-//          // TODO: Check against the guard pointer?
-//          if (s->name == p->name) {
-//            m_InvalidNestedLocks = true;
-//          }
-//        }
-//      }
+      // TODO: Starfield, verify: Scripts do in fact have nested lock guards; need to verify once CK comes out
+      for (auto s: tls->lockParams) {
+        assert(m_ThisTryGuardStatement);
+        for (auto p : m_ThisTryGuardStatement->lockParams) {
+          // TODO: Check against the guard pointer?
+          if (s->name == p->name) {
+            m_InvalidNestedLocks = true;
+          }
+        }
+      }
     }
 };
 
@@ -37,8 +37,8 @@ void PapyrusTryGuardStatement::semantic(PapyrusResolutionContext *ctx) {
     s->visit(visitor);
   }
   if (visitor.m_InvalidNestedLocks) {
-    // TODO: Starfield, verify: Fairly certain that nested locks are not allowed due to statements in the binary, need to verify once CK comes out
-    ctx->reportingContext.fatal(location, "Nested locks are not allowed");
+    // TODO: Starfield, verify
+    ctx->reportingContext.fatal(location, "Invalid nested lock found!");
   }
 }
 

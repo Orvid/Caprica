@@ -30,7 +30,7 @@ struct PapyrusGuardStatement final : public PapyrusStatement
     cfg.addLeaf();
     isTerminal = cfg.processStatements(body) && isTerminal;
 
-    if (isTerminal)
+  if (isTerminal)
       cfg.terminateNode(PapyrusControlFlowNodeEdgeType::Children);
     else
       cfg.createSibling();

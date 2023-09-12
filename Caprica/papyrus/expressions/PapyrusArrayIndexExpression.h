@@ -2,6 +2,7 @@
 
 #include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusObject.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>

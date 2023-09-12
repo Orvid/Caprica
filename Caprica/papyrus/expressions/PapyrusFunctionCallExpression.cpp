@@ -9,7 +9,7 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-static constexpr size_t MaxBuiltinArrayFunctionArgumentCount = 3;
+static constexpr size_t MaxBuiltinArrayFunctionArgumentCount = 4;
 
 pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, PapyrusExpression* base) const {
   if (!shouldEmit)
@@ -18,7 +18,7 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
   namespace op = caprica::pex::op;
   if (function.type == PapyrusIdentifierType::BuiltinArrayFunction) {
     assert(arguments.size() <= MaxBuiltinArrayFunctionArgumentCount);
-    const Parameter* args[MaxBuiltinArrayFunctionArgumentCount] = { nullptr, nullptr, nullptr };
+    const Parameter* args[MaxBuiltinArrayFunctionArgumentCount] = { nullptr, nullptr, nullptr, nullptr };
     auto cur = arguments.begin();
     for (size_t i = 0; i < arguments.size(); i++) {
       args[i] = *cur;
@@ -158,7 +158,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       ctx->checkForPoison(a->value);
     }
 
-    Parameter* args[MaxBuiltinArrayFunctionArgumentCount] = { nullptr, nullptr, nullptr };
+    Parameter* args[MaxBuiltinArrayFunctionArgumentCount] = { nullptr, nullptr, nullptr, nullptr };
     const auto getArgs = [&](const char* funcName, size_t argCountMin, size_t argCountMax = 0) {
       assert(arguments.size() <= MaxBuiltinArrayFunctionArgumentCount);
       if (argCountMax != 0) {

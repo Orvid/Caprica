@@ -14,6 +14,7 @@
 
 namespace caprica { namespace papyrus { namespace parser {
 
+#define MAX_INTEGER_DIGITS 10
 static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::Unknown, "Unknown" },
   { TokenType::EOL, "EOL" },
@@ -385,7 +386,7 @@ StartOver:
         return;
       }
 
-      if (str.size() < 8 || (str.size() == 8 && str.data()[0] <= '4')) {
+      if (str.size() < MAX_INTEGER_DIGITS || (str.size() == MAX_INTEGER_DIGITS && str.data()[0] <= '4')) {
         // It is probably an integer, but maybe not.
         try {
           str.push_back('\0');
