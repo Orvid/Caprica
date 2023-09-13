@@ -43,6 +43,7 @@ namespace Papyrus {
   bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
+  bool ignorePropertyNameLocalConflicts{ false };
   std::vector<std::string> importDirectories{ };
   CapricaUserFlagsDefinition userFlagsDefinition{ };
 }

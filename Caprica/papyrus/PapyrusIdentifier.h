@@ -106,6 +106,23 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
   static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
 
+  static const char * TypeToString(PapyrusIdentifierType t){
+    switch(t){
+      case PapyrusIdentifierType::Unresolved: return "Unresolved";
+      case PapyrusIdentifierType::Property: return "Property";
+      case PapyrusIdentifierType::Guard: return "Guard";
+      case PapyrusIdentifierType::Variable: return "Variable";
+      case PapyrusIdentifierType::Parameter: return "Parameter";
+      case PapyrusIdentifierType::DeclareStatement: return "DeclareStatement";
+      case PapyrusIdentifierType::StructMember: return "StructMember";
+      case PapyrusIdentifierType::Function: return "Function";
+      case PapyrusIdentifierType::BuiltinArrayFunction: return "BuiltinArrayFunction";
+      case PapyrusIdentifierType::BuiltinStateField: return "BuiltinStateField";
+    }
+    return "";
+  }
+
+
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
   void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;
   void ensureAssignable(CapricaReportingContext& repCtx) const;

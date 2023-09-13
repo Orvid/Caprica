@@ -56,6 +56,7 @@ struct PapyrusTryGuardStatement final : public PapyrusStatement
     bldr.popLockScope();
     bldr << location;
     bldr << op::unlockguards{ std::move(args) };
+    bldr << op::jmp(afterAll);
     bldr << afterAll;
   }
 

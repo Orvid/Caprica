@@ -29,9 +29,10 @@ struct PexFile final
 {
   allocators::ChainedPool* alloc;
 
+  // TODO: Currently set to Starfield, Make this configurable for Fallout 4
   uint8_t majorVersion{ 3 };
-  uint8_t minorVersion{ 9 };
-  uint16_t gameID{ 2 }; // Default to Fallout 4
+  uint8_t minorVersion{ 12 };
+  uint16_t gameID{ 4 }; // Default to Starfield
   time_t compilationTime{ };
   std::string_view sourceFileName{ "" };
   std::string userName{ "" };

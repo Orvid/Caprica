@@ -10,3 +10,4 @@ Caprica/tmp/*
 build/
 cmake-build-*
 
+test_compile/

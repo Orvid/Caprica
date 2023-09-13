@@ -85,6 +85,8 @@ namespace Papyrus {
   extern bool allowNegativeLiteralAsBinaryOp;
   // Enable Caprica extensions to the Papyrus language.
   extern bool enableLanguageExtensions;
+  // Ignore Property name and local var/parameter conflicts within a function; otherwise emits a warning.
+  extern bool ignorePropertyNameLocalConflicts;
   // The directories to search in for imported types and
   // unknown types.
   extern std::vector<std::string> importDirectories;

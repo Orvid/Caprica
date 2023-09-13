@@ -43,6 +43,7 @@ struct PapyrusFunctionParameter final
   }
 
 private:
+  friend IntrusiveLinkedList<PapyrusFunctionParameter>;
   template<typename T>
   friend struct IntrusiveLinkedList;
   template<typename T>
