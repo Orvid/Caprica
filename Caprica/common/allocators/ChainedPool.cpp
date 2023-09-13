@@ -153,7 +153,7 @@ void* ChainedPool::allocHeap(size_t newHeapSize, size_t firstAllocSize) {
 
 ChainedPool::HeapIterator ChainedPool::begin() const {
   HeapIterator iter{ };
-  iter.curHeap = current;
+  iter.curHeap = &base;
   return iter;
 }
 

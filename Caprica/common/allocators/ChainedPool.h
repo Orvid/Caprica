@@ -84,7 +84,7 @@ protected:
     HeapIterator& operator ++();
   private:
     friend ChainedPool;
-    Heap* curHeap{ nullptr };
+    const Heap* curHeap{ nullptr };
   };
 
   size_t heapSize;
