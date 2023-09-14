@@ -98,7 +98,7 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location) { \
 static inline bool m_Warn_##num##_##id_emitted{false}; \
 NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name) { \
   if (!m_Warn_##num##_##id_emitted) { \
-    warning(location, num, "%s\n\tFurther %d warnings will be suppressed.", formatString(msg, arg1Name), num); \
+    warning(location, num, "%s\n\tFurther %d warnings will be suppressed.", formatString(msg, arg1Name).c_str(), num); \
     m_Warn_##num##_##id_emitted = true; \
   } \
 }
