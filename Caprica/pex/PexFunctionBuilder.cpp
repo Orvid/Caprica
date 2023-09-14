@@ -106,8 +106,12 @@ PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
   for (auto& v : instr->variadicArgs) {
     if (v->type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
-    if (v->type == PexValueType::TemporaryVar && v->val.tmpVar->var)
+    if (v->type == PexValueType::TemporaryVar && v->val.tmpVar->var) {
+      // TODO: ATTN ORVID, fix this hack
+      auto next = v->next;
       *v = PexValue(PexValue::Identifier(v->val.tmpVar->var));
+      v->next = next;
+    }
     freeValueIfTemp(*v);
   }
 

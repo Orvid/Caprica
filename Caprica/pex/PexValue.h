@@ -150,7 +150,8 @@ struct IntrusivePexValue final : public PexValue
   IntrusivePexValue(const PexValue& str) : PexValue(str) { }
   IntrusivePexValue(PexValue&& str) : PexValue(str) { }
 
-private:
+// TODO: REMOVE THIS HACK!!!!
+//private:
   friend IntrusiveLinkedList<IntrusivePexValue>;
   IntrusivePexValue* next{ nullptr };
 };
