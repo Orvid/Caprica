@@ -475,6 +475,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
       if (cur.type == TokenType::EOL) {
         reportingContext.fatal(cur.location, "Syntax error: Guard statement with no guards specified!");
+      } else if (cur.type != TokenType::Identifier) {
+        reportingContext.fatal(cur.location, "Syntax error: Incorrect Guard Statement");
       }
       size_t idx = 0;
       do {
@@ -495,6 +497,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       auto ret = alloc->make<statements::PapyrusTryGuardStatement>(consumeLocation());
       if (cur.type == TokenType::EOL) {
         reportingContext.fatal(cur.location, "Syntax error: TryGuard statement with no guards specified!");
+      } else if (cur.type != TokenType::Identifier) {
+        reportingContext.fatal(cur.location, "Syntax error: Incorrect TryGuard Statement");
       }
       size_t idx = 0;
       do {
