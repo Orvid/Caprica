@@ -375,15 +375,16 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   std::vector<PapyrusIdentifier> resolvedIds;
 
   // TODO: verify that property before locals resolution is correct in Starfield/Fallout 4
-  for (auto pg : object->propertyGroups) {
-    for (auto p : pg->properties) {
-      if (idEq(p->name, ident.res.name)) {
-        resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
-        if (ignoreConflicts) { return resolvedIds[0]; }
+  if (!function || !function->isGlobal()) {
+    for (auto pg: object->propertyGroups) {
+      for (auto p: pg->properties) {
+        if (idEq(p->name, ident.res.name)) {
+          resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
+          if (ignoreConflicts) { return resolvedIds[0]; }
+        }
       }
     }
   }
-
   // This handles local var resolution.
   for (auto stack : localVariableScopeStack) {
     for (auto n : stack->locals) {
