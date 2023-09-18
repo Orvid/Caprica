@@ -56,6 +56,13 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   RemoveLast,
   // Fallout 76, Starfield
   GetMatchingStructs,
+
+//  SkyrimArrayFunctionMax = RFind,
+  Fallout4ArrayFunctionMax = RemoveLast,
+  Fallout76ArrayFunctionMax = GetMatchingStructs,
+  StarfieldArrayFunctionMax = GetMatchingStructs,
+  // Skyrim
+
 };
 
 struct PapyrusIdentifier final

@@ -38,6 +38,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     po::options_description desc("General");
     desc.add_options()
       ("help,h", "Print usage information.")
+      ("game,g", po::value<std::string>()->default_value("starfield"), "Set the game type to compile for. Valid values are: starfield, skyrim, fallout4, fallout76. (default: starfield)")
       ("import,i", po::value<std::vector<std::string>>()->composing(), "Set the compiler's import directories.")
       ("flags,f", po::value<std::string>(), "Set the file defining the user flags.")
       ("optimize,O", po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false), "Enable optimizations.")
@@ -149,6 +150,20 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       std::cout << "Usage: Caprica <sourceFile / directory>" << std::endl;
       std::cout << "Note that when passing a directory, only Papyrus script files (*.psc) in it will be compiled. Pex (*.pex) and Pex assembly (*.pas) files will be ignored." << std::endl;
       std::cout << visibleDesc << std::endl;
+      return false;
+    }
+
+    std::string gameType = vm["game"].as<std::string>();
+    if (_stricmp(gameType.c_str(), "Starfield") == 0){
+      conf::Papyrus::game = GameID::Starfield;
+    } else if (_stricmp(gameType.c_str(), "Skyrim") == 0) {
+      conf::Papyrus::game = GameID::Skyrim;
+    } else if (_stricmp(gameType.c_str(), "Fallout4") == 0) {
+      conf::Papyrus::game = GameID::Fallout4;
+    } else if (_stricmp(gameType.c_str(), "Fallout76") == 0) {
+      conf::Papyrus::game = GameID::Fallout76;
+    } else {
+      std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
       return false;
     }
 

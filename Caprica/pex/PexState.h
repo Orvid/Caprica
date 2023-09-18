@@ -22,7 +22,7 @@ struct PexState final
   PexState(const PexState&) = delete;
   ~PexState() = default;
 
-  static PexState* read(allocators::ChainedPool* alloc, PexReader& rdr);
+  static PexState *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const;
 

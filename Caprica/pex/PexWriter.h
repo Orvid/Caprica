@@ -10,6 +10,7 @@
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
+#include "common/GameID.h"
 
 namespace caprica { namespace pex {
 
@@ -22,6 +23,11 @@ struct PexWriter final : public CapricaBinaryWriter
   template<typename T>
   void write(T val) {
     CapricaBinaryWriter::write<T>(std::forward<T>(val));
+  }
+
+  template<>
+  void write(GameID val) {
+    boundWrite<uint16_t>((uint16_t)val);
   }
 
   template<>

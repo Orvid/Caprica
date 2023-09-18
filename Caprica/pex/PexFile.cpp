@@ -80,13 +80,22 @@ size_t PexFile::getUserFlagCount() const noexcept {
 
 PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   auto file = alloc->make<PexFile>(alloc);
-  if (rdr.read<uint32_t>() != 0xFA57C0DE)
-    CapricaReportingContext::logicalFatal("Unrecognized magic number!");
+  rdr.endianness = Endianness::Little; // ensure that we're reading little endian to begin with
+  auto magic = rdr.read<uint32_t>();
+  if (magic != PEX_MAGIC_NUM ) {
+    if (magic == PEX_MAGIC_NUM_BE ) {
+      // Big endian file, swap the endianness and continue.
+      rdr.endianness = Endianness::Big;
+    } else {
+      CapricaReportingContext::logicalFatal("Unrecognized magic number!");
+    }
+  }
   if ((file->majorVersion = rdr.read<uint8_t>()) != 3)
     CapricaReportingContext::logicalFatal("We currently only support major version 3!");
-  if ((file->minorVersion = rdr.read<uint8_t>()) != 9)
-    CapricaReportingContext::logicalFatal("We currently only support minor version 9!");
-  file->gameID = rdr.read<uint16_t>();
+  file->minorVersion = rdr.read<uint8_t>();
+  if (file->minorVersion > 15 || file->minorVersion < 1) // 3.1-2: Skyrim, 3.9: Fallout 4, 3.15: Fallout 76, 3.12: Starfield
+    CapricaReportingContext::logicalFatal("We currently only support minor versions 1-15!");
+  file->gameID = rdr.read<GameID>();
   file->compilationTime = rdr.read<time_t>();
   file->sourceFileName = alloc->allocateString(rdr.read<std::string>());
   file->userName = rdr.read<std::string>();
@@ -99,7 +108,7 @@ PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   }
 
   if (rdr.read<uint8_t>() != 0)
-    file->debugInfo = PexDebugInfo::read(alloc, rdr);
+    file->debugInfo = PexDebugInfo::read(alloc, rdr, file->gameID);
 
   auto ufTableSize = rdr.read<uint16_t>();
   file->userFlagTable.reserve(ufTableSize);
@@ -112,16 +121,18 @@ PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
 
   auto objTableSize = rdr.read<uint16_t>();
   for (size_t i = 0; i < objTableSize; i++)
-    file->objects.push_back(PexObject::read(alloc, rdr));
+    file->objects.push_back(PexObject::read(alloc, rdr, file->gameID));
 
   return file;
 }
 
 void PexFile::write(PexWriter& wtr) const {
-  wtr.write<uint32_t>(0xFA57C0DE); // Magic Number
+  if (gameID == GameID::Skyrim)
+    wtr.endianness = Endianness::Big;
+  wtr.write<uint32_t>(PEX_MAGIC_NUM); // Magic Number
   wtr.write<uint8_t>(majorVersion);
   wtr.write<uint8_t>(minorVersion);
-  wtr.write<uint16_t>(gameID);
+  wtr.write<GameID>(gameID);
   wtr.write<time_t>(compilationTime);
   wtr.write<identifier_ref>(sourceFileName);
   wtr.write<identifier_ref>(userName);
@@ -133,7 +144,7 @@ void PexFile::write(PexWriter& wtr) const {
 
   if (debugInfo) {
     wtr.write<uint8_t>(0x01);
-    debugInfo->write(wtr);
+    debugInfo->write(wtr, gameID);
   } else {
     wtr.write<uint8_t>(0x00);
   }
@@ -146,7 +157,7 @@ void PexFile::write(PexWriter& wtr) const {
 
   wtr.boundWrite<uint16_t>(objects.size());
   for (auto o : objects)
-    o->write(wtr);
+    o->write(wtr, gameID);
 }
 
 void PexFile::writeAsm(PexAsmWriter& wtr) const {

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <common/CapricaUserFlagsDefinition.h>
+#include "GameID.h"
 
 namespace caprica { namespace conf {
 
@@ -74,6 +75,7 @@ namespace EngineLimits {
 
 // Options directly related to the Papyrus language.
 namespace Papyrus {
+  extern GameID game;
   // If true, allow identifiers to be prefixed with '::', which are normally
   // reserved for compiler identifiers.
   extern bool allowCompilerIdentifiers;

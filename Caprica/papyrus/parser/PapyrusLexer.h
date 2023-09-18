@@ -12,6 +12,7 @@
 #include <common/FSUtils.h>
 #include <common/identifier_ref.h>
 #include <common/UtilMacros.h>
+#include <common/GameID.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -65,21 +66,14 @@ enum class TokenType : int32_t
   kAs,
   kAuto,
   kAutoReadOnly,
-  kBetaOnly,
   kBool,
-  kConst,
-  kCustomEvent,
-  kCustomEventName,
-  kDebugOnly,
   kElse,
   kElseIf,
   kEndEvent,
   kEndFunction,
-  kEndGroup,
   kEndIf,
   kEndProperty,
   kEndState,
-  kEndStruct,
   kEndWhile,
   kEvent,
   kExtends,
@@ -87,7 +81,6 @@ enum class TokenType : int32_t
   kFloat,
   kFunction,
   kGlobal,
-  kGroup,
   kIf,
   kImport,
   kInt,
@@ -99,15 +92,30 @@ enum class TokenType : int32_t
   kParent,
   kProperty,
   kReturn,
-  kScriptEventName,
   kScriptName,
   kSelf,
   kState,
   kString,
-  kStruct,
   kTrue,
   kVar,
   kWhile,
+
+  // Fallout4 / Fallout76 keywords
+  kBetaOnly,
+  kConst,
+  kCustomEvent,
+  kCustomEventName,
+  kDebugOnly,
+  kEndGroup,
+  kEndStruct,
+  kGroup,
+  kScriptEventName,
+  kStruct,
+
+  // Starfield keywords
+  kGuard,
+  kEndGuard,
+  kTryGuard,
 
   // Language extension keywords
   kBreak,
@@ -126,11 +134,26 @@ enum class TokenType : int32_t
   kSwitch,
   kTo,
 
-  // Starfield keywords
-  kGuard,
-  kEndGuard,
-  kTryGuard
+
 };
+constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions = true) {
+ if (includeExtensions && tp >= TokenType::kBreak && tp <= TokenType::kTo)
+      return true;
+
+  switch (game) {
+    case GameID::Skyrim:
+      return tp <= TokenType::kWhile;
+    case GameID::Fallout4:
+    case GameID::Fallout76:
+      return tp <= TokenType::kStruct;
+    case GameID::Starfield:
+      return tp <= TokenType::kTryGuard;
+    default:
+      return false;
+  }
+}
+constexpr int32_t STARFIELD_MAX_KEYWORD = (int32_t)TokenType::kTryGuard;
+
 
 struct PapyrusLexer
 {
