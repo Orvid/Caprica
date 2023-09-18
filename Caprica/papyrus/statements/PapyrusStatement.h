@@ -24,6 +24,7 @@ struct PapyrusStatement abstract
   virtual bool buildCFG(PapyrusCFG& cfg) const = 0;
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const = 0;
   virtual void semantic(PapyrusResolutionContext* ctx) = 0;
+  virtual void semantic_skyrim_first_pass(PapyrusResolutionContext* ctx) {};
   virtual void visit(PapyrusStatementVisitor& visitor) = 0;
 
 private:

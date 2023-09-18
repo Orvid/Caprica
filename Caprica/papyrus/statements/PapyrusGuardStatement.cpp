@@ -7,7 +7,7 @@ struct PapyrusGuardStatementBodyVisitor : public PapyrusSelectiveStatementVisito
 
     PapyrusGuardStatementBodyVisitor(const PapyrusGuardStatement *thisLockStatement)
             : m_ThisGuardStatement(thisLockStatement) {}
-
+// TODO: put the reporting context here, make it emit the error message here
     virtual void visit(PapyrusGuardStatement *ls) override {
 // TODO: Starfield, verify: Scripts do in fact have nested lock guards; need to verify once CK comes out
       for (auto s: ls->lockParams) {
@@ -23,6 +23,9 @@ struct PapyrusGuardStatementBodyVisitor : public PapyrusSelectiveStatementVisito
 };
 
 void PapyrusGuardStatement::semantic(PapyrusResolutionContext *ctx) {
+  if (conf::Papyrus::game != GameID::Starfield){
+    ctx->reportingContext.fatal(location, "Guard statements are illegal < Starfield!");
+  }
   for (auto lockparam: lockParams)
     lockparam->semantic(ctx);
   ctx->pushLocalVariableScope();

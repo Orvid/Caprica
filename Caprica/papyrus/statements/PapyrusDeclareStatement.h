@@ -55,7 +55,12 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
         initialValue = ctx->coerceExpression(initialValue, type);
       }
     }
+    // for skyrim semantic parsing, adding of local variables is handled below.
+    if (conf::Papyrus::game > GameID::Skyrim)
+      ctx->addLocalVariable(this);
+  }
 
+  virtual void semantic_skyrim_first_pass(PapyrusResolutionContext* ctx) override {
     ctx->addLocalVariable(this);
   }
 
