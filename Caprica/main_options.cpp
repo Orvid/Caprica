@@ -87,6 +87,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("input-file", po::value<std::vector<std::string>>(), "The input file.")
 
       // These are intended for debugging, not general use.
+      ("force-enable-optimizations", po::bool_switch()->default_value(false), "Force optimizations to be enabled.")
       ("debug-control-flow-graph", po::value<bool>(&conf::Debug::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
       ("performance-test-mode", po::bool_switch(&conf::Performance::performanceTestMode)->default_value(false), "Enable performance test mode.")
       ("dump-timing", po::bool_switch(&conf::Performance::dumpTiming)->default_value(false), "Dump timing info.")
@@ -165,6 +166,16 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     } else {
       std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
       return false;
+    }
+
+    // TODO: enable this eventually
+    if (vm["optimize"].as<bool>() && conf::Papyrus::game != GameID::Fallout4) {
+      if (!vm["force-enable-optimizations"].as<bool>()){
+        conf::CodeGeneration::enableOptimizations = false;
+        std::cout << "Warning: Optimization is currently only supported for Fallout 4, disabling..." << std::endl;
+      } else {
+        std::cout << "Warning: Optimization force enabled, optimization is currently only supported for Fallout 4 and may produce incorrect code." << std::endl;
+      }
     }
 
     if (vm["champollion-compat"].as<bool>()) {

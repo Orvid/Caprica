@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include <common/CapricaConfig.h>
+#include <common/FakeScripts.h>
 #include <common/allocators/AtomicChainedPool.h>
 
 #include <papyrus/parser/PapyrusParser.h>
@@ -43,6 +44,12 @@ void PapyrusCompilationNode::FileReadJob::run() {
   if (parent->type == NodeType::PapyrusCompile || parent->type == NodeType::PasCompile || parent->type == NodeType::PexDissassembly) {
     if (!conf::General::quietCompile)
       std::cout << "Compiling " << parent->reportedName << std::endl;
+  }
+  // TODO: remove this hack when imports are working
+  if (parent->sourceFilePath.starts_with("fake://")){
+    parent->ownedReadFileData = std::move(FakeScripts::getFakeScript(parent->sourceFilePath, conf::Papyrus::game).to_string());
+    parent->readFileData = parent->ownedReadFileData;
+    return;
   }
   if (parent->filesize < std::numeric_limits<uint32_t>::max()) {
     auto buf = readAllocator.allocate(parent->filesize + 1);
@@ -190,6 +197,10 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       parent->pexFile = nullptr;
       return;
     }
+
+    // TODO: fix this hack
+    case NodeType::PapyrusImport:
+      return;
     case NodeType::Unknown:
     case NodeType::PasReflection:
     case NodeType::PexReflection:
@@ -218,6 +229,10 @@ void PapyrusCompilationNode::FileWriteJob::run() {
       parent->pexWriter = nullptr;
       return;
     }
+    // TODO: remove this hack
+    case NodeType::PapyrusImport:
+      return;
+
     case NodeType::Unknown:
     case NodeType::PexDissassembly:
     case NodeType::PasReflection:

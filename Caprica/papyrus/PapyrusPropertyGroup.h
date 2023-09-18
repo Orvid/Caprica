@@ -27,7 +27,7 @@ struct PapyrusPropertyGroup final
   ~PapyrusPropertyGroup() = default;
 
   void buildPex(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) const {
-    if (file->debugInfo) {
+    if (file->debugInfo && file->gameID > GameID::Skyrim) {
       auto pg = file->alloc->make<pex::PexDebugPropertyGroup>();
       pg->objectName = obj->name;
       pg->groupName = file->getString(name);

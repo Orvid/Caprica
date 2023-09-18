@@ -147,6 +147,17 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_ONCE_A0(6003, Experimental_Syntax_TryLock, "The syntax for TryGuard/EndGuard is experimental and subject to change.")
   DEFINE_WARNING_ONCE_A2(6004, Experimental_Downcast_Arrays, "Downcasting Arrays ('%s') to ('%s') is experimental and subject to change.", const char*, sourceType, const char*, targetType);
 
+  // Warnings 7000-8000 are Skyrim warnings and for emitting warnings when attempting to emulate the truly *cursed* behavior of Skyrim's PCompiler
+  DEFINE_WARNING_A3(7000, Skyrim_Unknown_Event_On_Non_Native_Class, "Unknown Event ('%s') on non-native class '%s' that extends from '%s'.", const char*, eventName, const char*, sourceType, const char*, parentType);
+  DEFINE_WARNING_A3(7001, Skyrim_Child_Variable_Shadows_Parent_Property, "Object variable '%s' on class '%s' shadows parent class '%s' property ", const char*, varName, const char*, sourceType, const char*, parentType);
+  DEFINE_WARNING_A0(7002, Skyrim_Object_Variable_Named_Var, "Ambiguously named object variable named the same as type 'var'.")
+  // WHY THE FUCK IS THIS ALLOWED BY SKYRIM'S PCOMPILER OMG
+  // TODO: Skyrim: actually fix this issue
+  DEFINE_WARNING_A2(7003, Skyrim_Local_Use_Before_Declaration, "Local variable '%s' in function '%s' is used before it is declared.", const char*, varName, const char*, functionName);
+
+
+
+
 
 #undef DEFINE_WARNING_A1
 #undef DEFINE_WARNING_A2

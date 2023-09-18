@@ -27,7 +27,7 @@ struct PexWriter final : public CapricaBinaryWriter
 
   template<>
   void write(GameID val) {
-    boundWrite<uint16_t>((uint16_t)val);
+    write<uint16_t>(static_cast<uint16_t>(val));
   }
 
   template<>

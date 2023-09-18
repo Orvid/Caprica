@@ -41,6 +41,86 @@
 
 namespace caprica { namespace papyrus { namespace parser {
 
+static const caseless_unordered_identifier_ref_set skyrim_native_classes = {
+        "action",
+        "activator",
+        "activemagiceffect",
+        "actor",
+        "actorbase",
+        "alias",
+        "ammo",
+        "apparatus",
+        "armor",
+        "associationtype",
+        "book",
+        "cell",
+        "class",
+        "constructibleobject",
+        "container",
+        "debug",
+        "door",
+        "effectshader",
+        "enchantment",
+        "encounterzone",
+        "explosion",
+        "faction",
+        "flora",
+        "form",
+        "formlist",
+        "furniture",
+        "game",
+        "globalvariable",
+        "hazard",
+        "idle",
+        "imagespacemodifier",
+        "impactdataset",
+        "ingredient",
+        "key",
+        "keyword",
+        "leveledactor",
+        "leveleditem",
+        "leveledspell",
+        "light",
+        "location",
+        "locationalias",
+        "locationreftype",
+        "magiceffect",
+        "math",
+        "message",
+        "miscobject",
+        "musictype",
+        "objectreference",
+        "outfit",
+        "package",
+        "perk",
+        "potion",
+        "projectile",
+        "quest",
+        "race",
+        "referencealias",
+        "scene",
+        "scroll",
+        "shaderparticlegeometry",
+        "shout",
+        "soulgem",
+        "sound",
+        "soundcategory",
+        "spell",
+        "static",
+        "talkingactivator",
+        "textureset",
+        "topic",
+        "topicinfo",
+        "utility",
+        "visualeffect",
+        "voicetype",
+        "weapon",
+        "weather",
+        "wordofpower",
+        "worldspace",
+        "__scriptobject" // TODO: Skyrim base object hack, address later.
+};
+
 PapyrusScript* PapyrusParser::parseScript() {
   auto script = alloc->make<PapyrusScript>();
   script->allocator = alloc;
@@ -74,13 +154,29 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   if (maybeConsume(TokenType::kExtends)) {
     auto eLoc = cur.location;
     obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(eLoc, expectConsumeIdentRef()));
-  } else if (idEq(name, "ScriptObject")) {
-    obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::None(cur.location));
+  } else if (conf::Papyrus::game >= GameID::Fallout4){
+    if (idEq(name, "ScriptObject")) {
+      obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::None(cur.location));
+    } else {
+      obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "ScriptObject"));
+    }
   } else {
-    obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "ScriptObject"));
+    // TODO: SKYRIM HACK, address later
+    // Skyrim does not have ScriptObject as its base type, but every
+    // script still has a set of base methods and events. We need to load the fake __ScriptObject class.
+    if (idEq(name, "__ScriptObject")) {
+      obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::None(cur.location));
+    } else {
+      obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "__ScriptObject"));
+    }
   }
+
   obj->setName(name);
   obj->userFlags = maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations::Script);
+  // Skyrim issue: None of the source scripts have the native flag set, including the native classes.
+  // We need to do a lookup here and set it manually.
+  if (conf::Papyrus::game == GameID::Skyrim && skyrim_native_classes.find(obj->name) != skyrim_native_classes.end())
+    obj->userFlags.isNative = true;
   expectConsumeEOLs();
   obj->documentationString = maybeConsumeDocStringRef();
 
@@ -395,8 +491,18 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
 
 PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript*, PapyrusObject* object, PapyrusType&& type) {
   auto var = alloc->make<PapyrusVariable>(cur.location, std::move(type), object);
-  var->name = expectConsumeIdentRef();
-
+  if (conf::Papyrus::game != GameID::Skyrim) {
+    var->name = expectConsumeIdentRef();
+  } else {
+    // object variables can be named "var" in skyrim, apparently...
+    if (cur.type == TokenType::kVar) {
+      consume();
+      var->name = "var";
+      reportingContext.warning_W7002_Skyrim_Object_Variable_Named_Var(cur.location);
+    } else {
+      var->name = expectConsumeIdentRef();
+    }
+  }
   if (maybeConsume(TokenType::Equal)) {
     var->referenceState.isInitialized = true;
     var->defaultValue = expectConsumePapyrusValue();

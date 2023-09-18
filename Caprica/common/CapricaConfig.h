@@ -75,6 +75,7 @@ namespace EngineLimits {
 
 // Options directly related to the Papyrus language.
 namespace Papyrus {
+  // The game to compile for. Defaults to Starfield.
   extern GameID game;
   // If true, allow identifiers to be prefixed with '::', which are normally
   // reserved for compiler identifiers.

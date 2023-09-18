@@ -65,6 +65,21 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
 
 };
 
+constexpr bool isArrayFunctionInGame(PapyrusBuiltinArrayFunctionKind fk, GameID game) {
+  switch (game) {
+    case GameID::Skyrim:
+      return fk <= PapyrusBuiltinArrayFunctionKind::SkyrimArrayFunctionMax;
+    case GameID::Fallout4:
+      return fk <= PapyrusBuiltinArrayFunctionKind::Fallout4ArrayFunctionMax;
+    case GameID::Fallout76:
+      return fk <= PapyrusBuiltinArrayFunctionKind::Fallout76ArrayFunctionMax;
+    case GameID::Starfield:
+      return fk <= PapyrusBuiltinArrayFunctionKind::StarfieldArrayFunctionMax;
+    default:
+      return false;
+  }
+}
+
 struct PapyrusIdentifier final
 {
   PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };

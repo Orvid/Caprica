@@ -39,6 +39,7 @@ namespace EngineLimits {
 }
 
 namespace Papyrus {
+  GameID game;
   bool allowCompilerIdentifiers{ false };
   bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };

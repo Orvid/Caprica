@@ -354,7 +354,7 @@ StartOver:
       str.push_back((char)c);
 
       // It's hex.
-      if (c == '0' && peekChar() == 'x') {
+      if (c == '0' && (peekChar() == 'x' || peekChar() == 'X')) {
         str.push_back((char)getChar());
         while (isxdigit(peekChar()))
           str.push_back((char)getChar());
@@ -508,7 +508,7 @@ StartOver:
 
       identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
       auto f = keywordMap.find(str);
-      if (f != keywordMap.end() && keywordIsInGame(f->second, conf::Papyrus::game))
+      if (f != keywordMap.end() && keywordIsInGame(f->second, conf::Papyrus::game)) {
           return setTok(f->second, baseLoc);
       }
       if (conf::Papyrus::enableLanguageExtensions) {

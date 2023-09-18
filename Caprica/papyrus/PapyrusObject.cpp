@@ -29,7 +29,8 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
   auto obj = file->alloc->make<pex::PexObject>();
   obj->name = file->getString(name);
   if (auto parClass = tryGetParentClass())
-    obj->parentClassName = file->getString(parClass->name);
+    if (file->gameID != GameID::Skyrim || parClass->name != "__ScriptObject")
+      obj->parentClassName = file->getString(parClass->name);
   else
     obj->parentClassName = file->getString("");
   obj->documentationString = file->getString(documentationString);
@@ -40,13 +41,19 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
     obj->autoStateName = file->getString("");
   obj->userFlags = userFlags.buildPex(file);
 
-  for (auto s : structs)
-    s->buildPex(repCtx, file, obj);
+  if (file->gameID > GameID::Skyrim){
+    for (auto s : structs)
+      s->buildPex(repCtx, file, obj);
+  }
+
   for (auto v : variables)
     v->buildPex(repCtx, file, obj);
-  // TODO: Make this configurable for Starfield
-  for (auto g : guards)
-    g->buildPex(repCtx, file, obj);
+
+  if (file->gameID == GameID::Starfield) {
+    for (auto g : guards)
+      g->buildPex(repCtx, file, obj);
+  }
+
   for (auto g : propertyGroups)
     g->buildPex(repCtx, file, obj);
 
@@ -183,8 +190,18 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
   if (!checkInheritedOnly) {
     for (auto v : variables) {
       auto f = identMap.find(v->name);
-      if (f != identMap.end())
-        doError(repCtx, v->location, f->second.first, f->second.second, v->name);
+      if (f != identMap.end()) {
+        auto typenamed =  f->second.second;
+        if (conf::Papyrus::game == GameID::Skyrim && _stricmp(f->second.second, "property") == 0){
+          repCtx.warning_W7001_Skyrim_Child_Variable_Shadows_Parent_Property(
+                  v->location,
+                  v->name.to_string().c_str(),
+                  name.to_string().c_str(),
+                  parentClass.type == PapyrusType::Kind::ResolvedObject ? parentClass.resolved.obj->name.to_string().c_str() : "???");
+        } else {
+          doError(repCtx, v->location, f->second.first, f->second.second, v->name);
+        }
+      }
       else
         identMap.emplace(v->name, std::make_pair(checkInheritedOnly, "variable"));
     }

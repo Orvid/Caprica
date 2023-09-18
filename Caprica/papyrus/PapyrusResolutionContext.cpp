@@ -486,6 +486,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
   return ident;
 }
 
+static const caseless_unordered_identifier_ref_set skyrim_builtin_script_names = {
+        "GetState",
+        "GotoState"
+};
+
 PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident, bool wantGlobal) const {
   auto id = tryResolveFunctionIdentifier(baseType, ident, wantGlobal);
   if (id.type == PapyrusIdentifierType::Unresolved)
@@ -544,6 +549,9 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       reportingContext.warning_W6001_Experimental_Syntax_ArrayGetAllMatchingStructs(ident.location);
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.res.name.to_string().c_str());
+    }
+    if(!isArrayFunctionInGame(fk, conf::Papyrus::game)){
+      reportingContext.fatal(ident.location, "Array function '%s' is not available in %s scripts!", ident.res.name.to_string().c_str(), GameIDToString(conf::Papyrus::game));
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, allocator->make<PapyrusType>(baseType.getElementType()));
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {

@@ -9,6 +9,7 @@
 #include <common/CapricaJobManager.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
+#include <common/FakeScripts.h>
 #include <common/FSUtils.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
@@ -33,6 +34,12 @@ using caprica::papyrus::PapyrusCompilationNode;
 namespace caprica {
 bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManager* jobManager);
 
+
+static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
+        "fake://skyrim/__ScriptObject.psc",
+        "fake://skyrim/DLC1SCWispWallScript.psc",
+};
+
 bool addFilesFromDirectory(const std::string& f, bool recursive, const std::string& baseOutputDir, caprica::CapricaJobManager* jobManager) {
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
@@ -49,6 +56,26 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> namespaceMap{ };
+
+    // TODO: After imports are working, get rid of this hack
+    if (conf::Papyrus::game == GameID::Skyrim){
+      std::string outputDir = baseOutputDir;
+      for (auto &fake_script : FAKE_SKYRIM_SCRIPTS_SET){
+        auto basename = caprica::FSUtils::filenameAsRef(fake_script);
+
+        auto node = new PapyrusCompilationNode(
+                jobManager,
+                PapyrusCompilationNode::NodeType::PapyrusImport,
+                std::move(std::string(basename)),
+                std::move(outputDir),
+                std::move(std::string(fake_script)),
+                0,
+                caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game)
+        );
+        namespaceMap.emplace(caprica::identifier_ref(node->baseName), node);
+      }
+
+    }
     namespaceMap.reserve(8000);
     std::string curDirFull;
     if (curDir == "\\")
