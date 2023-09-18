@@ -136,23 +136,30 @@ enum class TokenType : int32_t
 
 
 };
-constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions = true) {
- if (includeExtensions && tp >= TokenType::kBreak && tp <= TokenType::kTo)
+constexpr TokenType SKYRIM_MAX_KEYWORD = TokenType::kWhile;
+constexpr TokenType FALLOUT4_MAX_KEYWORD = TokenType::kStruct;
+constexpr TokenType FALLOUT76_MAX_KEYWORD = TokenType::kStruct;
+constexpr TokenType STARFIELD_MAX_KEYWORD = TokenType::kTryGuard;
+
+constexpr bool keywordIsLanguageExtension(TokenType tp) {
+  return tp >= TokenType::kBreak && tp <= TokenType::kTo;
+}
+constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions = false) {
+ if (includeExtensions && keywordIsLanguageExtension(tp))
       return true;
 
   switch (game) {
     case GameID::Skyrim:
-      return tp <= TokenType::kWhile;
+      return tp <= SKYRIM_MAX_KEYWORD;
     case GameID::Fallout4:
     case GameID::Fallout76:
-      return tp <= TokenType::kStruct;
+      return tp <= FALLOUT4_MAX_KEYWORD;
     case GameID::Starfield:
-      return tp <= TokenType::kTryGuard;
+      return tp <= STARFIELD_MAX_KEYWORD;
     default:
       return false;
   }
 }
-constexpr int32_t STARFIELD_MAX_KEYWORD = (int32_t)TokenType::kTryGuard;
 
 
 struct PapyrusLexer

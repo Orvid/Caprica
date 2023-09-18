@@ -45,8 +45,8 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   Unknown = 0,
 
   Find,
-  FindStruct,
   RFind,
+  FindStruct,
   RFindStruct,
 
   Add,
@@ -56,8 +56,8 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   RemoveLast,
   // Fallout 76, Starfield
   GetMatchingStructs,
-
-//  SkyrimArrayFunctionMax = RFind,
+  ArrayFunctionMax,
+  SkyrimArrayFunctionMax = RFind,
   Fallout4ArrayFunctionMax = RemoveLast,
   Fallout76ArrayFunctionMax = GetMatchingStructs,
   StarfieldArrayFunctionMax = GetMatchingStructs,
