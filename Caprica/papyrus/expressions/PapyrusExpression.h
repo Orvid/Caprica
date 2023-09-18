@@ -17,6 +17,7 @@ struct PapyrusIdentifierExpression;
 struct PapyrusLiteralExpression;
 struct PapyrusMemberAccessExpression;
 struct PapyrusParentExpression;
+struct PapyrusCastExpression;
 
 struct PapyrusExpression abstract
 {
@@ -39,6 +40,7 @@ struct PapyrusExpression abstract
   virtual PapyrusLiteralExpression* asLiteralExpression() { return nullptr; }
   virtual PapyrusMemberAccessExpression* asMemberAccessExpression() { return nullptr; }
   virtual PapyrusParentExpression* asParentExpression() { return nullptr; }
+  virtual PapyrusCastExpression* asCastExpression() { return nullptr; }
 };
 
 }}}

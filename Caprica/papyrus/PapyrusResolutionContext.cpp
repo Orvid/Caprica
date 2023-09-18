@@ -104,6 +104,7 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(CapricaFileLocation loc, cons
   if (src == dest)
     return true;
 
+  // TODO: "None" is only allowed to be implicitly converted to "bool" and an object type in Skyrim and Fallout 4
   if (src.type == PapyrusType::Kind::None) {
     reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
     return true;

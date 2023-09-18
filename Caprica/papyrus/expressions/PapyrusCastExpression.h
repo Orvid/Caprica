@@ -22,6 +22,7 @@ struct PapyrusCastExpression final : public PapyrusExpression
   virtual pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override;
   virtual void semantic(PapyrusResolutionContext* ctx) override;
   virtual PapyrusType resultType() const override;
+  virtual PapyrusCastExpression* asCastExpression() override { return this; }
 };
 
 }}}
