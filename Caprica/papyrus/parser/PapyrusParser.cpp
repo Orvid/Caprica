@@ -494,14 +494,7 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript*, PapyrusObject* obj
   if (conf::Papyrus::game != GameID::Skyrim) {
     var->name = expectConsumeIdentRef();
   } else {
-    // object variables can be named "var" in skyrim, apparently...
-    if (cur.type == TokenType::kVar) {
-      consume();
-      var->name = "var";
-      reportingContext.warning_W7002_Skyrim_Object_Variable_Named_Var(cur.location);
-    } else {
-      var->name = expectConsumeIdentRef();
-    }
+    var->name = expectConsumeIdentRef();
   }
   if (maybeConsume(TokenType::Equal)) {
     var->referenceState.isInitialized = true;

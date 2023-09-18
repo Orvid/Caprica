@@ -97,7 +97,6 @@ enum class TokenType : int32_t
   kState,
   kString,
   kTrue,
-  kVar,
   kWhile,
 
   // Fallout4 / Fallout76 keywords
@@ -111,6 +110,7 @@ enum class TokenType : int32_t
   kGroup,
   kScriptEventName,
   kStruct,
+  kVar,
 
   // Starfield keywords
   kGuard,
@@ -137,8 +137,8 @@ enum class TokenType : int32_t
 
 };
 constexpr TokenType SKYRIM_MAX_KEYWORD = TokenType::kWhile;
-constexpr TokenType FALLOUT4_MAX_KEYWORD = TokenType::kStruct;
-constexpr TokenType FALLOUT76_MAX_KEYWORD = TokenType::kStruct;
+constexpr TokenType FALLOUT4_MAX_KEYWORD = TokenType::kVar;
+constexpr TokenType FALLOUT76_MAX_KEYWORD = FALLOUT4_MAX_KEYWORD;
 constexpr TokenType STARFIELD_MAX_KEYWORD = TokenType::kTryGuard;
 
 constexpr bool keywordIsLanguageExtension(TokenType tp) {
@@ -152,8 +152,9 @@ constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions
     case GameID::Skyrim:
       return tp <= SKYRIM_MAX_KEYWORD;
     case GameID::Fallout4:
-    case GameID::Fallout76:
       return tp <= FALLOUT4_MAX_KEYWORD;
+    case GameID::Fallout76:
+      return tp <= FALLOUT76_MAX_KEYWORD;
     case GameID::Starfield:
       return tp <= STARFIELD_MAX_KEYWORD;
     default:

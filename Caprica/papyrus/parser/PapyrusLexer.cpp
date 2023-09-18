@@ -84,7 +84,6 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kState, "State" },
   { TokenType::kString, "String" },
   { TokenType::kTrue, "True" },
-  { TokenType::kVar, "Var" },
   { TokenType::kWhile, "While" },
 
   // Fallout 4 / Fallout 76
@@ -98,6 +97,7 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kGroup, "Group" },
   { TokenType::kScriptEventName, "ScriptEventName" },
   { TokenType::kStruct, "Struct" },
+  { TokenType::kVar, "Var" },
 
   // Starfield
   { TokenType::kGuard, "Guard" },
@@ -197,7 +197,6 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "state", TokenType::kState },
   { "string", TokenType::kString },
   { "true", TokenType::kTrue },
-  { "var", TokenType::kVar },
   { "while", TokenType::kWhile },
 
   // Fallout 4 / Fallout 76
@@ -211,6 +210,7 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "group", TokenType::kGroup },
   { "scripteventname", TokenType::kScriptEventName },
   { "struct", TokenType::kStruct },
+  { "var", TokenType::kVar },
 
   // Starfield
   // TODO: Verify starfield syntax
