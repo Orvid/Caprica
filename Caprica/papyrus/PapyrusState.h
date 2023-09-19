@@ -92,8 +92,8 @@ struct PapyrusState final
 
     // Every skyrim script has these exact same functions
     if (file->gameID == GameID::Skyrim && name == ""){
-      state->functions.push_front(makeGetState(repCtx, file, obj));
-      state->functions.push_front(makeGotoState(repCtx, file, obj));
+      state->functions.push_back(makeGetState(repCtx, file, obj));
+      state->functions.push_back(makeGotoState(repCtx, file, obj));
     }
 
     size_t staticFunctionCount = 0;
