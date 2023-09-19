@@ -68,6 +68,16 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("require-all-paths-return", po::bool_switch()->default_value(false), "Require all control paths to return a value")
       ("ensure-betaonly-debugonly-dont-escape", po::bool_switch()->default_value(false), "Ensure values returned from BetaOnly and DebugOnly functions don't escape, as that will cause invalid code generation.")
       ("disable-implicit-conversion-from-none", po::bool_switch()->default_value(false), "Disable implicit conversion from None in most situations where the use of None likely wasn't the author's intention.")
+            ("skyrim-allow-unknown-events-on-non-native-class", po::value<bool>(&conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass)->default_value(false), "Allow unknown events to be defined on non-native classes. This is encountered with some scripts in the base game having Events that are not present on ObjectReference.")
+
+            ;
+
+    po::options_description skyrimCompatibilityDesc("Skyrim compatibility (default true with '--game=skyrim')");
+    skyrimCompatibilityDesc.add_options()
+      ("allow-unknown-events", po::value<bool>(&conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass)->default_value(true), "Allow unknown events to be defined on non-native classes. This is encountered with some scripts in the base game having Events that are not present on ObjectReference.")
+      ("allow-var-shadow-parent", po::value<bool>(&conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty)->default_value(true), "Allow Object variable names in derived classes to shadow properties in parent classes.")
+      ("allow-local-use-before-decl", po::value<bool>(&conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration)->default_value(true), "Allow local variables to be used before they are declared and initialized.")
+      ("allow-assign-void-method-result", po::value<bool>(&conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult)->default_value(true), "Allow void method call results to be assigned to Objects and Bools.")
       ;
 
     po::options_description advancedDesc("Advanced");
@@ -113,7 +123,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     p.add("input-file", -1);
 
     po::options_description visibleDesc("");
-    visibleDesc.add(desc).add(champollionCompatDesc).add(advancedDesc);
+    visibleDesc.add(desc).add(champollionCompatDesc).add(skyrimCompatibilityDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
     commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc).add(strictChecksDesc);
@@ -167,6 +177,15 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
       return false;
     }
+
+    if (conf::Papyrus::game != GameID::Skyrim){
+      // turn off skyrim options
+      conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass = false;
+      conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty = false;
+      conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration = false;
+      conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult = false;
+    }
+
 
     // TODO: enable this eventually
     if (vm["optimize"].as<bool>() && conf::Papyrus::game != GameID::Fallout4) {
