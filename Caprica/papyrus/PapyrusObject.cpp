@@ -28,11 +28,15 @@ const PapyrusObject* PapyrusObject::tryGetParentClass() const {
 void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const {
   auto obj = file->alloc->make<pex::PexObject>();
   obj->name = file->getString(name);
-  if (auto parClass = tryGetParentClass())
+  if (auto parClass = tryGetParentClass()) {
     if (file->gameID != GameID::Skyrim || parClass->name != "__ScriptObject")
       obj->parentClassName = file->getString(parClass->name);
-  else
+    else {
+      obj->parentClassName = file->getString("");
+    }
+  } else {
     obj->parentClassName = file->getString("");
+  }
   obj->documentationString = file->getString(documentationString);
   obj->isConst = isConst();
   if (autoState)
