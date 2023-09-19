@@ -1184,7 +1184,7 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
         break;
       case TokenType::kAutoReadOnly:
         flags.isAutoReadOnly = true;
-        flags.isAuto = true; // TODO: Orvid, do you want this to be true here too, or do you want the `IsAuto() && IsAutoReadOnly()` check in PapyrusProperty to be only `IsAutoReadOnly()`?
+        flags.isAuto = true;
         consume();
         break;
       case TokenType::kBetaOnly:
