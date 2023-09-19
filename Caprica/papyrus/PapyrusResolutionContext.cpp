@@ -374,6 +374,8 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
     }
   }
   localVariableScopeStack.top()->locals.push_back(allocator->make<LocalScopeVariableNode>(local->name, local));
+  // we discard the result, we just need to check to see if it conflicts with anything
+  tryResolveIdentifier(PapyrusIdentifier::Unresolved(local->location, local->name));
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
@@ -389,20 +391,6 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   bool ignoreConflicts = conf::Papyrus::ignorePropertyNameLocalConflicts;
   std::vector<PapyrusIdentifier> resolvedIds;
 
-  // This handles local var resolution.
-  for (auto stack : localVariableScopeStack) {
-    for (auto n : stack->locals) {
-      if (idEq(n->name, ident.res.name)) {
-        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration &&
-            ident.location.fileOffset < n->declareStatement->location.fileOffset) {
-          reportingContext.warning_W7003_Skyrim_Local_Use_Before_Declaration(ident.location, ident.res.name.to_string().c_str());
-        }
-        resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
-        if (ignoreConflicts) { return resolvedIds[0]; }
-      }
-    }
-  }
-
 
   if (function) {
     if ((idEq(function->name, "getstate") || idEq(function->name, "gotostate")) && idEq(ident.res.name, "__state")) {
@@ -412,7 +400,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
       if (ignoreConflicts) { return resolvedIds[0]; }
     }
 
-    // Parameters are allowed to have the same name as properties
+    // Parameters are allowed to have the same name as properties, and properties override them
     if (!function->isGlobal()) {
       for (auto pg: object->propertyGroups) {
         for (auto p: pg->properties) {
@@ -447,33 +435,51 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
         if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
-
+  }
+  // locals get resolved dead last
+  // This handles local var resolution.
+  if (function) {
+    for (auto stack: localVariableScopeStack) {
+      for (auto n: stack->locals) {
+        if (idEq(n->name, ident.res.name)) {
+          if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration &&
+              ident.location.fileOffset < n->declareStatement->location.fileOffset) {
+            reportingContext.warning_W7003_Skyrim_Local_Use_Before_Declaration(ident.location,
+                                                                               ident.res.name.to_string().c_str());
+          }
+          resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
+          if (ignoreConflicts) { return resolvedIds[0]; }
+        }
+      }
+    }
   }
 
-  if (auto parentClass = object->tryGetParentClass()) {
-    resolvedIds.push_back(tryResolveMemberIdentifier(object->parentClass, ident));
-    if (ignoreConflicts) { return resolvedIds[0]; }
-  }
-
-  if (resolvedIds.empty())
-    return ident;
-
+  // Do this before the parent class check; conflicts will be caught by the inheritence checker
   if (resolvedIds.size() == 1) {
     return resolvedIds[0];
   }
   if (resolvedIds.size() > 1) {
-    if (resolvedIds[0].type == PapyrusIdentifierType::Property){
-      for (auto shadow_ident: resolvedIds) {
-        if (shadow_ident.type == PapyrusIdentifierType::Unresolved || shadow_ident.type == PapyrusIdentifierType::Property)
-          continue;
-        if (shadow_ident.type == PapyrusIdentifierType::Parameter) {
-          reportingContext.warning_W4008_Function_Parameter_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type));
-        }
+    auto firstType = resolvedIds[0].type == PapyrusIdentifierType::DeclareStatement ? "Local variable" : PapyrusIdentifier::TypeToString(resolvedIds[0].type);
+    for (auto i = 1; i < resolvedIds.size(); i++) {
+      auto &shadow_ident = resolvedIds[i];
+      if (shadow_ident.type == PapyrusIdentifierType::Unresolved){
+        continue;
+      }
+      auto ptype = shadow_ident.type == PapyrusIdentifierType::DeclareStatement ? "Local variable" : PapyrusIdentifier::TypeToString(shadow_ident.type);
+      if (resolvedIds[0].type == PapyrusIdentifierType::Property && shadow_ident.type == PapyrusIdentifierType::Parameter) {
+        reportingContext.warning_W4008_Function_Parameter_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type));
+      } else {
+        reportingContext.error(shadow_ident.location, "%s '%s' already defined as %s in script", ptype, ident.res.name.to_string().c_str(), firstType);
       }
     }
-
+    return resolvedIds[0];
   }
-  return resolvedIds[0];
+
+  if (auto parentClass = object->tryGetParentClass()) {
+    return tryResolveMemberIdentifier(object->parentClass, ident);
+  }
+
+  return ident;
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {

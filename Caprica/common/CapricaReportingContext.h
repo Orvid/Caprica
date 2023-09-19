@@ -150,8 +150,6 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   // Warnings 7000-8000 are Skyrim warnings and for emitting warnings when attempting to emulate the truly *cursed* behavior of Skyrim's PCompiler
   DEFINE_WARNING_A3(7000, Skyrim_Unknown_Event_On_Non_Native_Class, "Unknown Event ('%s') on non-native class '%s' that extends from '%s'.", const char*, eventName, const char*, sourceType, const char*, parentType);
   DEFINE_WARNING_A3(7001, Skyrim_Child_Variable_Shadows_Parent_Property, "Object variable '%s' on class '%s' shadows parent class '%s' property ", const char*, varName, const char*, sourceType, const char*, parentType);
-  // WHY THE FUCK IS THIS ALLOWED BY SKYRIM'S PCOMPILER OMG
-  // TODO: Skyrim: check for this in semantic parsing so we can emit it
   DEFINE_WARNING_A1(7003, Skyrim_Local_Use_Before_Declaration, "Local variable '%s' is used before it is declared.", const char*, varName);
   // TODO: Check for this in semantic parsing, we only catch it when emitting pex
   DEFINE_WARNING_A1(7004, Skyrim_Assignment_Of_Void_Call_Result, "Assignment of result from void call '%s'.", const char*, functionName);
