@@ -72,7 +72,18 @@ bool PapyrusResolutionContext::canExplicitlyCast(CapricaFileLocation loc, const 
       return false;
     case PapyrusType::Kind::Array:
       if (src.type == PapyrusType::Kind::Array && src.getElementType().type == PapyrusType::Kind::ResolvedObject && dest.getElementType().type == PapyrusType::Kind::ResolvedObject) {
-        return isObjectSomeParentOf(dest.getElementType().resolved.obj, src.getElementType().resolved.obj);
+        // TODO: New in starfield, downcasting arrays of objects is allowed if explicit (VERIFY)
+        if (isObjectSomeParentOf(dest.getElementType().resolved.obj, src.getElementType().resolved.obj)){
+          return true;
+        }
+        if (isObjectSomeParentOf(src.getElementType().resolved.obj, dest.getElementType().resolved.obj)){
+          reportingContext.warning_W6004_Experimental_Downcast_Arrays(
+                  loc,
+                  (src.getElementType().resolved.obj->name.to_string() + "[]").c_str(),
+                  (dest.getElementType().resolved.obj->name.to_string() + "[]").c_str());
+          return true;
+        }
+        return  false;
       }
       return false;
 
@@ -255,6 +266,16 @@ const PapyrusState* PapyrusResolutionContext::tryResolveState(const identifier_r
   return nullptr;
 }
 
+const PapyrusGuard* PapyrusResolutionContext::tryResolveGuard(const PapyrusObject* parentObject, const identifier_ref& guardName) {
+  // TODO: Starfield: Verify that guards are not inherited and limited to the current parentObject.
+  for (auto &s: parentObject->guards) {
+    if (idEq(s->name, guardName)) {
+      return s;
+    }
+  }
+  return nullptr;
+}
+
 static bool tryResolveStruct(const PapyrusObject* object, const identifier_ref& structName, const PapyrusStruct** ret) {
   for (auto& s : object->structs) {
     if (idEq(s->name, structName)) {
@@ -350,47 +371,86 @@ PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdent
 PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusIdentifier& ident) const {
   if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
+  bool ignoreConflicts = conf::Papyrus::ignorePropertyNameLocalConflicts;
+  std::vector<PapyrusIdentifier> resolvedIds;
 
+  // TODO: verify that property before locals resolution is correct in Starfield/Fallout 4
+  if (!function || !function->isGlobal()) {
+    for (auto pg: object->propertyGroups) {
+      for (auto p: pg->properties) {
+        if (idEq(p->name, ident.res.name)) {
+          resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
+          if (ignoreConflicts) { return resolvedIds[0]; }
+        }
+      }
+    }
+  }
   // This handles local var resolution.
   for (auto stack : localVariableScopeStack) {
     for (auto n : stack->locals) {
       if (idEq(n->name, ident.res.name)) {
-        return PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement);
+        resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
+        if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
   }
+
 
   if (function) {
     if ((idEq(function->name, "getstate") || idEq(function->name, "gotostate")) && idEq(ident.res.name, "__state")) {
       PapyrusIdentifier i = ident;
       i.type = PapyrusIdentifierType::BuiltinStateField;
-      return i;
+        resolvedIds.push_back(i);
+      if (ignoreConflicts) { return resolvedIds[0]; }
     }
 
     for (auto p : function->parameters) {
-      if (idEq(p->name, ident.res.name))
-        return PapyrusIdentifier::FunctionParameter(ident.location, p);
+      if (idEq(p->name, ident.res.name)) {
+        resolvedIds.push_back(PapyrusIdentifier::FunctionParameter(ident.location, p));
+        if (ignoreConflicts) { return resolvedIds[0]; }
+      }
     }
   }
 
   if (!function || !function->isGlobal()) {
     for (auto v : object->variables) {
-      if (idEq(v->name, ident.res.name))
-        return PapyrusIdentifier::Variable(ident.location, v);
-    }
-
-    for (auto pg : object->propertyGroups) {
-      for (auto p : pg->properties) {
-        if (idEq(p->name, ident.res.name))
-          return PapyrusIdentifier::Property(ident.location, p);
+      if (idEq(v->name, ident.res.name)) {
+        resolvedIds.push_back(PapyrusIdentifier::Variable(ident.location, v));
+        if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
+
+    for (auto g : object->guards) {
+      if (idEq(g->name, ident.res.name)) {
+        resolvedIds.push_back(PapyrusIdentifier::Guard(ident.location, g));
+        if (ignoreConflicts) { return resolvedIds[0]; }
+      }
+    }
+
   }
 
-  if (auto parentClass = object->tryGetParentClass())
-    return tryResolveMemberIdentifier(object->parentClass, ident);
+  if (auto parentClass = object->tryGetParentClass()) {
+    resolvedIds.push_back(tryResolveMemberIdentifier(object->parentClass, ident));
+    if (ignoreConflicts) { return resolvedIds[0]; }
+  }
 
-  return ident;
+  if (resolvedIds.empty())
+    return ident;
+
+  if (resolvedIds.size() == 1) {
+    return resolvedIds[0];
+  }
+  if (resolvedIds.size() > 1) {
+    if (resolvedIds[0].type == PapyrusIdentifierType::Property){
+      for (auto shadow_ident: resolvedIds) {
+        if (shadow_ident.type == PapyrusIdentifierType::Unresolved || shadow_ident.type == PapyrusIdentifierType::Property)
+          continue;
+        reportingContext.warning_W4008_Local_Variable_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type), ident.res.name.to_string().c_str());
+      }
+    }
+    // TODO: object variables vs local/params?
+  }
+  return resolvedIds[0];
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
@@ -417,6 +477,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveMemberIdentifier(const Pap
           return PapyrusIdentifier::Property(ident.location, prop);
       }
     }
+    //TODO: Starfield: Verify that child classes cannot use guards inherited from parent classes.
 
     if (auto parentClass = baseType.resolved.obj->tryGetParentClass())
       return tryResolveMemberIdentifier(baseType.resolved.obj->parentClass, ident);
@@ -478,6 +539,9 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       fk = PapyrusBuiltinArrayFunctionKind::Remove;
     } else if (idEq(ident.res.name, "removelast")) {
       fk = PapyrusBuiltinArrayFunctionKind::RemoveLast;
+    } else if (idEq(ident.res.name, "getmatchingstructs")) {
+      fk = PapyrusBuiltinArrayFunctionKind::GetMatchingStructs;
+      reportingContext.warning_W6001_Experimental_Syntax_ArrayGetAllMatchingStructs(ident.location);
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.res.name.to_string().c_str());
     }

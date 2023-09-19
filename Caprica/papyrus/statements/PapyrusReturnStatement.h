@@ -24,6 +24,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
+    bldr.generateUnlockGuardsForCurrentLockScope();
     if (!returnValue) {
       bldr << location;
       bldr << op::ret{ pex::PexValue::None() };

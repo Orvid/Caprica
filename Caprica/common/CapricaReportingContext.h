@@ -64,6 +64,20 @@ struct CapricaReportingContext final
     throw std::runtime_error("");
   }
 
+  template<typename... Args>
+  NEVER_INLINE
+  static std::string formatString(const char* msg, Args&&... args) {
+    constexpr bool haveArgs = sizeof...(args) != 0;
+    if (haveArgs) {
+      size_t size = std::snprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
+      std::unique_ptr<char[]> buf(new char[size]);
+      std::snprintf(buf.get(), size, msg, std::forward<Args>(args)...);
+      return std::string(buf.get(), buf.get() + size - 1);
+    } else {
+      return msg;
+    }
+  }
+
 #define DEFINE_WARNING_A0(num, id, msg) \
 NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location) { warning(location, num, msg); }
 #define DEFINE_WARNING_A1(num, id, msg, arg1Type, arg1Name) \
@@ -72,6 +86,31 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
 NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name) { warning(location, num, msg, arg1Name, arg2Name); }
 #define DEFINE_WARNING_A3(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name, arg3Type, arg3Name) \
 NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name, arg3Type arg3Name) { warning(location, num, msg, arg1Name, arg2Name, arg3Name); }
+#define DEFINE_WARNING_ONCE_A0(num, id, msg) \
+static inline bool m_Warn_##num##_##id_emitted{false}; \
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location) { \
+  if (!m_Warn_##num##_##id_emitted) { \
+    warning(location, num, "%s\n\tFurther %d warnings will be suppressed.", msg, num); \
+    m_Warn_##num##_##id_emitted = true; \
+  } \
+}
+#define DEFINE_WARNING_ONCE_A1(num, id, msg, arg1Type, arg1Name) \
+static inline bool m_Warn_##num##_##id_emitted{false}; \
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name) { \
+  if (!m_Warn_##num##_##id_emitted) { \
+    warning(location, num, "%s\n\tFurther %d warnings will be suppressed.", formatString(msg, arg1Name).c_str(), num); \
+    m_Warn_##num##_##id_emitted = true; \
+  } \
+}
+#define DEFINE_WARNING_ONCE_A2(num, id, msg, arg1Type, arg1Name, arg2Type, arg2Name) \
+static inline bool m_Warn_##num##_##id_emitted{false}; \
+NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name) { \
+  if (!m_Warn_##num##_##id_emitted) { \
+    warning(location, num, "%s\n\tFurther %d warnings will be suppressed.", formatString(msg, arg1Name, arg2Name).c_str(), num); \
+    m_Warn_##num##_##id_emitted = true; \
+  } \
+}
+
 
   // Warnings 1000-1999 are for warnings that really should be errors but can't be because the base game triggers them.
   DEFINE_WARNING_A1(1000, Strict_Not_All_Control_Paths_Return, "Not all control paths of '%s' return a value.", const char*, functionName)
@@ -90,6 +129,7 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_A2(2008, EngineLimits_PexObject_StaticFunctionCount, "There are %zu static functions in this object, but the engine limit is %zu static functions.", size_t, count, size_t, engineMax)
   DEFINE_WARNING_A2(2009, EngineLimits_PexObject_VariableCount, "There are %zu variables in this object, but the engine limit is %zu variables.", size_t, count, size_t, engineMax)
   DEFINE_WARNING_A3(2010, EngineLimits_PexState_FunctionCount, "There are %zu functions in the '%s' state, but the engine limit is %zu functions in a named state.", size_t, count, const char*, stateName, size_t, engineMax)
+  DEFINE_WARNING_A2(2011, EngineLimits_PexObject_GuardCount, "There are %zu guards in this object, but the engine limit is %zu guards.", size_t, count, size_t, engineMax)
 
   // Warnings 4000-6000 are for general Papyrus Script warnings.
   DEFINE_WARNING_A2(4001, Unecessary_Cast, "Unecessary cast from '%s' to '%s'.", const char*, sourceType, const char*, targetType)
@@ -98,6 +138,15 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_A1(4005, Unwritten_Script_Variable, "The script variable '%s' is not initialized, and is never written to.", const char*, variableName)
   DEFINE_WARNING_A1(4006, Script_Variable_Only_Written, "The script variable '%s' is only ever written to.", const char*, variableName)
   DEFINE_WARNING_A1(4007, Script_Variable_Initialized_Never_Used, "The script variable '%s' is initialized but is never used.", const char*, variableName)
+  DEFINE_WARNING_A2(4008, Local_Variable_Shadows_Property, "The %s '%s' shadows script property, using property.", const char*, idType, const char*, idName)
+
+  // TODO: Starfield: reevaluate when CK comes out
+  // Warnings 6001-7000 are for warning about use of experimental syntax subject to change.
+  DEFINE_WARNING_ONCE_A0(6001, Experimental_Syntax_ArrayGetAllMatchingStructs, "The syntax of the 'ArrayGetAllMatchingStructs' function is experimental and subject to change.")
+  DEFINE_WARNING_ONCE_A0(6002, Experimental_Syntax_Lock, "The syntax for Guard/EndGuard is experimental and subject to change.")
+  DEFINE_WARNING_ONCE_A0(6003, Experimental_Syntax_TryLock, "The syntax for TryGuard/EndGuard is experimental and subject to change.")
+  DEFINE_WARNING_ONCE_A2(6004, Experimental_Downcast_Arrays, "Downcasting Arrays ('%s') to ('%s') is experimental and subject to change.", const char*, sourceType, const char*, targetType);
+
 
 #undef DEFINE_WARNING_A1
 #undef DEFINE_WARNING_A2
@@ -123,19 +172,6 @@ private:
     maybePushMessage(this, &location, nullptr, warningNumber, formatString(msg, std::forward<Args>(args)...));
   }
 
-  template<typename... Args>
-  NEVER_INLINE
-  static std::string formatString(const char* msg, Args&&... args) {
-    constexpr bool haveArgs = sizeof...(args) != 0;
-    if (haveArgs) {
-      size_t size = std::snprintf(nullptr, 0, msg, std::forward<Args>(args)...) + 1;
-      std::unique_ptr<char[]> buf(new char[size]);
-      std::snprintf(buf.get(), size, msg, std::forward<Args>(args)...);
-      return std::string(buf.get(), buf.get() + size - 1);
-    } else {
-      return msg;
-    }
-  }
 };
 
 }

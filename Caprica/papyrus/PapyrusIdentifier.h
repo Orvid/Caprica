@@ -16,6 +16,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusFunction;
 struct PapyrusFunctionParameter;
+struct PapyrusGuard;
 struct PapyrusProperty;
 struct PapyrusResolutionContext;
 struct PapyrusStructMember;
@@ -29,6 +30,7 @@ enum class PapyrusIdentifierType : uint16_t
   Unresolved,
 
   Property,
+  Guard,
   Variable,
   Parameter,
   DeclareStatement,
@@ -52,6 +54,8 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   Insert,
   Remove,
   RemoveLast,
+  // Fallout 76, Starfield
+  GetMatchingStructs,
 };
 
 struct PapyrusIdentifier final
@@ -63,6 +67,7 @@ struct PapyrusIdentifier final
   {
     identifier_ref name{ };
     const PapyrusProperty* prop;
+    const PapyrusGuard* guard;
     const PapyrusVariable* var;
     const PapyrusFunctionParameter* param;
     const statements::PapyrusDeclareStatement* declStatement;
@@ -93,12 +98,30 @@ struct PapyrusIdentifier final
     return id;
   }
   static PapyrusIdentifier Property(CapricaFileLocation loc, const PapyrusProperty* p);
+  static PapyrusIdentifier Guard(CapricaFileLocation loc, const PapyrusGuard* g);
   static PapyrusIdentifier Variable(CapricaFileLocation loc, const PapyrusVariable* v);
   static PapyrusIdentifier FunctionParameter(CapricaFileLocation loc, const PapyrusFunctionParameter* p);
   static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s);
   static PapyrusIdentifier StructMember(CapricaFileLocation loc, const PapyrusStructMember* m);
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
   static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
+
+  static const char * TypeToString(PapyrusIdentifierType t){
+    switch(t){
+      case PapyrusIdentifierType::Unresolved: return "Unresolved";
+      case PapyrusIdentifierType::Property: return "Property";
+      case PapyrusIdentifierType::Guard: return "Guard";
+      case PapyrusIdentifierType::Variable: return "Variable";
+      case PapyrusIdentifierType::Parameter: return "Parameter";
+      case PapyrusIdentifierType::DeclareStatement: return "DeclareStatement";
+      case PapyrusIdentifierType::StructMember: return "StructMember";
+      case PapyrusIdentifierType::Function: return "Function";
+      case PapyrusIdentifierType::BuiltinArrayFunction: return "BuiltinArrayFunction";
+      case PapyrusIdentifierType::BuiltinStateField: return "BuiltinStateField";
+    }
+    return "";
+  }
+
 
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
   void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;

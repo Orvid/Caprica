@@ -44,6 +44,9 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
     s->buildPex(repCtx, file, obj);
   for (auto v : variables)
     v->buildPex(repCtx, file, obj);
+  // TODO: Make this configurable for Starfield
+  for (auto g : guards)
+    g->buildPex(repCtx, file, obj);
   for (auto g : propertyGroups)
     g->buildPex(repCtx, file, obj);
 
@@ -64,6 +67,8 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
   EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_NamedStateCount, namedStateCount);
   EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_PropertyCount, obj->properties.size());
   EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_VariableCount, obj->variables.size());
+  // TODO: Make this configurable for Starfield
+  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_GuardCount, obj->guards.size());
 
   file->objects.push_back(obj);
 }
@@ -93,6 +98,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
     ctx->addImport(i.first, i.second);
   ctx->ensureNamesAreUnique(structs, "struct");
   ctx->ensureNamesAreUnique(variables, "variable");
+  ctx->ensureNamesAreUnique(guards, "guard");
   ctx->ensureNamesAreUnique(propertyGroups, "property group");
   ctx->ensureNamesAreUnique(states, "state");
   ctx->ensureNamesAreUnique(customEvents, "custom event");
@@ -112,6 +118,9 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
     s->semantic2(ctx);
   for (auto c : customEvents)
     c->semantic2(ctx);
+  // TODO: Make this configurable for Starfield
+  for (auto g : guards)
+    g->semantic2(ctx);
 
   for (auto v : variables) {
     if (!v->referenceState.isRead) {
@@ -179,6 +188,16 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
       else
         identMap.emplace(v->name, std::make_pair(checkInheritedOnly, "variable"));
     }
+  }
+  // TODO: Make this configurable for Starfield
+  // TODO: Starfield: Verify that guards in child classes are not allowed to have the same name as guards in parent classes.
+  // guards
+  for (auto g : guards){
+    auto f = identMap.find(g->name);
+    if (f != identMap.end())
+      doError(repCtx, g->location, f->second.first, f->second.second, g->name);
+    else
+      identMap.emplace(g->name, std::make_pair(checkInheritedOnly, "guard"));
   }
 }
 

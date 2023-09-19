@@ -72,7 +72,10 @@ Again:
       current = current->next;
       goto Again;
     }
-    return (char*)allocHeap(heapSize, size);
+    auto alloced = allocHeap(heapSize, size);
+    if (current->next != nullptr)
+      current = current->next;
+    return (char*) alloced;
   }
   return (char*)ret;
 }

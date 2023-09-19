@@ -19,6 +19,7 @@ struct EngineLimits final
     PexObject_StaticFunctionCount,
     PexObject_VariableCount,
     PexState_FunctionCount,
+    PexObject_GuardCount,
   };
 
   static void checkLimit(CapricaReportingContext& repCtx, CapricaFileLocation location, Type tp, size_t value, identifier_ref referenceName = "") {
@@ -67,6 +68,11 @@ struct EngineLimits final
         if (exceedsLimit(value, conf::EngineLimits::maxFunctionsPerState))
           repCtx.warning_W2010_EngineLimits_PexState_FunctionCount(location, value, referenceName.to_string().c_str(), conf::EngineLimits::maxFunctionsPerState);
         break;
+      case Type::PexObject_GuardCount:
+        if (exceedsLimit(value, conf::EngineLimits::maxGuardsPerObject))
+          repCtx.warning_W2011_EngineLimits_PexObject_GuardCount(location, value, conf::EngineLimits::maxGuardsPerObject);
+        break;
+
     }
   }
 };

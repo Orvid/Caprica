@@ -68,6 +68,8 @@ namespace EngineLimits {
   extern size_t maxUserFlags;
   // The maximum number of variables in a single object. 0 means no limit.
   extern size_t maxVariablesPerObject;
+  // The maximum number of guards in a single object. 0 means no limit.
+  extern size_t maxGuardsPerObject;
 }
 
 // Options directly related to the Papyrus language.
@@ -83,6 +85,8 @@ namespace Papyrus {
   extern bool allowNegativeLiteralAsBinaryOp;
   // Enable Caprica extensions to the Papyrus language.
   extern bool enableLanguageExtensions;
+  // Ignore Property name and local var/parameter conflicts within a function; otherwise emits a warning.
+  extern bool ignorePropertyNameLocalConflicts;
   // The directories to search in for imported types and
   // unknown types.
   extern std::vector<std::string> importDirectories;

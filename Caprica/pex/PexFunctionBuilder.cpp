@@ -103,12 +103,13 @@ PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
       v = PexValue::Identifier(v.val.tmpVar->var);
     freeValueIfTemp(v);
   }
-  for (auto& v : instr->variadicArgs) {
-    if (v->type == PexValueType::Invalid)
+  for (auto it = instr->variadicArgs.beginInsertable(); it != instr->variadicArgs.endInsertable(); ++it) {
+    if ((*it)->type == PexValueType::Invalid)
       reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
-    if (v->type == PexValueType::TemporaryVar && v->val.tmpVar->var)
-      *v = PexValue(PexValue::Identifier(v->val.tmpVar->var));
-    freeValueIfTemp(*v);
+    if ((*it)->type == PexValueType::TemporaryVar && (*it)->val.tmpVar->var) {
+      instr->variadicArgs.replace(it, PexValue(PexValue::Identifier((*it)->val.tmpVar->var)));
+    }
+    freeValueIfTemp(**it);
   }
 
   auto destIdx = PexInstruction::getDestArgIndexForOpCode(instr->opCode);

@@ -28,6 +28,7 @@ namespace EngineLimits {
   size_t maxArrayLength{ 0 };
   size_t maxFunctionsInEmptyStatePerObject{ 0 };
   size_t maxFunctionsPerState{ 0 };
+  size_t maxGuardsPerObject{ 0 };
   size_t maxInitialValuesPerObject{ 0 };
   size_t maxNamedStatesPerObject{ 0 };
   size_t maxParametersPerFunction{ 0 };
@@ -42,6 +43,7 @@ namespace Papyrus {
   bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
+  bool ignorePropertyNameLocalConflicts{ false };
   std::vector<std::string> importDirectories{ };
   CapricaUserFlagsDefinition userFlagsDefinition{ };
 }

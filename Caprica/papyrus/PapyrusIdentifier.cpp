@@ -16,6 +16,13 @@ PapyrusIdentifier PapyrusIdentifier::Property(CapricaFileLocation loc, const Pap
   id.res.prop = p;
   return id;
 }
+
+PapyrusIdentifier PapyrusIdentifier::Guard(CapricaFileLocation loc, const PapyrusGuard* g) {
+  auto id = PapyrusIdentifier(PapyrusIdentifierType::Guard, loc);
+  id.res.guard = g;
+  return id;
+}
+
 PapyrusIdentifier PapyrusIdentifier::Variable(CapricaFileLocation loc, const PapyrusVariable* v) {
   auto id = PapyrusIdentifier(PapyrusIdentifierType::Variable, loc);
   id.res.var = v;

@@ -62,13 +62,20 @@ enum class PexOpCode : uint8_t
   ArrayRemoveLast,
   ArrayRemove,
   ArrayClear,
+  ArrayGetAllMatchingStructs,
+  LockGuards,
+  UnlockGuards,
+  TryLockGuards,
+  MAXOPCODE
 };
 
-using PexInstructionArgs = boost::container::static_vector<caprica::pex::PexValue, 5>;
+#define MAX_OPCODE_RAW_ARGS 6
+
+using PexInstructionArgs = boost::container::static_vector<caprica::pex::PexValue, MAX_OPCODE_RAW_ARGS>;
 
 struct PexInstruction final
 {
-  static constexpr size_t kMaxRawArgs = 5;
+  static constexpr size_t kMaxRawArgs = MAX_OPCODE_RAW_ARGS;
 
   PexOpCode opCode{ PexOpCode::Nop };
   PexInstructionArgs args{ };
@@ -83,9 +90,13 @@ struct PexInstruction final
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args({ arg1, arg2, arg3 }), variadicArgs(std::move(varArguments)) { }
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, PexValue arg4) : opCode(op), args({ arg1, arg2, arg3, arg4 }) { }
   explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, PexValue arg4, PexValue arg5) : opCode(op), args({ arg1, arg2, arg3, arg4, arg5 }) { }
+  explicit PexInstruction(PexOpCode op, PexValue arg1, PexValue arg2, PexValue arg3, PexValue arg4, PexValue arg5, PexValue arg6) : opCode(op), args({ arg1, arg2, arg3, arg4, arg5, arg6 }) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments) : opCode(op), args(std::move(arguments)) { }
   explicit PexInstruction(PexOpCode op, PexInstructionArgs&& arguments, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args(std::move(arguments)), variadicArgs(std::move(varArguments)) { }
-  PexInstruction(const PexInstruction&) = default;
+  explicit PexInstruction(PexOpCode op, PexValue arg1, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args({ arg1 }), variadicArgs(std::move(varArguments)) { }
+  explicit PexInstruction(PexOpCode op, IntrusiveLinkedList<IntrusivePexValue>&& varArguments) : opCode(op), args(), variadicArgs(std::move(varArguments)) { }
+
+    PexInstruction(const PexInstruction&) = default;
   PexInstruction(PexInstruction&&) = default;
   PexInstruction& operator=(const PexInstruction&) = default;
   PexInstruction& operator=(PexInstruction&&) = default;

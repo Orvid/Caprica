@@ -17,16 +17,21 @@ static size_t getArgCountForOpCode(PexOpCode op) {
 #define OP_ARG3(name, opcode, ...) case PexOpCode::opcode: return 3;
 #define OP_ARG4(name, opcode, ...) case PexOpCode::opcode: return 4;
 #define OP_ARG5(name, opcode, ...) case PexOpCode::opcode: return 5;
-    OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#define OP_ARG6(name, opcode, ...) case PexOpCode::opcode: return 6;
+OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+#undef OP_ARG6
     case PexOpCode::Invalid:
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
     case PexOpCode::CallParent:
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
+    case PexOpCode::TryLockGuards:
       break;
   }
   CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
@@ -35,23 +40,29 @@ static size_t getArgCountForOpCode(PexOpCode op) {
 int32_t PexInstruction::getDestArgIndexForOpCode(PexOpCode op) {
   switch (op) {
     case PexOpCode::Nop:
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
       return -1;
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
       return 2;
     case PexOpCode::CallParent:
       return 1;
+    case PexOpCode::TryLockGuards:
+      return 0;
 #define OP_ARG1(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG2(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG3(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG4(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
 #define OP_ARG5(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
-      OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5)
+#define OP_ARG6(name, opcode, destArgIdx, ...) case PexOpCode::opcode: return destArgIdx;
+      OPCODES(OP_ARG1, OP_ARG2, OP_ARG3, OP_ARG4, OP_ARG5, OP_ARG6)
 #undef OP_ARG1
 #undef OP_ARG2
 #undef OP_ARG3
 #undef OP_ARG4
 #undef OP_ARG5
+#undef OP_ARG6
     case PexOpCode::Invalid:
       break;
   }
@@ -63,6 +74,17 @@ PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& 
   inst->opCode = (PexOpCode)rdr.read<uint8_t>();
 
   switch (inst->opCode) {
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
+    {
+      goto CallCommon;
+    }
+    case PexOpCode::TryLockGuards:
+    {
+      inst->args.reserve(1);
+      inst->args.push_back(rdr.read<PexValue>());
+      goto CallCommon;
+    }
     case PexOpCode::CallMethod:
     case PexOpCode::CallStatic:
     {
@@ -108,6 +130,9 @@ void PexInstruction::write(PexWriter& wtr) const {
     wtr.write<PexValue>(a);
 
   switch (opCode) {
+    case PexOpCode::LockGuards:
+    case PexOpCode::UnlockGuards:
+    case PexOpCode::TryLockGuards:
     case PexOpCode::CallMethod:
     case PexOpCode::CallParent:
     case PexOpCode::CallStatic:
@@ -175,6 +200,10 @@ static const caseless_unordered_identifier_map<PexOpCode> opCodeNameMap{
   { "arrayremovelastelement", PexOpCode::ArrayRemoveLast },
   { "arrayremoveelements", PexOpCode::ArrayRemove },
   { "arrayclearelements", PexOpCode::ArrayClear },
+  { "arraygetallmatchingstructs", PexOpCode::ArrayGetAllMatchingStructs },
+  { "lockguards", PexOpCode::LockGuards },
+  { "unlockguards", PexOpCode::UnlockGuards },
+  { "trylockguards", PexOpCode::TryLockGuards },
 };
 
 PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
@@ -234,6 +263,10 @@ static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap{
   { PexOpCode::ArrayRemoveLast, "ARRAYREMOVELASTELEMENT" },
   { PexOpCode::ArrayRemove, "ARRAYREMOVEELEMENTS" },
   { PexOpCode::ArrayClear, "ARRAYCLEARELEMENTS" },
+  { PexOpCode::ArrayGetAllMatchingStructs, "ARRAYGETALLMATCHINGSTRUCTS" },
+  { PexOpCode::LockGuards, "LOCKGUARDS" },
+  { PexOpCode::UnlockGuards, "UNLOCKGUARDS" },
+  { PexOpCode::TryLockGuards, "TRYLOCKGUARDS" },
 };
 
 std::string PexInstruction::opCodeToPexAsm(PexOpCode op) {

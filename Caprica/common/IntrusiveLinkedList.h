@@ -1,4 +1,5 @@
 #pragma once
+#include <stdexcept>
 
 namespace caprica {
 
@@ -319,6 +320,20 @@ public:
 
   InsertableIterator endInsertable() {
     return InsertableIterator();
+  }
+
+  void replace(InsertableIterator& loc, T&& val) {
+    if (!loc.cur) {
+      throw std::runtime_error("Attempted to replace a non-existent value!");
+    }
+    val.next = loc.cur->next;
+    if (!loc.prev) {
+      *loc.cur = val;
+    } else {
+      auto * prev = loc.prev;
+      *loc.cur = val;
+      prev->next = loc.cur;
+    }
   }
 
   void insertBefore(InsertableIterator& loc, T* val) {

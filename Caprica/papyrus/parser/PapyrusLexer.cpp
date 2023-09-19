@@ -14,6 +14,7 @@
 
 namespace caprica { namespace papyrus { namespace parser {
 
+#define MAX_INTEGER_DIGITS 10
 static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::Unknown, "Unknown" },
   { TokenType::EOL, "EOL" },
@@ -111,6 +112,11 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kStep, "Step" },
   { TokenType::kSwitch, "Switch" },
   { TokenType::kTo, "To" },
+
+  // TODO: VERIFY STARFIELD SYNTAX!
+  { TokenType::kGuard, "Guard" },
+  { TokenType::kEndGuard, "EndGuard" },
+  { TokenType::kTryGuard, "TryGuard" },
 };
 
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
@@ -199,6 +205,10 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "true", TokenType::kTrue },
   { "var", TokenType::kVar },
   { "while", TokenType::kWhile },
+  // TODO: VERIFY STARFIELD SYNTAX!
+  { "guard", TokenType::kGuard },
+  { "endguard", TokenType::kEndGuard },
+  { "tryguard", TokenType::kTryGuard },
 };
 
 // Language extension keywords
@@ -376,7 +386,7 @@ StartOver:
         return;
       }
 
-      if (str.size() < 8 || (str.size() == 8 && str.data()[0] <= '4')) {
+      if (str.size() < MAX_INTEGER_DIGITS || (str.size() == MAX_INTEGER_DIGITS && str.data()[0] <= '4')) {
         // It is probably an integer, but maybe not.
         try {
           str.push_back('\0');

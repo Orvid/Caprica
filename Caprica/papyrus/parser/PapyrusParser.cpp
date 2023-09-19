@@ -32,8 +32,10 @@
 #include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusForEachStatement.h>
 #include <papyrus/statements/PapyrusIfStatement.h>
+#include <papyrus/statements/PapyrusGuardStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
 #include <papyrus/statements/PapyrusSwitchStatement.h>
+#include <papyrus/statements/PapyrusTryGuardStatement.h>
 #include <papyrus/statements/PapyrusWhileStatement.h>
 
 
@@ -103,6 +105,14 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
         obj->states.push_back(parseState(script, obj, false));
         break;
 
+      case TokenType::kGuard: {
+        consume();
+        auto guard = alloc->make<PapyrusGuard>(cur.location);
+        guard->name = expectConsumeIdentRef();
+        expectConsumeEOLs();
+        obj->guards.push_back(guard);
+        break;
+      }
       case TokenType::kStruct:
         consume();
         obj->structs.push_back(parseStruct(script, obj));
@@ -453,6 +463,53 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       auto ret = alloc->make<statements::PapyrusReturnStatement>(consumeLocation());
       if (cur.type != TokenType::EOL)
         ret->returnValue = parseExpression(func);
+      expectConsumeEOLs();
+      return ret;
+    }
+
+    case TokenType::kGuard:
+    {
+      reportingContext.warning_W6002_Experimental_Syntax_Lock(cur.location);
+
+      auto ret = alloc->make<statements::PapyrusGuardStatement>(consumeLocation());
+
+      if (cur.type == TokenType::EOL) {
+        reportingContext.fatal(cur.location, "Syntax error: Guard statement with no guards specified!");
+      } else if (cur.type != TokenType::Identifier) {
+        reportingContext.fatal(cur.location, "Syntax error: Incorrect Guard Statement");
+      }
+      size_t idx = 0;
+      do {
+        maybeConsume(TokenType::Comma);
+        auto guard = alloc->make<PapyrusLockParameter>(cur.location, idx++);
+        guard->name = expectConsumeIdentRef();
+        ret->lockParams.push_back(guard);
+      } while (cur.type == TokenType::Comma);
+      expectConsumeEOLs();
+      while (!maybeConsume(TokenType::kEndGuard))
+        ret->body.push_back(parseStatement(func));
+      expectConsumeEOLs();
+      return ret;
+    }
+    case TokenType::kTryGuard:
+    {
+      reportingContext.warning_W6003_Experimental_Syntax_TryLock(cur.location);
+      auto ret = alloc->make<statements::PapyrusTryGuardStatement>(consumeLocation());
+      if (cur.type == TokenType::EOL) {
+        reportingContext.fatal(cur.location, "Syntax error: TryGuard statement with no guards specified!");
+      } else if (cur.type != TokenType::Identifier) {
+        reportingContext.fatal(cur.location, "Syntax error: Incorrect TryGuard Statement");
+      }
+      size_t idx = 0;
+      do {
+        maybeConsume(TokenType::Comma);
+        auto guard = alloc->make<PapyrusLockParameter>(cur.location, idx++);
+        guard->name = expectConsumeIdentRef();
+        ret->lockParams.push_back(guard);
+      } while (cur.type == TokenType::Comma);
+      expectConsumeEOLs();
+      while (!maybeConsume(TokenType::kEndGuard))
+        ret->body.push_back(parseStatement(func));
       expectConsumeEOLs();
       return ret;
     }
@@ -1127,6 +1184,7 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
         break;
       case TokenType::kAutoReadOnly:
         flags.isAutoReadOnly = true;
+        flags.isAuto = true;
         consume();
         break;
       case TokenType::kBetaOnly:

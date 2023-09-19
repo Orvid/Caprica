@@ -50,7 +50,12 @@ Again:
       current.compare_exchange_strong(curHp, n);
       goto Again;
     }
-    return (char*)allocHeap(heapSize, size);
+    auto alloced = allocHeap(heapSize, size);
+    n = curHp->next.load(std::memory_order_acquire);
+    if (n != nullptr) {
+      current.compare_exchange_strong(curHp, n);
+    }
+    return (char*) alloced;
   }
   return (char*)ret;
 }

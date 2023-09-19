@@ -11,8 +11,10 @@ struct PapyrusExpressionStatement;
 struct PapyrusForStatement;
 struct PapyrusForEachStatement;
 struct PapyrusIfStatement;
+struct PapyrusGuardStatement;
 struct PapyrusReturnStatement;
 struct PapyrusSwitchStatement;
+struct PapyrusTryGuardStatement;
 struct PapyrusWhileStatement;
 
 struct PapyrusStatementVisitor abstract
@@ -30,8 +32,10 @@ struct PapyrusStatementVisitor abstract
   virtual void visit(PapyrusForStatement* s) = 0;
   virtual void visit(PapyrusForEachStatement* s) = 0;
   virtual void visit(PapyrusIfStatement* s) = 0;
+  virtual void visit(PapyrusGuardStatement* s) = 0;
   virtual void visit(PapyrusReturnStatement* s) = 0;
   virtual void visit(PapyrusSwitchStatement* s) = 0;
+  virtual void visit(PapyrusTryGuardStatement* s) = 0;
   virtual void visit(PapyrusWhileStatement* s) = 0;
 };
 
@@ -50,8 +54,10 @@ struct PapyrusSelectiveStatementVisitor abstract : public PapyrusStatementVisito
   virtual void visit(PapyrusForStatement*) override { }
   virtual void visit(PapyrusForEachStatement*) override { }
   virtual void visit(PapyrusIfStatement*) override { }
+  virtual void visit(PapyrusGuardStatement*) override { }
   virtual void visit(PapyrusReturnStatement*) override { }
   virtual void visit(PapyrusSwitchStatement*) override { }
+  virtual void visit(PapyrusTryGuardStatement*) override { }
   virtual void visit(PapyrusWhileStatement*) override { }
 };
 
