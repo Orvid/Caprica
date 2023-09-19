@@ -274,6 +274,33 @@ struct PapyrusNamespace final
   }
 
   void createNamespace(const identifier_ref& curPiece, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
+    if (conf::Papyrus::game == GameID::Skyrim){
+      // skyrim has no namespacing
+      if (curPiece != "")
+        CapricaReportingContext::logicalFatal("Invalid namespacing on Skyrim script: %s", curPiece.to_string().c_str());
+
+      if (!objects.empty()) {
+        // we have to merge them
+        for (auto &obj : map){
+          auto f = objects.find(obj.first);
+          if (f != objects.end()){
+            // we have a duplicate
+            if (_stricmp(f->second->baseName.data(), obj.second->baseName.data()) == 0){
+              // we have a problem
+              CapricaReportingContext::logicalFatal("Conflicting script name: %s", obj.first.to_string().c_str());
+            }
+          } else {
+            // we don't have a duplicate, so we can just add it
+            objects.emplace(std::move(obj.first), std::move(obj.second));
+          }
+        }
+        return;
+      } else {
+        // we don't have any objects, so we can just move the map
+        objects = std::move(map);
+        return;
+      }
+    }
     if (curPiece == "") {
       objects = std::move(map);
       return;

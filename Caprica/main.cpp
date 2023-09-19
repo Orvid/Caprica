@@ -49,6 +49,27 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
   auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{ };
   dirs.push_back("\\");
+  // TODO: After imports are working, get rid of this hack
+  if (conf::Papyrus::game == GameID::Skyrim){
+    caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> tempMap{ };
+    std::string outputDir = baseOutputDir;
+    for (auto &fake_script : FAKE_SKYRIM_SCRIPTS_SET){
+      auto basename = caprica::FSUtils::filenameAsRef(fake_script);
+
+      auto node = new PapyrusCompilationNode(
+              jobManager,
+              PapyrusCompilationNode::NodeType::PapyrusImport,
+              std::move(std::string(basename)),
+              std::move(outputDir),
+              std::move(std::string(fake_script)),
+              0,
+              caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game)
+      );
+      tempMap.emplace(caprica::identifier_ref(node->baseName), node);
+    }
+    caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(tempMap));
+  }
+
   while (dirs.size()) {
     HANDLE hFind;
     WIN32_FIND_DATA data;
@@ -56,26 +77,6 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
     dirs.pop_back();
     auto curSearchPattern = absBaseDir + curDir + "\\*";
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> namespaceMap{ };
-
-    // TODO: After imports are working, get rid of this hack
-    if (conf::Papyrus::game == GameID::Skyrim){
-      std::string outputDir = baseOutputDir;
-      for (auto &fake_script : FAKE_SKYRIM_SCRIPTS_SET){
-        auto basename = caprica::FSUtils::filenameAsRef(fake_script);
-
-        auto node = new PapyrusCompilationNode(
-                jobManager,
-                PapyrusCompilationNode::NodeType::PapyrusImport,
-                std::move(std::string(basename)),
-                std::move(outputDir),
-                std::move(std::string(fake_script)),
-                0,
-                caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game)
-        );
-        namespaceMap.emplace(caprica::identifier_ref(node->baseName), node);
-      }
-
-    }
     namespaceMap.reserve(8000);
     std::string curDirFull;
     if (curDir == "\\")
@@ -140,10 +141,15 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
     } while (FindNextFileA(hFind, &data));
     FindClose(hFind);
 
-    auto namespaceName = curDir;
-    std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-    namespaceName = namespaceName.substr(1);
-    caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
+    if (conf::Papyrus::game > GameID::Skyrim) {
+      auto namespaceName = curDir;
+      std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
+      namespaceName = namespaceName.substr(1);
+      caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
+    } else {
+      caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(namespaceMap));
+      namespaceMap.clear();
+    }
   }
   return true;
 }
