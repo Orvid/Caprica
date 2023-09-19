@@ -14,15 +14,28 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
     // from a void function call returning ::NoneVar. You are apparently allowed to assign the results
     // of void function calls to objects and bools, so we need to check for that here.
     if (val.type == pex::PexValueType::Invalid) {
-      if (targetType.type == PapyrusType::Kind::ResolvedObject) {
-        bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result_To_Object(location,
-                                                                          targetType.resolved.obj->name.to_string().c_str());
-        val = bldr.getNoneLocal(location);
-      } else if (targetType.type == PapyrusType::Kind::Bool) {
-        bldr.reportingContext.warning_W7006_Skyrim_Casting_None_Call_Result_To_Bool(location);
-        val = bldr.getNoneLocal(location);
-      } else {
+      if (!conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult) {
         bldr.reportingContext.fatal(location, "Cannot cast None method call result to '%s'!", targetType.prettyString().c_str());
+      }
+      switch (targetType.type) {
+        case PapyrusType::Kind::ResolvedObject:
+        case PapyrusType::Kind::ResolvedStruct:
+        case PapyrusType::Kind::Bool:
+        case PapyrusType::Kind::Var:
+        case PapyrusType::Kind::String:
+        case PapyrusType::Kind::Array:
+        case PapyrusType::Kind::None:
+          bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location, targetType.prettyString().c_str());
+          val = bldr.getNoneLocal(location);
+          break;
+        default:
+          if (conf::Papyrus::allowImplicitNoneCastsToAnyType){
+            bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location, targetType.prettyString().c_str());
+            val = bldr.getNoneLocal(location);
+            break;
+          }
+          bldr.reportingContext.fatal(location, "Cannot cast None method call result to '%s'!", targetType.prettyString().c_str());
+          break;
       }
     }
   }
@@ -36,7 +49,7 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
   innerExpression->semantic(ctx);
   ctx->checkForPoison(innerExpression);
   targetType = ctx->resolveType(targetType);
-  
+
   if (innerExpression->resultType() == targetType)
     ctx->reportingContext.warning_W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
 

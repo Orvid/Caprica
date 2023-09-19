@@ -45,8 +45,16 @@ namespace Papyrus {
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
+  bool allowImplicitNoneCastsToAnyType{ false };
   std::vector<std::string> importDirectories{ };
   CapricaUserFlagsDefinition userFlagsDefinition{ };
+}
+
+namespace Skyrim {
+  bool skyrimAllowUnknownEventsOnNonNativeClass{ true };
+  bool skyrimAllowObjectVariableShadowingParentProperty{ true };
+  bool skyrimAllowLocalUseBeforeDeclaration{ true };
+  bool skyrimAllowAssigningVoidMethodCallResult{ true };
 }
 
 namespace Performance {

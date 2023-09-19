@@ -104,10 +104,24 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(CapricaFileLocation loc, cons
   if (src == dest)
     return true;
 
-  // TODO: "None" is only allowed to be implicitly converted to "bool" and an object type in Skyrim and Fallout 4
   if (src.type == PapyrusType::Kind::None) {
-    reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
-    return true;
+    if (conf::Papyrus::allowImplicitNoneCastsToAnyType){
+      return true;
+    }
+    switch (dest.type) {
+      case PapyrusType::Kind::Bool:
+      case PapyrusType::Kind::ResolvedObject:
+      case PapyrusType::Kind::ResolvedStruct:
+      case PapyrusType::Kind::Var:
+      case PapyrusType::Kind::String:
+      case PapyrusType::Kind::Array:
+        reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
+        return true;
+      default:
+        break;
+    }
+    reportingContext.error(loc, "Cannot convert None to '%s'!", dest.prettyString().c_str());
+    return false;
   }
 
   switch (dest.type) {
@@ -375,17 +389,6 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   bool ignoreConflicts = conf::Papyrus::ignorePropertyNameLocalConflicts;
   std::vector<PapyrusIdentifier> resolvedIds;
 
-  // TODO: verify that property before locals resolution is correct in Starfield/Fallout 4
-  if (!function || !function->isGlobal()) {
-    for (auto pg: object->propertyGroups) {
-      for (auto p: pg->properties) {
-        if (idEq(p->name, ident.res.name)) {
-          resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
-          if (ignoreConflicts) { return resolvedIds[0]; }
-        }
-      }
-    }
-  }
   // This handles local var resolution.
   for (auto stack : localVariableScopeStack) {
     for (auto n : stack->locals) {
@@ -405,12 +408,25 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
       if (ignoreConflicts) { return resolvedIds[0]; }
     }
 
+    // Parameters are allowed to have the same name as properties
+    if (!function->isGlobal()) {
+      for (auto pg: object->propertyGroups) {
+        for (auto p: pg->properties) {
+          if (idEq(p->name, ident.res.name)) {
+            resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
+            if (ignoreConflicts) { return resolvedIds[0]; }
+          }
+        }
+      }
+    }
+
     for (auto p : function->parameters) {
       if (idEq(p->name, ident.res.name)) {
         resolvedIds.push_back(PapyrusIdentifier::FunctionParameter(ident.location, p));
         if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
+
   }
 
   if (!function || !function->isGlobal()) {
@@ -446,7 +462,10 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
       for (auto shadow_ident: resolvedIds) {
         if (shadow_ident.type == PapyrusIdentifierType::Unresolved || shadow_ident.type == PapyrusIdentifierType::Property)
           continue;
-        reportingContext.warning_W4008_Local_Variable_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type), ident.res.name.to_string().c_str());
+        if (shadow_ident.type == PapyrusIdentifierType::Parameter) {
+          // TODO: verify that the
+          reportingContext.warning_W4008_Function_Parameter_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type));
+        }
       }
     }
     // TODO: object variables vs local/params?

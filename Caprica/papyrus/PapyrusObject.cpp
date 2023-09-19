@@ -191,13 +191,13 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
     for (auto v : variables) {
       auto f = identMap.find(v->name);
       if (f != identMap.end()) {
-        auto typenamed =  f->second.second;
-        if (conf::Papyrus::game == GameID::Skyrim && _stricmp(f->second.second, "property") == 0){
+        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty &&
+              _stricmp(f->second.second, "property") == 0){
           repCtx.warning_W7001_Skyrim_Child_Variable_Shadows_Parent_Property(
                   v->location,
                   v->name.to_string().c_str(),
                   name.to_string().c_str(),
-                  parentClass.type == PapyrusType::Kind::ResolvedObject ? parentClass.resolved.obj->name.to_string().c_str() : "???");
+                  parentClass.prettyString().c_str());
         } else {
           doError(repCtx, v->location, f->second.first, f->second.second, v->name);
         }
