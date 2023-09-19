@@ -152,7 +152,7 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_A3(7001, Skyrim_Child_Variable_Shadows_Parent_Property, "Object variable '%s' on class '%s' shadows parent class '%s' property ", const char*, varName, const char*, sourceType, const char*, parentType);
   // WHY THE FUCK IS THIS ALLOWED BY SKYRIM'S PCOMPILER OMG
   // TODO: Skyrim: check for this in semantic parsing so we can emit it
-  DEFINE_WARNING_A2(7003, Skyrim_Local_Use_Before_Declaration, "Local variable '%s' in function '%s' is used before it is declared.", const char*, varName, const char*, functionName);
+  DEFINE_WARNING_A1(7003, Skyrim_Local_Use_Before_Declaration, "Local variable '%s' is used before it is declared.", const char*, varName);
   // TODO: Check for this in semantic parsing, we only catch it when emitting pex
   DEFINE_WARNING_A1(7004, Skyrim_Assignment_Of_Void_Call_Result, "Assignment of result from void call '%s'.", const char*, functionName);
   DEFINE_WARNING_A1(7005, Skyrim_Casting_None_Call_Result, "Casting None method call result to type '%s'", const char*, type);

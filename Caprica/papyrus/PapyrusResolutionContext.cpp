@@ -393,6 +393,10 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   for (auto stack : localVariableScopeStack) {
     for (auto n : stack->locals) {
       if (idEq(n->name, ident.res.name)) {
+        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration &&
+            ident.location.fileOffset < n->declareStatement->location.fileOffset) {
+          reportingContext.warning_W7003_Skyrim_Local_Use_Before_Declaration(ident.location, ident.res.name.to_string().c_str());
+        }
         resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
         if (ignoreConflicts) { return resolvedIds[0]; }
       }
@@ -463,12 +467,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
         if (shadow_ident.type == PapyrusIdentifierType::Unresolved || shadow_ident.type == PapyrusIdentifierType::Property)
           continue;
         if (shadow_ident.type == PapyrusIdentifierType::Parameter) {
-          // TODO: verify that the
           reportingContext.warning_W4008_Function_Parameter_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type));
         }
       }
     }
-    // TODO: object variables vs local/params?
+
   }
   return resolvedIds[0];
 }
