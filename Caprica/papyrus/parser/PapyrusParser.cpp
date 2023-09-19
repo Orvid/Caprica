@@ -203,7 +203,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 
       case TokenType::kGuard: {
         consume();
-        auto guard = alloc->make<PapyrusGuard>(cur.location);
+        auto guard = alloc->make<PapyrusGuard>(cur.location, obj);
         guard->name = expectConsumeIdentRef();
         expectConsumeEOLs();
         obj->guards.push_back(guard);
