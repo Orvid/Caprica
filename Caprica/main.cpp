@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
     return -1;
   }
   if (conf::Papyrus::game == caprica::GameID::Starfield){
-    std::cerr << "**** WARNING! ****" << std::endl;
+    std::cout << "**** WARNING! ****" << std::endl;
     std::cout << "The syntax for new features in Starfield (Guard, TryGuard, GetMatchingStructs) is experimental." << std::endl;
     std::cout << "It should be considered as unstable and subject to change." << std::endl << std::endl;
     std::cout << "The proper syntax will only be known when the Creation Kit comes out in early 2024," << std::endl;
