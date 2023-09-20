@@ -11,6 +11,7 @@
 #include <common/CapricaStats.h>
 #include <common/FakeScripts.h>
 #include <common/FSUtils.h>
+#include <common/GameID.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
 #include <papyrus/PapyrusCompilationContext.h>
@@ -200,6 +201,14 @@ int main(int argc, char* argv[])
       std::cout << ex.what() << std::endl;
     caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
+  }
+  if (conf::Papyrus::game == caprica::GameID::Starfield){
+    std::cerr << "**** WARNING! ****" << std::endl;
+    std::cout << "The syntax for new features in Starfield (Guard, TryGuard, GetMatchingStructs) is experimental." << std::endl;
+    std::cout << "It should be considered as unstable and subject to change." << std::endl << std::endl;
+    std::cout << "The proper syntax will only be known when the Creation Kit comes out in early 2024," << std::endl;
+    std::cout << "and subsequent releases of Caprica may drop support for this experimental syntax." << std::endl;
+    std::cout << "Be prepared to update your scripts when the final syntax is known." << std::endl << std::endl;
   }
 
   jobManager.awaitShutdown();
