@@ -105,6 +105,8 @@ namespace Skyrim {
   extern bool skyrimAllowUnknownEventsOnNonNativeClass;
   // Allows object variables to shadow parent class properties
   extern bool skyrimAllowObjectVariableShadowingParentProperty;
+  // Allows local variables to shadow parent class properties
+  extern bool skyrimAllowLocalVariableShadowingParentProperty;
   // Allows local variables to be used before they are declared and initialized
   extern bool skyrimAllowLocalUseBeforeDeclaration;
   // Allows void method call results to be assigned to Objects and Bools

@@ -18,7 +18,7 @@
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
-#include "common/GameID.h"
+#include <common/GameID.h>
 
 namespace caprica {
 

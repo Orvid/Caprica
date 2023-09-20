@@ -53,6 +53,7 @@ namespace Papyrus {
 namespace Skyrim {
   bool skyrimAllowUnknownEventsOnNonNativeClass{ true };
   bool skyrimAllowObjectVariableShadowingParentProperty{ true };
+  bool skyrimAllowLocalVariableShadowingParentProperty{ true };
   bool skyrimAllowLocalUseBeforeDeclaration{ true };
   bool skyrimAllowAssigningVoidMethodCallResult{ true };
 }

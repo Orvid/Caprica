@@ -128,18 +128,18 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
   static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
 
-  static const char * TypeToString(PapyrusIdentifierType t){
+  static const char * prettyTypeString(PapyrusIdentifierType t){
     switch(t){
       case PapyrusIdentifierType::Unresolved: return "Unresolved";
       case PapyrusIdentifierType::Property: return "Property";
       case PapyrusIdentifierType::Guard: return "Guard";
       case PapyrusIdentifierType::Variable: return "Variable";
       case PapyrusIdentifierType::Parameter: return "Parameter";
-      case PapyrusIdentifierType::DeclareStatement: return "DeclareStatement";
-      case PapyrusIdentifierType::StructMember: return "StructMember";
+      case PapyrusIdentifierType::DeclareStatement: return "Local Variable";
+      case PapyrusIdentifierType::StructMember: return "Struct Member";
       case PapyrusIdentifierType::Function: return "Function";
-      case PapyrusIdentifierType::BuiltinArrayFunction: return "BuiltinArrayFunction";
-      case PapyrusIdentifierType::BuiltinStateField: return "BuiltinStateField";
+      case PapyrusIdentifierType::BuiltinArrayFunction: return "Built-in Array Function";
+      case PapyrusIdentifierType::BuiltinStateField: return "Built-in State Field";
     }
     return "";
   }

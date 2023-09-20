@@ -11,8 +11,6 @@
 #include <common/IntrusiveLinkedList.h>
 #include <common/IntrusiveStack.h>
 
-namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
-
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusValue.h>

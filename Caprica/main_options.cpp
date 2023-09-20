@@ -221,22 +221,15 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     if (vm["strict"].as<bool>()) {
+      for (size_t i = 1000; i < 1010; i++) {
+        conf::Warnings::warningsToHandleAsErrors.insert(i);
+      }
+    } else if (vm["require-all-paths-return"].as<bool>()) {
       conf::Warnings::warningsToHandleAsErrors.insert(1000);
+    } else if (vm["ensure-betaonly-debugonly-dont-escape"].as<bool>()) {
       conf::Warnings::warningsToHandleAsErrors.insert(1001);
       conf::Warnings::warningsToHandleAsErrors.insert(1002);
-      conf::Warnings::warningsToHandleAsErrors.insert(1003);
-    }
-
-    if (vm["require-all-paths-return"].as<bool>()) {
-      conf::Warnings::warningsToHandleAsErrors.insert(1000);
-    }
-
-    if (vm["ensure-betaonly-debugonly-dont-escape"].as<bool>()) {
-      conf::Warnings::warningsToHandleAsErrors.insert(1001);
-      conf::Warnings::warningsToHandleAsErrors.insert(1002);
-    }
-
-    if (vm["disable-implicit-conversion-from-none"].as<bool>()) {
+    } else if (vm["disable-implicit-conversion-from-none"].as<bool>()) {
       conf::Warnings::warningsToHandleAsErrors.insert(1003);
     }
 
