@@ -24,15 +24,11 @@ struct PapyrusReturnStatement final : public PapyrusStatement
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
+    auto val = !returnValue ? pex::PexValue::None() : returnValue->generateLoad(file, bldr);
+    bldr << location;
     bldr.generateUnlockGuardsForCurrentLockScope();
-    if (!returnValue) {
-      bldr << location;
-      bldr << op::ret{ pex::PexValue::None() };
-    } else {
-      auto val = returnValue->generateLoad(file, bldr);
-      bldr << location;
-      bldr << op::ret{ val };
-    }
+    bldr << location;
+    bldr << op::ret{ val };
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
