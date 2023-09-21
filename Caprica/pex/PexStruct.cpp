@@ -4,7 +4,7 @@
 
 namespace caprica { namespace pex {
 
-PexStruct * PexStruct::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexStruct* PexStruct::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   auto struc = alloc->make<PexStruct>();
   struc->name = rdr.read<PexString>();
   auto mLen = rdr.read<uint16_t>();

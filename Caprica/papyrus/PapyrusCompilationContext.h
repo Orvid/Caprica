@@ -18,7 +18,6 @@ struct PapyrusCompilationNode final
     Unknown,
 
     PapyrusCompile,
-    PapyrusImport,
 
     PasCompile,
     PexDissassembly,

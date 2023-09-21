@@ -181,11 +181,7 @@ struct PapyrusForStatement final : public PapyrusStatement
       if (iteratorVariable->resultType().type != PapyrusType::Kind::Int && iteratorVariable->resultType().type != PapyrusType::Kind::Float)
         ctx->reportingContext.error(initialValue->location, "For statements only support Int and Float counter values, got a counter of type '%s'!", iteratorVariable->resultType().prettyString().c_str());
     }
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s: body) {
-        s->semantic_skyrim_first_pass(ctx);
-      }
-    }
+
     for (auto s : body)
       s->semantic(ctx);
     ctx->popLocalVariableScope();

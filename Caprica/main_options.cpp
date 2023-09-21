@@ -38,7 +38,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     po::options_description desc("General");
     desc.add_options()
       ("help,h", "Print usage information.")
-      ("game,g", po::value<std::string>()->default_value("starfield"), "Set the game type to compile for. Valid values are: starfield, skyrim, fallout4, fallout76. (default: starfield)")
       ("import,i", po::value<std::vector<std::string>>()->composing(), "Set the compiler's import directories.")
       ("flags,f", po::value<std::string>(), "Set the file defining the user flags.")
       ("optimize,O", po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false), "Enable optimizations.")
@@ -68,16 +67,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("require-all-paths-return", po::bool_switch()->default_value(false), "Require all control paths to return a value")
       ("ensure-betaonly-debugonly-dont-escape", po::bool_switch()->default_value(false), "Ensure values returned from BetaOnly and DebugOnly functions don't escape, as that will cause invalid code generation.")
       ("disable-implicit-conversion-from-none", po::bool_switch()->default_value(false), "Disable implicit conversion from None in most situations where the use of None likely wasn't the author's intention.")
-            ("skyrim-allow-unknown-events-on-non-native-class", po::value<bool>(&conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass)->default_value(false), "Allow unknown events to be defined on non-native classes. This is encountered with some scripts in the base game having Events that are not present on ObjectReference.")
-
-            ;
-
-    po::options_description skyrimCompatibilityDesc("Skyrim compatibility (default true with '--game=skyrim')");
-    skyrimCompatibilityDesc.add_options()
-      ("allow-unknown-events", po::value<bool>(&conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass)->default_value(true), "Allow unknown events to be defined on non-native classes. This is encountered with some scripts in the base game having Events that are not present on ObjectReference.")
-      ("allow-var-shadow-parent", po::value<bool>(&conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty)->default_value(true), "Allow Object variable names in derived classes to shadow properties in parent classes.")
-      ("allow-local-use-before-decl", po::value<bool>(&conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration)->default_value(true), "Allow local variables to be used before they are declared and initialized.")
-      ("allow-assign-void-method-result", po::value<bool>(&conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult)->default_value(true), "Allow void method call results to be assigned to Objects and Bools.")
       ;
 
     po::options_description advancedDesc("Advanced");
@@ -97,7 +86,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("input-file", po::value<std::vector<std::string>>(), "The input file.")
 
       // These are intended for debugging, not general use.
-      ("force-enable-optimizations", po::bool_switch()->default_value(false), "Force optimizations to be enabled.")
       ("debug-control-flow-graph", po::value<bool>(&conf::Debug::debugControlFlowGraph)->default_value(false), "Dump the control flow graph for every function to std::cout.")
       ("performance-test-mode", po::bool_switch(&conf::Performance::performanceTestMode)->default_value(false), "Enable performance test mode.")
       ("dump-timing", po::bool_switch(&conf::Performance::dumpTiming)->default_value(false), "Dump timing info.")
@@ -123,7 +111,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     p.add("input-file", -1);
 
     po::options_description visibleDesc("");
-    visibleDesc.add(desc).add(champollionCompatDesc).add(skyrimCompatibilityDesc).add(advancedDesc);
+    visibleDesc.add(desc).add(champollionCompatDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
     commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc).add(strictChecksDesc);
@@ -164,39 +152,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       return false;
     }
 
-    std::string gameType = vm["game"].as<std::string>();
-    if (_stricmp(gameType.c_str(), "Starfield") == 0){
-      conf::Papyrus::game = GameID::Starfield;
-    } else if (_stricmp(gameType.c_str(), "Skyrim") == 0) {
-      conf::Papyrus::game = GameID::Skyrim;
-    } else if (_stricmp(gameType.c_str(), "Fallout4") == 0) {
-      conf::Papyrus::game = GameID::Fallout4;
-    } else if (_stricmp(gameType.c_str(), "Fallout76") == 0) {
-      conf::Papyrus::game = GameID::Fallout76;
-    } else {
-      std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
-      return false;
-    }
-
-    if (conf::Papyrus::game != GameID::Skyrim){
-      // turn off skyrim options
-      conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass = false;
-      conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty = false;
-      conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration = false;
-      conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult = false;
-    }
-
-
-    // TODO: enable this eventually
-    if (vm["optimize"].as<bool>() && conf::Papyrus::game != GameID::Fallout4) {
-      if (!vm["force-enable-optimizations"].as<bool>()){
-        conf::CodeGeneration::enableOptimizations = false;
-        std::cout << "Warning: Optimization is currently only supported for Fallout 4, disabling..." << std::endl;
-      } else {
-        std::cout << "Warning: Optimization force enabled, optimization is currently only supported for Fallout 4 and may produce incorrect code." << std::endl;
-      }
-    }
-
     if (vm["champollion-compat"].as<bool>()) {
       conf::Papyrus::allowCompilerIdentifiers = true;
       conf::Papyrus::allowDecompiledStructNameRefs = true;
@@ -221,15 +176,22 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     if (vm["strict"].as<bool>()) {
-      for (size_t i = 1000; i < 1010; i++) {
-        conf::Warnings::warningsToHandleAsErrors.insert(i);
-      }
-    } else if (vm["require-all-paths-return"].as<bool>()) {
       conf::Warnings::warningsToHandleAsErrors.insert(1000);
-    } else if (vm["ensure-betaonly-debugonly-dont-escape"].as<bool>()) {
       conf::Warnings::warningsToHandleAsErrors.insert(1001);
       conf::Warnings::warningsToHandleAsErrors.insert(1002);
-    } else if (vm["disable-implicit-conversion-from-none"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1003);
+    }
+
+    if (vm["require-all-paths-return"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1000);
+    }
+
+    if (vm["ensure-betaonly-debugonly-dont-escape"].as<bool>()) {
+      conf::Warnings::warningsToHandleAsErrors.insert(1001);
+      conf::Warnings::warningsToHandleAsErrors.insert(1002);
+    }
+
+    if (vm["disable-implicit-conversion-from-none"].as<bool>()) {
       conf::Warnings::warningsToHandleAsErrors.insert(1003);
     }
 

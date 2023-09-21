@@ -45,8 +45,8 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   Unknown = 0,
 
   Find,
-  RFind,
   FindStruct,
+  RFind,
   RFindStruct,
 
   Add,
@@ -56,29 +56,7 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   RemoveLast,
   // Fallout 76, Starfield
   GetMatchingStructs,
-  ArrayFunctionMax,
-  SkyrimArrayFunctionMax = RFind,
-  Fallout4ArrayFunctionMax = RemoveLast,
-  Fallout76ArrayFunctionMax = GetMatchingStructs,
-  StarfieldArrayFunctionMax = GetMatchingStructs,
-  // Skyrim
-
 };
-
-constexpr bool isArrayFunctionInGame(PapyrusBuiltinArrayFunctionKind fk, GameID game) {
-  switch (game) {
-    case GameID::Skyrim:
-      return fk <= PapyrusBuiltinArrayFunctionKind::SkyrimArrayFunctionMax;
-    case GameID::Fallout4:
-      return fk <= PapyrusBuiltinArrayFunctionKind::Fallout4ArrayFunctionMax;
-    case GameID::Fallout76:
-      return fk <= PapyrusBuiltinArrayFunctionKind::Fallout76ArrayFunctionMax;
-    case GameID::Starfield:
-      return fk <= PapyrusBuiltinArrayFunctionKind::StarfieldArrayFunctionMax;
-    default:
-      return false;
-  }
-}
 
 struct PapyrusIdentifier final
 {
@@ -128,18 +106,18 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
   static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
 
-  static const char * prettyTypeString(PapyrusIdentifierType t){
+  static const char * TypeToString(PapyrusIdentifierType t){
     switch(t){
       case PapyrusIdentifierType::Unresolved: return "Unresolved";
       case PapyrusIdentifierType::Property: return "Property";
       case PapyrusIdentifierType::Guard: return "Guard";
       case PapyrusIdentifierType::Variable: return "Variable";
       case PapyrusIdentifierType::Parameter: return "Parameter";
-      case PapyrusIdentifierType::DeclareStatement: return "Local Variable";
-      case PapyrusIdentifierType::StructMember: return "Struct Member";
+      case PapyrusIdentifierType::DeclareStatement: return "DeclareStatement";
+      case PapyrusIdentifierType::StructMember: return "StructMember";
       case PapyrusIdentifierType::Function: return "Function";
-      case PapyrusIdentifierType::BuiltinArrayFunction: return "Built-in Array Function";
-      case PapyrusIdentifierType::BuiltinStateField: return "Built-in State Field";
+      case PapyrusIdentifierType::BuiltinArrayFunction: return "BuiltinArrayFunction";
+      case PapyrusIdentifierType::BuiltinStateField: return "BuiltinStateField";
     }
     return "";
   }

@@ -11,10 +11,11 @@
 #include <common/IntrusiveLinkedList.h>
 #include <common/IntrusiveStack.h>
 
+namespace caprica { namespace papyrus { struct PapyrusResolutionContext; } }
+
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
 #include <papyrus/PapyrusValue.h>
-#include <common/CapricaConfig.h>
 
 namespace caprica { namespace papyrus {
 
@@ -100,12 +101,6 @@ struct PapyrusResolutionContext final
         // TODO: Output location of first name.
         auto f = foundNames.find(member->name);
         if (f != foundNames.end()) {
-          // if this is a state, look up the previous state and see if it was an empty declaration
-          if (conf::Papyrus::game == GameID::Skyrim &&  _stricmp(typeOfName,"state") == 0){
-            auto state = tryResolveState(member->name, object);
-            if (state && state->functions.size() == 0)
-              continue;
-          }
           reportingContext.error(member->location, "A %s named '%s' was already defined in this scope.", typeOfName, member->name.to_string().c_str());
         } else {
           foundNames.insert(member->name);

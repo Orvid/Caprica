@@ -9,9 +9,7 @@
 #include <common/CapricaJobManager.h>
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
-#include <common/FakeScripts.h>
 #include <common/FSUtils.h>
-#include <common/GameID.h>
 #include <common/parser/CapricaUserFlagsParser.h>
 
 #include <papyrus/PapyrusCompilationContext.h>
@@ -35,12 +33,6 @@ using caprica::papyrus::PapyrusCompilationNode;
 namespace caprica {
 bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManager* jobManager);
 
-
-static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
-        "fake://skyrim/__ScriptObject.psc",
-        "fake://skyrim/DLC1SCWispWallScript.psc",
-};
-
 bool addFilesFromDirectory(const std::string& f, bool recursive, const std::string& baseOutputDir, caprica::CapricaJobManager* jobManager) {
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
@@ -50,27 +42,6 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
   auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{ };
   dirs.push_back("\\");
-  // TODO: After imports are working, get rid of this hack
-  if (conf::Papyrus::game == GameID::Skyrim){
-    caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*> tempMap{ };
-    std::string outputDir = baseOutputDir;
-    for (auto &fake_script : FAKE_SKYRIM_SCRIPTS_SET){
-      auto basename = caprica::FSUtils::filenameAsRef(fake_script);
-
-      auto node = new PapyrusCompilationNode(
-              jobManager,
-              PapyrusCompilationNode::NodeType::PapyrusImport,
-              std::move(std::string(basename)),
-              std::move(outputDir),
-              std::move(std::string(fake_script)),
-              0,
-              caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game)
-      );
-      tempMap.emplace(caprica::identifier_ref(node->baseName), node);
-    }
-    caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(tempMap));
-  }
-
   while (dirs.size()) {
     HANDLE hFind;
     WIN32_FIND_DATA data;
@@ -142,15 +113,10 @@ bool addFilesFromDirectory(const std::string& f, bool recursive, const std::stri
     } while (FindNextFileA(hFind, &data));
     FindClose(hFind);
 
-    if (conf::Papyrus::game > GameID::Skyrim) {
-      auto namespaceName = curDir;
-      std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-      namespaceName = namespaceName.substr(1);
-      caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
-    } else {
-      caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(namespaceMap));
-      namespaceMap.clear();
-    }
+    auto namespaceName = curDir;
+    std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
+    namespaceName = namespaceName.substr(1);
+    caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
   }
   return true;
 }
@@ -201,14 +167,6 @@ int main(int argc, char* argv[])
       std::cout << ex.what() << std::endl;
     caprica::CapricaReportingContext::breakIfDebugging();
     return -1;
-  }
-  if (conf::Papyrus::game == caprica::GameID::Starfield){
-    std::cout << "**** WARNING! ****" << std::endl;
-    std::cout << "The syntax for new features in Starfield (Guard, TryGuard, GetMatchingStructs) is experimental." << std::endl;
-    std::cout << "It should be considered as unstable and subject to change." << std::endl << std::endl;
-    std::cout << "The proper syntax will only be known when the Creation Kit comes out in early 2024," << std::endl;
-    std::cout << "and subsequent releases of Caprica may drop support for this experimental syntax." << std::endl;
-    std::cout << "Be prepared to update your scripts when the final syntax is known." << std::endl << std::endl;
   }
 
   jobManager.awaitShutdown();

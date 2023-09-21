@@ -37,8 +37,8 @@ struct PexObject final
   PexObject(const PexObject&) = delete;
   ~PexObject() = default;
 
-  static PexObject *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
-  void write(PexWriter &wtr, GameID gameType) const;
+  static PexObject* read(allocators::ChainedPool* alloc, PexReader& rdr);
+  void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
 private:

@@ -150,7 +150,7 @@ StartOver:
         str.append(1, char(getChar()));
 
       auto f = keywordMap.find(str);
-      if (f != keywordMap.end() && (f->second != TokenType::kStructVar || conf::Papyrus::game > GameID::Skyrim))
+      if (f != keywordMap.end())
         return setTok(f->second, baseLoc);
 
       auto tok = Token(TokenType::Identifier, baseLoc);

@@ -16,11 +16,10 @@ namespace caprica { namespace papyrus {
 struct PapyrusGuard final
 {
   identifier_ref name{ "" };
-  const PapyrusObject* parent{ nullptr };
 
   CapricaFileLocation location;
 
-  explicit PapyrusGuard(CapricaFileLocation loc, const PapyrusObject* par) : location(loc), parent(par) { }
+  explicit PapyrusGuard(CapricaFileLocation loc) : location(loc) { }
   PapyrusGuard(const PapyrusGuard&) = delete;
   ~PapyrusGuard() = default;
 

@@ -47,32 +47,9 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     pex::PexValue rVal;
     if (binOpExpression)
       rVal = binOpExpression->generateLoad(file, bldr);
-    else {
+    else
       rVal = rValue->generateLoad(file, bldr);
-      if (conf::Papyrus::game == GameID::Skyrim && rVal.type == pex::PexValueType::Invalid){
-        // check if if the rValue is the result of a function call
-        auto travRValueExpression = rValue;
-        while (true){
-          if (auto fc = travRValueExpression->asFunctionCallExpression()) {
-            // this was a void method call that was assigned to this variable; change it to None and emit a warning
-            if (fc->resultType().type == PapyrusType::Kind::None){
-              rVal = bldr.getNoneLocal(fc->location);
-              bldr.reportingContext.warning_W7004_Skyrim_Assignment_Of_Void_Call_Result(fc->location, fc->function.res.name.to_string().c_str());
-            }
-            break;
-          }
-          if (auto ma = travRValueExpression->asMemberAccessExpression()) {
-            travRValueExpression = ma->accessExpression;
-            continue;
-          }
-          if (auto ai = travRValueExpression->asCastExpression()) {
-            travRValueExpression = ai->innerExpression;
-            continue;
-          }
-          break; // we didn't find a function call expression
-        }
-      }
-    }
+
     if (auto id = lValue->asIdentifierExpression()) {
       bldr << location;
       id->identifier.generateStore(file, bldr, pex::PexValue::Identifier(file->getString("self")), rVal);

@@ -95,21 +95,11 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
       if (i->condition.getPapyrusType() != condition->resultType())
         ctx->reportingContext.error(i->condition.location, "The condition of a case statement must match the type of the expression being switched on! Expected '%s', got '%s'!", condition->resultType().prettyString().c_str(), i->condition.getPapyrusType().prettyString().c_str());
       ctx->pushLocalVariableScope();
-      if (conf::Papyrus::game == GameID::Skyrim) {
-        for (auto s : i->body) {
-          s->semantic_skyrim_first_pass(ctx);
-        }
-      }
       for (auto s : i->body)
         s->semantic(ctx);
       ctx->popLocalVariableScope();
     }
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s : defaultStatements) {
-        s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : defaultStatements)
       s->semantic(ctx);
     ctx->popLocalVariableScope();

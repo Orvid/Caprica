@@ -69,38 +69,9 @@ int32_t PexInstruction::getDestArgIndexForOpCode(PexOpCode op) {
   CapricaReportingContext::logicalFatal("Unknown PexOpCode!");
 }
 
-PexInstruction * PexInstruction::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   auto inst = alloc->make<PexInstruction>();
   inst->opCode = (PexOpCode)rdr.read<uint8_t>();
-
-  if (inst->opCode >= PexOpCode::OPCODECOUNT)
-    CapricaReportingContext::logicalFatal("Unknown PexOpCode: %u", (unsigned)inst->opCode);
-  switch (gameType){
-    case GameID::Skyrim:
-    {
-      if (inst->opCode > PexOpCode::SkyrimOpcodeMax)
-        CapricaReportingContext::logicalFatal("Invalid opcode for Skyrim: %s", PexInstruction::opCodeToPexAsm(inst->opCode).c_str());
-      break;
-    }
-    case GameID::Fallout4:
-    {
-      if (inst->opCode > PexOpCode::Fallout4OpcodeMax)
-        CapricaReportingContext::logicalFatal("Invalid opcode for Fallout4: %s", PexInstruction::opCodeToPexAsm(inst->opCode).c_str());
-      break;
-    }
-    case GameID::Fallout76:
-    {
-      if (inst->opCode > PexOpCode::Fallout76OpcodeMax)
-        CapricaReportingContext::logicalFatal("Invalid opcode for Fallout76: %s", PexInstruction::opCodeToPexAsm(inst->opCode).c_str());
-      break;
-    }
-    case GameID::Starfield:
-    {
-      if (inst->opCode > PexOpCode::StarfieldOpcodeMax)
-        CapricaReportingContext::logicalFatal("Unknown PexOpCode: %u", (unsigned)inst->opCode);
-      break;
-    }
-  }
 
   switch (inst->opCode) {
     case PexOpCode::LockGuards:

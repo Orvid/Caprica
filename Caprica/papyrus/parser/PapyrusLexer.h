@@ -12,7 +12,6 @@
 #include <common/FSUtils.h>
 #include <common/identifier_ref.h>
 #include <common/UtilMacros.h>
-#include <common/GameID.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
@@ -66,14 +65,21 @@ enum class TokenType : int32_t
   kAs,
   kAuto,
   kAutoReadOnly,
+  kBetaOnly,
   kBool,
+  kConst,
+  kCustomEvent,
+  kCustomEventName,
+  kDebugOnly,
   kElse,
   kElseIf,
   kEndEvent,
   kEndFunction,
+  kEndGroup,
   kEndIf,
   kEndProperty,
   kEndState,
+  kEndStruct,
   kEndWhile,
   kEvent,
   kExtends,
@@ -81,6 +87,7 @@ enum class TokenType : int32_t
   kFloat,
   kFunction,
   kGlobal,
+  kGroup,
   kIf,
   kImport,
   kInt,
@@ -92,30 +99,15 @@ enum class TokenType : int32_t
   kParent,
   kProperty,
   kReturn,
+  kScriptEventName,
   kScriptName,
   kSelf,
   kState,
   kString,
-  kTrue,
-  kWhile,
-
-  // Fallout4 / Fallout76 keywords
-  kBetaOnly,
-  kConst,
-  kCustomEvent,
-  kCustomEventName,
-  kDebugOnly,
-  kEndGroup,
-  kEndStruct,
-  kGroup,
-  kScriptEventName,
   kStruct,
+  kTrue,
   kVar,
-
-  // Starfield keywords
-  kGuard,
-  kEndGuard,
-  kTryGuard,
+  kWhile,
 
   // Language extension keywords
   kBreak,
@@ -134,34 +126,11 @@ enum class TokenType : int32_t
   kSwitch,
   kTo,
 
-
+  // Starfield keywords
+  kGuard,
+  kEndGuard,
+  kTryGuard
 };
-constexpr TokenType SKYRIM_MAX_KEYWORD = TokenType::kWhile;
-constexpr TokenType FALLOUT4_MAX_KEYWORD = TokenType::kVar;
-constexpr TokenType FALLOUT76_MAX_KEYWORD = FALLOUT4_MAX_KEYWORD;
-constexpr TokenType STARFIELD_MAX_KEYWORD = TokenType::kTryGuard;
-
-constexpr bool keywordIsLanguageExtension(TokenType tp) {
-  return tp >= TokenType::kBreak && tp <= TokenType::kTo;
-}
-constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions = false) {
- if (includeExtensions && keywordIsLanguageExtension(tp))
-      return true;
-
-  switch (game) {
-    case GameID::Skyrim:
-      return tp <= SKYRIM_MAX_KEYWORD;
-    case GameID::Fallout4:
-      return tp <= FALLOUT4_MAX_KEYWORD;
-    case GameID::Fallout76:
-      return tp <= FALLOUT76_MAX_KEYWORD;
-    case GameID::Starfield:
-      return tp <= STARFIELD_MAX_KEYWORD;
-    default:
-      return false;
-  }
-}
-
 
 struct PapyrusLexer
 {

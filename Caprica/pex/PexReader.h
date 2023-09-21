@@ -11,7 +11,6 @@
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
-#include "common/GameID.h"
 
 namespace caprica { namespace pex {
 
@@ -27,21 +26,18 @@ struct PexReader final : public CapricaBinaryReader
   }
 
   template<>
-  GameID read() {
-    return (GameID) read<uint16_t>();
-  }
-
-  template<>
   PexString read() {
     PexString val;
-    val.index = read<uint16_t>();
+    val.index = 0;
+    strm.read((char*)&val.index, sizeof(uint16_t));
     return val;
   }
 
   template<>
   PexUserFlags read() {
     PexUserFlags val;
-    val.data = read<uint32_t>();
+    val.data = 0;
+    strm.read((char*)&val.data, sizeof(uint32_t));
     return val;
   }
 
@@ -73,8 +69,6 @@ struct PexReader final : public CapricaBinaryReader
     }
     CapricaReportingContext::logicalFatal("Unknown PexValueType!");
   }
-
-
 };
 
 }}

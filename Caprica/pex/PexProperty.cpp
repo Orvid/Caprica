@@ -6,7 +6,7 @@
 
 namespace caprica { namespace pex {
 
-PexProperty * PexProperty::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexProperty* PexProperty::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   auto prop = alloc->make<PexProperty>();
   prop->name = rdr.read<PexString>();
   prop->typeName = rdr.read<PexString>();
@@ -24,9 +24,9 @@ PexProperty * PexProperty::read(allocators::ChainedPool *alloc, PexReader &rdr, 
     prop->autoVar = rdr.read<PexString>();
   } else {
     if (prop->isReadable)
-      prop->readFunction = PexFunction::read(alloc, rdr, true, gameType);
+      prop->readFunction = PexFunction::read(alloc, rdr, true);
     if (prop->isWritable)
-      prop->writeFunction = PexFunction::read(alloc, rdr, true, gameType);
+      prop->writeFunction = PexFunction::read(alloc, rdr, true);
   }
   return prop;
 }

@@ -22,7 +22,7 @@ struct PexGuard final
   PexGuard(const PexGuard&) = delete;
   ~PexGuard() = default;
 
-  static PexGuard *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  static PexGuard* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 

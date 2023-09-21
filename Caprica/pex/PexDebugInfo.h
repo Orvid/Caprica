@@ -23,8 +23,8 @@ struct PexDebugInfo final
   PexDebugInfo(const PexDebugInfo&) = delete;
   ~PexDebugInfo() = default;
 
-  static PexDebugInfo *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
-  void write(PexWriter &wtr, GameID gameType) const;
+  static PexDebugInfo* read(allocators::ChainedPool* alloc, PexReader& rdr);
+  void write(PexWriter& wtr) const;
 };
 
 }}

@@ -94,12 +94,6 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
 
   ctx->function = this;
   ctx->pushLocalVariableScope();
-  // skyrim first pass
-  if (conf::Papyrus::game == GameID::Skyrim) {
-    for (auto s: statements) {
-      s->semantic_skyrim_first_pass(ctx);
-    }
-  }
   for (auto s : statements)
     s->semantic(ctx);
   ctx->popLocalVariableScope();

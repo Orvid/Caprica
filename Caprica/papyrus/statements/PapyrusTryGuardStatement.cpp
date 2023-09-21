@@ -25,9 +25,6 @@ struct PapyrusTryGuardStatementBodyVisitor : public PapyrusSelectiveStatementVis
 };
 
 void PapyrusTryGuardStatement::semantic(PapyrusResolutionContext *ctx) {
-  if (conf::Papyrus::game != GameID::Starfield){
-    ctx->reportingContext.fatal(location, "TryGuard statements are illegal < Starfield!");
-  }
   for (auto lockparam : lockParams)
     lockparam->semantic(ctx);
   ctx->pushLocalVariableScope();

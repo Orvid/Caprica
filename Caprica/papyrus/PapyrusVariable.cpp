@@ -10,9 +10,7 @@ void PapyrusVariable::buildPex(CapricaReportingContext&, pex::PexFile* file, pex
   var->typeName = type.buildPex(file);
   var->userFlags = userFlags.buildPex(file);
   var->defaultValue = defaultValue.buildPex(file);
-  if (file->gameID > GameID::Skyrim){
-    var->isConst = isConst();
-  }
+  var->isConst = isConst();
   obj->variables.push_back(var);
 }
 

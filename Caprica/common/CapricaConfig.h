@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <common/CapricaUserFlagsDefinition.h>
-#include "GameID.h"
 
 namespace caprica { namespace conf {
 
@@ -75,8 +74,6 @@ namespace EngineLimits {
 
 // Options directly related to the Papyrus language.
 namespace Papyrus {
-  // The game to compile for. Defaults to Starfield.
-  extern GameID game;
   // If true, allow identifiers to be prefixed with '::', which are normally
   // reserved for compiler identifiers.
   extern bool allowCompilerIdentifiers;
@@ -90,27 +87,11 @@ namespace Papyrus {
   extern bool enableLanguageExtensions;
   // Ignore Property name and local var/parameter conflicts within a function; otherwise emits a warning.
   extern bool ignorePropertyNameLocalConflicts;
-  // Allow implicit casting of `None` to any type (by default, ints, floats, and event names are not allowed).
-  extern bool allowImplicitNoneCastsToAnyType;
   // The directories to search in for imported types and
   // unknown types.
   extern std::vector<std::string> importDirectories;
   // The user flags definition.
   extern CapricaUserFlagsDefinition userFlagsDefinition;
-}
-
-// Skyrim-specific settings to emulate the behavior of the Skyrim PCompiler
-namespace Skyrim {
-  // Allows non-inherited events to be declared on non-native classes
-  extern bool skyrimAllowUnknownEventsOnNonNativeClass;
-  // Allows object variables to shadow parent class properties
-  extern bool skyrimAllowObjectVariableShadowingParentProperty;
-  // Allows local variables to shadow parent class properties
-  extern bool skyrimAllowLocalVariableShadowingParentProperty;
-  // Allows local variables to be used before they are declared and initialized
-  extern bool skyrimAllowLocalUseBeforeDeclaration;
-  // Allows void method call results to be assigned to Objects and Bools
-  extern bool skyrimAllowAssigningVoidMethodCallResult;
 }
 
 // Options for tweaking the performance of Caprica.

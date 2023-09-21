@@ -21,7 +21,7 @@ struct PexStruct final
   PexStruct(const PexStruct&) = delete;
   ~PexStruct() = default;
 
-  static PexStruct *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  static PexStruct* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 

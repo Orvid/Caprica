@@ -28,15 +28,10 @@ const PapyrusObject* PapyrusObject::tryGetParentClass() const {
 void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const {
   auto obj = file->alloc->make<pex::PexObject>();
   obj->name = file->getString(name);
-  if (auto parClass = tryGetParentClass()) {
-    if (file->gameID != GameID::Skyrim || parClass->name != "__ScriptObject")
-      obj->parentClassName = file->getString(parClass->name);
-    else {
-      obj->parentClassName = file->getString("");
-    }
-  } else {
+  if (auto parClass = tryGetParentClass())
+    obj->parentClassName = file->getString(parClass->name);
+  else
     obj->parentClassName = file->getString("");
-  }
   obj->documentationString = file->getString(documentationString);
   obj->isConst = isConst();
   if (autoState)
@@ -45,19 +40,13 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
     obj->autoStateName = file->getString("");
   obj->userFlags = userFlags.buildPex(file);
 
-  if (file->gameID > GameID::Skyrim){
-    for (auto s : structs)
-      s->buildPex(repCtx, file, obj);
-  }
-
+  for (auto s : structs)
+    s->buildPex(repCtx, file, obj);
   for (auto v : variables)
     v->buildPex(repCtx, file, obj);
-
-  if (file->gameID == GameID::Starfield) {
-    for (auto g : guards)
-      g->buildPex(repCtx, file, obj);
-  }
-
+  // TODO: Make this configurable for Starfield
+  for (auto g : guards)
+    g->buildPex(repCtx, file, obj);
   for (auto g : propertyGroups)
     g->buildPex(repCtx, file, obj);
 
@@ -194,19 +183,8 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
   if (!checkInheritedOnly) {
     for (auto v : variables) {
       auto f = identMap.find(v->name);
-      if (f != identMap.end()) {
-        // child class variables are allowed to shadow parent properties in Skyrim
-        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty &&
-              _stricmp(f->second.second, "property") == 0){
-          repCtx.warning_W7001_Skyrim_Child_Variable_Shadows_Parent_Property(
-                  v->location,
-                  v->name.to_string().c_str(),
-                  name.to_string().c_str(),
-                  parentClass.prettyString().c_str());
-        } else {
-          doError(repCtx, v->location, f->second.first, f->second.second, v->name);
-        }
-      }
+      if (f != identMap.end())
+        doError(repCtx, v->location, f->second.first, f->second.second, v->name);
       else
         identMap.emplace(v->name, std::make_pair(checkInheritedOnly, "variable"));
     }

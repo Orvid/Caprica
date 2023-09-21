@@ -51,7 +51,6 @@ enum class PexOpCode : uint8_t
   ArraySetElement,
   ArrayFindElement,
   ArrayRFindElement,
-  // Fallout 4
   Is,
   StructCreate,
   StructGet,
@@ -63,17 +62,11 @@ enum class PexOpCode : uint8_t
   ArrayRemoveLast,
   ArrayRemove,
   ArrayClear,
-  // Fallout 76
   ArrayGetAllMatchingStructs,
-  // Starfield
   LockGuards,
   UnlockGuards,
   TryLockGuards,
-  OPCODECOUNT,
-  SkyrimOpcodeMax = ArrayRFindElement,
-  Fallout4OpcodeMax = ArrayClear,
-  Fallout76OpcodeMax = ArrayGetAllMatchingStructs,
-  StarfieldOpcodeMax = TryLockGuards,
+  MAXOPCODE
 };
 
 #define MAX_OPCODE_RAW_ARGS 6
@@ -146,7 +139,7 @@ struct PexInstruction final
   }
   static int32_t getDestArgIndexForOpCode(PexOpCode op);
 
-  static PexInstruction *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  static PexInstruction* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
 
   static PexOpCode tryParseOpCode(const std::string& str);

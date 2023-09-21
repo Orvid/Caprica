@@ -8,7 +8,7 @@
 
 namespace caprica { namespace pex {
 
-PexFunction * PexFunction::read(allocators::ChainedPool *alloc, PexReader &rdr, bool isProperty, GameID gameType) {
+PexFunction* PexFunction::read(allocators::ChainedPool* alloc, PexReader& rdr, bool isProperty) {
   auto func = alloc->make<PexFunction>();
   if (!isProperty)
     func->name = rdr.read<PexString>();
@@ -29,7 +29,7 @@ PexFunction * PexFunction::read(allocators::ChainedPool *alloc, PexReader &rdr, 
     func->locals.push_back(PexLocalVariable::read(alloc, rdr));
   auto iSize = rdr.read<uint16_t>();
   for (size_t i = 0; i < iSize; i++)
-    func->instructions.push_back(PexInstruction::read(alloc, rdr, gameType));
+    func->instructions.push_back(PexInstruction::read(alloc, rdr));
 
   return func;
 }

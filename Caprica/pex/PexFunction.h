@@ -39,7 +39,7 @@ struct PexFunction final
   PexFunction(const PexFunction&) = delete;
   ~PexFunction() = default;
 
-  static PexFunction *read(allocators::ChainedPool *alloc, PexReader &rdr, bool isProperty, GameID gameType);
+  static PexFunction* read(allocators::ChainedPool* alloc, PexReader& rdr, bool isProperty);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const;
 

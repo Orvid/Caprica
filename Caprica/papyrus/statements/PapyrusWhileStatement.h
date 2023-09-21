@@ -51,11 +51,6 @@ struct PapyrusWhileStatement final : public PapyrusStatement
     condition = ctx->coerceExpression(condition, PapyrusType::Bool(condition->location));
     ctx->pushBreakContinueScope();
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s: body) {
-        s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : body)
       s->semantic(ctx);
     ctx->popLocalVariableScope();

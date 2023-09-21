@@ -31,7 +31,7 @@ struct PexProperty final
   PexProperty(const PexProperty&) = delete;
   ~PexProperty() = default;
 
-  static PexProperty *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  static PexProperty* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const;
 

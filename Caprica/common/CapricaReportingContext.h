@@ -116,9 +116,7 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_A1(1000, Strict_Not_All_Control_Paths_Return, "Not all control paths of '%s' return a value.", const char*, functionName)
   DEFINE_WARNING_A0(1001, Strict_Poison_BetaOnly, "The return value of a BetaOnly function cannot be used in a non-BetaOnly context.")
   DEFINE_WARNING_A0(1002, Strict_Poison_DebugOnly, "The return value of a DebugOnly function cannot be used in a non-DebugOnly context.")
-  DEFINE_WARNING_A1(1003, Strict_None_Implicit_Conversion, "None implicitly converted to '%s'.", const char*, destTypeName)
-  DEFINE_WARNING_A1(1004, Function_Parameter_Shadows_Property, "The function parameter '%s' shadows script property, using property.", const char*, idName)
-  DEFINE_WARNING_A2(1005, Function_Parameter_Shadows_Parent_Property, "The function parameter '%s' shadows parent %s property, using parent property.", const char*, idName, const char*, parentName)
+  DEFINE_WARNING_A1(1003, Strict_None_Implicit_Conversion, "None cannot be implicitly converted to '%s'.", const char*, destTypeName)
 
   // Warnings 2000-2199 are for engine imposed limitations.
   DEFINE_WARNING_A2(2001, EngineLimits_ArrayLength, "Attempting to create an array with %zu elements, but the engine limit is %zu elements.", size_t, count, size_t, engineMax)
@@ -140,6 +138,7 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_A1(4005, Unwritten_Script_Variable, "The script variable '%s' is not initialized, and is never written to.", const char*, variableName)
   DEFINE_WARNING_A1(4006, Script_Variable_Only_Written, "The script variable '%s' is only ever written to.", const char*, variableName)
   DEFINE_WARNING_A1(4007, Script_Variable_Initialized_Never_Used, "The script variable '%s' is initialized but is never used.", const char*, variableName)
+  DEFINE_WARNING_A2(4008, Local_Variable_Shadows_Property, "The %s '%s' shadows script property, using property.", const char*, idType, const char*, idName)
 
   // TODO: Starfield: reevaluate when CK comes out
   // Warnings 6001-7000 are for warning about use of experimental syntax subject to change.
@@ -147,17 +146,6 @@ NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type a
   DEFINE_WARNING_ONCE_A0(6002, Experimental_Syntax_Lock, "The syntax for Guard/EndGuard is experimental and subject to change.")
   DEFINE_WARNING_ONCE_A0(6003, Experimental_Syntax_TryLock, "The syntax for TryGuard/EndGuard is experimental and subject to change.")
   DEFINE_WARNING_ONCE_A2(6004, Experimental_Downcast_Arrays, "Downcasting Arrays ('%s') to ('%s') is experimental and subject to change.", const char*, sourceType, const char*, targetType);
-
-  // Warnings 7000-8000 are Skyrim warnings and for emitting warnings when attempting to emulate the truly *cursed* behavior of Skyrim's PCompiler
-  DEFINE_WARNING_A3(7000, Skyrim_Unknown_Event_On_Non_Native_Class, "Unknown Event ('%s') on non-native class '%s' that extends from '%s'.", const char*, eventName, const char*, sourceType, const char*, parentType);
-  DEFINE_WARNING_A3(7001, Skyrim_Child_Variable_Shadows_Parent_Property, "Object variable '%s' on class '%s' shadows parent class '%s' property, using parent property", const char*, varName, const char*, sourceType, const char*, parentType);
-  DEFINE_WARNING_A2(7002, Skyrim_Local_Variable_Shadows_Parent_Property, "Local variable '%s' shadows parent class '%s' property, using parent property", const char*, varName, const char*, parentType)
-  DEFINE_WARNING_A1(7003, Skyrim_Local_Use_Before_Declaration, "Local variable '%s' is used before it is declared.", const char*, varName);
-  // TODO: Check for this in semantic parsing, we only catch it when emitting pex
-  DEFINE_WARNING_A1(7004, Skyrim_Assignment_Of_Void_Call_Result, "Assignment of result from void call '%s'.", const char*, functionName);
-  DEFINE_WARNING_A1(7005, Skyrim_Casting_None_Call_Result, "Casting None method call result to type '%s'", const char*, type);
-
-
 
 
 #undef DEFINE_WARNING_A1

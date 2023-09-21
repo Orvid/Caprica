@@ -80,21 +80,11 @@ struct PapyrusIfStatement final : public PapyrusStatement
       ctx->checkForPoison(i->condition);
       i->condition = ctx->coerceExpression(i->condition, PapyrusType::Bool(i->condition->location));
       ctx->pushLocalVariableScope();
-      if (conf::Papyrus::game == GameID::Skyrim) {
-          for (auto s: i->body) {
-            s->semantic_skyrim_first_pass(ctx);
-          }
-      }
       for (auto s : i->body)
         s->semantic(ctx);
       ctx->popLocalVariableScope();
     }
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s : elseStatements) {
-        s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : elseStatements)
       s->semantic(ctx);
     ctx->popLocalVariableScope();
