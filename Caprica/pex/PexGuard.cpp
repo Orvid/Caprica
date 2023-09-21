@@ -5,7 +5,9 @@
 
 namespace caprica { namespace pex {
 
-PexGuard* PexGuard::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+PexGuard * PexGuard::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+  if (gameType < GameID::Starfield)
+    CapricaReportingContext::logicalFatal("Guards do not exist in this game!");
   auto prop = alloc->make<PexGuard>();
   prop->name = rdr.read<PexString>();
   return prop;

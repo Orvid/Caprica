@@ -105,6 +105,11 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
   // TODO: Perhaps allow declaring it as a parent object of the element type?
   if (declareStatement->type != elementType)
     ctx->reportingContext.error(declareStatement->type.location, "Cannot declare the loop variable as '%s', expected '%s'!", declareStatement->type.prettyString().c_str(), elementType.prettyString().c_str());
+  if (conf::Papyrus::game == GameID::Skyrim) {
+    for (auto s: body) {
+      s->semantic_skyrim_first_pass(ctx);
+    }
+  }
   for (auto s : body)
     s->semantic(ctx);
   ctx->popLocalVariableScope();

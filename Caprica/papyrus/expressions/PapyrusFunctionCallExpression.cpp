@@ -36,6 +36,15 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         bldr << op::arrayfindelement{ bVal, dest, elem, idx };
         return dest;
       }
+      case PapyrusBuiltinArrayFunctionKind::RFind:
+      {
+        auto elem = args[0]->value->generateLoad(file, bldr);
+        auto idx = args[1]->value->generateLoad(file, bldr);
+        auto dest = bldr.allocTemp(resultType());
+        bldr << location;
+        bldr << op::arrayrfindelement{ bVal, dest, elem, idx };
+        return dest;
+      }
       case PapyrusBuiltinArrayFunctionKind::FindStruct:
       {
         auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
@@ -44,15 +53,6 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
         auto dest = bldr.allocTemp(resultType());
         bldr << location;
         bldr << op::arrayfindstruct{ bVal, dest, memberName, elem, idx };
-        return dest;
-      }
-      case PapyrusBuiltinArrayFunctionKind::RFind:
-      {
-        auto elem = args[0]->value->generateLoad(file, bldr);
-        auto idx = args[1]->value->generateLoad(file, bldr);
-        auto dest = bldr.allocTemp(resultType());
-        bldr << location;
-        bldr << op::arrayrfindelement{ bVal, dest, elem, idx };
         return dest;
       }
       case PapyrusBuiltinArrayFunctionKind::RFindStruct:

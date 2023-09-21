@@ -4,22 +4,24 @@
 
 namespace caprica { namespace pex {
 
-PexVariable* PexVariable::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+PexVariable * PexVariable::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
   auto var = alloc->make<PexVariable>();
   var->name = rdr.read<PexString>();
   var->typeName = rdr.read<PexString>();
   var->userFlags = rdr.read<PexUserFlags>();
   var->defaultValue = rdr.read<PexValue>();
-  var->isConst = rdr.read<uint8_t>() != 0;
+  if (gameType > GameID::Skyrim)
+    var->isConst = rdr.read<uint8_t>() != 0;
   return var;
 }
 
-void PexVariable::write(PexWriter& wtr) const {
+void PexVariable::write(PexWriter &wtr, GameID gameType) const {
   wtr.write<PexString>(name);
   wtr.write<PexString>(typeName);
   wtr.write<PexUserFlags>(userFlags);
   wtr.write<PexValue>(defaultValue);
-  wtr.write<uint8_t>(isConst ? 0x01 : 0x00);
+  if (gameType > GameID::Skyrim)
+    wtr.write<uint8_t>(isConst ? 0x01 : 0x00);
 }
 
 void PexVariable::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {

@@ -56,7 +56,13 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
       }
     }
 
-    ctx->addLocalVariable(this);
+    if (conf::Papyrus::game > GameID::Skyrim || !conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration)
+      ctx->addLocalVariable(this);
+  }
+
+  virtual void semantic_skyrim_first_pass(PapyrusResolutionContext* ctx) override {
+    if (conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration)
+      ctx->addLocalVariable(this);
   }
 
   virtual void visit(PapyrusStatementVisitor& visitor) override {

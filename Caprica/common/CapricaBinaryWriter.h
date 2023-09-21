@@ -5,6 +5,7 @@
 #include <limits>
 #include <string_view>
 
+#include <common/ByteSwap.h>
 #include <common/FSUtils.h>
 #include <common/allocators/ChainedPool.h>
 
@@ -12,6 +13,7 @@ namespace caprica {
 
 struct CapricaBinaryWriter
 {
+  Endianness endianness{ Endianness::Little };
   explicit CapricaBinaryWriter() = default;
   CapricaBinaryWriter(const CapricaBinaryWriter&) = delete;
   ~CapricaBinaryWriter() = default;
@@ -46,33 +48,33 @@ struct CapricaBinaryWriter
 
   template<>
   void write(int16_t val) {
-    strm.make<int16_t>(val);
+    strm.make<int16_t>(endianness == Endianness::Little ? val : byteswap(val));
   }
 
   template<>
   void write(uint16_t val) {
-    strm.make<uint16_t>(val);
+    strm.make<uint16_t>(endianness == Endianness::Little ? val : byteswap(val));
   }
 
   template<>
   void write(int32_t val) {
-    strm.make<int32_t>(val);
+    strm.make<int32_t>(endianness == Endianness::Little ? val : byteswap(val));
   }
 
   template<>
   void write(uint32_t val) {
-    strm.make<uint32_t>(val);
+    strm.make<uint32_t>(endianness == Endianness::Little ? val : byteswap(val));
   }
 
   template<>
   void write(float val) {
-    strm.make<float>(val);
+    strm.make<float>(endianness == Endianness::Little ? val : byteswap_float(val));
   }
 
   template<>
   void write(time_t val) {
     static_assert(sizeof(time_t) == 8, "time_t is not 64 bits");
-    strm.make<time_t>(val);
+    strm.make<time_t>(endianness == Endianness::Little ? val : byteswap(val));
   }
 
   template<>

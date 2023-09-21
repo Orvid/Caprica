@@ -1,5 +1,6 @@
 #include <papyrus/PapyrusResolutionContext.h>
 
+#include <algorithm>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -105,8 +106,23 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(CapricaFileLocation loc, cons
     return true;
 
   if (src.type == PapyrusType::Kind::None) {
-    reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
-    return true;
+    if (conf::Papyrus::allowImplicitNoneCastsToAnyType){
+      return true;
+    }
+    switch (dest.type) {
+      case PapyrusType::Kind::Bool:
+      case PapyrusType::Kind::ResolvedObject:
+      case PapyrusType::Kind::ResolvedStruct:
+      case PapyrusType::Kind::Var:
+      case PapyrusType::Kind::String:
+      case PapyrusType::Kind::Array:
+        reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
+        return true;
+      default:
+        break;
+    }
+    reportingContext.error(loc, "Cannot convert None to '%s'!", dest.prettyString().c_str());
+    return false;
   }
 
   switch (dest.type) {
@@ -359,6 +375,8 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
     }
   }
   localVariableScopeStack.top()->locals.push_back(allocator->make<LocalScopeVariableNode>(local->name, local));
+  // we discard the result, we just need to check to see if it conflicts with anything
+  tryResolveIdentifier(PapyrusIdentifier::Unresolved(local->location, local->name));
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
@@ -367,33 +385,23 @@ PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdent
     reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.res.name.to_string().c_str());
   return id;
 }
-
+const PapyrusObject * getMemberParent(PapyrusIdentifier ident) {
+  switch (ident.type) {
+    case PapyrusIdentifierType::Property:
+      return ident.res.prop->parent;
+    case PapyrusIdentifierType::Variable:
+      return ident.res.var->parent;
+    case PapyrusIdentifierType::Guard:
+      return ident.res.guard->parent;
+    default:
+      return nullptr;
+  }
+}
 PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusIdentifier& ident) const {
   if (ident.type != PapyrusIdentifierType::Unresolved)
     return ident;
   bool ignoreConflicts = conf::Papyrus::ignorePropertyNameLocalConflicts;
   std::vector<PapyrusIdentifier> resolvedIds;
-
-  // TODO: verify that property before locals resolution is correct in Starfield/Fallout 4
-  if (!function || !function->isGlobal()) {
-    for (auto pg: object->propertyGroups) {
-      for (auto p: pg->properties) {
-        if (idEq(p->name, ident.res.name)) {
-          resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
-          if (ignoreConflicts) { return resolvedIds[0]; }
-        }
-      }
-    }
-  }
-  // This handles local var resolution.
-  for (auto stack : localVariableScopeStack) {
-    for (auto n : stack->locals) {
-      if (idEq(n->name, ident.res.name)) {
-        resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
-        if (ignoreConflicts) { return resolvedIds[0]; }
-      }
-    }
-  }
 
 
   if (function) {
@@ -401,56 +409,162 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
       PapyrusIdentifier i = ident;
       i.type = PapyrusIdentifierType::BuiltinStateField;
         resolvedIds.push_back(i);
-      if (ignoreConflicts) { return resolvedIds[0]; }
+    }
+
+    // Parameters are allowed to have the same name as properties, and properties override them
+    if (!function->isGlobal()) {
+      for (auto pg: object->propertyGroups) {
+        for (auto p: pg->properties) {
+          if (idEq(p->name, ident.res.name)) {
+            resolvedIds.push_back(PapyrusIdentifier::Property(ident.location, p));
+          }
+        }
+      }
     }
 
     for (auto p : function->parameters) {
       if (idEq(p->name, ident.res.name)) {
         resolvedIds.push_back(PapyrusIdentifier::FunctionParameter(ident.location, p));
-        if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
+
   }
 
   if (!function || !function->isGlobal()) {
     for (auto v : object->variables) {
       if (idEq(v->name, ident.res.name)) {
         resolvedIds.push_back(PapyrusIdentifier::Variable(ident.location, v));
-        if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
 
     for (auto g : object->guards) {
       if (idEq(g->name, ident.res.name)) {
         resolvedIds.push_back(PapyrusIdentifier::Guard(ident.location, g));
-        if (ignoreConflicts) { return resolvedIds[0]; }
       }
     }
-
   }
+  // locals get resolved dead last
+  // This handles local var resolution.
+  if (function) {
+    for (auto stack: localVariableScopeStack) {
+      for (auto n: stack->locals) {
+        if (idEq(n->name, ident.res.name)) {
+          if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration &&
+              ident.location.fileOffset < n->declareStatement->location.fileOffset) {
+            reportingContext.warning_W7003_Skyrim_Local_Use_Before_Declaration(ident.location,
+                                                                               ident.res.name.to_string().c_str());
+          }
+          resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
+        }
+      }
+    }
+  }
+
+  PapyrusIdentifier parentIdent = PapyrusIdentifier::Unresolved(CapricaFileLocation(), ident.res.name);
 
   if (auto parentClass = object->tryGetParentClass()) {
-    resolvedIds.push_back(tryResolveMemberIdentifier(object->parentClass, ident));
-    if (ignoreConflicts) { return resolvedIds[0]; }
+    parentIdent = tryResolveMemberIdentifier(object->parentClass, ident);
   }
 
-  if (resolvedIds.empty())
+  if (resolvedIds.empty()){
+    if (parentIdent.type != PapyrusIdentifierType::Unresolved) {
+      return parentIdent;
+    }
     return ident;
-
-  if (resolvedIds.size() == 1) {
+  } else if (resolvedIds.size() == 1 && parentIdent.type == PapyrusIdentifierType::Unresolved) {
     return resolvedIds[0];
   }
-  if (resolvedIds.size() > 1) {
-    if (resolvedIds[0].type == PapyrusIdentifierType::Property){
-      for (auto shadow_ident: resolvedIds) {
-        if (shadow_ident.type == PapyrusIdentifierType::Unresolved || shadow_ident.type == PapyrusIdentifierType::Property)
+
+  // We have conflicts; we need to check them
+
+  // checking conflicts with parent guards
+  // TODO: Starfield: verify whether or not local vars/parameters conflict with parent guard names
+  // we currently don't pass back the parent guard when resolving the parent members so this check is inoperative
+//  if (parentIdent.type == PapyrusIdentifierType::Guard){
+//    for (auto & rIdent : resolvedIds) {
+//      if (rIdent.type != PapyrusIdentifierType::Unresolved) {
+//        reportingContext.error(rIdent.location, "%s '%s' conflicts with %s parent class Guard",
+//                               PapyrusIdentifier::prettyTypeString(rIdent.type),
+//                               ident.res.name.to_string().c_str(),
+//                               getMemberParent(parentIdent) ? getMemberParent(parentIdent)->name.to_string().c_str() : "unknown");
+//      }
+//    }
+//    // parent guard overrides local var/parameter
+//    return parentIdent;
+//  }
+
+  // checking conflicts with parent properties
+  if (parentIdent.type == PapyrusIdentifierType::Property) {
+    for (auto & rIdent : resolvedIds) {
+      if (rIdent.type == PapyrusIdentifierType::Unresolved)
+        continue;
+      if (rIdent.type == PapyrusIdentifierType::DeclareStatement) {
+        // this type of shadowing is allowed by default in skyrim
+        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalVariableShadowingParentProperty){
+          reportingContext.warning_W7002_Skyrim_Local_Variable_Shadows_Parent_Property(rIdent.location,
+                                                                                       ident.res.name.to_string().c_str(),
+                                                                                       getMemberParent(parentIdent)->name.to_string().c_str());
           continue;
-        reportingContext.warning_W4008_Local_Variable_Shadows_Property(shadow_ident.location, PapyrusIdentifier::TypeToString(shadow_ident.type), ident.res.name.to_string().c_str());
+        }
+        reportingContext.error(rIdent.location, "Local variable '%s' conflicts with %s parent class %s",
+                               ident.res.name.to_string().c_str(),
+                               getMemberParent(parentIdent)->name.to_string().c_str(),
+                               PapyrusIdentifier::prettyTypeString(parentIdent.type));
+      } else if (rIdent.type == PapyrusIdentifierType::Parameter) {
+        // TODO: Verify Starfield allows this
+        // in all PCompilers you're allowed to shadow a parent property with a parameter
+        reportingContext.warning_W1005_Function_Parameter_Shadows_Parent_Property(rIdent.location,
+                                                                                  ident.res.name.to_string().c_str(),
+                                                                                  getMemberParent(parentIdent)->name.to_string().c_str());
+      } else {
+        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty){
+          // Warning here already was emitted caught by the object's inheritence checker.
+          continue;
+        }
+        // if it's a script member, it's an error.
+        reportingContext.error(rIdent.location, "%s '%s' conflicts with %s parent class %s",
+                     PapyrusIdentifier::prettyTypeString(rIdent.type),
+                     ident.res.name.to_string().c_str(),
+                     getMemberParent(parentIdent)->name.to_string().c_str(),
+                     PapyrusIdentifier::prettyTypeString(parentIdent.type));
       }
     }
-    // TODO: object variables vs local/params?
+    // parent property overrides local var/parameter
+    return parentIdent;
   }
-  return resolvedIds[0];
+
+  if (resolvedIds.size() > 1) {
+    for (auto i = 0; i < resolvedIds.size() - 1; i++) {
+      if (resolvedIds[i].type == PapyrusIdentifierType::Unresolved) {
+        continue;
+      }
+      for (auto j = i; j < resolvedIds.size(); j++) {
+        auto &shadow_ident = resolvedIds[j];
+        // duplicates (if this is one) get caught by semantic pass
+        if (shadow_ident.type == PapyrusIdentifierType::Unresolved || resolvedIds[i].type == shadow_ident.type) {
+          continue;
+        }
+        if (resolvedIds[i].type == PapyrusIdentifierType::Property &&
+            shadow_ident.type == PapyrusIdentifierType::Parameter) {
+          // TODO: Verify Starfield allows this
+          // in all PCompilers you're allowed to shadow a script property with a parameter
+          reportingContext.warning_W1004_Function_Parameter_Shadows_Property(shadow_ident.location,
+                                                                             ident.res.name.to_string().c_str());
+        } else {
+          reportingContext.error(shadow_ident.location,
+                                 "%s '%s' already defined as %s in script",
+                                 PapyrusIdentifier::prettyTypeString(shadow_ident.type),
+                                 ident.res.name.to_string().c_str(),
+                                 PapyrusIdentifier::prettyTypeString(resolvedIds[i].type));
+        }
+      }
+    }
+
+  }
+    return resolvedIds[0];
+
+
+
 }
 
 PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const PapyrusType& baseType, const PapyrusIdentifier& ident) const {
@@ -544,6 +658,9 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       reportingContext.warning_W6001_Experimental_Syntax_ArrayGetAllMatchingStructs(ident.location);
     } else {
       reportingContext.fatal(ident.location, "Unknown function '%s' called on an array expression!", ident.res.name.to_string().c_str());
+    }
+    if(!isArrayFunctionInGame(fk, conf::Papyrus::game)){
+      reportingContext.fatal(ident.location, "Array function '%s' is not available in %s scripts!", ident.res.name.to_string().c_str(), GameIDToString(conf::Papyrus::game));
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location, fk, allocator->make<PapyrusType>(baseType.getElementType()));
   } else if (baseType.type == PapyrusType::Kind::ResolvedObject) {

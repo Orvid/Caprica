@@ -25,8 +25,8 @@ struct PexVariable final
   PexVariable(const PexVariable&) = delete;
   ~PexVariable() = default;
 
-  static PexVariable* read(allocators::ChainedPool* alloc, PexReader& rdr);
-  void write(PexWriter& wtr) const;
+  static PexVariable *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  void write(PexWriter &wtr, GameID gameType) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
 private:

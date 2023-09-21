@@ -18,6 +18,7 @@
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
+#include <common/GameID.h>
 
 namespace caprica {
 
@@ -25,14 +26,16 @@ namespace papyrus { struct PapyrusScript; }
 
 namespace pex {
 
+constexpr uint32_t PEX_MAGIC_NUM = 0xFA57C0DE;
+constexpr uint32_t PEX_MAGIC_NUM_BE = 0xDE57C0FA;
+
 struct PexFile final
 {
   allocators::ChainedPool* alloc;
 
-  // TODO: Currently set to Starfield, Make this configurable for Fallout 4
   uint8_t majorVersion{ 3 };
   uint8_t minorVersion{ 12 };
-  uint16_t gameID{ 4 }; // Default to Starfield
+  GameID gameID{ GameID::Starfield }; // Default to Starfield
   time_t compilationTime{ };
   std::string_view sourceFileName{ "" };
   std::string userName{ "" };
@@ -63,6 +66,31 @@ struct PexFile final
   PexUserFlags getUserFlag(PexString name, uint8_t bitNum);
   size_t getUserFlagCount() const noexcept;
 
+  void setGameAndVersion(GameID game) {
+    gameID = game;
+    switch(game) {
+      case GameID::Skyrim:
+        majorVersion = 3;
+        minorVersion = 2; // Vanilla base game uses 3.1, vanilla expansions use 3.2, all SE and AE scripts use 3.2
+        break;
+      case GameID::Fallout4:
+        majorVersion = 3;
+        minorVersion = 9; // apparently doesn't change for fallout 4?
+        break;
+      case GameID::Fallout76:
+        majorVersion = 3;
+        minorVersion = 15; // TODO: Verify why fallout76 version is > starfield version??
+        break;
+      case GameID::Starfield:
+        majorVersion = 3;
+        minorVersion = 12;
+        break;
+      default:
+        majorVersion = 0;
+        minorVersion = 0;
+        break;
+    }
+  }
   static PexFile* read(allocators::ChainedPool* alloc, PexReader& rdr);
   void write(PexWriter& wtr) const;
   void writeAsm(PexAsmWriter& wtr) const;

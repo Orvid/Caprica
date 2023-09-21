@@ -6,55 +6,69 @@
 
 namespace caprica { namespace pex {
 
-PexObject* PexObject::read(allocators::ChainedPool* alloc, PexReader& rdr) {
+PexObject * PexObject::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
   auto obj = alloc->make<PexObject>();
   obj->name = rdr.read<PexString>();
   // The size of the object, but we don't care about it.
   rdr.read<uint32_t>();
   obj->parentClassName = rdr.read<PexString>();
   obj->documentationString = rdr.read<PexString>();
-  obj->isConst = rdr.read<uint8_t>() != 0;
+  if (gameType > GameID::Skyrim) {
+    obj->isConst = rdr.read<uint8_t>() != 0;
+  }
   obj->userFlags = rdr.read<PexUserFlags>();
   obj->autoStateName = rdr.read<PexString>();
-  auto sLen = rdr.read<uint16_t>();
-  for (size_t i = 0; i < sLen; i++)
-    obj->structs.push_back(PexStruct::read(alloc, rdr));
+  if (gameType > GameID::Skyrim) {
+    auto sLen = rdr.read<uint16_t>();
+    for (size_t i = 0; i < sLen; i++)
+      obj->structs.push_back(PexStruct::read(alloc, rdr, gameType));
+  }
   auto vLen = rdr.read<uint16_t>();
   for (size_t i = 0; i < vLen; i++)
-    obj->variables.push_back(PexVariable::read(alloc, rdr));
-  // TODO: Make this configurable for Starfield
-  auto gLen = rdr.read<uint16_t>();
-  for (size_t i = 0; i < gLen; i++)
-    obj->guards.push_back(PexGuard::read(alloc, rdr));
+    obj->variables.push_back(PexVariable::read(alloc, rdr, gameType));
+
+  if (gameType == GameID::Starfield) {
+    auto gLen = rdr.read<uint16_t>();
+    for (size_t i = 0; i < gLen; i++)
+      obj->guards.push_back(PexGuard::read(alloc, rdr, gameType));
+  }
   auto pLen = rdr.read<uint16_t>();
   for (size_t i = 0; i < pLen; i++)
-    obj->properties.push_back(PexProperty::read(alloc, rdr));
+    obj->properties.push_back(PexProperty::read(alloc, rdr, gameType));
   auto stLen = rdr.read<uint16_t>();
   for (size_t i = 0; i < stLen; i++)
-    obj->states.push_back(PexState::read(alloc, rdr));
+    obj->states.push_back(PexState::read(alloc, rdr, gameType));
   return obj;
 }
 
-void PexObject::write(PexWriter& wtr) const {
+void PexObject::write(PexWriter &wtr, GameID gameType) const {
   wtr.write<PexString>(name);
   wtr.beginObject();
 
   wtr.write<PexString>(parentClassName);
   wtr.write<PexString>(documentationString);
-  wtr.write<uint8_t>(isConst ? 0x01 : 0x00);
+  if (gameType > GameID::Skyrim) {
+    wtr.write<uint8_t>(isConst ? 0x01 : 0x00);
+  }
   wtr.write<PexUserFlags>(userFlags);
   wtr.write<PexString>(autoStateName);
-  
-  wtr.boundWrite<uint16_t>(structs.size());
-  for (auto s : structs)
-    s->write(wtr);
+
+  if (gameType > GameID::Skyrim) {
+    wtr.boundWrite<uint16_t>(structs.size());
+    for (auto s: structs)
+      s->write(wtr);
+  }
+
   wtr.boundWrite<uint16_t>(variables.size());
   for (auto v : variables)
-    v->write(wtr);
-  // TODO: Make this configurable for Starfield
-  wtr.boundWrite<uint16_t>(guards.size());
-  for (auto g : guards)
-    g->write(wtr);
+    v->write(wtr, gameType);
+
+  if (gameType == GameID::Starfield) {
+    wtr.boundWrite<uint16_t>(guards.size());
+    for (auto g: guards)
+      g->write(wtr);
+  }
+
   wtr.boundWrite<uint16_t>(properties.size());
   for (auto p : properties)
     p->write(wtr);

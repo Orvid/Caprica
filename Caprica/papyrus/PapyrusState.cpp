@@ -41,8 +41,13 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
   if (auto parentClass = ctx->object->tryGetParentClass()) {
     for (auto f : functions) {
       auto baseFunc = searchRootStateForFunction(f.second->name, parentClass);
-      if (f.second->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative())
-        ctx->reportingContext.error(f.second->location, "Non-native scripts cannot define new events.");
+      if (f.second->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative()) {
+        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass){
+          ctx->reportingContext.warning_W7000_Skyrim_Unknown_Event_On_Non_Native_Class(f.second->location, f.second->name.to_string().c_str(), ctx->object->name.to_string().c_str(), parentClass->name.to_string().c_str());
+        } else {
+          ctx->reportingContext.error(f.second->location, "Non-native scripts cannot define new events.");
+        }
+      }
       if (baseFunc && !baseFunc->hasSameSignature(f.second))
         ctx->reportingContext.error(f.second->location, "The signature of the '%s' function (%s) doesn't match the signature in the parent class '%s'. The expected signature is '%s'.", f.second->name.to_string().c_str(), f.second->prettySignature().c_str(), baseFunc->parentObject->name.to_string().c_str(), baseFunc->prettySignature().c_str());
     }

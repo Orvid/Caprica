@@ -39,13 +39,23 @@ namespace EngineLimits {
 }
 
 namespace Papyrus {
+  GameID game;
   bool allowCompilerIdentifiers{ false };
   bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
+  bool allowImplicitNoneCastsToAnyType{ false };
   std::vector<std::string> importDirectories{ };
   CapricaUserFlagsDefinition userFlagsDefinition{ };
+}
+
+namespace Skyrim {
+  bool skyrimAllowUnknownEventsOnNonNativeClass{ true };
+  bool skyrimAllowObjectVariableShadowingParentProperty{ true };
+  bool skyrimAllowLocalVariableShadowingParentProperty{ true };
+  bool skyrimAllowLocalUseBeforeDeclaration{ true };
+  bool skyrimAllowAssigningVoidMethodCallResult{ true };
 }
 
 namespace Performance {

@@ -53,21 +53,14 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kAs, "As" },
   { TokenType::kAuto, "Auto" },
   { TokenType::kAutoReadOnly, "AutoReadOnly" },
-  { TokenType::kBetaOnly, "BetaOnly" },
   { TokenType::kBool, "Bool" },
-  { TokenType::kConst, "Const" },
-  { TokenType::kCustomEvent, "CustomEvent" },
-  { TokenType::kCustomEventName, "CustomEventName" },
-  { TokenType::kDebugOnly, "DebugOnly" },
   { TokenType::kElse, "Else" },
   { TokenType::kElseIf, "ElseIf" },
   { TokenType::kEndEvent, "EndEvent" },
   { TokenType::kEndFunction, "EndFunction" },
-  { TokenType::kEndGroup, "EndGroup" },
   { TokenType::kEndIf, "EndIf" },
   { TokenType::kEndProperty, "EndProperty" },
   { TokenType::kEndState, "EndState" },
-  { TokenType::kEndStruct, "EndStruct" },
   { TokenType::kEndWhile, "EndWhile" },
   { TokenType::kEvent, "Event" },
   { TokenType::kExtends, "Extends" },
@@ -75,7 +68,6 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kFloat, "Float" },
   { TokenType::kFunction, "Function" },
   { TokenType::kGlobal, "Global" },
-  { TokenType::kGroup, "Group" },
   { TokenType::kIf, "If" },
   { TokenType::kImport, "Import" },
   { TokenType::kInt, "Int" },
@@ -88,15 +80,31 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kProperty, "Property" },
   { TokenType::kReturn, "Return" },
   { TokenType::kScriptName, "ScriptName" },
-  { TokenType::kScriptEventName, "ScriptEventName" },
   { TokenType::kSelf, "Self" },
   { TokenType::kState, "State" },
   { TokenType::kString, "String" },
-  { TokenType::kStruct, "Struct" },
   { TokenType::kTrue, "True" },
-  { TokenType::kVar, "Var" },
   { TokenType::kWhile, "While" },
 
+  // Fallout 4 / Fallout 76
+  { TokenType::kBetaOnly, "BetaOnly" },
+  { TokenType::kConst, "Const" },
+  { TokenType::kCustomEvent, "CustomEvent" },
+  { TokenType::kCustomEventName, "CustomEventName" },
+  { TokenType::kDebugOnly, "DebugOnly" },
+  { TokenType::kEndGroup, "EndGroup" },
+  { TokenType::kEndStruct, "EndStruct" },
+  { TokenType::kGroup, "Group" },
+  { TokenType::kScriptEventName, "ScriptEventName" },
+  { TokenType::kStruct, "Struct" },
+  { TokenType::kVar, "Var" },
+
+  // Starfield
+  { TokenType::kGuard, "Guard" },
+  { TokenType::kEndGuard, "EndGuard" },
+  { TokenType::kTryGuard, "TryGuard" },
+
+  // language extensions
   { TokenType::kBreak, "Break" },
   { TokenType::kCase, "Case" },
   { TokenType::kContinue, "Continue" },
@@ -113,10 +121,6 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
   { TokenType::kSwitch, "Switch" },
   { TokenType::kTo, "To" },
 
-  // TODO: VERIFY STARFIELD SYNTAX!
-  { TokenType::kGuard, "Guard" },
-  { TokenType::kEndGuard, "EndGuard" },
-  { TokenType::kTryGuard, "TryGuard" },
 };
 
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
@@ -162,21 +166,14 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "as", TokenType::kAs },
   { "auto", TokenType::kAuto },
   { "autoreadonly", TokenType::kAutoReadOnly },
-  { "betaonly", TokenType::kBetaOnly },
   { "bool", TokenType::kBool },
-  { "const", TokenType::kConst },
-  { "customevent", TokenType::kCustomEvent },
-  { "customeventname", TokenType::kCustomEventName },
-  { "debugonly", TokenType::kDebugOnly },
   { "else", TokenType::kElse },
   { "elseif", TokenType::kElseIf },
   { "endevent", TokenType::kEndEvent },
   { "endfunction", TokenType::kEndFunction },
-  { "endgroup", TokenType::kEndGroup },
   { "endif", TokenType::kEndIf },
   { "endproperty", TokenType::kEndProperty },
   { "endstate", TokenType::kEndState },
-  { "endstruct", TokenType::kEndStruct },
   { "endwhile", TokenType::kEndWhile },
   { "event", TokenType::kEvent },
   { "extends", TokenType::kExtends },
@@ -184,7 +181,6 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "float", TokenType::kFloat },
   { "function", TokenType::kFunction },
   { "global", TokenType::kGlobal },
-  { "group", TokenType::kGroup },
   { "if", TokenType::kIf },
   { "import", TokenType::kImport },
   { "int", TokenType::kInt },
@@ -197,15 +193,27 @@ static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
   { "property", TokenType::kProperty },
   { "return", TokenType::kReturn },
   { "scriptname", TokenType::kScriptName },
-  { "scripteventname", TokenType::kScriptEventName },
   { "self", TokenType::kSelf },
   { "state", TokenType::kState },
   { "string", TokenType::kString },
-  { "struct", TokenType::kStruct },
   { "true", TokenType::kTrue },
-  { "var", TokenType::kVar },
   { "while", TokenType::kWhile },
-  // TODO: VERIFY STARFIELD SYNTAX!
+
+  // Fallout 4 / Fallout 76
+  { "betaonly", TokenType::kBetaOnly },
+  { "const", TokenType::kConst },
+  { "customevent", TokenType::kCustomEvent },
+  { "customeventname", TokenType::kCustomEventName },
+  { "debugonly", TokenType::kDebugOnly },
+  { "endgroup", TokenType::kEndGroup },
+  { "endstruct", TokenType::kEndStruct },
+  { "group", TokenType::kGroup },
+  { "scripteventname", TokenType::kScriptEventName },
+  { "struct", TokenType::kStruct },
+  { "var", TokenType::kVar },
+
+  // Starfield
+  // TODO: Verify starfield syntax
   { "guard", TokenType::kGuard },
   { "endguard", TokenType::kEndGuard },
   { "tryguard", TokenType::kTryGuard },
@@ -346,7 +354,7 @@ StartOver:
       str.push_back((char)c);
 
       // It's hex.
-      if (c == '0' && peekChar() == 'x') {
+      if (c == '0' && (peekChar() == 'x' || peekChar() == 'X')) {
         str.push_back((char)getChar());
         while (isxdigit(peekChar()))
           str.push_back((char)getChar());
@@ -500,9 +508,9 @@ StartOver:
 
       identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
       auto f = keywordMap.find(str);
-      if (f != keywordMap.end())
-        return setTok(f->second, baseLoc);
-
+      if (f != keywordMap.end() && keywordIsInGame(f->second, conf::Papyrus::game)) {
+          return setTok(f->second, baseLoc);
+      }
       if (conf::Papyrus::enableLanguageExtensions) {
         auto f2 = languageExtensionsKeywordMap.find(str);
         if (f2 != languageExtensionsKeywordMap.end())
