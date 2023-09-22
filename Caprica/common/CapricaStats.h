@@ -6,17 +6,21 @@ namespace caprica {
 
 struct CapricaStats final {
 private:
-  struct NopIncStruct final
-  {
+  struct NopIncStruct final {
     size_t val;
 
-    NopIncStruct& operator++(int) { val++; return *this; }
-    NopIncStruct& operator=(size_t f) { val = f; return *this; }
+    NopIncStruct& operator++(int) {
+      val++;
+      return *this;
+    }
+    NopIncStruct& operator=(size_t f) {
+      val = f;
+      return *this;
+    }
   };
 
-
-  //using counter_type = std::atomic<size_t>;
-  //using counter_type = size_t;
+  // using counter_type = std::atomic<size_t>;
+  // using counter_type = size_t;
   using counter_type = NopIncStruct;
 
 public:
@@ -30,7 +34,6 @@ public:
 
   static void outputStats();
   static void outputImportedCount();
-
 };
 
 }

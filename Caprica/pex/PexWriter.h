@@ -7,41 +7,40 @@
 #include <common/CapricaBinaryWriter.h>
 #include <common/CapricaReportingContext.h>
 
+#include "common/GameID.h"
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
-#include "common/GameID.h"
 
 namespace caprica { namespace pex {
 
-struct PexWriter final : public CapricaBinaryWriter
-{
+struct PexWriter final : public CapricaBinaryWriter {
   explicit PexWriter() = default;
   PexWriter(const PexWriter&) = delete;
   ~PexWriter() = default;
 
-  template<typename T>
+  template <typename T>
   void write(T val) {
     CapricaBinaryWriter::write<T>(std::forward<T>(val));
   }
 
-  template<>
+  template <>
   void write(GameID val) {
     write<uint16_t>(static_cast<uint16_t>(val));
   }
 
-  template<>
+  template <>
   void write(PexString val) {
     assert(val.index != -1);
     boundWrite<uint16_t>(val.index);
   }
 
-  template<>
+  template <>
   void write(PexUserFlags val) {
     boundWrite<uint32_t>(val.data);
   }
 
-  template<>
+  template <>
   void write(PexValue val) {
     write<uint8_t>((uint8_t)val.type);
     switch (val.type) {
@@ -81,8 +80,8 @@ struct PexWriter final : public CapricaBinaryWriter
   }
 
 private:
-  uint32_t* objectLength{ nullptr };
-  size_t objectStartSize{ 0 };
+  uint32_t* objectLength { nullptr };
+  size_t objectStartSize { 0 };
 };
 
 }}

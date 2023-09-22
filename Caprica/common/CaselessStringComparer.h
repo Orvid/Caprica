@@ -31,14 +31,13 @@ bool idEq(const std::string& a, const std::string& b);
 NEVER_INLINE
 bool idEq(std::string_view a, std::string_view b);
 ALWAYS_INLINE
-bool idEq(const identifier_ref& a, const identifier_ref& b) { return a.identifierEquals(b); }
+bool idEq(const identifier_ref& a, const identifier_ref& b) {
+  return a.identifierEquals(b);
+}
 
-struct CaselessStringHasher final
-{
+struct CaselessStringHasher final {
   size_t operator()(const char* k) const = delete;
-  size_t operator()(const std::string& k) const {
-    return doCaselessHash(k.c_str(), k.size());
-  }
+  size_t operator()(const std::string& k) const { return doCaselessHash(k.c_str(), k.size()); }
 
 private:
   friend struct CaselessPathHasher;
@@ -46,35 +45,27 @@ private:
   static size_t doCaselessHash(const char* k, size_t len);
 };
 
-struct CaselessStringEqual final
-{
+struct CaselessStringEqual final {
   bool operator()(const char* lhs, const char* rhs) const = delete;
-  bool operator()(const std::string& lhs, const std::string& rhs) const {
-    return caselessEq(lhs, rhs);
-  }
+  bool operator()(const std::string& lhs, const std::string& rhs) const { return caselessEq(lhs, rhs); }
 };
 
-struct CaselessPathHasher final
-{
-  size_t operator()(const std::string& k) const {
-    return doPathHash(k.c_str(), k.size());
-  }
+struct CaselessPathHasher final {
+  size_t operator()(const std::string& k) const { return doPathHash(k.c_str(), k.size()); }
 
 private:
   NEVER_INLINE
   static size_t doPathHash(const char* k, size_t len);
 };
 
-struct CaselessPathEqual final
-{
+struct CaselessPathEqual final {
   bool operator()(const std::string& lhs, const std::string& rhs) const {
     return pathEq(std::string_view(lhs), std::string_view(rhs));
   }
 };
 
-struct CaselessIdentifierHasher final
-{
-  template<bool isNullTerminated>
+struct CaselessIdentifierHasher final {
+  template <bool isNullTerminated>
   static uint32_t hash(const char* s, size_t len);
 
   size_t operator()(const char* k) const = delete;
@@ -91,21 +82,14 @@ struct CaselessIdentifierHasher final
 extern template uint32_t CaselessIdentifierHasher::hash<true>(const char*, size_t);
 extern template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size_t);
 
-struct CaselessIdentifierEqual final
-{
-  template<bool isNullTerminated>
+struct CaselessIdentifierEqual final {
+  template <bool isNullTerminated>
   static bool equal(const char* a, const char* b, size_t len);
 
   bool operator()(const char* lhs, const char* rhs) const = delete;
-  bool operator()(const std::string& lhs, const std::string& rhs) const {
-    return idEq(lhs, rhs);
-  }
-  bool operator()(std::string_view lhs, std::string_view rhs) const {
-    return idEq(lhs, rhs);
-  }
-  bool operator()(const identifier_ref& lhs, const identifier_ref& rhs) const {
-    return idEq(lhs, rhs);
-  }
+  bool operator()(const std::string& lhs, const std::string& rhs) const { return idEq(lhs, rhs); }
+  bool operator()(std::string_view lhs, std::string_view rhs) const { return idEq(lhs, rhs); }
+  bool operator()(const identifier_ref& lhs, const identifier_ref& rhs) const { return idEq(lhs, rhs); }
 };
 extern template bool CaselessIdentifierEqual::equal<true>(const char*, const char*, size_t);
 extern template bool CaselessIdentifierEqual::equal<false>(const char*, const char*, size_t);
@@ -117,14 +101,18 @@ using caseless_unordered_set = std::unordered_set<std::string, CaselessStringHas
 // The path collections are for UTF-8 encoded strings, and when comparing two,
 // they are likely to have a long prefix in common.
 using caseless_unordered_path_set = std::unordered_set<std::string, CaselessPathHasher, CaselessPathEqual>;
-template<typename V>
+template <typename V>
 using caseless_unordered_path_map = typename std::unordered_map<std::string, V, CaselessPathHasher, CaselessPathEqual>;
 
-using caseless_unordered_identifier_set = std::unordered_set<std::string, CaselessIdentifierHasher, CaselessIdentifierEqual>;
-using caseless_unordered_identifier_ref_set = std::unordered_set<identifier_ref, CaselessIdentifierHasher, CaselessIdentifierEqual>;
-template<typename V>
-using caseless_unordered_identifier_map = typename std::unordered_map<std::string, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
-template<typename V>
-using caseless_unordered_identifier_ref_map = typename std::unordered_map<identifier_ref, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+using caseless_unordered_identifier_set =
+    std::unordered_set<std::string, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+using caseless_unordered_identifier_ref_set =
+    std::unordered_set<identifier_ref, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+template <typename V>
+using caseless_unordered_identifier_map =
+    typename std::unordered_map<std::string, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
+template <typename V>
+using caseless_unordered_identifier_ref_map =
+    typename std::unordered_map<identifier_ref, V, CaselessIdentifierHasher, CaselessIdentifierEqual>;
 
 }

@@ -12,22 +12,21 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-struct PexStruct final
-{
-  PexString name{ };
-  IntrusiveLinkedList<PexStructMember> members{ };
+struct PexStruct final {
+  PexString name {};
+  IntrusiveLinkedList<PexStructMember> members {};
 
   explicit PexStruct() = default;
   PexStruct(const PexStruct&) = delete;
   ~PexStruct() = default;
 
-  static PexStruct *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  static PexStruct* read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
 private:
   friend IntrusiveLinkedList<PexStruct>;
-  PexStruct* next{ nullptr };
+  PexStruct* next { nullptr };
 };
 
 }}

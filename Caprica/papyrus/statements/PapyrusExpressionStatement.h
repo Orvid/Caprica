@@ -8,9 +8,8 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusExpressionStatement final : public PapyrusStatement
-{
-  expressions::PapyrusExpression* expression{ nullptr };
+struct PapyrusExpressionStatement final : public PapyrusStatement {
+  expressions::PapyrusExpression* expression { nullptr };
 
   explicit PapyrusExpressionStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusExpressionStatement(const PapyrusExpressionStatement&) = delete;
@@ -31,9 +30,7 @@ struct PapyrusExpressionStatement final : public PapyrusStatement
     expression->semantic(ctx);
   }
 
-  virtual void visit(PapyrusStatementVisitor& visitor) override {
-    visitor.visit(this);
-  }
+  virtual void visit(PapyrusStatementVisitor& visitor) override { visitor.visit(this); }
 };
 
 }}}

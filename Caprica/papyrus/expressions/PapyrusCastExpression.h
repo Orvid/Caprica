@@ -1,7 +1,7 @@
 #pragma once
 
-#include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusType.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -9,13 +9,14 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusCastExpression final : public PapyrusExpression
-{
-  PapyrusExpression* innerExpression{ nullptr };
+struct PapyrusCastExpression final : public PapyrusExpression {
+  PapyrusExpression* innerExpression { nullptr };
   PapyrusType targetType;
 
-  explicit PapyrusCastExpression(CapricaFileLocation loc, const PapyrusType& targ) : PapyrusExpression(loc), targetType(targ) { }
-  explicit PapyrusCastExpression(CapricaFileLocation loc, PapyrusType&& targ) : PapyrusExpression(loc), targetType(std::move(targ)) { }
+  explicit PapyrusCastExpression(CapricaFileLocation loc, const PapyrusType& targ)
+      : PapyrusExpression(loc), targetType(targ) { }
+  explicit PapyrusCastExpression(CapricaFileLocation loc, PapyrusType&& targ)
+      : PapyrusExpression(loc), targetType(std::move(targ)) { }
   PapyrusCastExpression(const PapyrusCastExpression&) = delete;
   virtual ~PapyrusCastExpression() override = default;
 

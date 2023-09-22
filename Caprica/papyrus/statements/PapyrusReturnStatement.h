@@ -9,9 +9,8 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusReturnStatement final : public PapyrusStatement
-{
-  expressions::PapyrusExpression* returnValue{ nullptr };
+struct PapyrusReturnStatement final : public PapyrusStatement {
+  expressions::PapyrusExpression* returnValue { nullptr };
 
   explicit PapyrusReturnStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusReturnStatement(const PapyrusReturnStatement&) = delete;
@@ -28,7 +27,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
     bldr << location;
     bldr.generateUnlockGuardsForCurrentLockScope();
     bldr << location;
-    bldr << op::ret{ val };
+    bldr << op::ret { val };
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
@@ -39,9 +38,7 @@ struct PapyrusReturnStatement final : public PapyrusStatement
     }
   }
 
-  virtual void visit(PapyrusStatementVisitor& visitor) override {
-    visitor.visit(this);
-  }
+  virtual void visit(PapyrusStatementVisitor& visitor) override { visitor.visit(this); }
 };
 
 }}}

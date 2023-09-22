@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 
 #include <iterator>
 #include <string>
@@ -13,8 +13,7 @@ namespace caprica {
 
 // Yes, the name is identifier_ref, but it is used to hold
 // normal string refs as well.
-struct identifier_ref final
-{
+struct identifier_ref final {
   static constexpr size_t npos = size_t(-1);
 
   constexpr identifier_ref() = default;
@@ -27,8 +26,8 @@ struct identifier_ref final
   constexpr identifier_ref(const char* str, size_t length) : mData(str), mLength(length) { }
   constexpr identifier_ref(const identifier_ref& rhs) = default;
   constexpr identifier_ref(identifier_ref&& rhs) = default;
-  identifier_ref& operator =(const identifier_ref& rhs) = default;
-  identifier_ref& operator =(identifier_ref&& rhs) = default;
+  identifier_ref& operator=(const identifier_ref& rhs) = default;
+  identifier_ref& operator=(identifier_ref&& rhs) = default;
 
   constexpr const char* begin() const { return mData; }
   constexpr const char* cbegin() const { return mData; }
@@ -75,24 +74,23 @@ struct identifier_ref final
   std::string to_string() const;
   std::string_view to_string_view() const;
 
-
 private:
-  const char* mData{ nullptr };
-  size_t mLength{ 0 };
-  mutable uint32_t mCaselessHash{ 0 };
+  const char* mData { nullptr };
+  size_t mLength { 0 };
+  mutable uint32_t mCaselessHash { 0 };
 
   size_t reverse_distance(std::reverse_iterator<const char*> first, std::reverse_iterator<const char*> last) const;
 };
 
-bool operator ==(const identifier_ref& x, const identifier_ref& y);
-bool operator ==(const identifier_ref& x, const std::string& y);
-bool operator ==(const std::string& x, const identifier_ref& y);
-bool operator ==(const identifier_ref& x, const char* y);
-bool operator ==(const char* x, const identifier_ref& y);
-bool operator !=(const identifier_ref& x, const identifier_ref& y);
-bool operator !=(const identifier_ref& x, const std::string& y);
-bool operator !=(const std::string& x, const identifier_ref& y);
-bool operator !=(const identifier_ref& x, const char* y);
-bool operator !=(const char* x, const identifier_ref& y);
+bool operator==(const identifier_ref& x, const identifier_ref& y);
+bool operator==(const identifier_ref& x, const std::string& y);
+bool operator==(const std::string& x, const identifier_ref& y);
+bool operator==(const identifier_ref& x, const char* y);
+bool operator==(const char* x, const identifier_ref& y);
+bool operator!=(const identifier_ref& x, const identifier_ref& y);
+bool operator!=(const identifier_ref& x, const std::string& y);
+bool operator!=(const std::string& x, const identifier_ref& y);
+bool operator!=(const identifier_ref& x, const char* y);
+bool operator!=(const char* x, const identifier_ref& y);
 
 }

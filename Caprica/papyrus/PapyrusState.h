@@ -16,7 +16,7 @@
 namespace caprica { namespace papyrus {
 
 // Generates GetState, which every Skyrim script has
-static pex::PexFunction * makeGetState(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) {
+static pex::PexFunction* makeGetState(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) {
   auto fDebInfo = file->alloc->make<pex::PexDebugFunctionInfo>();
   fDebInfo->objectName = obj->name;
   fDebInfo->functionType = pex::PexDebugFunctionType::Normal;
@@ -30,14 +30,14 @@ static pex::PexFunction * makeGetState(CapricaReportingContext& repCtx, pex::Pex
   getState->isGlobal = false;
   getState->isNative = false;
   CapricaFileLocation loc(0);
-  pex::PexFunctionBuilder bldr{ repCtx, loc, file };
-  bldr << pex::op::ret{ pex::PexValue::Identifier(file->getString("::State")) };
+  pex::PexFunctionBuilder bldr { repCtx, loc, file };
+  bldr << pex::op::ret { pex::PexValue::Identifier(file->getString("::State")) };
   bldr.populateFunction(getState, fDebInfo);
   return getState;
 }
 
 // Generates GotoState, which every Skyrim script has
-static pex::PexFunction * makeGotoState(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) {
+static pex::PexFunction* makeGotoState(CapricaReportingContext& repCtx, pex::PexFile* file, pex::PexObject* obj) {
   auto fDebInfo = file->alloc->make<pex::PexDebugFunctionInfo>();
   fDebInfo->objectName = obj->name;
   fDebInfo->functionType = pex::PexDebugFunctionType::Normal;
@@ -56,29 +56,24 @@ static pex::PexFunction * makeGotoState(CapricaReportingContext& repCtx, pex::Pe
   gotoState->parameters.push_back(newState);
   auto selfstring = file->getString("self");
   CapricaFileLocation loc(0);
-  pex::PexFunctionBuilder bldr{ repCtx, loc, file };
-  bldr << pex::op::callmethod{
-    file->getString("onEndState"),
-    pex::PexValue::Identifier(selfstring),
-    pex::PexValue::Identifier{bldr.getNoneLocal(loc)},
-    {}
-  } << pex::op::assign {
-    pex::PexValue::Identifier(file->getString("::State")),
-    pex::PexValue::Identifier(newState->name)
-  } << pex::op::callmethod{file->getString("onBeginState"),
-          pex::PexValue::Identifier(selfstring),
-          pex::PexValue::Identifier{bldr.getNoneLocal(loc)},
-          {}
-  };
+  pex::PexFunctionBuilder bldr { repCtx, loc, file };
+  bldr << pex::op::callmethod { file->getString("onEndState"),
+                                pex::PexValue::Identifier(selfstring),
+                                pex::PexValue::Identifier { bldr.getNoneLocal(loc) },
+                                {} }
+       << pex::op::assign { pex::PexValue::Identifier(file->getString("::State")),
+                            pex::PexValue::Identifier(newState->name) }
+       << pex::op::callmethod { file->getString("onBeginState"),
+                                pex::PexValue::Identifier(selfstring),
+                                pex::PexValue::Identifier { bldr.getNoneLocal(loc) },
+                                {} };
   bldr.populateFunction(gotoState, fDebInfo);
   return gotoState;
 };
 
-
-struct PapyrusState final
-{
-  identifier_ref name{ "" };
-  caseless_unordered_identifier_ref_map<PapyrusFunction*> functions{ };
+struct PapyrusState final {
+  identifier_ref name { "" };
+  caseless_unordered_identifier_ref_map<PapyrusFunction*> functions {};
 
   CapricaFileLocation location;
 
@@ -91,7 +86,7 @@ struct PapyrusState final
     state->name = file->getString(name);
 
     // Every skyrim script has these exact same functions
-    if (file->gameID == GameID::Skyrim && name == ""){
+    if (file->gameID == GameID::Skyrim && name == "") {
       state->functions.push_back(makeGetState(repCtx, file, obj));
       state->functions.push_back(makeGotoState(repCtx, file, obj));
     }
@@ -104,8 +99,15 @@ struct PapyrusState final
     }
 
     if (name == "") {
-      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_EmptyStateFunctionCount, functions.size(), name);
-      EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_StaticFunctionCount, staticFunctionCount);
+      EngineLimits::checkLimit(repCtx,
+                               location,
+                               EngineLimits::Type::PexObject_EmptyStateFunctionCount,
+                               functions.size(),
+                               name);
+      EngineLimits::checkLimit(repCtx,
+                               location,
+                               EngineLimits::Type::PexObject_StaticFunctionCount,
+                               staticFunctionCount);
     } else {
       EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexState_FunctionCount, functions.size(), name);
     }
@@ -118,7 +120,7 @@ struct PapyrusState final
 
 private:
   friend IntrusiveLinkedList<PapyrusState>;
-  PapyrusState* next{ nullptr };
+  PapyrusState* next { nullptr };
 };
 
 }}

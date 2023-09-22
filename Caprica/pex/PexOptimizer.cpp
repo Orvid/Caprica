@@ -3,23 +3,20 @@
 #include <unordered_map>
 #include <vector>
 
-namespace caprica { namespace pex { 
+namespace caprica { namespace pex {
 
-struct OptInstruction final
-{
-  size_t id{ 0 };
-  size_t instructionNum{ 0 };
-  PexInstruction* instr{ nullptr };
-  std::vector<OptInstruction*> instructionsReferencingLabel{ };
-  OptInstruction* branchTarget{ nullptr };
-  uint16_t lineNumber{ 0 };
+struct OptInstruction final {
+  size_t id { 0 };
+  size_t instructionNum { 0 };
+  PexInstruction* instr { nullptr };
+  std::vector<OptInstruction*> instructionsReferencingLabel {};
+  OptInstruction* branchTarget { nullptr };
+  uint16_t lineNumber { 0 };
 
   explicit OptInstruction(size_t id, PexInstruction* instr) : id(id), instr(instr) { }
   ~OptInstruction() = default;
 
-  bool isDead() const {
-    return instr == nullptr || instr->opCode == PexOpCode::Nop;
-  }
+  bool isDead() const { return instr == nullptr || instr->opCode == PexOpCode::Nop; }
 
   void killInstruction() {
 #if 0
@@ -49,7 +46,7 @@ static std::vector<OptInstruction*> buildOptInstructions(const PexDebugFunctionI
     }
   }
 
-  std::vector<OptInstruction*> optimizedInstructions{ };
+  std::vector<OptInstruction*> optimizedInstructions {};
   optimizedInstructions.reserve(instructions.size());
   size_t id = 0;
   for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur, id++) {
@@ -95,10 +92,9 @@ void PexOptimizer::optimize(PexFile* file,
     return true;
   };
   const auto nextNonDead = [&optimizedInstructions](size_t startID) -> OptInstruction* {
-    for (size_t i = startID + 1; i < optimizedInstructions.size(); i++) {
+    for (size_t i = startID + 1; i < optimizedInstructions.size(); i++)
       if (!optimizedInstructions[i]->isDead())
         return optimizedInstructions[i];
-    }
     return nullptr;
   };
 
@@ -152,8 +148,8 @@ void PexOptimizer::optimize(PexFile* file,
       curInstrNum++;
   }
 
-  IntrusiveLinkedList<PexInstruction> newInstructions{ };
-  std::vector<uint16_t> newLineInfo{ };
+  IntrusiveLinkedList<PexInstruction> newInstructions {};
+  std::vector<uint16_t> newLineInfo {};
   newLineInfo.reserve(curInstrNum);
   for (auto& i : optimizedInstructions) {
     if (i->instr) {

@@ -4,12 +4,10 @@
 
 namespace caprica {
 
-template<typename T>
-struct AtomicStack final
-{
-  struct Node
-  {
-    std::atomic<T*> next{ nullptr };
+template <typename T>
+struct AtomicStack final {
+  struct Node {
+    std::atomic<T*> next { nullptr };
   };
 
   bool tryPop(T*& ret) {
@@ -19,9 +17,8 @@ struct AtomicStack final
 
     auto newN = n->next.load();
     while (!root.compare_exchange_weak(n, newN)) {
-      if (!n) {
+      if (!n)
         return false;
-      }
       newN = n->next.load();
     }
 
@@ -37,7 +34,7 @@ struct AtomicStack final
   }
 
 private:
-  std::atomic<T*> root{ nullptr };
+  std::atomic<T*> root { nullptr };
 };
 
 }

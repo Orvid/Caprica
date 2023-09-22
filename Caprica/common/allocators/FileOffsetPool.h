@@ -7,8 +7,7 @@
 
 namespace caprica { namespace allocators {
 
-struct FileOffsetPool final
-{
+struct FileOffsetPool final {
   explicit FileOffsetPool() = default;
   ~FileOffsetPool() {
     if (flattenedTree) {
@@ -57,10 +56,9 @@ struct FileOffsetPool final
 private:
   static constexpr size_t HeapSize = 510; // Chosen so that sizeof(Heap) == 4096
 
-  struct Heap final
-  {
-    size_t nextDataIndex{ 0 };
-    Heap* next{ nullptr };
+  struct Heap final {
+    size_t nextDataIndex { 0 };
+    Heap* next { nullptr };
     size_t data[HeapSize];
 
     explicit Heap() { }
@@ -73,15 +71,14 @@ private:
     }
   };
 
-  size_t mSize{ 0 };
-  Heap* current{ &base };
-  size_t* flattenedTree{ nullptr };
-  size_t flattenedTreeSize{ 0 };
+  size_t mSize { 0 };
+  Heap* current { &base };
+  size_t* flattenedTree { nullptr };
+  size_t flattenedTreeSize { 0 };
   Heap base;
 
 public:
-  struct Iterator final
-  {
+  struct Iterator final {
     using iterator_category = std::random_access_iterator_tag;
     using value_type = size_t;
     using difference_type = int64_t;
@@ -89,17 +86,17 @@ public:
     using reference = size_t&;
 
     size_t* data;
-    size_t curIndex{ 0 };
+    size_t curIndex { 0 };
     size_t maxIndex;
 
-    Iterator& operator ++() {
+    Iterator& operator++() {
       if (curIndex == maxIndex)
         return *this;
       curIndex++;
       return *this;
     }
 
-    Iterator& operator +=(int64_t off) {
+    Iterator& operator+=(int64_t off) {
       if (curIndex + off < 0) {
         curIndex = 0;
         return *this;
@@ -112,20 +109,20 @@ public:
       return *this;
     }
 
-    Iterator operator +(int64_t off) const {
+    Iterator operator+(int64_t off) const {
       Iterator ret = *this;
       ret += off;
       return ret;
     }
 
-    Iterator& operator --() {
+    Iterator& operator--() {
       if (curIndex == 0)
         return *this;
       curIndex--;
       return *this;
     }
 
-    Iterator& operator -=(int64_t off) {
+    Iterator& operator-=(int64_t off) {
       if (curIndex - off < 0) {
         curIndex = 0;
         return *this;
@@ -138,45 +135,30 @@ public:
       return *this;
     }
 
-    Iterator operator -(int64_t off) const {
+    Iterator operator-(int64_t off) const {
       Iterator ret = *this;
       ret -= off;
       return ret;
     }
 
-    int64_t operator -(const Iterator& b) const {
-      return (int64_t)curIndex - (int64_t)b.curIndex;
-    }
+    int64_t operator-(const Iterator& b) const { return (int64_t)curIndex - (int64_t)b.curIndex; }
 
-    size_t& operator [](size_t idx) {
-      return data[idx];
-    }
-    const size_t& operator [](size_t idx) const {
-      return data[idx];
-    }
-    size_t& operator *() {
-      return data[curIndex];
-    }
-    const size_t& operator *() const {
-      return data[curIndex];
-    }
-    size_t& operator ->() {
-      return data[curIndex];
-    }
-    const size_t& operator ->() const {
-      return data[curIndex];
-    }
+    size_t& operator[](size_t idx) { return data[idx]; }
+    const size_t& operator[](size_t idx) const { return data[idx]; }
+    size_t& operator*() { return data[curIndex]; }
+    const size_t& operator*() const { return data[curIndex]; }
+    size_t& operator->() { return data[curIndex]; }
+    const size_t& operator->() const { return data[curIndex]; }
 
-    bool operator ==(const Iterator& other) const {
-      return curIndex == other.curIndex;
-    }
-    bool operator !=(const Iterator& other) const { return !(*this == other); }
-    bool operator <(const Iterator& other) const { return curIndex < other.curIndex; }
-    bool operator <=(const Iterator& other) const { return curIndex <= other.curIndex; }
-    bool operator >(const Iterator& other) const { return curIndex > other.curIndex; }
-    bool operator >=(const Iterator& other) const { return curIndex >= other.curIndex; }
+    bool operator==(const Iterator& other) const { return curIndex == other.curIndex; }
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+    bool operator<(const Iterator& other) const { return curIndex < other.curIndex; }
+    bool operator<=(const Iterator& other) const { return curIndex <= other.curIndex; }
+    bool operator>(const Iterator& other) const { return curIndex > other.curIndex; }
+    bool operator>=(const Iterator& other) const { return curIndex >= other.curIndex; }
 
     explicit Iterator() = default;
+
   private:
     friend FileOffsetPool;
     Iterator(size_t* dat, size_t curIdx, size_t maxIdx) : data(dat), curIndex(curIdx), maxIndex(maxIdx) { }
@@ -198,13 +180,13 @@ public:
   }
 };
 
-inline FileOffsetPool::Iterator operator +(int64_t off, const FileOffsetPool::Iterator& a) {
+inline FileOffsetPool::Iterator operator+(int64_t off, const FileOffsetPool::Iterator& a) {
   FileOffsetPool::Iterator ret = a;
   ret += off;
   return ret;
 }
 
-inline FileOffsetPool::Iterator operator -(int64_t off, const FileOffsetPool::Iterator& a) {
+inline FileOffsetPool::Iterator operator-(int64_t off, const FileOffsetPool::Iterator& a) {
   FileOffsetPool::Iterator ret = a;
   ret -= off;
   return ret;

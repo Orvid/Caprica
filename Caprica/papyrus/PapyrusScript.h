@@ -17,12 +17,11 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusScript final
-{
-  time_t lastModificationTime{ };
-  std::string sourceFileName{ "" };
-  IntrusiveLinkedList<PapyrusObject> objects{ };
-  allocators::ChainedPool* allocator{ nullptr };
+struct PapyrusScript final {
+  time_t lastModificationTime {};
+  std::string sourceFileName { "" };
+  IntrusiveLinkedList<PapyrusObject> objects {};
+  allocators::ChainedPool* allocator { nullptr };
 
   explicit PapyrusScript() = default;
   PapyrusScript(const PapyrusScript&) = delete;

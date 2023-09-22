@@ -15,7 +15,9 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
     // of void function calls to objects and bools, so we need to check for that here.
     if (val.type == pex::PexValueType::Invalid) {
       if (!conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult) {
-        bldr.reportingContext.fatal(location, "Cannot cast None method call result to '%s'!", targetType.prettyString().c_str());
+        bldr.reportingContext.fatal(location,
+                                    "Cannot cast None method call result to '%s'!",
+                                    targetType.prettyString().c_str());
       }
       switch (targetType.type) {
         case PapyrusType::Kind::ResolvedObject:
@@ -25,23 +27,27 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
         case PapyrusType::Kind::String:
         case PapyrusType::Kind::Array:
         case PapyrusType::Kind::None:
-          bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location, targetType.prettyString().c_str());
+          bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location,
+                                                                              targetType.prettyString().c_str());
           val = bldr.getNoneLocal(location);
           break;
         default:
-          if (conf::Papyrus::allowImplicitNoneCastsToAnyType){
-            bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location, targetType.prettyString().c_str());
+          if (conf::Papyrus::allowImplicitNoneCastsToAnyType) {
+            bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location,
+                                                                                targetType.prettyString().c_str());
             val = bldr.getNoneLocal(location);
             break;
           }
-          bldr.reportingContext.fatal(location, "Cannot cast None method call result to '%s'!", targetType.prettyString().c_str());
+          bldr.reportingContext.fatal(location,
+                                      "Cannot cast None method call result to '%s'!",
+                                      targetType.prettyString().c_str());
           break;
       }
     }
   }
 
   bldr << location;
-  bldr << op::cast{ dest, val };
+  bldr << op::cast { dest, val };
   return dest;
 }
 
@@ -50,12 +56,19 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
   ctx->checkForPoison(innerExpression);
   targetType = ctx->resolveType(targetType);
 
-  if (innerExpression->resultType() == targetType)
-    ctx->reportingContext.warning_W4001_Unecessary_Cast(location, innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
+  if (innerExpression->resultType() == targetType) {
+    ctx->reportingContext.warning_W4001_Unecessary_Cast(location,
+                                                        innerExpression->resultType().prettyString().c_str(),
+                                                        targetType.prettyString().c_str());
+  }
 
   if (!ctx->canExplicitlyCast(innerExpression->location, innerExpression->resultType(), targetType)) {
-    if (!ctx->canImplicitlyCoerceExpression(innerExpression, targetType))
-      ctx->reportingContext.error(location, "Cannot convert from '%s' to '%s'!", innerExpression->resultType().prettyString().c_str(), targetType.prettyString().c_str());
+    if (!ctx->canImplicitlyCoerceExpression(innerExpression, targetType)) {
+      ctx->reportingContext.error(location,
+                                  "Cannot convert from '%s' to '%s'!",
+                                  innerExpression->resultType().prettyString().c_str(),
+                                  targetType.prettyString().c_str());
+    }
   }
 }
 

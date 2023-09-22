@@ -10,21 +10,20 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusIfStatement final : public PapyrusStatement
-{
-  struct IfBody final
-  {
-    expressions::PapyrusExpression* condition{ nullptr };
-    IntrusiveLinkedList<PapyrusStatement> body{ };
+struct PapyrusIfStatement final : public PapyrusStatement {
+  struct IfBody final {
+    expressions::PapyrusExpression* condition { nullptr };
+    IntrusiveLinkedList<PapyrusStatement> body {};
 
-    IfBody(expressions::PapyrusExpression* c, IntrusiveLinkedList<PapyrusStatement>&& b) : condition(c), body(std::move(b)) { }
+    IfBody(expressions::PapyrusExpression* c, IntrusiveLinkedList<PapyrusStatement>&& b)
+        : condition(c), body(std::move(b)) { }
 
   private:
     friend IntrusiveLinkedList<IfBody>;
-    IfBody* next{ nullptr };
+    IfBody* next { nullptr };
   };
-  IntrusiveLinkedList<IfBody> ifBodies{ };
-  IntrusiveLinkedList<PapyrusStatement> elseStatements{ };
+  IntrusiveLinkedList<IfBody> ifBodies {};
+  IntrusiveLinkedList<PapyrusStatement> elseStatements {};
 
   explicit PapyrusIfStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusIfStatement(const PapyrusIfStatement&) = delete;
@@ -54,18 +53,18 @@ struct PapyrusIfStatement final : public PapyrusStatement
     namespace op = caprica::pex::op;
     pex::PexLabel* afterAll;
     bldr >> afterAll;
-    pex::PexLabel* nextCondition{ nullptr };
+    pex::PexLabel* nextCondition { nullptr };
     for (auto& ifBody : ifBodies) {
       if (nextCondition)
         bldr << nextCondition;
       bldr >> nextCondition;
       auto lVal = ifBody->condition->generateLoad(file, bldr);
       bldr << location;
-      bldr << op::jmpf{ lVal, nextCondition };
+      bldr << op::jmpf { lVal, nextCondition };
       for (auto s : ifBody->body)
         s->buildPex(file, bldr);
       bldr << location;
-      bldr << op::jmp{ afterAll };
+      bldr << op::jmp { afterAll };
     }
 
     bldr << nextCondition;
@@ -80,21 +79,17 @@ struct PapyrusIfStatement final : public PapyrusStatement
       ctx->checkForPoison(i->condition);
       i->condition = ctx->coerceExpression(i->condition, PapyrusType::Bool(i->condition->location));
       ctx->pushLocalVariableScope();
-      if (conf::Papyrus::game == GameID::Skyrim) {
-          for (auto s: i->body) {
-            s->semantic_skyrim_first_pass(ctx);
-          }
-      }
+      if (conf::Papyrus::game == GameID::Skyrim)
+        for (auto s : i->body)
+          s->semantic_skyrim_first_pass(ctx);
       for (auto s : i->body)
         s->semantic(ctx);
       ctx->popLocalVariableScope();
     }
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s : elseStatements) {
+    if (conf::Papyrus::game == GameID::Skyrim)
+      for (auto s : elseStatements)
         s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : elseStatements)
       s->semantic(ctx);
     ctx->popLocalVariableScope();
@@ -103,10 +98,9 @@ struct PapyrusIfStatement final : public PapyrusStatement
   virtual void visit(PapyrusStatementVisitor& visitor) override {
     visitor.visit(this);
 
-    for (auto i : ifBodies) {
+    for (auto i : ifBodies)
       for (auto s : i->body)
         s->visit(visitor);
-    }
     for (auto s : elseStatements)
       s->visit(visitor);
   }

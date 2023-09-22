@@ -11,10 +11,8 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusCompilationNode final
-{
-  enum class NodeType
-  {
+struct PapyrusCompilationNode final {
+  enum class NodeType {
     Unknown,
 
     PapyrusCompile,
@@ -30,17 +28,21 @@ struct PapyrusCompilationNode final
   std::string_view baseName;
 
   PapyrusCompilationNode() = delete;
-  PapyrusCompilationNode(CapricaJobManager* mgr, NodeType compileType, std::string&& sourcePath,
-                         std::string&& baseOutputDir, std::string&& absolutePath,
-                         time_t lastMod, size_t fileSize) :
-    reportedName(std::move(sourcePath)),
-    outputDirectory(std::move(baseOutputDir)),
-    sourceFilePath(std::move(absolutePath)),
-    lastModTime(lastMod),
-    filesize(fileSize),
-    reportingContext(reportedName),
-    jobManager(mgr),
-    type(compileType) {
+  PapyrusCompilationNode(CapricaJobManager* mgr,
+                         NodeType compileType,
+                         std::string&& sourcePath,
+                         std::string&& baseOutputDir,
+                         std::string&& absolutePath,
+                         time_t lastMod,
+                         size_t fileSize)
+      : reportedName(std::move(sourcePath)),
+        outputDirectory(std::move(baseOutputDir)),
+        sourceFilePath(std::move(absolutePath)),
+        lastModTime(lastMod),
+        filesize(fileSize),
+        reportingContext(reportedName),
+        jobManager(mgr),
+        type(compileType) {
     baseName = FSUtils::basenameAsRef(sourceFilePath);
     // TODO: fix Imports hack
     if (type == NodeType::PapyrusImport)
@@ -68,6 +70,7 @@ struct PapyrusCompilationNode final
 private:
   struct BaseJob : public CapricaJob {
     BaseJob(PapyrusCompilationNode* par) : parent(par) { }
+
   protected:
     PapyrusCompilationNode* parent;
   };
@@ -78,47 +81,47 @@ private:
   std::string reportedName;
   std::string outputDirectory;
   std::string sourceFilePath;
-  std::string_view readFileData{ };
-  std::string ownedReadFileData{ };
-  pex::PexWriter* pexWriter{ nullptr };
-  PapyrusScript* loadedScript{ nullptr };
-  pex::PexFile* pexFile{ nullptr };
-  PapyrusObject* resolvedObject{ nullptr };
+  std::string_view readFileData {};
+  std::string ownedReadFileData {};
+  pex::PexWriter* pexWriter { nullptr };
+  PapyrusScript* loadedScript { nullptr };
+  pex::PexFile* pexFile { nullptr };
+  PapyrusObject* resolvedObject { nullptr };
   CapricaReportingContext reportingContext;
-  PapyrusResolutionContext* resolutionContext{ nullptr };
+  PapyrusResolutionContext* resolutionContext { nullptr };
   CapricaJobManager* jobManager;
 
   struct FileReadJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
-  } readJob{ this };
+  } readJob { this };
   struct FileParseJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
-  } parseJob{ this };
-  struct FileSemanticJob final : public BaseJob
-  {
+  } parseJob { this };
+  struct FileSemanticJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
-  } semanticJob{ this };
-  struct FileCompileJob final : public BaseJob
-  {
+  } semanticJob { this };
+  struct FileCompileJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
-  } compileJob{ this };
-  struct FileWriteJob final : public BaseJob
-  {
+  } compileJob { this };
+  struct FileWriteJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
-  } writeJob{ this };
+  } writeJob { this };
 };
 
-struct PapyrusCompilationContext final
-{
+struct PapyrusCompilationContext final {
   static void awaitRead();
   static void doCompile(CapricaJobManager* jobManager);
-  static void pushNamespaceFullContents(const std::string& namespaceName, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map);
-  static bool tryFindType(const identifier_ref& baseNamespace, const identifier_ref& typeName, PapyrusCompilationNode** retNode, identifier_ref* retStructName);
+  static void pushNamespaceFullContents(const std::string& namespaceName,
+                                        caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map);
+  static bool tryFindType(const identifier_ref& baseNamespace,
+                          const identifier_ref& typeName,
+                          PapyrusCompilationNode** retNode,
+                          identifier_ref* retStructName);
 };
 
 }}

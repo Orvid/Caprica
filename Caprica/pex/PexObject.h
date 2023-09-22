@@ -19,31 +19,30 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-struct PexObject final
-{
-  PexString name{ };
-  PexString parentClassName{ };
-  PexString documentationString{ };
-  bool isConst{ false };
-  PexUserFlags userFlags{ };
-  PexString autoStateName{ };
-  IntrusiveLinkedList<PexStruct> structs{ };
-  IntrusiveLinkedList<PexVariable> variables{ };
-  IntrusiveLinkedList<PexProperty> properties{ };
-  IntrusiveLinkedList<PexState> states{ };
-  IntrusiveLinkedList<PexGuard> guards{ };
+struct PexObject final {
+  PexString name {};
+  PexString parentClassName {};
+  PexString documentationString {};
+  bool isConst { false };
+  PexUserFlags userFlags {};
+  PexString autoStateName {};
+  IntrusiveLinkedList<PexStruct> structs {};
+  IntrusiveLinkedList<PexVariable> variables {};
+  IntrusiveLinkedList<PexProperty> properties {};
+  IntrusiveLinkedList<PexState> states {};
+  IntrusiveLinkedList<PexGuard> guards {};
 
   explicit PexObject() = default;
   PexObject(const PexObject&) = delete;
   ~PexObject() = default;
 
-  static PexObject *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
-  void write(PexWriter &wtr, GameID gameType) const;
+  static PexObject* read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType);
+  void write(PexWriter& wtr, GameID gameType) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
 private:
   friend IntrusiveLinkedList<PexObject>;
-  PexObject* next{ nullptr };
+  PexObject* next { nullptr };
 };
 
 }}

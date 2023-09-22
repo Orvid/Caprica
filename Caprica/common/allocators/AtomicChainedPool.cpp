@@ -36,9 +36,8 @@ bool AtomicChainedPool::Heap::tryAlloc(size_t size, void** retBuf) {
 }
 
 char* AtomicChainedPool::allocate(size_t size) {
-  if (size > heapSize) {
+  if (size > heapSize)
     return (char*)allocHeap(size, size);
-  }
 Again:
   void* ret = nullptr;
   auto curHp = current.load(std::memory_order_acquire);
@@ -52,10 +51,9 @@ Again:
     }
     auto alloced = allocHeap(heapSize, size);
     n = curHp->next.load(std::memory_order_acquire);
-    if (n != nullptr) {
+    if (n != nullptr)
       current.compare_exchange_strong(curHp, n);
-    }
-    return (char*) alloced;
+    return (char*)alloced;
   }
   return (char*)ret;
 }

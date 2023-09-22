@@ -8,11 +8,10 @@
 
 namespace caprica { namespace pex {
 
-struct PexDebugStructOrder final
-{
-  PexString objectName{ };
-  PexString structName{ };
-  IntrusiveLinkedList<IntrusivePexString> members{ };
+struct PexDebugStructOrder final {
+  PexString objectName {};
+  PexString structName {};
+  IntrusiveLinkedList<IntrusivePexString> members {};
 
   explicit PexDebugStructOrder() = default;
   PexDebugStructOrder(const PexDebugStructOrder&) = delete;
@@ -23,7 +22,7 @@ struct PexDebugStructOrder final
 
 private:
   friend IntrusiveLinkedList<PexDebugStructOrder>;
-  PexDebugStructOrder* next{ nullptr };
+  PexDebugStructOrder* next { nullptr };
 };
 
 }}

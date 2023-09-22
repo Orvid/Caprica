@@ -8,18 +8,16 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-enum class PapyrusUnaryOperatorType
-{
+enum class PapyrusUnaryOperatorType {
   None,
 
   Not,
   Negate,
 };
 
-struct PapyrusUnaryOpExpression final : public PapyrusExpression
-{
-  PapyrusUnaryOperatorType operation{ PapyrusUnaryOperatorType::None };
-  PapyrusExpression* innerExpression{ nullptr };
+struct PapyrusUnaryOpExpression final : public PapyrusExpression {
+  PapyrusUnaryOperatorType operation { PapyrusUnaryOperatorType::None };
+  PapyrusExpression* innerExpression { nullptr };
 
   explicit PapyrusUnaryOpExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusUnaryOpExpression(const PapyrusUnaryOpExpression&) = delete;
@@ -33,16 +31,16 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression
     switch (operation) {
       case PapyrusUnaryOperatorType::Negate:
         if (innerExpression->resultType().type == PapyrusType::Kind::Float)
-          bldr << op::fneg{ dest, iVal };
+          bldr << op::fneg { dest, iVal };
         else if (innerExpression->resultType().type == PapyrusType::Kind::Int)
-          bldr << op::ineg{ dest, iVal };
+          bldr << op::ineg { dest, iVal };
         else
           bldr.reportingContext.fatal(location, "You can only negate integers and floats!");
         return dest;
       case PapyrusUnaryOperatorType::Not:
-        bldr << op::_not{ dest, iVal };
+        bldr << op::_not { dest, iVal };
         return dest;
-      
+
       case PapyrusUnaryOperatorType::None:
         break;
     }

@@ -13,8 +13,7 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusStatement abstract
-{
+struct PapyrusStatement abstract {
   const CapricaFileLocation location;
 
   explicit PapyrusStatement(CapricaFileLocation loc) : location(loc) { }
@@ -29,7 +28,7 @@ struct PapyrusStatement abstract
 
 private:
   friend IntrusiveLinkedList<PapyrusStatement>;
-  PapyrusStatement* next{ nullptr };
+  PapyrusStatement* next { nullptr };
 };
 
 }}}

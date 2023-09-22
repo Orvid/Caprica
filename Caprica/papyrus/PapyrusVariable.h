@@ -16,20 +16,20 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusVariable final
-{
-  identifier_ref name{ "" };
+struct PapyrusVariable final {
+  identifier_ref name { "" };
   PapyrusType type;
-  PapyrusUserFlags userFlags{ };
-  PapyrusValue defaultValue{ PapyrusValue::Default() };
+  PapyrusUserFlags userFlags {};
+  PapyrusValue defaultValue { PapyrusValue::Default() };
 
   CapricaFileLocation location;
-  const PapyrusObject* parent{ nullptr };
-  CapricaReferenceState referenceState{ };
+  const PapyrusObject* parent { nullptr };
+  CapricaReferenceState referenceState {};
 
   bool isConst() const { return userFlags.isConst; }
 
-  explicit PapyrusVariable(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par) : location(loc), type(std::move(tp)), parent(par) { }
+  explicit PapyrusVariable(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par)
+      : location(loc), type(std::move(tp)), parent(par) { }
   PapyrusVariable(const PapyrusVariable&) = delete;
   ~PapyrusVariable() = default;
 
@@ -38,7 +38,7 @@ struct PapyrusVariable final
 
 private:
   friend IntrusiveLinkedList<PapyrusVariable>;
-  PapyrusVariable* next{ nullptr };
+  PapyrusVariable* next { nullptr };
 };
 
 }}

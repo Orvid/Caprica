@@ -11,8 +11,7 @@
 
 namespace caprica { namespace parser {
 
-enum class TokenType : int32_t
-{
+enum class TokenType : int32_t {
   Unknown,
 
   // This is EOF, but EOF is a stdlib define :(
@@ -33,14 +32,12 @@ enum class TokenType : int32_t
   kVariable,
 };
 
-struct CapricaUserFlagsLexer
-{
-  struct Token final
-  {
-    TokenType type{ TokenType::Unknown };
-    CapricaFileLocation location{ };
-    std::string sValue{ };
-    int32_t iValue{ };
+struct CapricaUserFlagsLexer {
+  struct Token final {
+    TokenType type { TokenType::Unknown };
+    CapricaFileLocation location {};
+    std::string sValue {};
+    int32_t iValue {};
 
     explicit Token(TokenType tp) : type(tp) { }
     explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
@@ -52,8 +49,7 @@ struct CapricaUserFlagsLexer
       switch (type) {
         case TokenType::Identifier:
           return "Identifier(" + sValue + ")";
-        case TokenType::Integer:
-        {
+        case TokenType::Integer: {
           std::ostringstream str;
           str << "Integer(" << iValue << ")";
           return str.str();
@@ -67,11 +63,7 @@ struct CapricaUserFlagsLexer
   };
 
   explicit CapricaUserFlagsLexer(CapricaReportingContext& repCtx, const std::string& file)
-    : filename(file),
-      strm(file, std::ifstream::binary),
-      cur(TokenType::Unknown),
-      reportingContext(repCtx)
-  {
+      : filename(file), strm(file, std::ifstream::binary), cur(TokenType::Unknown), reportingContext(repCtx) {
     consume(); // set the first token.
   }
   CapricaUserFlagsLexer(const CapricaUserFlagsLexer&) = delete;
@@ -86,15 +78,13 @@ protected:
 
 private:
   std::ifstream strm;
-  CapricaFileLocation location{ };
+  CapricaFileLocation location {};
 
   int getChar() {
     location.fileOffset++;
     return strm.get();
   }
-  int peekChar() {
-    return strm.peek();
-  }
+  int peekChar() { return strm.peek(); }
   void setTok(TokenType tp, CapricaFileLocation loc);
   void setTok(Token& tok);
 };

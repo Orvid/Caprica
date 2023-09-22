@@ -4,25 +4,17 @@
 
 namespace caprica {
 
-alignas(128) const uint64_t charToLowerMap[] = {
-  ' ', '!', '"', '#', '$', '%', '&', '\'',
-  '(', ')', '*', '+', ',', '-', '.', '/',
-  '0', '1', '2', '3', '4', '5', '6', '7',
-  '8', '9', ':', ';', '<', '=', '>', '?',
-  '@', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-  'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-  'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-  'x', 'y', 'z', '[', '\\', ']', '^', '_',
-  '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-  'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-  'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-  'x', 'y', 'z', '{', '|', '}', '~'
-};
+alignas(128) const uint64_t charToLowerMap[] = { ' ', '!', '"', '#', '$',  '%', '&', '\'', '(', ')', '*', '+', ',', '-',
+                                                 '.', '/', '0', '1', '2',  '3', '4', '5',  '6', '7', '8', '9', ':', ';',
+                                                 '<', '=', '>', '?', '@',  'a', 'b', 'c',  'd', 'e', 'f', 'g', 'h', 'i',
+                                                 'j', 'k', 'l', 'm', 'n',  'o', 'p', 'q',  'r', 's', 't', 'u', 'v', 'w',
+                                                 'x', 'y', 'z', '[', '\\', ']', '^', '_',  '`', 'a', 'b', 'c', 'd', 'e',
+                                                 'f', 'g', 'h', 'i', 'j',  'k', 'l', 'm',  'n', 'o', 'p', 'q', 'r', 's',
+                                                 't', 'u', 'v', 'w', 'x',  'y', 'z', '{',  '|', '}', '~' };
 
 void identifierToLower(char* data, size_t size) {
-  for (size_t i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++)
     *data = (char)(charToLowerMap - 0x20)[*data];
-  }
 }
 
 void identifierToLower(std::string& str) {
@@ -65,16 +57,11 @@ bool pathEq(const identifier_ref& a, const identifier_ref& b) {
   return caselessEq(std::string_view(a.data(), a.size()), std::string_view(b.data(), b.size()));
 }
 
-alignas(128) static const __m128i spaces{
-  ' ', ' ', ' ', ' ',
-  ' ', ' ', ' ', ' ',
-  ' ', ' ', ' ', ' ',
-  ' ', ' ', ' ', ' '
-};
+alignas(128) static const __m128i spaces { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+                                           ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 
-template<bool isNullTerminated>
-ALWAYS_INLINE
-bool CaselessIdentifierEqual::equal(const char* a, const char* b, size_t len) {
+template <bool isNullTerminated>
+ALWAYS_INLINE bool CaselessIdentifierEqual::equal(const char* a, const char* b, size_t len) {
   // This uses the SSE2 instructions movdqa, movdqu, pcmpeqb, por, pmovmskb,
   // and is safe to use on any 64-bit CPU.
   // This returns via goto's because of how MSVC does codegen.
@@ -123,7 +110,7 @@ bool CaselessIdentifierEqual::equal(const char* a, const char* b, size_t len) {
 template bool CaselessIdentifierEqual::equal<true>(const char*, const char*, size_t);
 template bool CaselessIdentifierEqual::equal<false>(const char*, const char*, size_t);
 
-template<bool isNullTerminated>
+template <bool isNullTerminated>
 static bool idEq(const char* a, size_t sA, const char* b, size_t sB) {
   if (sA != sB)
     return false;
@@ -157,7 +144,6 @@ size_t CaselessStringHasher::doCaselessHash(const char* k, size_t len) {
   const char* cStr = k;
   const char* eStr = k + len;
 
-
   size_t val = offsetBasis;
 #if 0
   for (; cStr < eStr; cStr++) {
@@ -180,9 +166,8 @@ size_t CaselessPathHasher::doPathHash(const char* k, size_t len) {
   return CaselessStringHasher::doCaselessHash(k, len);
 }
 
-template<bool isNullTerminated>
-ALWAYS_INLINE
-uint32_t CaselessIdentifierHasher::hash(const char* s, size_t len) {
+template <bool isNullTerminated>
+ALWAYS_INLINE uint32_t CaselessIdentifierHasher::hash(const char* s, size_t len) {
   const char* cStr = s;
 
   size_t lenLeft = len;

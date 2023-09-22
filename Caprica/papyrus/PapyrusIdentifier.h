@@ -22,11 +22,14 @@ struct PapyrusResolutionContext;
 struct PapyrusStructMember;
 struct PapyrusVariable;
 
-namespace expressions { struct PapyrusMemberAccessExpression; }
-namespace statements { struct PapyrusDeclareStatement; }
+namespace expressions {
+struct PapyrusMemberAccessExpression;
+}
+namespace statements {
+struct PapyrusDeclareStatement;
+}
 
-enum class PapyrusIdentifierType : uint16_t
-{
+enum class PapyrusIdentifierType : uint16_t {
   Unresolved,
 
   Property,
@@ -40,8 +43,7 @@ enum class PapyrusIdentifierType : uint16_t
   BuiltinStateField,
 };
 
-enum class PapyrusBuiltinArrayFunctionKind : uint16_t
-{
+enum class PapyrusBuiltinArrayFunctionKind : uint16_t {
   Unknown = 0,
 
   Find,
@@ -62,7 +64,6 @@ enum class PapyrusBuiltinArrayFunctionKind : uint16_t
   Fallout76ArrayFunctionMax = GetMatchingStructs,
   StarfieldArrayFunctionMax = GetMatchingStructs,
   // Skyrim
-
 };
 
 constexpr bool isArrayFunctionInGame(PapyrusBuiltinArrayFunctionKind fk, GameID game) {
@@ -80,14 +81,12 @@ constexpr bool isArrayFunctionInGame(PapyrusBuiltinArrayFunctionKind fk, GameID 
   }
 }
 
-struct PapyrusIdentifier final
-{
-  PapyrusIdentifierType type{ PapyrusIdentifierType::Unresolved };
-  PapyrusBuiltinArrayFunctionKind arrayFuncKind{ PapyrusBuiltinArrayFunctionKind::Unknown };
+struct PapyrusIdentifier final {
+  PapyrusIdentifierType type { PapyrusIdentifierType::Unresolved };
+  PapyrusBuiltinArrayFunctionKind arrayFuncKind { PapyrusBuiltinArrayFunctionKind::Unknown };
   CapricaFileLocation location;
-  union ResolvedTargets
-  {
-    identifier_ref name{ };
+  union ResolvedTargets {
+    identifier_ref name {};
     const PapyrusProperty* prop;
     const PapyrusGuard* guard;
     const PapyrusVariable* var;
@@ -103,8 +102,8 @@ struct PapyrusIdentifier final
   PapyrusIdentifier() = delete;
   PapyrusIdentifier(const PapyrusIdentifier&) = default;
   PapyrusIdentifier(PapyrusIdentifier&&) = default;
-  PapyrusIdentifier& operator =(const PapyrusIdentifier&) = default;
-  PapyrusIdentifier& operator =(PapyrusIdentifier&&) = default;
+  PapyrusIdentifier& operator=(const PapyrusIdentifier&) = default;
+  PapyrusIdentifier& operator=(PapyrusIdentifier&&) = default;
   ~PapyrusIdentifier() = default;
 
   static PapyrusIdentifier Unresolved(CapricaFileLocation loc, const std::string& nm) = delete;
@@ -126,27 +125,40 @@ struct PapyrusIdentifier final
   static PapyrusIdentifier DeclStatement(CapricaFileLocation loc, const statements::PapyrusDeclareStatement* s);
   static PapyrusIdentifier StructMember(CapricaFileLocation loc, const PapyrusStructMember* m);
   static PapyrusIdentifier Function(CapricaFileLocation loc, const PapyrusFunction* f);
-  static PapyrusIdentifier ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
+  static PapyrusIdentifier
+  ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
 
-  static const char * prettyTypeString(PapyrusIdentifierType t){
-    switch(t){
-      case PapyrusIdentifierType::Unresolved: return "Unresolved";
-      case PapyrusIdentifierType::Property: return "Property";
-      case PapyrusIdentifierType::Guard: return "Guard";
-      case PapyrusIdentifierType::Variable: return "Variable";
-      case PapyrusIdentifierType::Parameter: return "Parameter";
-      case PapyrusIdentifierType::DeclareStatement: return "Local Variable";
-      case PapyrusIdentifierType::StructMember: return "Struct Member";
-      case PapyrusIdentifierType::Function: return "Function";
-      case PapyrusIdentifierType::BuiltinArrayFunction: return "Built-in Array Function";
-      case PapyrusIdentifierType::BuiltinStateField: return "Built-in State Field";
+  static const char* prettyTypeString(PapyrusIdentifierType t) {
+    switch (t) {
+      case PapyrusIdentifierType::Unresolved:
+        return "Unresolved";
+      case PapyrusIdentifierType::Property:
+        return "Property";
+      case PapyrusIdentifierType::Guard:
+        return "Guard";
+      case PapyrusIdentifierType::Variable:
+        return "Variable";
+      case PapyrusIdentifierType::Parameter:
+        return "Parameter";
+      case PapyrusIdentifierType::DeclareStatement:
+        return "Local Variable";
+      case PapyrusIdentifierType::StructMember:
+        return "Struct Member";
+      case PapyrusIdentifierType::Function:
+        return "Function";
+      case PapyrusIdentifierType::BuiltinArrayFunction:
+        return "Built-in Array Function";
+      case PapyrusIdentifierType::BuiltinStateField:
+        return "Built-in State Field";
     }
     return "";
   }
 
-
   pex::PexValue generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base) const;
-  void generateStore(pex::PexFile* file, pex::PexFunctionBuilder& bldr, pex::PexValue::Identifier base, pex::PexValue val) const;
+  void generateStore(pex::PexFile* file,
+                     pex::PexFunctionBuilder& bldr,
+                     pex::PexValue::Identifier base,
+                     pex::PexValue val) const;
   void ensureAssignable(CapricaReportingContext& repCtx) const;
   void markRead();
   void markWritten();

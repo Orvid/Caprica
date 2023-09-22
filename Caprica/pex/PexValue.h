@@ -14,8 +14,7 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-enum class PexValueType : uint8_t
-{
+enum class PexValueType : uint8_t {
   None = 0,
   Identifier = 1,
   String = 2,
@@ -28,23 +27,20 @@ enum class PexValueType : uint8_t
   Invalid = 50,
 };
 
-struct PexTemporaryVariableRef
-{
-  PexString type{ };
-  PexLocalVariable* var{ nullptr };
+struct PexTemporaryVariableRef {
+  PexString type {};
+  PexLocalVariable* var { nullptr };
 
   explicit PexTemporaryVariableRef(const PexString& tp) : type(tp) { }
 
 private:
   friend IntrusiveLinkedList<PexTemporaryVariableRef>;
-  PexTemporaryVariableRef* next{ nullptr };
+  PexTemporaryVariableRef* next { nullptr };
 };
 
-struct PexValue
-{
-  PexValueType type{ PexValueType::None };
-  union ValueData
-  {
+struct PexValue {
+  PexValueType type { PexValueType::None };
+  union ValueData {
     PexString s;
     int32_t i;
     float f;
@@ -61,18 +57,16 @@ struct PexValue
     ValueData(PexTemporaryVariableRef* ref) : tmpVar(ref) { }
   } val;
 
-  struct TemporaryVariable
-  {
+  struct TemporaryVariable {
     PexTemporaryVariableRef* var;
 
     explicit TemporaryVariable(PexTemporaryVariableRef* v) : var(v) { }
     TemporaryVariable(const TemporaryVariable&) = default;
     ~TemporaryVariable() = default;
   };
-  struct Identifier
-  {
+  struct Identifier {
     PexString name;
-    PexTemporaryVariableRef* tmpVar{ nullptr };
+    PexTemporaryVariableRef* tmpVar { nullptr };
 
     Identifier() = delete;
     Identifier(PexString str) : name(str) { }
@@ -89,24 +83,21 @@ struct PexValue
       return Identifier(var.val.s);
     }
   };
-  struct Integer
-  {
+  struct Integer {
     int32_t i;
 
     explicit Integer(int32_t val) : i(val) { }
     Integer(const Integer&) = delete;
     ~Integer() = default;
   };
-  struct Float
-  {
+  struct Float {
     float f;
 
     explicit Float(float val) : f(val) { }
     Float(const Float&) = delete;
     ~Float() = default;
   };
-  struct Bool
-  {
+  struct Bool {
     bool b;
 
     explicit Bool(bool val) : b(val) { }
@@ -116,7 +107,7 @@ struct PexValue
   struct None { };
   struct Invalid { };
 
-  explicit PexValue() { };
+  explicit PexValue() {};
   PexValue(PexLabel* lab) : type(PexValueType::Label), val(lab) { }
   PexValue(PexLocalVariable* var) : type(PexValueType::Identifier), val(var->name) { }
   PexValue(const TemporaryVariable& val) : type(PexValueType::TemporaryVar), val(val.var) { }
@@ -133,26 +124,23 @@ struct PexValue
   PexValue(const Invalid&) : type(PexValueType::Invalid) { }
   PexValue(const PexValue&) = default;
   PexValue(PexValue&& other) = default;
-  PexValue& operator =(const PexValue&) = default;
-  PexValue& operator =(PexValue&&) = default;
+  PexValue& operator=(const PexValue&) = default;
+  PexValue& operator=(PexValue&&) = default;
   ~PexValue() = default;
 
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
-  bool operator ==(const PexValue& other) const;
-  bool operator !=(const PexValue& other) const {
-    return !(*this == other);
-  }
+  bool operator==(const PexValue& other) const;
+  bool operator!=(const PexValue& other) const { return !(*this == other); }
 };
 
-struct IntrusivePexValue final : public PexValue
-{
+struct IntrusivePexValue final : public PexValue {
   IntrusivePexValue(const PexValue& str) : PexValue(str) { }
   IntrusivePexValue(PexValue&& str) : PexValue(str) { }
 
 private:
   friend IntrusiveLinkedList<IntrusivePexValue>;
-  IntrusivePexValue* next{ nullptr };
+  IntrusivePexValue* next { nullptr };
 };
 
 }}

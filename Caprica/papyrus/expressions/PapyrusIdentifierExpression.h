@@ -1,7 +1,7 @@
 #pragma once
 
-#include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusIdentifier.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -9,12 +9,12 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusIdentifierExpression final : public PapyrusExpression
-{
+struct PapyrusIdentifierExpression final : public PapyrusExpression {
   PapyrusIdentifier identifier;
-  bool isAssignmentContext{ false };
+  bool isAssignmentContext { false };
 
-  explicit PapyrusIdentifierExpression(CapricaFileLocation loc, PapyrusIdentifier&& id) : PapyrusExpression(loc), identifier(std::move(id)) { }
+  explicit PapyrusIdentifierExpression(CapricaFileLocation loc, PapyrusIdentifier&& id)
+      : PapyrusExpression(loc), identifier(std::move(id)) { }
   PapyrusIdentifierExpression(const PapyrusIdentifierExpression&) = delete;
   virtual ~PapyrusIdentifierExpression() override = default;
 
@@ -30,13 +30,9 @@ struct PapyrusIdentifierExpression final : public PapyrusExpression
       identifier.markRead();
   }
 
-  virtual PapyrusType resultType() const override {
-    return identifier.resultType();
-  }
+  virtual PapyrusType resultType() const override { return identifier.resultType(); }
 
-  virtual PapyrusIdentifierExpression* asIdentifierExpression() override {
-    return this;
-  }
+  virtual PapyrusIdentifierExpression* asIdentifierExpression() override { return this; }
 };
 
 }}}

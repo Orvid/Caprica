@@ -25,7 +25,9 @@ void PexStructMember::write(PexWriter& wtr) const {
 }
 
 void PexStructMember::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.write(".variable %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(typeName).to_string().c_str());
+  wtr.write(".variable %s %s",
+            file->getStringValue(name).to_string().c_str(),
+            file->getStringValue(typeName).to_string().c_str());
   if (isConst)
     wtr.write(" const");
   wtr.writeln();

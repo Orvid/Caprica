@@ -1,7 +1,7 @@
 #pragma once
 
-#include <papyrus/PapyrusValue.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusValue.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -9,12 +9,13 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusLiteralExpression final : public PapyrusExpression
-{
+struct PapyrusLiteralExpression final : public PapyrusExpression {
   PapyrusValue value;
 
-  explicit PapyrusLiteralExpression(CapricaFileLocation loc, const PapyrusValue& val) : PapyrusExpression(loc), value(val) { }
-  explicit PapyrusLiteralExpression(CapricaFileLocation loc, PapyrusValue&& val) : PapyrusExpression(loc), value(std::move(val)) { }
+  explicit PapyrusLiteralExpression(CapricaFileLocation loc, const PapyrusValue& val)
+      : PapyrusExpression(loc), value(val) { }
+  explicit PapyrusLiteralExpression(CapricaFileLocation loc, PapyrusValue&& val)
+      : PapyrusExpression(loc), value(std::move(val)) { }
   PapyrusLiteralExpression(const PapyrusLiteralExpression&) = delete;
   virtual ~PapyrusLiteralExpression() override = default;
 
@@ -25,13 +26,9 @@ struct PapyrusLiteralExpression final : public PapyrusExpression
 
   virtual void semantic(PapyrusResolutionContext*) override { }
 
-  virtual PapyrusType resultType() const override {
-    return value.getPapyrusType();
-  }
+  virtual PapyrusType resultType() const override { return value.getPapyrusType(); }
 
-  virtual PapyrusLiteralExpression* asLiteralExpression() override {
-    return this;
-  }
+  virtual PapyrusLiteralExpression* asLiteralExpression() override { return this; }
 };
 
 }}}

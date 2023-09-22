@@ -2,8 +2,8 @@
 
 #include <common/identifier_ref.h>
 
-#include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusType.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
 #include <pex/PexFile.h>
@@ -11,15 +11,15 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusDeclareStatement final : public PapyrusStatement
-{
+struct PapyrusDeclareStatement final : public PapyrusStatement {
   PapyrusType type;
-  identifier_ref name{ "" };
-  bool isAuto{ false };
-  bool isConst{ false };
-  expressions::PapyrusExpression* initialValue{ nullptr };
+  identifier_ref name { "" };
+  bool isAuto { false };
+  bool isConst { false };
+  expressions::PapyrusExpression* initialValue { nullptr };
 
-  explicit PapyrusDeclareStatement(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusStatement(loc), type(std::move(tp)) { }
+  explicit PapyrusDeclareStatement(CapricaFileLocation loc, PapyrusType&& tp)
+      : PapyrusStatement(loc), type(std::move(tp)) { }
   PapyrusDeclareStatement(const PapyrusDeclareStatement&) = delete;
   virtual ~PapyrusDeclareStatement() override {
     if (initialValue)
@@ -37,7 +37,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
     if (initialValue) {
       auto val = initialValue->generateLoad(file, bldr);
       bldr << location;
-      bldr << op::assign{ loc, val };
+      bldr << op::assign { loc, val };
     }
   }
 
@@ -65,9 +65,7 @@ struct PapyrusDeclareStatement final : public PapyrusStatement
       ctx->addLocalVariable(this);
   }
 
-  virtual void visit(PapyrusStatementVisitor& visitor) override {
-    visitor.visit(this);
-  }
+  virtual void visit(PapyrusStatementVisitor& visitor) override { visitor.visit(this); }
 };
 
 }}}

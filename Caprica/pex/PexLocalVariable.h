@@ -13,10 +13,9 @@ struct PexFile;
 struct PexReader;
 struct PexWriter;
 
-struct PexLocalVariable final
-{
-  PexString name{ };
-  PexString type{ };
+struct PexLocalVariable final {
+  PexString name {};
+  PexString type {};
 
   explicit PexLocalVariable() = default;
   PexLocalVariable(const PexLocalVariable&) = delete;
@@ -28,9 +27,9 @@ struct PexLocalVariable final
 
 private:
   friend IntrusiveLinkedList<PexLocalVariable>;
-  PexLocalVariable* next{ nullptr };
+  PexLocalVariable* next { nullptr };
   friend IntrusiveStack<PexLocalVariable>;
-  PexLocalVariable* nextInStack{ nullptr };
+  PexLocalVariable* nextInStack { nullptr };
 };
 
 }}

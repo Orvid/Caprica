@@ -23,8 +23,7 @@
 
 namespace caprica { namespace papyrus {
 
-enum class PapyrusFunctionType
-{
+enum class PapyrusFunctionType {
   Unknown,
 
   Getter,
@@ -34,18 +33,17 @@ enum class PapyrusFunctionType
   RemoteEvent,
 };
 
-struct PapyrusFunction final
-{
-  identifier_ref name{ "" };
-  identifier_ref documentationComment{ "" };
+struct PapyrusFunction final {
+  identifier_ref name { "" };
+  identifier_ref documentationComment { "" };
   PapyrusType returnType;
-  PapyrusUserFlags userFlags{ };
-  IntrusiveLinkedList<PapyrusFunctionParameter> parameters{ };
-  IntrusiveLinkedList<statements::PapyrusStatement> statements{ };
-  PapyrusObject* parentObject{ nullptr };
-  PapyrusFunctionType functionType{ PapyrusFunctionType::Unknown };
-  identifier_ref remoteEventParent{ "" };
-  identifier_ref remoteEventName{ "" };
+  PapyrusUserFlags userFlags {};
+  IntrusiveLinkedList<PapyrusFunctionParameter> parameters {};
+  IntrusiveLinkedList<statements::PapyrusStatement> statements {};
+  PapyrusObject* parentObject { nullptr };
+  PapyrusFunctionType functionType { PapyrusFunctionType::Unknown };
+  identifier_ref remoteEventParent { "" };
+  identifier_ref remoteEventName { "" };
 
   CapricaFileLocation location;
 
@@ -58,7 +56,7 @@ struct PapyrusFunction final
   PapyrusFunction(const PapyrusFunction&) = delete;
   ~PapyrusFunction() = default;
 
-  pex::PexFunction* buildPex(CapricaReportingContext& repCtx, 
+  pex::PexFunction* buildPex(CapricaReportingContext& repCtx,
                              pex::PexFile* file,
                              pex::PexObject* obj,
                              pex::PexState* state,
@@ -71,7 +69,7 @@ struct PapyrusFunction final
 
 private:
   friend IntrusiveLinkedList<PapyrusFunction>;
-  PapyrusFunction* next{ nullptr };
+  PapyrusFunction* next { nullptr };
 };
 
 }}

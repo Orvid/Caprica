@@ -2,8 +2,8 @@
 #include "common/GameID.h"
 
 namespace caprica {
-constexpr const char *FAKE_SKYRIM_SCRIPTOBJECT_SCRIPT =
-        R"(Scriptname __ScriptObject Hidden
+constexpr const char* FAKE_SKYRIM_SCRIPTOBJECT_SCRIPT =
+    R"(Scriptname __ScriptObject Hidden
 
 String Function GetState()
   { Function that returns the current state }
@@ -31,8 +31,8 @@ EndEvent
 )";
 
 // This was not included in the source release for skyrim, and it is depended on by others.
-constexpr const char *MISSING_DLC1SCWispWallScript_SKYRIM =
-R"(ScriptName DLC1SCWispWallScript Extends ObjectReference
+constexpr const char* MISSING_DLC1SCWispWallScript_SKYRIM =
+    R"(ScriptName DLC1SCWispWallScript Extends ObjectReference
 
 ;-- Variables ---------------------------------------
 Int DeadCount = 0
@@ -67,14 +67,11 @@ EndFunction
 )";
 
 static const caseless_unordered_identifier_ref_map<identifier_ref> FAKE_SCRIPTS = {
-        {"fake://skyrim/__ScriptObject.psc", FAKE_SKYRIM_SCRIPTOBJECT_SCRIPT},
-        {"fake://skyrim/DLC1SCWispWallScript.psc", MISSING_DLC1SCWispWallScript_SKYRIM},
+  {"fake://skyrim/__ScriptObject.psc",        FAKE_SKYRIM_SCRIPTOBJECT_SCRIPT    },
+  { "fake://skyrim/DLC1SCWispWallScript.psc", MISSING_DLC1SCWispWallScript_SKYRIM},
 };
 
-
-
-
-identifier_ref FakeScripts::getFakeScript(const identifier_ref &name, GameID game) {
+identifier_ref FakeScripts::getFakeScript(const identifier_ref& name, GameID game) {
   if (game != GameID::Skyrim)
     return identifier_ref();
   auto it = FAKE_SCRIPTS.find(name);
@@ -82,7 +79,7 @@ identifier_ref FakeScripts::getFakeScript(const identifier_ref &name, GameID gam
     return it->second;
   return identifier_ref();
 }
-size_t FakeScripts::getSizeOfFakeScript(const identifier_ref &name, GameID game) {
+size_t FakeScripts::getSizeOfFakeScript(const identifier_ref& name, GameID game) {
   if (game != GameID::Skyrim)
     return 0;
   auto it = FAKE_SCRIPTS.find(name);
@@ -90,8 +87,5 @@ size_t FakeScripts::getSizeOfFakeScript(const identifier_ref &name, GameID game)
     return 0;
   return it->second.size();
 }
-
-
-
 
 }

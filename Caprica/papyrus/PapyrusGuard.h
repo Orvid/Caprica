@@ -13,10 +13,9 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusGuard final
-{
-  identifier_ref name{ "" };
-  const PapyrusObject* parent{ nullptr };
+struct PapyrusGuard final {
+  identifier_ref name { "" };
+  const PapyrusObject* parent { nullptr };
 
   CapricaFileLocation location;
 
@@ -25,12 +24,12 @@ struct PapyrusGuard final
   ~PapyrusGuard() = default;
 
   void buildPex(CapricaReportingContext&, pex::PexFile* file, pex::PexObject* obj) const;
-  
+
   void semantic2(PapyrusResolutionContext* ctx);
 
 private:
   friend IntrusiveLinkedList<PapyrusGuard>;
-  PapyrusGuard* next{ nullptr };
+  PapyrusGuard* next { nullptr };
 };
 
 }}

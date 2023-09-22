@@ -3,10 +3,9 @@
 #include <pex/PexFile.h>
 
 namespace caprica { namespace pex {
-struct PexOptimizer final
-{
+struct PexOptimizer final {
   static void optimize(PexFile* file) {
-    PexOptimizer opt{ };
+    PexOptimizer opt {};
     for (auto o : file->objects)
       opt.optimize(file, o);
   }

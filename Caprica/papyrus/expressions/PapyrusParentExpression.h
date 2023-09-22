@@ -1,8 +1,8 @@
 #pragma once
 
+#include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/expressions/PapyrusExpression.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -10,13 +10,13 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusParentExpression final : public PapyrusExpression
-{
+struct PapyrusParentExpression final : public PapyrusExpression {
   // We do this this way because we can't
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  explicit PapyrusParentExpression(CapricaFileLocation loc, const PapyrusType& tp) : PapyrusExpression(loc), type(tp) { }
+  explicit PapyrusParentExpression(CapricaFileLocation loc, const PapyrusType& tp)
+      : PapyrusExpression(loc), type(tp) { }
   PapyrusParentExpression(const PapyrusParentExpression&) = delete;
   virtual ~PapyrusParentExpression() override = default;
 
@@ -32,13 +32,9 @@ struct PapyrusParentExpression final : public PapyrusExpression
       ctx->reportingContext.fatal(location, "Parent is invalid in a script with no parent!");
   }
 
-  virtual PapyrusType resultType() const override {
-    return type;
-  }
+  virtual PapyrusType resultType() const override { return type; }
 
-  virtual PapyrusParentExpression* asParentExpression() override {
-    return this;
-  }
+  virtual PapyrusParentExpression* asParentExpression() override { return this; }
 };
 
 }}}

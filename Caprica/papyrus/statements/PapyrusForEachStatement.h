@@ -11,13 +11,12 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusForEachStatement final : public PapyrusStatement
-{
-  PapyrusDeclareStatement* declareStatement{ nullptr };
-  expressions::PapyrusExpression* expressionToIterate{ nullptr };
-  IntrusiveLinkedList<PapyrusStatement> body{ };
-  PapyrusIdentifier* getCountIdentifier{ nullptr };
-  PapyrusIdentifier* getAtIdentifier{ nullptr };
+struct PapyrusForEachStatement final : public PapyrusStatement {
+  PapyrusDeclareStatement* declareStatement { nullptr };
+  expressions::PapyrusExpression* expressionToIterate { nullptr };
+  IntrusiveLinkedList<PapyrusStatement> body {};
+  PapyrusIdentifier* getCountIdentifier { nullptr };
+  PapyrusIdentifier* getAtIdentifier { nullptr };
 
   explicit PapyrusForEachStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusForEachStatement(const PapyrusForEachStatement&) = delete;

@@ -1,8 +1,8 @@
 #pragma once
 
+#include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/PapyrusObject.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/expressions/PapyrusExpression.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -10,13 +10,13 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusSelfExpression final : public PapyrusExpression
-{
+struct PapyrusSelfExpression final : public PapyrusExpression {
   // We do this this way because we can't
   // get the type in resultType() otherwise.
   PapyrusType type;
 
-  explicit PapyrusSelfExpression(CapricaFileLocation loc, PapyrusType&& tp) : PapyrusExpression(loc), type(std::move(tp)) { }
+  explicit PapyrusSelfExpression(CapricaFileLocation loc, PapyrusType&& tp)
+      : PapyrusExpression(loc), type(std::move(tp)) { }
   PapyrusSelfExpression(const PapyrusSelfExpression&) = delete;
   virtual ~PapyrusSelfExpression() override = default;
 
@@ -30,9 +30,7 @@ struct PapyrusSelfExpression final : public PapyrusExpression
       ctx->reportingContext.fatal(location, "An error occured while resolving the self type!");
   }
 
-  virtual PapyrusType resultType() const override {
-    return type;
-  }
+  virtual PapyrusType resultType() const override { return type; }
 };
 
 }}}

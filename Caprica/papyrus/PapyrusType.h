@@ -17,17 +17,14 @@ namespace caprica { namespace papyrus {
 struct PapyrusObject;
 struct PapyrusStruct;
 
-struct PapyrusType final
-{
-  enum class PoisonKind
-  {
-    None  = 0b00000000,
-    Beta  = 0b00000001,
+struct PapyrusType final {
+  enum class PoisonKind {
+    None = 0b00000000,
+    Beta = 0b00000001,
     Debug = 0b00000010,
   };
 
-  enum class Kind
-  {
+  enum class Kind {
     None,
     Bool,
     Float,
@@ -48,12 +45,11 @@ struct PapyrusType final
   // assigned fully later in the control flow.
   struct Default final { };
 
-  Kind type{ Kind::None };
-  PoisonKind poisonState{ PoisonKind::None };
-  CapricaFileLocation location{ };
-  union ResolvedData
-  {
-    const PapyrusStruct* struc{ nullptr };
+  Kind type { Kind::None };
+  PoisonKind poisonState { PoisonKind::None };
+  CapricaFileLocation location {};
+  union ResolvedData {
+    const PapyrusStruct* struc { nullptr };
     const PapyrusObject* obj;
     const PapyrusType* arrayElementType;
   } resolved;
@@ -62,8 +58,8 @@ struct PapyrusType final
   PapyrusType(const Default&) : type(Kind::Unresolved) { }
   PapyrusType(const PapyrusType& other) = default;
   PapyrusType(PapyrusType&& other) = default;
-  PapyrusType& operator =(const PapyrusType&) = default;
-  PapyrusType& operator =(PapyrusType&&) = default;
+  PapyrusType& operator=(const PapyrusType&) = default;
+  PapyrusType& operator=(PapyrusType&&) = default;
   ~PapyrusType() = default;
 
   static PapyrusType Unresolved(CapricaFileLocation loc, const std::string& nm) = delete;
@@ -123,34 +119,32 @@ struct PapyrusType final
   void poison(PoisonKind kind);
   bool isPoisoned(PoisonKind kind) const;
 
-  bool operator !=(const PapyrusType& other) const;
-  bool operator ==(const PapyrusType& other) const {
-    return !(*this != other);
-  }
+  bool operator!=(const PapyrusType& other) const;
+  bool operator==(const PapyrusType& other) const { return !(*this != other); }
 
 private:
   friend struct PapyrusResolutionContext;
 
-  identifier_ref name{ };
+  identifier_ref name {};
 
   PapyrusType(Kind k, CapricaFileLocation loc) : type(k), location(loc) { }
 
   LargelyBufferedString& getTypeStringAsRef(LargelyBufferedString& buf) const;
 };
 
-inline auto operator ~(PapyrusType::PoisonKind a) {
+inline auto operator~(PapyrusType::PoisonKind a) {
   return (decltype(a))(~(std::underlying_type<decltype(a)>::type)a);
 }
-inline auto operator &(PapyrusType::PoisonKind a, PapyrusType::PoisonKind b) {
+inline auto operator&(PapyrusType::PoisonKind a, PapyrusType::PoisonKind b) {
   return (decltype(a))((std::underlying_type<decltype(a)>::type)a & (std::underlying_type<decltype(b)>::type)b);
 }
-inline auto operator |(PapyrusType::PoisonKind a, PapyrusType::PoisonKind b) {
+inline auto operator|(PapyrusType::PoisonKind a, PapyrusType::PoisonKind b) {
   return (decltype(a))((std::underlying_type<decltype(a)>::type)a | (std::underlying_type<decltype(b)>::type)b);
 }
-inline auto& operator &=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
+inline auto& operator&=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
   return a = a & b;
 }
-inline auto& operator |=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
+inline auto& operator|=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
   return a = a | b;
 }
 

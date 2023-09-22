@@ -1,8 +1,8 @@
 #pragma once
 
-#include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/PapyrusObject.h>
+#include <papyrus/PapyrusType.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -10,10 +10,9 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusArrayIndexExpression final : public PapyrusExpression
-{
-  PapyrusExpression* baseExpression{ nullptr };
-  PapyrusExpression* indexExpression{ nullptr };
+struct PapyrusArrayIndexExpression final : public PapyrusExpression {
+  PapyrusExpression* baseExpression { nullptr };
+  PapyrusExpression* indexExpression { nullptr };
 
   explicit PapyrusArrayIndexExpression(CapricaFileLocation loc) : PapyrusExpression(loc) { }
   PapyrusArrayIndexExpression(const PapyrusArrayIndexExpression&) = delete;
@@ -25,7 +24,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     auto idx = indexExpression->generateLoad(file, bldr);
     bldr << location;
     auto dest = bldr.allocTemp(this->resultType());
-    bldr << op::arraygetelement{ dest, pex::PexValue::Identifier::fromVar(base), idx };
+    bldr << op::arraygetelement { dest, pex::PexValue::Identifier::fromVar(base), idx };
     return dest;
   }
 
@@ -34,14 +33,17 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     auto base = baseExpression->generateLoad(file, bldr);
     auto idx = indexExpression->generateLoad(file, bldr);
     bldr << location;
-    bldr << op::arraysetelement{ pex::PexValue::Identifier::fromVar(base), idx, val };
+    bldr << op::arraysetelement { pex::PexValue::Identifier::fromVar(base), idx, val };
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     baseExpression->semantic(ctx);
     ctx->checkForPoison(baseExpression);
-    if (baseExpression->resultType().type != PapyrusType::Kind::Array)
-      ctx->reportingContext.error(baseExpression->location, "You can only index arrays! Got '%s'!", baseExpression->resultType().prettyString().c_str());
+    if (baseExpression->resultType().type != PapyrusType::Kind::Array) {
+      ctx->reportingContext.error(baseExpression->location,
+                                  "You can only index arrays! Got '%s'!",
+                                  baseExpression->resultType().prettyString().c_str());
+    }
     indexExpression->semantic(ctx);
     ctx->checkForPoison(indexExpression);
     indexExpression = ctx->coerceExpression(indexExpression, PapyrusType::Int(indexExpression->location));
@@ -54,9 +56,7 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression
     return PapyrusType::None(location);
   }
 
-  virtual PapyrusArrayIndexExpression* asArrayIndexExpression() override {
-    return this;
-  }
+  virtual PapyrusArrayIndexExpression* asArrayIndexExpression() override { return this; }
 };
 
 }}}

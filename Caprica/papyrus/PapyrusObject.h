@@ -27,8 +27,7 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusCompilationNode;
 
-enum class PapyrusResoultionState
-{
+enum class PapyrusResoultionState {
   Unresolved,
 
   PreSemanticInProgress,
@@ -41,30 +40,30 @@ enum class PapyrusResoultionState
   Semantic2Completed,
 };
 
-struct PapyrusObject final
-{
-  identifier_ref name{ "" };
-  identifier_ref documentationString{ "" };
-  PapyrusUserFlags userFlags{ };
+struct PapyrusObject final {
+  identifier_ref name { "" };
+  identifier_ref documentationString { "" };
+  PapyrusUserFlags userFlags {};
   PapyrusType parentClass;
-  PapyrusState* autoState{ nullptr };
-  
+  PapyrusState* autoState { nullptr };
+
   CapricaFileLocation location;
 
-  std::vector<std::pair<CapricaFileLocation, identifier_ref>> imports{ };
-  IntrusiveLinkedList<PapyrusStruct> structs{ };
-  IntrusiveLinkedList<PapyrusVariable> variables{ };
-  IntrusiveLinkedList<PapyrusGuard> guards{ };
-  IntrusiveLinkedList<PapyrusPropertyGroup> propertyGroups{ };
-  IntrusiveLinkedList<PapyrusState> states{ };
-  IntrusiveLinkedList<PapyrusCustomEvent> customEvents{ };
+  std::vector<std::pair<CapricaFileLocation, identifier_ref>> imports {};
+  IntrusiveLinkedList<PapyrusStruct> structs {};
+  IntrusiveLinkedList<PapyrusVariable> variables {};
+  IntrusiveLinkedList<PapyrusGuard> guards {};
+  IntrusiveLinkedList<PapyrusPropertyGroup> propertyGroups {};
+  IntrusiveLinkedList<PapyrusState> states {};
+  IntrusiveLinkedList<PapyrusCustomEvent> customEvents {};
 
   bool isBetaOnly() const { return userFlags.isBetaOnly; }
   bool isConst() const { return userFlags.isConst; }
   bool isDebugOnly() const { return userFlags.isDebugOnly; }
   bool isNative() const { return userFlags.isNative; }
 
-  explicit PapyrusObject(const CapricaFileLocation& loc, allocators::ChainedPool* alloc, const PapyrusType& baseTp) : location(loc), parentClass(baseTp) {
+  explicit PapyrusObject(const CapricaFileLocation& loc, allocators::ChainedPool* alloc, const PapyrusType& baseTp)
+      : location(loc), parentClass(baseTp) {
     rootState = alloc->make<PapyrusState>(location);
     states.push_back(rootState);
   }
@@ -81,9 +80,7 @@ struct PapyrusObject final
     identifierToLower(lowerName);
   }
 
-  identifier_ref loweredName() const {
-    return lowerName;
-  }
+  identifier_ref loweredName() const { return lowerName; }
 
   identifier_ref getNamespaceName() const {
     auto pos = name.rfind(':');
@@ -108,15 +105,18 @@ struct PapyrusObject final
 private:
   friend PapyrusCompilationNode;
   friend IntrusiveLinkedList<PapyrusObject>;
-  PapyrusObject* next{ nullptr };
+  PapyrusObject* next { nullptr };
 
-  PapyrusCompilationNode* compilationNode{ nullptr };
-  PapyrusResoultionState resolutionState{ PapyrusResoultionState::Unresolved };
-  PapyrusState* rootState{ nullptr };
-  PapyrusPropertyGroup* rootPropertyGroup{ nullptr };
-  std::string lowerName{ };
+  PapyrusCompilationNode* compilationNode { nullptr };
+  PapyrusResoultionState resolutionState { PapyrusResoultionState::Unresolved };
+  PapyrusState* rootState { nullptr };
+  PapyrusPropertyGroup* rootPropertyGroup { nullptr };
+  std::string lowerName {};
 
-  void checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap, bool checkInheritedOnly) const;
+  void
+  checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx,
+                                       caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap,
+                                       bool checkInheritedOnly) const;
 };
 
 }}

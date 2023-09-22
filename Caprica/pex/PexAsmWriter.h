@@ -11,21 +11,20 @@
 
 namespace caprica { namespace pex {
 
-struct PexAsmWriter final
-{
+struct PexAsmWriter final {
   // The indent level. Yes, this spelling is deliberate.
-  size_t ident{ 0 };
+  size_t ident { 0 };
 
   explicit PexAsmWriter(std::ostream& dest) : strm(dest) { }
   PexAsmWriter(const PexAsmWriter&) = delete;
   ~PexAsmWriter() = default;
 
-  template<typename T>
+  template <typename T>
   void writeKV(const char* key, T val) {
     static_assert(std::is_same_v<T, void>, "Unknown type for the value!");
   }
 
-  template<>
+  template <>
   void writeKV(const char* key, time_t val) {
     ensureIndent();
     // TODO: Add a comment output of the times in the local time.
@@ -33,34 +32,34 @@ struct PexAsmWriter final
     writeln();
   }
 
-  template<>
+  template <>
   void writeKV(const char* key, std::string val) {
     ensureIndent();
     strm << '.' << key << " \"" << escapeString(val) << "\"";
     writeln();
   }
 
-  template<>
+  template <>
   void writeKV(const char* key, std::string_view val) {
     ensureIndent();
     strm << '.' << key << " \"" << escapeString(std::string(val)) << "\"";
     writeln();
   }
 
-  template<>
+  template <>
   void writeKV(const char* key, PexUserFlags val) {
     ensureIndent();
     strm << '.' << key << " " << val.data;
     writeln();
   }
 
-  template<typename... Args>
+  template <typename... Args>
   void write(const std::string& msg, Args&&... args) {
     ensureIndent();
     strm << formatString(msg, args...);
   }
 
-  template<typename... Args>
+  template <typename... Args>
   void writeln(const std::string& msg, Args&&... args) {
     ensureIndent();
     strm << formatString(msg, args...);
@@ -74,7 +73,7 @@ struct PexAsmWriter final
 
   static std::string escapeString(const std::string& str) {
     std::ostringstream dest;
-    
+
     for (auto c : str) {
       switch (c) {
         case '\n':
@@ -103,19 +102,18 @@ struct PexAsmWriter final
   }
 
 private:
-  bool haveIndented{ false };
+  bool haveIndented { false };
   std::ostream& strm;
 
   void ensureIndent() {
     if (!haveIndented) {
-      for (size_t i = 0; i < ident; i++) {
+      for (size_t i = 0; i < ident; i++)
         strm << "  ";
-      }
       haveIndented = true;
     }
   }
 
-  template<typename... Args>
+  template <typename... Args>
   static std::string formatString(const std::string& msg, Args&&... args) {
     constexpr bool hasArgs = sizeof...(args) != 0;
     if (hasArgs) {

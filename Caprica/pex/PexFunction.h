@@ -20,32 +20,36 @@ struct PexFile;
 struct PexObject;
 struct PexState;
 
-struct PexFunction final
-{
+struct PexFunction final {
   // If name is invalid, it is assumed this is
   // a property function, and the name won't be
   // written to file.
-  PexString name{ };
-  PexString returnTypeName{ };
-  PexString documentationString{ };
-  PexUserFlags userFlags{ };
-  bool isNative{ false };
-  bool isGlobal{ false };
-  IntrusiveLinkedList<PexFunctionParameter> parameters{ };
-  IntrusiveLinkedList<PexLocalVariable> locals{ };
-  IntrusiveLinkedList<PexInstruction> instructions{ };
+  PexString name {};
+  PexString returnTypeName {};
+  PexString documentationString {};
+  PexUserFlags userFlags {};
+  bool isNative { false };
+  bool isGlobal { false };
+  IntrusiveLinkedList<PexFunctionParameter> parameters {};
+  IntrusiveLinkedList<PexLocalVariable> locals {};
+  IntrusiveLinkedList<PexInstruction> instructions {};
 
   explicit PexFunction() = default;
   PexFunction(const PexFunction&) = delete;
   ~PexFunction() = default;
 
-  static PexFunction *read(allocators::ChainedPool *alloc, PexReader &rdr, bool isProperty, GameID gameType);
+  static PexFunction* read(allocators::ChainedPool* alloc, PexReader& rdr, bool isProperty, GameID gameType);
   void write(PexWriter& wtr) const;
-  void writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const;
+  void writeAsm(const PexFile* file,
+                const PexObject* obj,
+                const PexState* state,
+                PexDebugFunctionType funcType,
+                std::string propName,
+                PexAsmWriter& wtr) const;
 
 private:
   friend IntrusiveLinkedList<PexFunction>;
-  PexFunction* next{ nullptr };
+  PexFunction* next { nullptr };
 };
 
 }}

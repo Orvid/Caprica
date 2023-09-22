@@ -10,14 +10,13 @@
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaStats.h>
 #include <common/FSUtils.h>
+#include <common/GameID.h>
 #include <common/identifier_ref.h>
 #include <common/UtilMacros.h>
-#include <common/GameID.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
-enum class TokenType : int32_t
-{
+enum class TokenType : int32_t {
   Unknown,
 
   EOL,
@@ -133,8 +132,6 @@ enum class TokenType : int32_t
   kStep,
   kSwitch,
   kTo,
-
-
 };
 constexpr TokenType SKYRIM_MAX_KEYWORD = TokenType::kWhile;
 constexpr TokenType FALLOUT4_MAX_KEYWORD = TokenType::kVar;
@@ -145,8 +142,8 @@ constexpr bool keywordIsLanguageExtension(TokenType tp) {
   return tp >= TokenType::kBreak && tp <= TokenType::kTo;
 }
 constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions = false) {
- if (includeExtensions && keywordIsLanguageExtension(tp))
-      return true;
+  if (includeExtensions && keywordIsLanguageExtension(tp))
+    return true;
 
   switch (game) {
     case GameID::Skyrim:
@@ -162,21 +159,17 @@ constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions
   }
 }
 
-
-struct PapyrusLexer
-{
-  struct Token final
-  {
-    TokenType type{ TokenType::Unknown };
-    union InnerValue
-    {
+struct PapyrusLexer {
+  struct Token final {
+    TokenType type { TokenType::Unknown };
+    union InnerValue {
       identifier_ref s;
       int32_t i;
       float f;
 
       InnerValue() : s() { }
     } val;
-    CapricaFileLocation location{ };
+    CapricaFileLocation location {};
 
     explicit Token(TokenType tp) : type(tp) { }
     Token(const Token&) = delete;
@@ -204,10 +197,7 @@ struct PapyrusLexer
   };
 
   explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file, std::string_view data)
-    : filename(file),
-      reportingContext(repCtx),
-      alloc(new allocators::ChainedPool(1024 * 4))
-  {
+      : filename(file), reportingContext(repCtx), alloc(new allocators::ChainedPool(1024 * 4)) {
     CapricaStats::lexedFilesCount++;
     strm = data.data();
     strmLen = data.size();
@@ -220,7 +210,7 @@ protected:
   allocators::ChainedPool* alloc;
   CapricaReportingContext& reportingContext;
   std::string filename;
-  Token cur{ TokenType::Unknown };
+  Token cur { TokenType::Unknown };
 
   void consume();
   ALWAYS_INLINE
@@ -236,17 +226,17 @@ protected:
   TokenType peekTokenType(int distance = 0);
 
 private:
-  const char* strm{ nullptr };
-  size_t strmI{ 0 };
-  size_t strmLen{ 0 };
-  CapricaFileLocation location{ };
+  const char* strm { nullptr };
+  size_t strmI { 0 };
+  size_t strmLen { 0 };
+  CapricaFileLocation location {};
   static constexpr size_t MaxPeekedTokens = 3;
-  int peekedTokenI{ 0 };
-  int peekedTokenCount{ 0 };
-  Token peekedTokens[MaxPeekedTokens]{
-    Token{ TokenType::Unknown },
-    Token{ TokenType::Unknown },
-    Token{ TokenType::Unknown },
+  int peekedTokenI { 0 };
+  int peekedTokenCount { 0 };
+  Token peekedTokens[MaxPeekedTokens] {
+    Token { TokenType::Unknown },
+    Token { TokenType::Unknown },
+    Token { TokenType::Unknown },
   };
 
   ALWAYS_INLINE

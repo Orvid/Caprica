@@ -37,7 +37,7 @@ void PexValue::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
   CapricaReportingContext::logicalFatal("Unknown PexValueType to write as asm!");
 }
 
-bool PexValue::operator ==(const PexValue& other) const {
+bool PexValue::operator==(const PexValue& other) const {
   if (type != other.type)
     return false;
 

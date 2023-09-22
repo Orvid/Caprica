@@ -2,16 +2,18 @@
 
 #include <cstring>
 
-#include <papyrus/PapyrusFunction.h>
-#include <papyrus/PapyrusObject.h>
 #include <papyrus/expressions/PapyrusLiteralExpression.h>
 #include <papyrus/expressions/PapyrusParentExpression.h>
+#include <papyrus/PapyrusFunction.h>
+#include <papyrus/PapyrusObject.h>
 
 namespace caprica { namespace papyrus { namespace expressions {
 
 static constexpr size_t MaxBuiltinArrayFunctionArgumentCount = 4;
 
-pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pex::PexFunctionBuilder& bldr, PapyrusExpression* base) const {
+pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file,
+                                                          pex::PexFunctionBuilder& bldr,
+                                                          PapyrusExpression* base) const {
   if (!shouldEmit)
     return pex::PexValue::Invalid();
 
@@ -27,89 +29,79 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
 
     auto bVal = pex::PexValue::Identifier::fromVar(base->generateLoad(file, bldr));
     switch (function.arrayFuncKind) {
-      case PapyrusBuiltinArrayFunctionKind::Find:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Find: {
         auto elem = args[0]->value->generateLoad(file, bldr);
         auto idx = args[1]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
         bldr << location;
-        bldr << op::arrayfindelement{ bVal, dest, elem, idx };
+        bldr << op::arrayfindelement { bVal, dest, elem, idx };
         return dest;
       }
-      case PapyrusBuiltinArrayFunctionKind::RFind:
-      {
+      case PapyrusBuiltinArrayFunctionKind::RFind: {
         auto elem = args[0]->value->generateLoad(file, bldr);
         auto idx = args[1]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
         bldr << location;
-        bldr << op::arrayrfindelement{ bVal, dest, elem, idx };
+        bldr << op::arrayrfindelement { bVal, dest, elem, idx };
         return dest;
       }
-      case PapyrusBuiltinArrayFunctionKind::FindStruct:
-      {
+      case PapyrusBuiltinArrayFunctionKind::FindStruct: {
         auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
         auto elem = args[1]->value->generateLoad(file, bldr);
         auto idx = args[2]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
         bldr << location;
-        bldr << op::arrayfindstruct{ bVal, dest, memberName, elem, idx };
+        bldr << op::arrayfindstruct { bVal, dest, memberName, elem, idx };
         return dest;
       }
-      case PapyrusBuiltinArrayFunctionKind::RFindStruct:
-      {
+      case PapyrusBuiltinArrayFunctionKind::RFindStruct: {
         auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
         auto elem = args[1]->value->generateLoad(file, bldr);
         auto idx = args[2]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
         bldr << location;
-        bldr << op::arrayrfindstruct{ bVal, dest, memberName, elem, idx };
+        bldr << op::arrayrfindstruct { bVal, dest, memberName, elem, idx };
         return dest;
       }
-      case PapyrusBuiltinArrayFunctionKind::Add:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Add: {
         auto elem = args[0]->value->generateLoad(file, bldr);
         auto cnt = args[1]->value->generateLoad(file, bldr);
         bldr << location;
-        bldr << op::arrayadd{ bVal, elem, cnt };
+        bldr << op::arrayadd { bVal, elem, cnt };
         return pex::PexValue::Invalid();
       }
-      case PapyrusBuiltinArrayFunctionKind::Clear:
-      {
-          bldr << location;
-          bldr << op::arrayclear{ bVal };
-          return pex::PexValue::Invalid();
+      case PapyrusBuiltinArrayFunctionKind::Clear: {
+        bldr << location;
+        bldr << op::arrayclear { bVal };
+        return pex::PexValue::Invalid();
       }
-      case PapyrusBuiltinArrayFunctionKind::Insert:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Insert: {
         auto elem = args[0]->value->generateLoad(file, bldr);
         auto idx = args[1]->value->generateLoad(file, bldr);
         bldr << location;
-        bldr << op::arrayinsert{ bVal, elem, idx };
+        bldr << op::arrayinsert { bVal, elem, idx };
         return pex::PexValue::Invalid();
       }
-      case PapyrusBuiltinArrayFunctionKind::Remove:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Remove: {
         auto idx = args[0]->value->generateLoad(file, bldr);
         auto cnt = args[1]->value->generateLoad(file, bldr);
         bldr << location;
-        bldr << op::arrayremove{ bVal, idx, cnt };
+        bldr << op::arrayremove { bVal, idx, cnt };
         return pex::PexValue::Invalid();
       }
-      case PapyrusBuiltinArrayFunctionKind::RemoveLast:
-      {
+      case PapyrusBuiltinArrayFunctionKind::RemoveLast: {
         bldr << location;
-        bldr << op::arrayremovelast{ bVal };
+        bldr << op::arrayremovelast { bVal };
         return pex::PexValue::Invalid();
       }
-      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs:
-      {
+      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs: {
         auto memberName = args[0]->value->asLiteralExpression()->value.buildPex(file);
         auto elem = args[1]->value->generateLoad(file, bldr);
         auto idx = args[2]->value->generateLoad(file, bldr);
         auto cnt = args[3]->value->generateLoad(file, bldr);
         auto dest = bldr.allocTemp(resultType());
         bldr << location;
-        bldr << op::arraygetallmatchingstructs{ bVal, dest, memberName, elem, idx, cnt };
+        bldr << op::arraygetallmatchingstructs { bVal, dest, memberName, elem, idx, cnt };
         return dest;
       }
       case PapyrusBuiltinArrayFunctionKind::Unknown:
@@ -117,7 +109,9 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
     }
     CapricaReportingContext::logicalFatal("Unknown PapyrusBuiltinArrayFunctionKind!");
   } else {
-    const auto getDest = [](pex::PexFunctionBuilder& bldr, const CapricaFileLocation& loc, const PapyrusType& tp) -> pex::PexValue::Identifier {
+    const auto getDest = [](pex::PexFunctionBuilder& bldr,
+                            const CapricaFileLocation& loc,
+                            const PapyrusType& tp) -> pex::PexValue::Identifier {
       if (tp.type == PapyrusType::Kind::None)
         return bldr.getNoneLocal(loc);
       else
@@ -130,14 +124,20 @@ pex::PexValue PapyrusFunctionCallExpression::generateLoad(pex::PexFile* file, pe
       args.push_back(file->alloc->make<pex::IntrusivePexValue>(param->value->generateLoad(file, bldr)));
     bldr << location;
     if (function.res.func->isGlobal()) {
-      bldr << op::callstatic{ file->getString(function.res.func->parentObject->loweredName()), file->getString(function.res.func->name), dest, std::move(args) };
+      bldr << op::callstatic { file->getString(function.res.func->parentObject->loweredName()),
+                               file->getString(function.res.func->name),
+                               dest,
+                               std::move(args) };
     } else if (base && base->asParentExpression()) {
-      bldr << op::callparent{ file->getString(function.res.func->name), dest, std::move(args) };
+      bldr << op::callparent { file->getString(function.res.func->name), dest, std::move(args) };
     } else if (base) {
       auto bVal = base->generateLoad(file, bldr);
-      bldr << op::callmethod{ file->getString(function.res.func->name), bVal, dest, std::move(args) };
+      bldr << op::callmethod { file->getString(function.res.func->name), bVal, dest, std::move(args) };
     } else {
-      bldr << op::callmethod{ file->getString(function.res.func->name), pex::PexValue::Identifier(file->getString("self")), dest, std::move(args) };
+      bldr << op::callmethod { file->getString(function.res.func->name),
+                               pex::PexValue::Identifier(file->getString("self")),
+                               dest,
+                               std::move(args) };
     }
 
     if (function.res.func->returnType.type == PapyrusType::Kind::None)
@@ -162,8 +162,13 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     const auto getArgs = [&](const char* funcName, size_t argCountMin, size_t argCountMax = 0) {
       assert(arguments.size() <= MaxBuiltinArrayFunctionArgumentCount);
       if (argCountMax != 0) {
-        if (arguments.size() < argCountMin || arguments.size() > argCountMax)
-          ctx->reportingContext.fatal(location, "Expected either %ull or %ull parameters to '%s'!", argCountMin, argCountMax, funcName);
+        if (arguments.size() < argCountMin || arguments.size() > argCountMax) {
+          ctx->reportingContext.fatal(location,
+                                      "Expected either %ull or %ull parameters to '%s'!",
+                                      argCountMin,
+                                      argCountMax,
+                                      funcName);
+        }
       } else {
         if (arguments.size() != argCountMin)
           ctx->reportingContext.fatal(location, "Expected %ull parameters to '%s'!", argCountMin, funcName);
@@ -176,8 +181,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     };
 
     switch (function.arrayFuncKind) {
-      case PapyrusBuiltinArrayFunctionKind::Find:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Find: {
         getArgs("Find", 1, 2);
         args[0]->value = ctx->coerceExpression(args[0]->value, *function.res.arrayFuncElementType);
         if (arguments.size() == 1) {
@@ -185,18 +189,22 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 0));
           arguments.push_back(p);
         } else {
-          if (args[1]->name != "" && !idEq(args[1]->name, "aiStartIndex"))
-            ctx->reportingContext.error(args[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", args[1]->name.to_string().c_str());
+          if (args[1]->name != "" && !idEq(args[1]->name, "aiStartIndex")) {
+            ctx->reportingContext.error(args[1]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiStartIndex'!",
+                                        args[1]->name.to_string().c_str());
+          }
           args[1]->value = ctx->coerceExpression(args[1]->value, PapyrusType::Int(args[1]->value->location));
         }
         return;
       }
-      case PapyrusBuiltinArrayFunctionKind::FindStruct:
-      {
+      case PapyrusBuiltinArrayFunctionKind::FindStruct: {
         getArgs("FindStruct", 2, 3);
-        if (args[0]->value->resultType().type != PapyrusType::Kind::String)
-          ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
-        
+        if (args[0]->value->resultType().type != PapyrusType::Kind::String) {
+          ctx->reportingContext.fatal(location,
+                                      "Expected the literal name of the struct member as a string to compare against!");
+        }
+
         auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
         PapyrusType elemType = PapyrusType::Default();
         for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
@@ -205,8 +213,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
             break;
           }
         }
-        if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        if (elemType.type == PapyrusType::Kind::None) {
+          ctx->reportingContext.fatal(args[0]->value->location,
+                                      "Unknown member '%s' of struct '%s'!",
+                                      memberName.to_string().c_str(),
+                                      function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        }
         args[1]->value = ctx->coerceExpression(args[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -214,14 +226,16 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 0));
           arguments.push_back(p);
         } else {
-          if (args[2]->name != "" && !idEq(args[2]->name, "aiStartIndex"))
-            ctx->reportingContext.error(args[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", args[2]->name.to_string().c_str());
+          if (args[2]->name != "" && !idEq(args[2]->name, "aiStartIndex")) {
+            ctx->reportingContext.error(args[2]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiStartIndex'!",
+                                        args[2]->name.to_string().c_str());
+          }
           args[2]->value = ctx->coerceExpression(args[2]->value, PapyrusType::Int(args[2]->value->location));
         }
         return;
       }
-      case PapyrusBuiltinArrayFunctionKind::RFind:
-      {
+      case PapyrusBuiltinArrayFunctionKind::RFind: {
         getArgs("RFind", 1, 2);
         args[0]->value = ctx->coerceExpression(args[0]->value, *function.res.arrayFuncElementType);
         if (arguments.size() == 1) {
@@ -229,17 +243,21 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, -1));
           arguments.push_back(p);
         } else {
-          if (args[1]->name != "" && !idEq(args[1]->name, "aiStartIndex"))
-            ctx->reportingContext.error(args[1]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", args[1]->name.to_string().c_str());
+          if (args[1]->name != "" && !idEq(args[1]->name, "aiStartIndex")) {
+            ctx->reportingContext.error(args[1]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiStartIndex'!",
+                                        args[1]->name.to_string().c_str());
+          }
           args[1]->value = ctx->coerceExpression(args[1]->value, PapyrusType::Int(args[1]->value->location));
         }
         return;
       }
-      case PapyrusBuiltinArrayFunctionKind::RFindStruct:
-      {
+      case PapyrusBuiltinArrayFunctionKind::RFindStruct: {
         getArgs("RFindStruct", 2, 3);
-        if (args[0]->value->resultType().type != PapyrusType::Kind::String)
-          ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
+        if (args[0]->value->resultType().type != PapyrusType::Kind::String) {
+          ctx->reportingContext.fatal(location,
+                                      "Expected the literal name of the struct member as a string to compare against!");
+        }
 
         auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
         PapyrusType elemType = PapyrusType::Default();
@@ -249,8 +267,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
             break;
           }
         }
-        if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        if (elemType.type == PapyrusType::Kind::None) {
+          ctx->reportingContext.fatal(args[0]->value->location,
+                                      "Unknown member '%s' of struct '%s'!",
+                                      memberName.to_string().c_str(),
+                                      function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        }
         args[1]->value = ctx->coerceExpression(args[1]->value, elemType);
 
         if (arguments.size() == 2) {
@@ -258,14 +280,16 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, -1));
           arguments.push_back(p);
         } else {
-          if (args[2]->name != "" && !idEq(args[2]->name, "aiStartIndex"))
-            ctx->reportingContext.error(args[2]->value->location, "Unknown argument '%s'! Was expecting 'aiStartIndex'!", args[2]->name.to_string().c_str());
+          if (args[2]->name != "" && !idEq(args[2]->name, "aiStartIndex")) {
+            ctx->reportingContext.error(args[2]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiStartIndex'!",
+                                        args[2]->name.to_string().c_str());
+          }
           args[2]->value = ctx->coerceExpression(args[2]->value, PapyrusType::Int(args[2]->value->location));
         }
         return;
       }
-      case PapyrusBuiltinArrayFunctionKind::Add:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Add: {
         getArgs("Add", 1, 2);
         args[0]->value = ctx->coerceExpression(args[0]->value, *function.res.arrayFuncElementType);
         if (arguments.size() == 1) {
@@ -273,8 +297,11 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 1));
           arguments.push_back(p);
         } else {
-          if (args[1]->name != "" && !idEq(args[1]->name, "aiCount"))
-            ctx->reportingContext.error(args[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", args[1]->name.to_string().c_str());
+          if (args[1]->name != "" && !idEq(args[1]->name, "aiCount")) {
+            ctx->reportingContext.error(args[1]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiCount'!",
+                                        args[1]->name.to_string().c_str());
+          }
           args[1]->value = ctx->coerceExpression(args[1]->value, PapyrusType::Int(args[1]->value->location));
         }
         return;
@@ -287,8 +314,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         args[0]->value = ctx->coerceExpression(args[0]->value, *function.res.arrayFuncElementType);
         args[1]->value = ctx->coerceExpression(args[1]->value, PapyrusType::Int(args[1]->value->location));
         return;
-      case PapyrusBuiltinArrayFunctionKind::Remove:
-      {
+      case PapyrusBuiltinArrayFunctionKind::Remove: {
         getArgs("Remove", 1, 2);
         args[0]->value = ctx->coerceExpression(args[0]->value, PapyrusType::Int(args[0]->value->location));
         if (arguments.size() == 1) {
@@ -296,8 +322,11 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           p->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::Integer(location, 1));
           arguments.push_back(p);
         } else {
-          if (args[1]->name != "" && !idEq(args[1]->name, "aiCount"))
-            ctx->reportingContext.error(args[1]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!", args[1]->name.to_string().c_str());
+          if (args[1]->name != "" && !idEq(args[1]->name, "aiCount")) {
+            ctx->reportingContext.error(args[1]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiCount'!",
+                                        args[1]->name.to_string().c_str());
+          }
           args[1]->value = ctx->coerceExpression(args[1]->value, PapyrusType::Int(args[1]->value->location));
         }
         return;
@@ -305,11 +334,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       case PapyrusBuiltinArrayFunctionKind::RemoveLast:
         getArgs("RemoveLast", 0);
         return;
-      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs:
-      {
+      case PapyrusBuiltinArrayFunctionKind::GetMatchingStructs: {
         getArgs("GetMatchingStructs", 3, 4);
-        if (args[0]->value->resultType().type != PapyrusType::Kind::String)
-          ctx->reportingContext.fatal(location, "Expected the literal name of the struct member as a string to compare against!");
+        if (args[0]->value->resultType().type != PapyrusType::Kind::String) {
+          ctx->reportingContext.fatal(location,
+                                      "Expected the literal name of the struct member as a string to compare against!");
+        }
 
         auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
         PapyrusType elemType = PapyrusType::Default();
@@ -319,8 +349,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
             break;
           }
         }
-        if (elemType.type == PapyrusType::Kind::None)
-          ctx->reportingContext.fatal(args[0]->value->location, "Unknown member '%s' of struct '%s'!", memberName.to_string().c_str(), function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        if (elemType.type == PapyrusType::Kind::None) {
+          ctx->reportingContext.fatal(args[0]->value->location,
+                                      "Unknown member '%s' of struct '%s'!",
+                                      memberName.to_string().c_str(),
+                                      function.res.arrayFuncElementType->resolved.struc->name.to_string().c_str());
+        }
         args[1]->value = ctx->coerceExpression(args[1]->value, elemType);
 
         args[2]->value = ctx->coerceExpression(args[2]->value, PapyrusType::Int(args[2]->value->location));
@@ -330,7 +364,8 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           arguments.push_back(p);
         } else {
           if (args[3]->name != "" && !idEq(args[3]->name, "aiCount")) {
-            ctx->reportingContext.error(args[3]->value->location, "Unknown argument '%s'! Was expecting 'aiCount'!",
+            ctx->reportingContext.error(args[3]->value->location,
+                                        "Unknown argument '%s'! Was expecting 'aiCount'!",
                                         args[3]->name.to_string().c_str());
           }
           args[3]->value = ctx->coerceExpression(args[3]->value, PapyrusType::Int(args[3]->value->location));
@@ -358,10 +393,9 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
     }
 
     const auto hasNamedArgs = [&]() {
-      for (auto a : arguments) {
+      for (auto a : arguments)
         if (a->name != "")
           return true;
-      }
       return false;
     };
     if (arguments.size() != function.res.func->parameters.size() || hasNamedArgs()) {
@@ -386,10 +420,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
               ++newArgsIter;
             newArgIndex++;
           }
-          ctx->reportingContext.fatal(iter->value->location, "Unable to find a parameter named '%s'!", iter->name.to_string().c_str());
+          ctx->reportingContext.fatal(iter->value->location,
+                                      "Unable to find a parameter named '%s'!",
+                                      iter->name.to_string().c_str());
         }
-        if (hadNamedArgs)
-          ctx->reportingContext.fatal(iter->value->location, "No normal arguments are allowed after the first named argument!");
+        if (hadNamedArgs) {
+          ctx->reportingContext.fatal(iter->value->location,
+                                      "No normal arguments are allowed after the first named argument!");
+        }
 
         {
           auto a = *iter;
@@ -422,13 +460,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       ctx->checkForPoison(p.self->value);
       switch (p.other->type.type) {
         case PapyrusType::Kind::CustomEventName:
-        case PapyrusType::Kind::ScriptEventName:
-        {
+        case PapyrusType::Kind::ScriptEventName: {
           bool isCustomEvent = p.other->type.type == PapyrusType::Kind::CustomEventName;
 
           auto le = p.self->value->asLiteralExpression();
           if (!le || le->value.type != PapyrusValueType::String) {
-            ctx->reportingContext.error(p.self->value->location, "Argument %zu must be string literal.", p.other->index);
+            ctx->reportingContext.error(p.self->value->location,
+                                        "Argument %zu must be string literal.",
+                                        p.other->index);
             continue;
           }
 
@@ -445,12 +484,17 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
           if (!isCustomEvent && ctx->tryResolveEvent(baseType.resolved.obj, le->value.val.s)) {
             continue;
           } else if (auto ev = ctx->tryResolveCustomEvent(baseType.resolved.obj, le->value.val.s)) {
-            le->value.val.s = ctx->allocator->allocateIdentifier(ev->parentObject->name.to_string() + "_" + le->value.val.s.to_string());
+            le->value.val.s = ctx->allocator->allocateIdentifier(ev->parentObject->name.to_string() + "_" +
+                                                                 le->value.val.s.to_string());
             continue;
           }
 
         EventResolutionError:
-          ctx->reportingContext.error(p.self->value->location, "Unable to resolve %s event named '%s' in '%s' or one of its parents.", isCustomEvent ? "a custom" : "an", le->value.val.s.to_string().c_str(), baseType.prettyString().c_str());
+          ctx->reportingContext.error(p.self->value->location,
+                                      "Unable to resolve %s event named '%s' in '%s' or one of its parents.",
+                                      isCustomEvent ? "a custom" : "an",
+                                      le->value.val.s.to_string().c_str(),
+                                      baseType.prettyString().c_str());
           break;
         }
         default:
@@ -460,15 +504,13 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
 
     // We need the semantic pass to have run for the args, but we can't have them coerced until after
     // we've transformed CustomEventName and ScriptEventName parameters.
-    for (auto p : arguments.lockstepIterate(function.res.func->parameters)) {
-      if (p.other->type.type == PapyrusType::Kind::CustomEventName) {
+    for (auto p : arguments.lockstepIterate(function.res.func->parameters))
+      if (p.other->type.type == PapyrusType::Kind::CustomEventName)
         p.self->value = ctx->coerceExpression(p.self->value, PapyrusType::String(p.self->value->location));
-      } else if (p.other->type.type == PapyrusType::Kind::ScriptEventName) {
+      else if (p.other->type.type == PapyrusType::Kind::ScriptEventName)
         p.self->value = ctx->coerceExpression(p.self->value, PapyrusType::String(p.self->value->location));
-      } else {
+      else
         p.self->value = ctx->coerceExpression(p.self->value, p.other->type);
-      }
-    }
 
     if (function.res.func->name == "GotoState" && arguments.size() == 1) {
       auto le = arguments.front()->value->asLiteralExpression();

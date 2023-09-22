@@ -15,11 +15,10 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusObject;
 
-struct PapyrusStruct final
-{
-  identifier_ref name{ "" };
-  IntrusiveLinkedList<PapyrusStructMember> members{ };
-  PapyrusObject* parentObject{ nullptr };
+struct PapyrusStruct final {
+  identifier_ref name { "" };
+  IntrusiveLinkedList<PapyrusStructMember> members {};
+  PapyrusObject* parentObject { nullptr };
 
   CapricaFileLocation location;
 
@@ -40,7 +39,7 @@ struct PapyrusStruct final
       debInf->members.push_back(file->alloc->make<pex::IntrusivePexString>(file->getString(m->name)));
     }
     obj->structs.push_back(struc);
-    
+
     if (file->debugInfo)
       file->debugInfo->structOrders.push_back(debInf);
   }
@@ -53,7 +52,7 @@ struct PapyrusStruct final
 
 private:
   friend IntrusiveLinkedList<PapyrusStruct>;
-  PapyrusStruct* next{ nullptr };
+  PapyrusStruct* next { nullptr };
 };
 
 }}

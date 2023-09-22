@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
+#include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/PapyrusIdentifier.h>
 #include <papyrus/PapyrusType.h>
-#include <papyrus/expressions/PapyrusExpression.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -13,30 +13,29 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusFunctionCallExpression final : public PapyrusExpression
-{
-  struct Parameter final
-  {
-    size_t argIndex{ 0 };
-    identifier_ref name{ "" };
-    PapyrusExpression* value{ nullptr };
+struct PapyrusFunctionCallExpression final : public PapyrusExpression {
+  struct Parameter final {
+    size_t argIndex { 0 };
+    identifier_ref name { "" };
+    PapyrusExpression* value { nullptr };
 
     explicit Parameter() = default;
     Parameter(const Parameter&) = delete;
     ~Parameter() = default;
 
   private:
-    template<typename T>
+    template <typename T>
     friend struct IntrusiveLinkedList;
-    template<typename T>
-    template<typename T2>
+    template <typename T>
+    template <typename T2>
     friend struct IntrusiveLinkedList<T>::LockstepIterator;
-    Parameter* next{ nullptr };
+    Parameter* next { nullptr };
   };
   PapyrusIdentifier function;
-  IntrusiveLinkedList<Parameter> arguments{ };
+  IntrusiveLinkedList<Parameter> arguments {};
 
-  explicit PapyrusFunctionCallExpression(CapricaFileLocation loc, PapyrusIdentifier&& f) : PapyrusExpression(loc), function(std::move(f)) { }
+  explicit PapyrusFunctionCallExpression(CapricaFileLocation loc, PapyrusIdentifier&& f)
+      : PapyrusExpression(loc), function(std::move(f)) { }
   PapyrusFunctionCallExpression(const PapyrusFunctionCallExpression&) = delete;
   virtual ~PapyrusFunctionCallExpression() override = default;
 
@@ -46,19 +45,15 @@ struct PapyrusFunctionCallExpression final : public PapyrusExpression
   }
 
   void semantic(PapyrusResolutionContext* ctx, PapyrusExpression* baseExpression);
-  virtual void semantic(PapyrusResolutionContext* ctx) override {
-    semantic(ctx, nullptr);
-  }
+  virtual void semantic(PapyrusResolutionContext* ctx) override { semantic(ctx, nullptr); }
 
   virtual PapyrusType resultType() const override;
 
-  virtual PapyrusFunctionCallExpression* asFunctionCallExpression() override {
-    return this;
-  }
+  virtual PapyrusFunctionCallExpression* asFunctionCallExpression() override { return this; }
 
 private:
-  bool isPoisonedReturn{ false };
-  bool shouldEmit{ true };
+  bool isPoisonedReturn { false };
+  bool shouldEmit { true };
 };
 
 }}}

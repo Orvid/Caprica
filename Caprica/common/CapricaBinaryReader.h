@@ -1,17 +1,16 @@
 #pragma once
 
+#include <common/ByteSwap.h>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <common/ByteSwap.h>
 
 namespace caprica {
 
-struct CapricaBinaryReader
-{
-  Endianness endianness{ Endianness::Little };
+struct CapricaBinaryReader {
+  Endianness endianness { Endianness::Little };
   explicit CapricaBinaryReader(const std::string& file) : strm(file, std::ifstream::binary) {
     strm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
   }
@@ -23,61 +22,61 @@ struct CapricaBinaryReader
     return strm.eof();
   }
 
-  template<typename T>
+  template <typename T>
   T read() {
     static_assert(std::is_same_v<T, void>, "Invalid type passed to read!");
   }
 
-  template<>
+  template <>
   int8_t read() {
     int8_t val;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   uint8_t read() {
     uint8_t val = 0;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   int16_t read() {
     int16_t val;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   uint16_t read() {
     uint16_t val;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   int32_t read() {
     int32_t val;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   uint32_t read() {
     uint32_t val;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   float read() {
     float val;
     strm.read((char*)&val, sizeof(val));
     return endianness == Endianness::Little ? val : byteswap_float(val);
   }
 
-  template<>
+  template <>
   time_t read() {
     static_assert(sizeof(time_t) == 8, "time_t is not 64 bits");
     time_t val;
@@ -85,7 +84,7 @@ struct CapricaBinaryReader
     return endianness == Endianness::Little ? val : byteswap(val);
   }
 
-  template<>
+  template <>
   std::string read() {
     auto len = read<uint16_t>();
     std::unique_ptr<char[]> buf(new char[len]);

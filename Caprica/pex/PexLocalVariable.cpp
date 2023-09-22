@@ -19,7 +19,9 @@ void PexLocalVariable::write(PexWriter& wtr) const {
 }
 
 void PexLocalVariable::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.writeln(".local %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(type).to_string().c_str());
+  wtr.writeln(".local %s %s",
+              file->getStringValue(name).to_string().c_str(),
+              file->getStringValue(type).to_string().c_str());
 }
 
 }}

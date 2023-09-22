@@ -13,25 +13,24 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-struct PexVariable final
-{
-  PexString name{ };
-  PexString typeName{ };
-  PexUserFlags userFlags{ };
-  PexValue defaultValue{ };
-  bool isConst{ false };
+struct PexVariable final {
+  PexString name {};
+  PexString typeName {};
+  PexUserFlags userFlags {};
+  PexValue defaultValue {};
+  bool isConst { false };
 
   explicit PexVariable() = default;
   PexVariable(const PexVariable&) = delete;
   ~PexVariable() = default;
 
-  static PexVariable *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
-  void write(PexWriter &wtr, GameID gameType) const;
+  static PexVariable* read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType);
+  void write(PexWriter& wtr, GameID gameType) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
 private:
   friend IntrusiveLinkedList<PexVariable>;
-  PexVariable* next{ nullptr };
+  PexVariable* next { nullptr };
 };
 
 }}

@@ -15,112 +15,111 @@
 namespace caprica { namespace papyrus { namespace parser {
 
 #define MAX_INTEGER_DIGITS 10
-static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap{
-  { TokenType::Unknown, "Unknown" },
-  { TokenType::EOL, "EOL" },
-  { TokenType::END, "EOF" },
-  { TokenType::Identifier, "Identifier" },
-  { TokenType::DocComment, "Documentation Comment" },
-  { TokenType::String, "String" },
-  { TokenType::Integer, "Integer" },
-  { TokenType::Float, "Float" },
-  { TokenType::LParen, "(" },
-  { TokenType::RParen, ")" },
-  { TokenType::LSquare, "[" },
-  { TokenType::RSquare, "]" },
-  { TokenType::Dot, "." },
-  { TokenType::Comma, "," },
-  { TokenType::Equal, "=" },
-  { TokenType::Exclaim, "!" },
-  { TokenType::Plus, "+" },
-  { TokenType::PlusEqual, "+=" },
-  { TokenType::Minus, "-" },
-  { TokenType::MinusEqual, "-=" },
-  { TokenType::Mul, "*" },
-  { TokenType::MulEqual, "*=" },
-  { TokenType::Div, "/" },
-  { TokenType::DivEqual, "/=" },
-  { TokenType::Mod, "%" },
-  { TokenType::ModEqual, "%=" },
-  { TokenType::CmpEq, "==" },
-  { TokenType::CmpNeq, "!=" },
-  { TokenType::CmpLt, "<" },
-  { TokenType::CmpLte, "<=" },
-  { TokenType::CmpGt, ">" },
-  { TokenType::CmpGte, ">=" },
-  { TokenType::BooleanOr, "||" },
-  { TokenType::BooleanAnd, "&&" },
-  { TokenType::kAs, "As" },
-  { TokenType::kAuto, "Auto" },
-  { TokenType::kAutoReadOnly, "AutoReadOnly" },
-  { TokenType::kBool, "Bool" },
-  { TokenType::kElse, "Else" },
-  { TokenType::kElseIf, "ElseIf" },
-  { TokenType::kEndEvent, "EndEvent" },
-  { TokenType::kEndFunction, "EndFunction" },
-  { TokenType::kEndIf, "EndIf" },
-  { TokenType::kEndProperty, "EndProperty" },
-  { TokenType::kEndState, "EndState" },
-  { TokenType::kEndWhile, "EndWhile" },
-  { TokenType::kEvent, "Event" },
-  { TokenType::kExtends, "Extends" },
-  { TokenType::kFalse, "False" },
-  { TokenType::kFloat, "Float" },
-  { TokenType::kFunction, "Function" },
-  { TokenType::kGlobal, "Global" },
-  { TokenType::kIf, "If" },
-  { TokenType::kImport, "Import" },
-  { TokenType::kInt, "Int" },
-  { TokenType::kIs, "Is" },
-  { TokenType::kLength, "Length" },
-  { TokenType::kNative, "Native" },
-  { TokenType::kNew, "New" },
-  { TokenType::kNone, "None" },
-  { TokenType::kParent, "Parent" },
-  { TokenType::kProperty, "Property" },
-  { TokenType::kReturn, "Return" },
-  { TokenType::kScriptName, "ScriptName" },
-  { TokenType::kSelf, "Self" },
-  { TokenType::kState, "State" },
-  { TokenType::kString, "String" },
-  { TokenType::kTrue, "True" },
-  { TokenType::kWhile, "While" },
+static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap {
+  {TokenType::Unknown,           "Unknown"              },
+  { TokenType::EOL,              "EOL"                  },
+  { TokenType::END,              "EOF"                  },
+  { TokenType::Identifier,       "Identifier"           },
+  { TokenType::DocComment,       "Documentation Comment"},
+  { TokenType::String,           "String"               },
+  { TokenType::Integer,          "Integer"              },
+  { TokenType::Float,            "Float"                },
+  { TokenType::LParen,           "("                    },
+  { TokenType::RParen,           ")"                    },
+  { TokenType::LSquare,          "["                    },
+  { TokenType::RSquare,          "]"                    },
+  { TokenType::Dot,              "."                    },
+  { TokenType::Comma,            ","                    },
+  { TokenType::Equal,            "="                    },
+  { TokenType::Exclaim,          "!"                    },
+  { TokenType::Plus,             "+"                    },
+  { TokenType::PlusEqual,        "+="                   },
+  { TokenType::Minus,            "-"                    },
+  { TokenType::MinusEqual,       "-="                   },
+  { TokenType::Mul,              "*"                    },
+  { TokenType::MulEqual,         "*="                   },
+  { TokenType::Div,              "/"                    },
+  { TokenType::DivEqual,         "/="                   },
+  { TokenType::Mod,              "%"                    },
+  { TokenType::ModEqual,         "%="                   },
+  { TokenType::CmpEq,            "=="                   },
+  { TokenType::CmpNeq,           "!="                   },
+  { TokenType::CmpLt,            "<"                    },
+  { TokenType::CmpLte,           "<="                   },
+  { TokenType::CmpGt,            ">"                    },
+  { TokenType::CmpGte,           ">="                   },
+  { TokenType::BooleanOr,        "||"                   },
+  { TokenType::BooleanAnd,       "&&"                   },
+  { TokenType::kAs,              "As"                   },
+  { TokenType::kAuto,            "Auto"                 },
+  { TokenType::kAutoReadOnly,    "AutoReadOnly"         },
+  { TokenType::kBool,            "Bool"                 },
+  { TokenType::kElse,            "Else"                 },
+  { TokenType::kElseIf,          "ElseIf"               },
+  { TokenType::kEndEvent,        "EndEvent"             },
+  { TokenType::kEndFunction,     "EndFunction"          },
+  { TokenType::kEndIf,           "EndIf"                },
+  { TokenType::kEndProperty,     "EndProperty"          },
+  { TokenType::kEndState,        "EndState"             },
+  { TokenType::kEndWhile,        "EndWhile"             },
+  { TokenType::kEvent,           "Event"                },
+  { TokenType::kExtends,         "Extends"              },
+  { TokenType::kFalse,           "False"                },
+  { TokenType::kFloat,           "Float"                },
+  { TokenType::kFunction,        "Function"             },
+  { TokenType::kGlobal,          "Global"               },
+  { TokenType::kIf,              "If"                   },
+  { TokenType::kImport,          "Import"               },
+  { TokenType::kInt,             "Int"                  },
+  { TokenType::kIs,              "Is"                   },
+  { TokenType::kLength,          "Length"               },
+  { TokenType::kNative,          "Native"               },
+  { TokenType::kNew,             "New"                  },
+  { TokenType::kNone,            "None"                 },
+  { TokenType::kParent,          "Parent"               },
+  { TokenType::kProperty,        "Property"             },
+  { TokenType::kReturn,          "Return"               },
+  { TokenType::kScriptName,      "ScriptName"           },
+  { TokenType::kSelf,            "Self"                 },
+  { TokenType::kState,           "State"                },
+  { TokenType::kString,          "String"               },
+  { TokenType::kTrue,            "True"                 },
+  { TokenType::kWhile,           "While"                },
 
-  // Fallout 4 / Fallout 76
-  { TokenType::kBetaOnly, "BetaOnly" },
-  { TokenType::kConst, "Const" },
-  { TokenType::kCustomEvent, "CustomEvent" },
-  { TokenType::kCustomEventName, "CustomEventName" },
-  { TokenType::kDebugOnly, "DebugOnly" },
-  { TokenType::kEndGroup, "EndGroup" },
-  { TokenType::kEndStruct, "EndStruct" },
-  { TokenType::kGroup, "Group" },
-  { TokenType::kScriptEventName, "ScriptEventName" },
-  { TokenType::kStruct, "Struct" },
-  { TokenType::kVar, "Var" },
+ // Fallout 4 / Fallout 76
+  { TokenType::kBetaOnly,        "BetaOnly"             },
+  { TokenType::kConst,           "Const"                },
+  { TokenType::kCustomEvent,     "CustomEvent"          },
+  { TokenType::kCustomEventName, "CustomEventName"      },
+  { TokenType::kDebugOnly,       "DebugOnly"            },
+  { TokenType::kEndGroup,        "EndGroup"             },
+  { TokenType::kEndStruct,       "EndStruct"            },
+  { TokenType::kGroup,           "Group"                },
+  { TokenType::kScriptEventName, "ScriptEventName"      },
+  { TokenType::kStruct,          "Struct"               },
+  { TokenType::kVar,             "Var"                  },
 
-  // Starfield
-  { TokenType::kGuard, "Guard" },
-  { TokenType::kEndGuard, "EndGuard" },
-  { TokenType::kTryGuard, "TryGuard" },
+ // Starfield
+  { TokenType::kGuard,           "Guard"                },
+  { TokenType::kEndGuard,        "EndGuard"             },
+  { TokenType::kTryGuard,        "TryGuard"             },
 
-  // language extensions
-  { TokenType::kBreak, "Break" },
-  { TokenType::kCase, "Case" },
-  { TokenType::kContinue, "Continue" },
-  { TokenType::kDefault, "Default" },
-  { TokenType::kDo, "Do" },
-  { TokenType::kEndFor, "EndFor" },
-  { TokenType::kEndForEach, "EndForEach" },
-  { TokenType::kEndSwitch, "EndSwitch" },
-  { TokenType::kFor, "For" },
-  { TokenType::kForEach, "ForEach" },
-  { TokenType::kIn, "In" },
-  { TokenType::kLoopWhile, "LoopWhile" },
-  { TokenType::kStep, "Step" },
-  { TokenType::kSwitch, "Switch" },
-  { TokenType::kTo, "To" },
-
+ // language extensions
+  { TokenType::kBreak,           "Break"                },
+  { TokenType::kCase,            "Case"                 },
+  { TokenType::kContinue,        "Continue"             },
+  { TokenType::kDefault,         "Default"              },
+  { TokenType::kDo,              "Do"                   },
+  { TokenType::kEndFor,          "EndFor"               },
+  { TokenType::kEndForEach,      "EndForEach"           },
+  { TokenType::kEndSwitch,       "EndSwitch"            },
+  { TokenType::kFor,             "For"                  },
+  { TokenType::kForEach,         "ForEach"              },
+  { TokenType::kIn,              "In"                   },
+  { TokenType::kLoopWhile,       "LoopWhile"            },
+  { TokenType::kStep,            "Step"                 },
+  { TokenType::kSwitch,          "Switch"               },
+  { TokenType::kTo,              "To"                   },
 };
 
 const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
@@ -143,11 +142,10 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
   assert(distance <= MaxPeekedTokens - 1);
 
   // It's already been lexed, peek directly.
-  if (peekedTokenI + distance < peekedTokenCount) {
+  if (peekedTokenI + distance < peekedTokenCount)
     return peekedTokens[peekedTokenI + distance].type;
-  } else {
+  else
     assert(peekedTokenI == 0);
-  }
 
   Token oldCur = std::move(cur);
   for (int i = peekedTokenCount; i <= distance; i++) {
@@ -163,86 +161,84 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
 }
 
 static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
-  { "as", TokenType::kAs },
-  { "auto", TokenType::kAuto },
-  { "autoreadonly", TokenType::kAutoReadOnly },
-  { "bool", TokenType::kBool },
-  { "else", TokenType::kElse },
-  { "elseif", TokenType::kElseIf },
-  { "endevent", TokenType::kEndEvent },
-  { "endfunction", TokenType::kEndFunction },
-  { "endif", TokenType::kEndIf },
-  { "endproperty", TokenType::kEndProperty },
-  { "endstate", TokenType::kEndState },
-  { "endwhile", TokenType::kEndWhile },
-  { "event", TokenType::kEvent },
-  { "extends", TokenType::kExtends },
-  { "false", TokenType::kFalse },
-  { "float", TokenType::kFloat },
-  { "function", TokenType::kFunction },
-  { "global", TokenType::kGlobal },
-  { "if", TokenType::kIf },
-  { "import", TokenType::kImport },
-  { "int", TokenType::kInt },
-  { "is", TokenType::kIs },
-  { "length", TokenType::kLength },
-  { "native", TokenType::kNative },
-  { "new", TokenType::kNew },
-  { "none", TokenType::kNone },
-  { "parent", TokenType::kParent },
-  { "property", TokenType::kProperty },
-  { "return", TokenType::kReturn },
-  { "scriptname", TokenType::kScriptName },
-  { "self", TokenType::kSelf },
-  { "state", TokenType::kState },
-  { "string", TokenType::kString },
-  { "true", TokenType::kTrue },
-  { "while", TokenType::kWhile },
+  {"as",               TokenType::kAs             },
+  { "auto",            TokenType::kAuto           },
+  { "autoreadonly",    TokenType::kAutoReadOnly   },
+  { "bool",            TokenType::kBool           },
+  { "else",            TokenType::kElse           },
+  { "elseif",          TokenType::kElseIf         },
+  { "endevent",        TokenType::kEndEvent       },
+  { "endfunction",     TokenType::kEndFunction    },
+  { "endif",           TokenType::kEndIf          },
+  { "endproperty",     TokenType::kEndProperty    },
+  { "endstate",        TokenType::kEndState       },
+  { "endwhile",        TokenType::kEndWhile       },
+  { "event",           TokenType::kEvent          },
+  { "extends",         TokenType::kExtends        },
+  { "false",           TokenType::kFalse          },
+  { "float",           TokenType::kFloat          },
+  { "function",        TokenType::kFunction       },
+  { "global",          TokenType::kGlobal         },
+  { "if",              TokenType::kIf             },
+  { "import",          TokenType::kImport         },
+  { "int",             TokenType::kInt            },
+  { "is",              TokenType::kIs             },
+  { "length",          TokenType::kLength         },
+  { "native",          TokenType::kNative         },
+  { "new",             TokenType::kNew            },
+  { "none",            TokenType::kNone           },
+  { "parent",          TokenType::kParent         },
+  { "property",        TokenType::kProperty       },
+  { "return",          TokenType::kReturn         },
+  { "scriptname",      TokenType::kScriptName     },
+  { "self",            TokenType::kSelf           },
+  { "state",           TokenType::kState          },
+  { "string",          TokenType::kString         },
+  { "true",            TokenType::kTrue           },
+  { "while",           TokenType::kWhile          },
 
-  // Fallout 4 / Fallout 76
-  { "betaonly", TokenType::kBetaOnly },
-  { "const", TokenType::kConst },
-  { "customevent", TokenType::kCustomEvent },
-  { "customeventname", TokenType::kCustomEventName },
-  { "debugonly", TokenType::kDebugOnly },
-  { "endgroup", TokenType::kEndGroup },
-  { "endstruct", TokenType::kEndStruct },
-  { "group", TokenType::kGroup },
-  { "scripteventname", TokenType::kScriptEventName },
-  { "struct", TokenType::kStruct },
-  { "var", TokenType::kVar },
+ // Fallout 4 / Fallout 76
+  { "betaonly",        TokenType::kBetaOnly       },
+  { "const",           TokenType::kConst          },
+  { "customevent",     TokenType::kCustomEvent    },
+  { "customeventname", TokenType::kCustomEventName},
+  { "debugonly",       TokenType::kDebugOnly      },
+  { "endgroup",        TokenType::kEndGroup       },
+  { "endstruct",       TokenType::kEndStruct      },
+  { "group",           TokenType::kGroup          },
+  { "scripteventname", TokenType::kScriptEventName},
+  { "struct",          TokenType::kStruct         },
+  { "var",             TokenType::kVar            },
 
-  // Starfield
+ // Starfield
   // TODO: Verify starfield syntax
-  { "guard", TokenType::kGuard },
-  { "endguard", TokenType::kEndGuard },
-  { "tryguard", TokenType::kTryGuard },
+  { "guard",           TokenType::kGuard          },
+  { "endguard",        TokenType::kEndGuard       },
+  { "tryguard",        TokenType::kTryGuard       },
 };
 
 // Language extension keywords
-static const caseless_unordered_identifier_ref_map<TokenType> languageExtensionsKeywordMap{
-  { "break", TokenType::kBreak },
-  { "case", TokenType::kCase },
-  { "continue", TokenType::kContinue },
-  { "default", TokenType::kDefault },
-  { "do", TokenType::kDo },
-  { "endfor", TokenType::kEndFor },
-  { "endforeach", TokenType::kEndForEach },
-  { "endswitch", TokenType::kEndSwitch },
-  { "for", TokenType::kFor },
-  { "foreach", TokenType::kForEach },
-  { "in", TokenType::kIn },
-  { "loopwhile", TokenType::kLoopWhile },
-  { "step", TokenType::kStep },
-  { "switch", TokenType::kSwitch },
-  { "to", TokenType::kTo },
+static const caseless_unordered_identifier_ref_map<TokenType> languageExtensionsKeywordMap {
+  {"break",       TokenType::kBreak     },
+  { "case",       TokenType::kCase      },
+  { "continue",   TokenType::kContinue  },
+  { "default",    TokenType::kDefault   },
+  { "do",         TokenType::kDo        },
+  { "endfor",     TokenType::kEndFor    },
+  { "endforeach", TokenType::kEndForEach},
+  { "endswitch",  TokenType::kEndSwitch },
+  { "for",        TokenType::kFor       },
+  { "foreach",    TokenType::kForEach   },
+  { "in",         TokenType::kIn        },
+  { "loopwhile",  TokenType::kLoopWhile },
+  { "step",       TokenType::kStep      },
+  { "switch",     TokenType::kSwitch    },
+  { "to",         TokenType::kTo        },
 };
 
 ALWAYS_INLINE
 static bool isAsciiAlphaNumeric(int c) {
-  return (c >= 'a' && c <= 'z') ||
-         (c >= 'A' && c <= 'Z') ||
-         (c >= '0' && c <= '9');
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
 }
 
 ALWAYS_INLINE
@@ -269,7 +265,7 @@ void PapyrusLexer::realConsume() {
 StartOver:
   auto baseLoc = location;
   auto c = getChar();
-  
+
   switch (c) {
     case -1:
       // Always pretend that there's an EOL at the end of the
@@ -330,12 +326,16 @@ StartOver:
       return setTok(TokenType::CmpGt, baseLoc);
 
     case '|':
-      if (peekChar() != '|')
-        reportingContext.fatal(baseLoc, "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
+      if (peekChar() != '|') {
+        reportingContext.fatal(baseLoc,
+                               "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
+      }
       return setTok(TokenType::BooleanOr, baseLoc, 1);
     case '&':
-      if (peekChar() != '&')
-        reportingContext.fatal(baseLoc, "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
+      if (peekChar() != '&') {
+        reportingContext.fatal(baseLoc,
+                               "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
+      }
       return setTok(TokenType::BooleanAnd, baseLoc, 1);
 
     Number:
@@ -348,8 +348,7 @@ StartOver:
     case '6':
     case '7':
     case '8':
-    case '9':
-    {
+    case '9': {
       LargelyBufferedString str;
       str.push_back((char)c);
 
@@ -358,7 +357,7 @@ StartOver:
         str.push_back((char)getChar());
         while (isxdigit(peekChar()))
           str.push_back((char)getChar());
-        
+
         str.push_back('\0');
         auto i = std::strtoul(str.data(), nullptr, 16);
         setTok(TokenType::Integer, baseLoc);
@@ -402,7 +401,8 @@ StartOver:
           setTok(TokenType::Integer, baseLoc);
           cur.val.i = (int32_t)i;
           return;
-        } catch (std::out_of_range oor) { }
+        } catch (std::out_of_range oor) {
+        }
       } else {
         str.push_back('\0');
       }
@@ -466,10 +466,9 @@ StartOver:
     case 'W':
     case 'X':
     case 'Y':
-    case 'Z':
-    {
+    case 'Z': {
       const char* baseStrm = strm - 1;
-      
+
       if (c == ':') {
         if (!conf::Papyrus::allowCompilerIdentifiers || peekChar() != ':')
           reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
@@ -477,10 +476,7 @@ StartOver:
       }
 
       static const __m128i identifierChars = {
-        'a', 'z', 'A', 'Z',
-        '0', '9',
-        '_', '_', ':', ':',
-        '\0',
+        'a', 'z', 'A', 'Z', '0', '9', '_', '_', ':', ':', '\0',
       };
 
       int idx = 0;
@@ -489,13 +485,9 @@ StartOver:
         // This scans 16 characters at a
         // time for the first one that
         // isn't in the identifier set.
-        idx = _mm_cmpistri(
-          identifierChars,
-          _mm_loadu_si128((__m128i*)strm),
-          _SIDD_UBYTE_OPS |
-          _SIDD_CMP_RANGES |
-          _SIDD_NEGATIVE_POLARITY |
-          _SIDD_LEAST_SIGNIFICANT);
+        idx = _mm_cmpistri(identifierChars,
+                           _mm_loadu_si128((__m128i*)strm),
+                           _SIDD_UBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY | _SIDD_LEAST_SIGNIFICANT);
         advanceChars(idx);
       } while (idx == 16);
 
@@ -506,11 +498,10 @@ StartOver:
           getChar();
       }
 
-      identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
+      identifier_ref str { baseStrm, (size_t)(strm - baseStrm) };
       auto f = keywordMap.find(str);
-      if (f != keywordMap.end() && keywordIsInGame(f->second, conf::Papyrus::game)) {
-          return setTok(f->second, baseLoc);
-      }
+      if (f != keywordMap.end() && keywordIsInGame(f->second, conf::Papyrus::game))
+        return setTok(f->second, baseLoc);
       if (conf::Papyrus::enableLanguageExtensions) {
         auto f2 = languageExtensionsKeywordMap.find(str);
         if (f2 != languageExtensionsKeywordMap.end())
@@ -522,8 +513,7 @@ StartOver:
       return;
     }
 
-    case '"':
-    {
+    case '"': {
       const char* baseStrm = strm;
       size_t charsRequired = 0;
 
@@ -547,7 +537,7 @@ StartOver:
         }
         charsRequired++;
       }
-      identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
+      identifier_ref str { baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() != '"')
         reportingContext.fatal(location, "Unclosed string!");
@@ -586,8 +576,7 @@ StartOver:
       return;
     }
 
-    case ';':
-    {
+    case ';': {
       if (peekChar() == '/') {
         // Multiline comment.
         getChar();
@@ -615,8 +604,7 @@ StartOver:
       goto StartOver;
     }
 
-    case '{':
-    {
+    case '{': {
       // Trim all leading whitespace.
       while (isspace(peekChar()))
         getChar();
@@ -638,7 +626,7 @@ StartOver:
           // we don't care, they both get written as-is.
         }
       }
-      identifier_ref str{ baseStrm, (size_t)(strm - baseStrm) };
+      identifier_ref str { baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() == -1)
         reportingContext.fatal(location, "Unexpected EOF before the end of a documentation comment!");
@@ -669,8 +657,7 @@ StartOver:
       return;
     }
 
-    case '\\':
-    {
+    case '\\': {
       consume();
       if (cur.type != TokenType::EOL)
         reportingContext.fatal(baseLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
@@ -678,8 +665,7 @@ StartOver:
     }
 
     case '\r':
-    case '\n':
-    {
+    case '\n': {
       if (c == '\r' && peekChar() == '\n')
         getChar();
       reportingContext.pushNextLineOffset(location);
@@ -687,8 +673,7 @@ StartOver:
     }
 
     case ' ':
-    case '\t':
-    {
+    case '\t': {
       while (peekChar() == ' ' || peekChar() == '\t')
         getChar();
       goto StartOver;

@@ -9,13 +9,12 @@
 
 namespace caprica { namespace pex {
 
-struct PexDebugPropertyGroup final
-{
-  PexString objectName{ };
-  PexString groupName{ };
-  PexString documentationString{ };
-  PexUserFlags userFlags{ };
-  IntrusiveLinkedList<IntrusivePexString> properties{ };
+struct PexDebugPropertyGroup final {
+  PexString objectName {};
+  PexString groupName {};
+  PexString documentationString {};
+  PexUserFlags userFlags {};
+  IntrusiveLinkedList<IntrusivePexString> properties {};
 
   explicit PexDebugPropertyGroup() = default;
   PexDebugPropertyGroup(const PexDebugPropertyGroup&) = delete;
@@ -27,7 +26,7 @@ struct PexDebugPropertyGroup final
 
 private:
   friend IntrusiveLinkedList<PexDebugPropertyGroup>;
-  PexDebugPropertyGroup* next{ nullptr };
+  PexDebugPropertyGroup* next { nullptr };
 };
 
 }}

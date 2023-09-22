@@ -6,9 +6,8 @@
 
 namespace caprica { namespace pex {
 
-struct PexLabel final
-{
-  size_t targetIdx{ (size_t)-1 };
+struct PexLabel final {
+  size_t targetIdx { (size_t)-1 };
 
   explicit PexLabel() = default;
   PexLabel(const PexLabel&) = delete;
@@ -16,7 +15,7 @@ struct PexLabel final
 
 private:
   friend IntrusiveLinkedList<PexLabel>;
-  PexLabel* next{ nullptr };
+  PexLabel* next { nullptr };
 };
 
 }}

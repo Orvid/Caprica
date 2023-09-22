@@ -8,9 +8,8 @@ namespace caprica {
 // from IntrusiveLinkedList so that things can be
 // in both an IntrusiveLinkedList and an IntrusiveStack
 // at the same time.
-template<typename T>
-struct IntrusiveStack final
-{
+template <typename T>
+struct IntrusiveStack final {
   void push(T* node) {
     node->nextInStack = root;
     root = node;
@@ -40,84 +39,58 @@ struct IntrusiveStack final
   size_t size() const { return count; }
 
 private:
-  struct ConstIterator final
-  {
-    ConstIterator& operator ++() {
+  struct ConstIterator final {
+    ConstIterator& operator++() {
       if (cur == nullptr)
         return *this;
       cur = cur->nextInStack;
       return *this;
     }
 
-    const T*& operator *() {
-      return cur;
-    }
-    const T*& operator *() const {
-      return cur;
-    }
-    const T*& operator ->() {
-      return cur;
-    }
-    const T*& operator ->() const {
-      return cur;
-    }
+    const T*& operator*() { return cur; }
+    const T*& operator*() const { return cur; }
+    const T*& operator->() { return cur; }
+    const T*& operator->() const { return cur; }
 
-    bool operator ==(const ConstIterator& other) const {
-      return cur == other.cur;
-    }
+    bool operator==(const ConstIterator& other) const { return cur == other.cur; }
 
-    bool operator !=(const ConstIterator& other) const {
-      return !(*this == other);
-    }
+    bool operator!=(const ConstIterator& other) const { return !(*this == other); }
 
   private:
     friend IntrusiveStack;
-    const T* cur{ nullptr };
+    const T* cur { nullptr };
 
     ConstIterator() = default;
     ConstIterator(const T* mFront) : cur(mFront) { }
   };
 
-  struct Iterator final
-  {
-    Iterator& operator ++() {
+  struct Iterator final {
+    Iterator& operator++() {
       if (cur == nullptr)
         return *this;
       cur = cur->nextInStack;
       return *this;
     }
 
-    T*& operator *() {
-      return cur;
-    }
-    const T*& operator *() const {
-      return cur;
-    }
-    T*& operator ->() {
-      return cur;
-    }
-    const T*& operator ->() const {
-      return cur;
-    }
+    T*& operator*() { return cur; }
+    const T*& operator*() const { return cur; }
+    T*& operator->() { return cur; }
+    const T*& operator->() const { return cur; }
 
-    bool operator ==(const Iterator& other) const {
-      return cur == other.cur;
-    }
+    bool operator==(const Iterator& other) const { return cur == other.cur; }
 
-    bool operator !=(const Iterator& other) const {
-      return !(*this == other);
-    }
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
 
   private:
     friend IntrusiveStack;
-    T* cur{ nullptr };
+    T* cur { nullptr };
 
     Iterator() = default;
     Iterator(T* mFront) : cur(mFront) { }
   };
 
-  size_t count{ 0 };
-  T* root{ nullptr };
+  size_t count { 0 };
+  T* root { nullptr };
 
 public:
   ConstIterator begin() const {
@@ -126,9 +99,7 @@ public:
     return ConstIterator(root);
   }
 
-  ConstIterator end() const {
-    return ConstIterator();
-  }
+  ConstIterator end() const { return ConstIterator(); }
 
   Iterator begin() {
     if (!count)
@@ -136,9 +107,7 @@ public:
     return Iterator(root);
   }
 
-  Iterator end() {
-    return Iterator();
-  }
+  Iterator end() { return Iterator(); }
 };
 
 }

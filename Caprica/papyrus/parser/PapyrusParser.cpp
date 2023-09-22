@@ -29,96 +29,95 @@
 #include <papyrus/statements/PapyrusDeclareStatement.h>
 #include <papyrus/statements/PapyrusDoWhileStatement.h>
 #include <papyrus/statements/PapyrusExpressionStatement.h>
-#include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusForEachStatement.h>
-#include <papyrus/statements/PapyrusIfStatement.h>
+#include <papyrus/statements/PapyrusForStatement.h>
 #include <papyrus/statements/PapyrusGuardStatement.h>
+#include <papyrus/statements/PapyrusIfStatement.h>
 #include <papyrus/statements/PapyrusReturnStatement.h>
 #include <papyrus/statements/PapyrusSwitchStatement.h>
 #include <papyrus/statements/PapyrusTryGuardStatement.h>
 #include <papyrus/statements/PapyrusWhileStatement.h>
 
-
 namespace caprica { namespace papyrus { namespace parser {
 
 static const caseless_unordered_identifier_ref_set skyrim_native_classes = {
-        "action",
-        "activator",
-        "activemagiceffect",
-        "actor",
-        "actorbase",
-        "alias",
-        "ammo",
-        "apparatus",
-        "armor",
-        "associationtype",
-        "book",
-        "cell",
-        "class",
-        "constructibleobject",
-        "container",
-        "debug",
-        "door",
-        "effectshader",
-        "enchantment",
-        "encounterzone",
-        "explosion",
-        "faction",
-        "flora",
-        "form",
-        "formlist",
-        "furniture",
-        "game",
-        "globalvariable",
-        "hazard",
-        "idle",
-        "imagespacemodifier",
-        "impactdataset",
-        "ingredient",
-        "key",
-        "keyword",
-        "leveledactor",
-        "leveleditem",
-        "leveledspell",
-        "light",
-        "location",
-        "locationalias",
-        "locationreftype",
-        "magiceffect",
-        "math",
-        "message",
-        "miscobject",
-        "musictype",
-        "objectreference",
-        "outfit",
-        "package",
-        "perk",
-        "potion",
-        "projectile",
-        "quest",
-        "race",
-        "referencealias",
-        "scene",
-        "scroll",
-        "shaderparticlegeometry",
-        "shout",
-        "soulgem",
-        "sound",
-        "soundcategory",
-        "spell",
-        "static",
-        "talkingactivator",
-        "textureset",
-        "topic",
-        "topicinfo",
-        "utility",
-        "visualeffect",
-        "voicetype",
-        "weapon",
-        "weather",
-        "wordofpower",
-        "worldspace",
-        "__scriptobject" // TODO: Skyrim base object hack, address later.
+  "action",
+  "activator",
+  "activemagiceffect",
+  "actor",
+  "actorbase",
+  "alias",
+  "ammo",
+  "apparatus",
+  "armor",
+  "associationtype",
+  "book",
+  "cell",
+  "class",
+  "constructibleobject",
+  "container",
+  "debug",
+  "door",
+  "effectshader",
+  "enchantment",
+  "encounterzone",
+  "explosion",
+  "faction",
+  "flora",
+  "form",
+  "formlist",
+  "furniture",
+  "game",
+  "globalvariable",
+  "hazard",
+  "idle",
+  "imagespacemodifier",
+  "impactdataset",
+  "ingredient",
+  "key",
+  "keyword",
+  "leveledactor",
+  "leveleditem",
+  "leveledspell",
+  "light",
+  "location",
+  "locationalias",
+  "locationreftype",
+  "magiceffect",
+  "math",
+  "message",
+  "miscobject",
+  "musictype",
+  "objectreference",
+  "outfit",
+  "package",
+  "perk",
+  "potion",
+  "projectile",
+  "quest",
+  "race",
+  "referencealias",
+  "scene",
+  "scroll",
+  "shaderparticlegeometry",
+  "shout",
+  "soulgem",
+  "sound",
+  "soundcategory",
+  "spell",
+  "static",
+  "talkingactivator",
+  "textureset",
+  "topic",
+  "topicinfo",
+  "utility",
+  "visualeffect",
+  "voicetype",
+  "weapon",
+  "weather",
+  "wordofpower",
+  "worldspace",
+  "__scriptobject" // TODO: Skyrim base object hack, address later.
 };
 
 PapyrusScript* PapyrusParser::parseScript() {
@@ -147,28 +146,30 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 
   expectConsume(TokenType::kScriptName);
   auto name = expectConsumeIdentRef();
-  if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name))
-    reportingContext.error(cur.location, "The script name '%s' must match the name of the file '%s'!", name.to_string().c_str(), std::string(FSUtils::basenameAsRef(script->sourceFileName)).c_str());
+  if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name)) {
+    reportingContext.error(cur.location,
+                           "The script name '%s' must match the name of the file '%s'!",
+                           name.to_string().c_str(),
+                           std::string(FSUtils::basenameAsRef(script->sourceFileName)).c_str());
+  }
 
   PapyrusObject* obj;
   if (maybeConsume(TokenType::kExtends)) {
     auto eLoc = cur.location;
     obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(eLoc, expectConsumeIdentRef()));
-  } else if (conf::Papyrus::game >= GameID::Fallout4){
-    if (idEq(name, "ScriptObject")) {
+  } else if (conf::Papyrus::game >= GameID::Fallout4) {
+    if (idEq(name, "ScriptObject"))
       obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::None(cur.location));
-    } else {
+    else
       obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "ScriptObject"));
-    }
   } else {
     // TODO: SKYRIM HACK, address later
     // Skyrim does not have ScriptObject as its base type, but every
     // script still has a set of base methods and events. We need to load the fake __ScriptObject class.
-    if (idEq(name, "__ScriptObject")) {
+    if (idEq(name, "__ScriptObject"))
       obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::None(cur.location));
-    } else {
+    else
       obj = alloc->make<PapyrusObject>(loc, alloc, PapyrusType::Unresolved(loc, "__ScriptObject"));
-    }
   }
 
   obj->setName(name);
@@ -182,8 +183,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
 
   while (cur.type != TokenType::END) {
     switch (cur.type) {
-      case TokenType::kImport:
-      {
+      case TokenType::kImport: {
         consume();
         auto eLoc = cur.location;
         obj->imports.emplace_back(eLoc, expectConsumeIdentRef());
@@ -237,7 +237,8 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       }
       case TokenType::kFunction: {
         consume();
-        auto f = parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction);
+        auto f =
+            parseFunction(script, obj, obj->getRootState(), PapyrusType::None(cur.location), TokenType::kEndFunction);
         obj->getRootState()->functions.emplace(f->name, f);
         break;
       }
@@ -247,8 +248,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       case TokenType::kInt:
       case TokenType::kString:
       case TokenType::kVar:
-      case TokenType::Identifier:
-      {
+      case TokenType::Identifier: {
         auto tp = expectConsumePapyrusType();
         if (cur.type == TokenType::kFunction) {
           consume();
@@ -275,8 +275,11 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
   auto state = alloc->make<PapyrusState>(cur.location);
   state->name = expectConsumeIdentRef();
   if (isAuto) {
-    if (object->autoState != nullptr)
-      reportingContext.error(cur.location, "Only one state can be declared auto. '%s' was already declared as the auto state.", object->autoState->name.to_string().c_str());
+    if (object->autoState != nullptr) {
+      reportingContext.error(cur.location,
+                             "Only one state can be declared auto. '%s' was already declared as the auto state.",
+                             object->autoState->name.to_string().c_str());
+    }
     object->autoState = state;
   }
   expectConsumeEOLs();
@@ -306,8 +309,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       case TokenType::kInt:
       case TokenType::kString:
       case TokenType::kVar:
-      case TokenType::Identifier:
-      {
+      case TokenType::Identifier: {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kFunction);
         auto f = parseFunction(script, object, state, std::move(tp), TokenType::kEndFunction);
@@ -355,7 +357,8 @@ Return:
   return struc;
 }
 
-PapyrusStructMember* PapyrusParser::parseStructMember(PapyrusScript*, PapyrusObject*, PapyrusStruct* struc, PapyrusType&& tp) {
+PapyrusStructMember*
+PapyrusParser::parseStructMember(PapyrusScript*, PapyrusObject*, PapyrusStruct* struc, PapyrusType&& tp) {
   auto mem = alloc->make<PapyrusStructMember>(cur.location, std::move(tp), struc);
   mem->name = expectConsumeIdentRef();
 
@@ -393,8 +396,7 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       case TokenType::kInt:
       case TokenType::kString:
       case TokenType::kVar:
-      case TokenType::Identifier:
-      {
+      case TokenType::Identifier: {
         auto tp = expectConsumePapyrusType();
         expectConsume(TokenType::kProperty);
         group->properties.push_back(parseProperty(script, object, std::move(tp)));
@@ -402,7 +404,9 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
       }
 
       default:
-        reportingContext.fatal(cur.location, "Unexpected token '%s' while parsing property group!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location,
+                               "Unexpected token '%s' while parsing property group!",
+                               cur.prettyString().c_str());
     }
   }
 
@@ -438,7 +442,8 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
           if (prop->writeFunction)
             reportingContext.error(cur.location, "The set function for this property has already been defined!");
           consume();
-          prop->writeFunction = parseFunction(script, object, nullptr, PapyrusType::None(cur.location), TokenType::kEndFunction);
+          prop->writeFunction =
+              parseFunction(script, object, nullptr, PapyrusType::None(cur.location), TokenType::kEndFunction);
           if (!prop->writeFunction)
             CapricaReportingContext::logicalFatal("Somehow failed while parsing the property setter!");
           prop->writeFunction->functionType = PapyrusFunctionType::Setter;
@@ -455,13 +460,14 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
         case TokenType::kInt:
         case TokenType::kString:
         case TokenType::kVar:
-        case TokenType::Identifier:
-        {
+        case TokenType::Identifier: {
           if (prop->readFunction)
             reportingContext.error(cur.location, "The get function for this property has already been defined!");
           auto tp = expectConsumePapyrusType();
-          if (tp != prop->type)
-            reportingContext.error(cur.location, "The return type of the get function must be the same as the property!");
+          if (tp != prop->type) {
+            reportingContext.error(cur.location,
+                                   "The return type of the get function must be the same as the property!");
+          }
           expectConsume(TokenType::kFunction);
           prop->readFunction = parseFunction(script, object, nullptr, std::move(tp), TokenType::kEndFunction);
           if (!prop->readFunction)
@@ -478,7 +484,9 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
           break;
 
         default:
-          reportingContext.fatal(cur.location, "Expected the get/set functions of a full property, got '%s'!", cur.prettyString().c_str());
+          reportingContext.fatal(cur.location,
+                                 "Expected the get/set functions of a full property, got '%s'!",
+                                 cur.prettyString().c_str());
       }
     }
 
@@ -491,11 +499,10 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
 
 PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript*, PapyrusObject* object, PapyrusType&& type) {
   auto var = alloc->make<PapyrusVariable>(cur.location, std::move(type), object);
-  if (conf::Papyrus::game != GameID::Skyrim) {
+  if (conf::Papyrus::game != GameID::Skyrim)
     var->name = expectConsumeIdentRef();
-  } else {
+  else
     var->name = expectConsumeIdentRef();
-  }
   if (maybeConsume(TokenType::Equal)) {
     var->referenceState.isInitialized = true;
     var->defaultValue = expectConsumePapyrusValue();
@@ -507,7 +514,8 @@ PapyrusVariable* PapyrusParser::parseVariable(PapyrusScript*, PapyrusObject* obj
   return var;
 }
 
-PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript*, PapyrusObject* object, PapyrusState*, PapyrusType&& returnType, TokenType endToken) {
+PapyrusFunction* PapyrusParser::parseFunction(
+    PapyrusScript*, PapyrusObject* object, PapyrusState*, PapyrusType&& returnType, TokenType endToken) {
   auto func = alloc->make<PapyrusFunction>(cur.location, std::move(returnType));
   if (endToken == TokenType::kEndFunction)
     func->functionType = PapyrusFunctionType::Function;
@@ -521,7 +529,8 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript*, PapyrusObject* obj
     func->functionType = PapyrusFunctionType::RemoteEvent;
     func->remoteEventParent = func->name;
     func->remoteEventName = expectConsumeIdentRef();
-    func->name = alloc->allocateIdentifier("::remote_" + func->remoteEventParent.to_string() + "_" + func->remoteEventName.to_string());
+    func->name = alloc->allocateIdentifier("::remote_" + func->remoteEventParent.to_string() + "_" +
+                                           func->remoteEventName.to_string());
   }
   expectConsume(TokenType::LParen);
 
@@ -529,7 +538,8 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript*, PapyrusObject* obj
     do {
       maybeConsume(TokenType::Comma);
 
-      auto param = alloc->make<PapyrusFunctionParameter>(cur.location, func->parameters.size(), expectConsumePapyrusType());
+      auto param =
+          alloc->make<PapyrusFunctionParameter>(cur.location, func->parameters.size(), expectConsumePapyrusType());
       param->name = expectConsumeIdentRef();
       if (maybeConsume(TokenType::Equal))
         param->defaultValue = expectConsumePapyrusValue();
@@ -542,9 +552,8 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript*, PapyrusObject* obj
   expectConsumeEOLs();
   func->documentationComment = maybeConsumeDocStringRef();
   if (!func->isNative()) {
-    while (cur.type != endToken && cur.type != TokenType::END) {
+    while (cur.type != endToken && cur.type != TokenType::END)
       func->statements.push_back(parseStatement(func));
-    }
 
     if (cur.type == TokenType::END)
       reportingContext.fatal(cur.location, "Unexpected EOF in state body!");
@@ -557,8 +566,7 @@ PapyrusFunction* PapyrusParser::parseFunction(PapyrusScript*, PapyrusObject* obj
 
 statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* func) {
   switch (cur.type) {
-    case TokenType::kReturn:
-    {
+    case TokenType::kReturn: {
       auto ret = alloc->make<statements::PapyrusReturnStatement>(consumeLocation());
       if (cur.type != TokenType::EOL)
         ret->returnValue = parseExpression(func);
@@ -566,17 +574,15 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kGuard:
-    {
+    case TokenType::kGuard: {
       reportingContext.warning_W6002_Experimental_Syntax_Lock(cur.location);
 
       auto ret = alloc->make<statements::PapyrusGuardStatement>(consumeLocation());
 
-      if (cur.type == TokenType::EOL) {
+      if (cur.type == TokenType::EOL)
         reportingContext.fatal(cur.location, "Syntax error: Guard statement with no guards specified!");
-      } else if (cur.type != TokenType::Identifier) {
+      else if (cur.type != TokenType::Identifier)
         reportingContext.fatal(cur.location, "Syntax error: Incorrect Guard Statement");
-      }
       size_t idx = 0;
       do {
         maybeConsume(TokenType::Comma);
@@ -590,15 +596,13 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       expectConsumeEOLs();
       return ret;
     }
-    case TokenType::kTryGuard:
-    {
+    case TokenType::kTryGuard: {
       reportingContext.warning_W6003_Experimental_Syntax_TryLock(cur.location);
       auto ret = alloc->make<statements::PapyrusTryGuardStatement>(consumeLocation());
-      if (cur.type == TokenType::EOL) {
+      if (cur.type == TokenType::EOL)
         reportingContext.fatal(cur.location, "Syntax error: TryGuard statement with no guards specified!");
-      } else if (cur.type != TokenType::Identifier) {
+      else if (cur.type != TokenType::Identifier)
         reportingContext.fatal(cur.location, "Syntax error: Incorrect TryGuard Statement");
-      }
       size_t idx = 0;
       do {
         maybeConsume(TokenType::Comma);
@@ -613,16 +617,14 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kIf:
-    {
+    case TokenType::kIf: {
       auto ret = alloc->make<statements::PapyrusIfStatement>(consumeLocation());
       while (true) {
         auto cond = parseExpression(func);
         expectConsumeEOLs();
-        IntrusiveLinkedList<statements::PapyrusStatement> curStatements{ };
-        while (cur.type != TokenType::kElseIf && cur.type != TokenType::kElse && cur.type != TokenType::kEndIf) {
+        IntrusiveLinkedList<statements::PapyrusStatement> curStatements {};
+        while (cur.type != TokenType::kElseIf && cur.type != TokenType::kElse && cur.type != TokenType::kEndIf)
           curStatements.push_back(parseStatement(func));
-        }
         ret->ifBodies.push_back(alloc->make<statements::PapyrusIfStatement::IfBody>(cond, std::move(curStatements)));
         if (cur.type == TokenType::kElseIf) {
           consume();
@@ -631,9 +633,8 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         if (cur.type == TokenType::kElse) {
           consume();
           expectConsumeEOLs();
-          while (cur.type != TokenType::kEndIf) {
+          while (cur.type != TokenType::kEndIf)
             ret->elseStatements.push_back(parseStatement(func));
-          }
         }
         expectConsume(TokenType::kEndIf);
         expectConsumeEOLs();
@@ -641,22 +642,19 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       }
     }
 
-    case TokenType::kBreak:
-    {
+    case TokenType::kBreak: {
       auto ret = alloc->make<statements::PapyrusBreakStatement>(consumeLocation());
       expectConsumeEOLs();
       return ret;
     }
 
-    case TokenType::kContinue:
-    {
+    case TokenType::kContinue: {
       auto ret = alloc->make<statements::PapyrusContinueStatement>(consumeLocation());
       expectConsumeEOLs();
       return ret;
     }
 
-    case TokenType::kDo:
-    {
+    case TokenType::kDo: {
       auto ret = alloc->make<statements::PapyrusDoWhileStatement>(consumeLocation());
       expectConsumeEOLs();
       while (cur.type != TokenType::kLoopWhile)
@@ -667,12 +665,11 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kFor:
-    {
+    case TokenType::kFor: {
       auto ret = alloc->make<statements::PapyrusForStatement>(consumeLocation());
       auto eLoc = cur.location;
-      PapyrusIdentifier* ident{ nullptr };
-      statements::PapyrusDeclareStatement* declStatement{ nullptr };
+      PapyrusIdentifier* ident { nullptr };
+      statements::PapyrusDeclareStatement* declStatement { nullptr };
       if (peekTokenType() == TokenType::Identifier) {
         if (cur.type == TokenType::kAuto) {
           declStatement = alloc->make<statements::PapyrusDeclareStatement>(eLoc, PapyrusType::None(eLoc));
@@ -702,8 +699,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kForEach:
-    {
+    case TokenType::kForEach: {
       auto ret = alloc->make<statements::PapyrusForEachStatement>(consumeLocation());
       bool hadLParen = maybeConsume(TokenType::LParen);
       auto eLoc = cur.location;
@@ -730,28 +726,26 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kSwitch:
-    {
+    case TokenType::kSwitch: {
       auto ret = alloc->make<statements::PapyrusSwitchStatement>(consumeLocation());
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
 
       while (true) {
         switch (cur.type) {
-          case TokenType::kCase:
-          {
+          case TokenType::kCase: {
             consume();
             auto cond = expectConsumePapyrusValue();
             expectConsumeEOLs();
-            IntrusiveLinkedList<statements::PapyrusStatement> curStatements{ };
+            IntrusiveLinkedList<statements::PapyrusStatement> curStatements {};
             while (cur.type != TokenType::kCase && cur.type != TokenType::kEndSwitch && cur.type != TokenType::kDefault)
               curStatements.push_back(parseStatement(func));
-            ret->caseBodies.push_back(alloc->make<statements::PapyrusSwitchStatement::CaseBody>(std::move(cond), std::move(curStatements)));
+            ret->caseBodies.push_back(
+                alloc->make<statements::PapyrusSwitchStatement::CaseBody>(std::move(cond), std::move(curStatements)));
             break;
           }
 
-          case TokenType::kDefault:
-          {
+          case TokenType::kDefault: {
             if (ret->defaultStatements.size() > 0)
               reportingContext.error(cur.location, "The default case was already defined!");
             consume();
@@ -773,8 +767,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       }
     }
 
-    case TokenType::kWhile:
-    {
+    case TokenType::kWhile: {
       auto ret = alloc->make<statements::PapyrusWhileStatement>(consumeLocation());
       ret->condition = parseExpression(func);
       expectConsumeEOLs();
@@ -785,8 +778,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
       return ret;
     }
 
-    case TokenType::kAuto:
-    {
+    case TokenType::kAuto: {
       if (!conf::Papyrus::enableLanguageExtensions)
         goto DefaultCase;
 
@@ -804,8 +796,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
     case TokenType::kFloat:
     case TokenType::kInt:
     case TokenType::kString:
-    case TokenType::kVar:
-    {
+    case TokenType::kVar: {
       auto eLoc = cur.location;
       auto ret = alloc->make<statements::PapyrusDeclareStatement>(eLoc, expectConsumePapyrusType());
       ret->name = expectConsumeIdentRef();
@@ -819,9 +810,11 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
 
     DefaultCase:
     case TokenType::Identifier:
-    default:
-    {
-      if (cur.type == TokenType::Identifier && (peekTokenType() == TokenType::Identifier ||  (peekTokenType() == TokenType::LSquare && peekTokenType(1) == TokenType::RSquare && peekTokenType(2) == TokenType::Identifier))) {
+    default: {
+      if (cur.type == TokenType::Identifier &&
+          (peekTokenType() == TokenType::Identifier ||
+           (peekTokenType() == TokenType::LSquare && peekTokenType(1) == TokenType::RSquare &&
+            peekTokenType(2) == TokenType::Identifier))) {
         auto eLoc = cur.location;
         auto ret = alloc->make<statements::PapyrusDeclareStatement>(eLoc, expectConsumePapyrusType());
         ret->name = expectConsumeIdentRef();
@@ -854,8 +847,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
         case TokenType::ModEqual:
           op = statements::PapyrusAssignOperatorType::Modulus;
           goto AssignStatementCommon;
-        AssignStatementCommon:
-        {
+        AssignStatementCommon : {
           auto assStat = alloc->make<statements::PapyrusAssignStatement>(consumeLocation());
           assStat->lValue = expr;
           assStat->operation = op;
@@ -864,8 +856,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
           return assStat;
         }
 
-        default:
-        {
+        default: {
           auto exprStat = alloc->make<statements::PapyrusExpressionStatement>(expr->location);
           exprStat->expression = expr;
           expectConsumeEOLs();
@@ -924,8 +915,7 @@ expressions::PapyrusExpression* PapyrusParser::parseCmpExpression(PapyrusFunctio
         op = expressions::PapyrusBinaryOperatorType::CmpGte;
         goto OperatorCommon;
 
-      OperatorCommon:
-      {
+      OperatorCommon : {
         auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
@@ -962,8 +952,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
         op = expressions::PapyrusBinaryOperatorType::Subtract;
         goto OperatorCommon;
 
-      OperatorCommon:
-      {
+      OperatorCommon : {
         auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
@@ -972,8 +961,7 @@ expressions::PapyrusExpression* PapyrusParser::parseAddExpression(PapyrusFunctio
         break;
       }
 
-      DumbNegativesCommon:
-      {
+      DumbNegativesCommon : {
         if (!conf::Papyrus::allowNegativeLiteralAsBinaryOp)
           goto Return;
         auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(cur.location);
@@ -1007,8 +995,7 @@ expressions::PapyrusExpression* PapyrusParser::parseMultExpression(PapyrusFuncti
         op = expressions::PapyrusBinaryOperatorType::Modulus;
         goto OperatorCommon;
 
-      OperatorCommon:
-      {
+      OperatorCommon : {
         auto binExpr = alloc->make<expressions::PapyrusBinaryOpExpression>(consumeLocation());
         binExpr->left = expr;
         binExpr->operation = op;
@@ -1035,8 +1022,7 @@ expressions::PapyrusExpression* PapyrusParser::parseUnaryExpression(PapyrusFunct
       op = expressions::PapyrusUnaryOperatorType::Negate;
       goto OperatorCommon;
 
-    OperatorCommon:
-    {
+    OperatorCommon : {
       auto unExpr = alloc->make<expressions::PapyrusUnaryOpExpression>(consumeLocation());
       unExpr->operation = op;
       unExpr->innerExpression = parseCastExpression(func);
@@ -1072,14 +1058,12 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
     case TokenType::String:
     case TokenType::kNone:
     case TokenType::kTrue:
-    case TokenType::kFalse:
-    {
+    case TokenType::kFalse: {
       auto eLoc = cur.location;
       return alloc->make<expressions::PapyrusLiteralExpression>(eLoc, expectConsumePapyrusValue());
     }
 
-    default:
-    {
+    default: {
       auto expr = parseArrayExpression(func);
       while (cur.type == TokenType::Dot) {
         auto maExpr = alloc->make<expressions::PapyrusMemberAccessExpression>(consumeLocation());
@@ -1092,8 +1076,7 @@ expressions::PapyrusExpression* PapyrusParser::parseDotExpression(PapyrusFunctio
           aiExpr->indexExpression = parseExpression(func);
           expectConsume(TokenType::RSquare);
           expr = aiExpr;
-        }
-        else {
+        } else {
           expr = maExpr;
         }
       }
@@ -1116,16 +1099,14 @@ expressions::PapyrusExpression* PapyrusParser::parseArrayExpression(PapyrusFunct
 
 expressions::PapyrusExpression* PapyrusParser::parseAtomExpression(PapyrusFunction* func) {
   switch (cur.type) {
-    case TokenType::LParen:
-    {
+    case TokenType::LParen: {
       consume();
       auto expr = parseExpression(func);
       expectConsume(TokenType::RParen);
       return expr;
     }
-    
-    case TokenType::kNew:
-    {
+
+    case TokenType::kNew: {
       auto loc = cur.location;
       consume();
       auto tp = expectConsumePapyrusType();
@@ -1150,17 +1131,19 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
       return alloc->make<expressions::PapyrusArrayLengthExpression>(consumeLocation());
     case TokenType::kParent:
       return alloc->make<expressions::PapyrusParentExpression>(consumeLocation(), func->parentObject->parentClass);
-    case TokenType::kSelf:
-    {
-      auto selfExpr = alloc->make<expressions::PapyrusSelfExpression>(cur.location, PapyrusType::ResolvedObject(cur.location, func->parentObject));
+    case TokenType::kSelf: {
+      auto selfExpr = alloc->make<expressions::PapyrusSelfExpression>(
+          cur.location,
+          PapyrusType::ResolvedObject(cur.location, func->parentObject));
       consume();
       return selfExpr;
     }
-    case TokenType::Identifier:
-    {
+    case TokenType::Identifier: {
       if (peekTokenType() == TokenType::LParen) {
         auto eLoc = cur.location;
-        auto fCallExpr = alloc->make<expressions::PapyrusFunctionCallExpression>(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
+        auto fCallExpr = alloc->make<expressions::PapyrusFunctionCallExpression>(
+            eLoc,
+            PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
         expectConsume(TokenType::LParen);
 
         if (cur.type != TokenType::RParen) {
@@ -1181,7 +1164,9 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
         return fCallExpr;
       } else {
         auto eLoc = cur.location;
-        return alloc->make<expressions::PapyrusIdentifierExpression>(eLoc, PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
+        return alloc->make<expressions::PapyrusIdentifierExpression>(
+            eLoc,
+            PapyrusIdentifier::Unresolved(eLoc, expectConsumeIdentRef()));
       }
     }
     default:
@@ -1215,8 +1200,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
       tp = PapyrusType::String(consumeLocation());
       tp.type = PapyrusType::Kind::ScriptEventName;
       break;
-    case TokenType::Identifier:
-    {
+    case TokenType::Identifier: {
       auto eLoc = cur.location;
       tp = PapyrusType::Unresolved(eLoc, expectConsumeIdentRef());
       break;
@@ -1235,7 +1219,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
 }
 
 PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
-  PapyrusValue val{ cur.location };
+  PapyrusValue val { cur.location };
 
   switch (cur.type) {
     case TokenType::Float:

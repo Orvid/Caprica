@@ -10,18 +10,15 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusDoWhileStatement final : public PapyrusStatement
-{
-  expressions::PapyrusExpression* condition{ nullptr };
-  IntrusiveLinkedList<PapyrusStatement> body{ };
+struct PapyrusDoWhileStatement final : public PapyrusStatement {
+  expressions::PapyrusExpression* condition { nullptr };
+  IntrusiveLinkedList<PapyrusStatement> body {};
 
   explicit PapyrusDoWhileStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusDoWhileStatement(const PapyrusDoWhileStatement&) = delete;
   virtual ~PapyrusDoWhileStatement() override = default;
 
-  virtual bool buildCFG(PapyrusCFG& cfg) const override {
-    return cfg.processCommonLoopBody(body);
-  }
+  virtual bool buildCFG(PapyrusCFG& cfg) const override { return cfg.processCommonLoopBody(body); }
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
@@ -40,7 +37,7 @@ struct PapyrusDoWhileStatement final : public PapyrusStatement
     bldr << beforeCondition;
     auto lVal = condition->generateLoad(file, bldr);
     bldr << location;
-    bldr << op::jmpt{ lVal, beforeBody };
+    bldr << op::jmpt { lVal, beforeBody };
 
     bldr << afterAll;
     bldr.popBreakContinueScope();
@@ -52,11 +49,9 @@ struct PapyrusDoWhileStatement final : public PapyrusStatement
     condition = ctx->coerceExpression(condition, PapyrusType::Bool(condition->location));
     ctx->pushBreakContinueScope();
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s: body) {
+    if (conf::Papyrus::game == GameID::Skyrim)
+      for (auto s : body)
         s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : body)
       s->semantic(ctx);
     ctx->popLocalVariableScope();

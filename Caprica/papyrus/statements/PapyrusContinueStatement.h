@@ -7,8 +7,7 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusContinueStatement final : public PapyrusStatement
-{
+struct PapyrusContinueStatement final : public PapyrusStatement {
   explicit PapyrusContinueStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusContinueStatement(const PapyrusContinueStatement&) = delete;
   virtual ~PapyrusContinueStatement() = default;
@@ -20,7 +19,7 @@ struct PapyrusContinueStatement final : public PapyrusStatement
 
   virtual void buildPex(pex::PexFile*, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
-    bldr << op::jmp{ bldr.currentContinueTarget() };
+    bldr << op::jmp { bldr.currentContinueTarget() };
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
@@ -28,9 +27,7 @@ struct PapyrusContinueStatement final : public PapyrusStatement
       ctx->reportingContext.error(location, "There's nothing to continue!");
   }
 
-  virtual void visit(PapyrusStatementVisitor& visitor) override {
-    visitor.visit(this);
-  }
+  virtual void visit(PapyrusStatementVisitor& visitor) override { visitor.visit(this); }
 };
 
 }}}

@@ -3,7 +3,6 @@
 
 namespace caprica {
 
-
 // matches values in "GameID" field in PEX header
 enum class GameID : uint16_t {
   INVALID = 0xFFFF,
@@ -14,7 +13,7 @@ enum class GameID : uint16_t {
   Starfield = 4,
 };
 
-constexpr const char *GameIDToString(GameID game) {
+constexpr const char* GameIDToString(GameID game) {
   switch (game) {
     case GameID::INVALID:
       return "INVALID";
@@ -31,6 +30,5 @@ constexpr const char *GameIDToString(GameID game) {
     default:
       return "INVALID";
   }
-
 };
 }

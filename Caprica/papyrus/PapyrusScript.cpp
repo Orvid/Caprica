@@ -1,7 +1,7 @@
 #include <papyrus/PapyrusScript.h>
 
-#include <Windows.h>
 #include <lmcons.h>
+#include <Windows.h>
 
 #include <common/CapricaConfig.h>
 #include <common/EngineLimits.h>
@@ -42,8 +42,12 @@ pex::PexFile* PapyrusScript::buildPex(CapricaReportingContext& repCtx) const {
   for (auto o : objects)
     o->buildPex(repCtx, pex);
 
-  if (objects.size())
-    EngineLimits::checkLimit(repCtx, objects.front()->location, EngineLimits::Type::PexFile_UserFlagCount, pex->getUserFlagCount());
+  if (objects.size()) {
+    EngineLimits::checkLimit(repCtx,
+                             objects.front()->location,
+                             EngineLimits::Type::PexFile_UserFlagCount,
+                             pex->getUserFlagCount());
+  }
   return pex;
 }
 

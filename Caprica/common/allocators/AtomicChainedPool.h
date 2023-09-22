@@ -6,20 +6,18 @@
 
 namespace caprica { namespace allocators {
 
-struct AtomicChainedPool final
-{
+struct AtomicChainedPool final {
   explicit AtomicChainedPool(size_t hpSize) : heapSize(hpSize), base(hpSize) { }
   ~AtomicChainedPool() = default;
 
   char* allocate(size_t size);
 
 private:
-  struct Heap final
-  {
+  struct Heap final {
     size_t allocedHeapSize;
     std::atomic<size_t> freeBytes;
     void* baseAlloc;
-    std::atomic<Heap*> next{ nullptr };
+    std::atomic<Heap*> next { nullptr };
 
     Heap() = delete;
     Heap(const Heap&) = delete;
@@ -34,7 +32,7 @@ private:
   };
 
   size_t heapSize;
-  std::atomic<Heap*> current{ &base };
+  std::atomic<Heap*> current { &base };
   Heap base;
 
   void* allocHeap(size_t newHeapSize, size_t firstAllocSize);

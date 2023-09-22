@@ -11,18 +11,15 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusWhileStatement final : public PapyrusStatement
-{
-  expressions::PapyrusExpression* condition{ nullptr };
-  IntrusiveLinkedList<PapyrusStatement> body{ };
+struct PapyrusWhileStatement final : public PapyrusStatement {
+  expressions::PapyrusExpression* condition { nullptr };
+  IntrusiveLinkedList<PapyrusStatement> body {};
 
   explicit PapyrusWhileStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusWhileStatement(const PapyrusWhileStatement&) = delete;
   virtual ~PapyrusWhileStatement() override = default;
 
-  virtual bool buildCFG(PapyrusCFG& cfg) const override {
-    return cfg.processCommonLoopBody(body);
-  }
+  virtual bool buildCFG(PapyrusCFG& cfg) const override { return cfg.processCommonLoopBody(body); }
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
@@ -34,12 +31,12 @@ struct PapyrusWhileStatement final : public PapyrusStatement
     bldr.pushBreakContinueScope(afterAll, beforeCondition);
     auto lVal = condition->generateLoad(file, bldr);
     bldr << location;
-    bldr << op::jmpf{ lVal, afterAll };
+    bldr << op::jmpf { lVal, afterAll };
 
     for (auto s : body)
       s->buildPex(file, bldr);
     bldr << location;
-    bldr << op::jmp{ beforeCondition };
+    bldr << op::jmp { beforeCondition };
 
     bldr << afterAll;
     bldr.popBreakContinueScope();
@@ -51,11 +48,9 @@ struct PapyrusWhileStatement final : public PapyrusStatement
     condition = ctx->coerceExpression(condition, PapyrusType::Bool(condition->location));
     ctx->pushBreakContinueScope();
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s: body) {
+    if (conf::Papyrus::game == GameID::Skyrim)
+      for (auto s : body)
         s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : body)
       s->semantic(ctx);
     ctx->popLocalVariableScope();

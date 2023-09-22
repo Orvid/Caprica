@@ -7,13 +7,12 @@
 #include <common/allocators/ChainedPool.h>
 #include <common/CapricaReportingContext.h>
 
-#include <pex/PexFile.h>
 #include <pex/parser/PexAsmLexer.h>
+#include <pex/PexFile.h>
 
 namespace caprica { namespace pex { namespace parser {
 
-struct PexAsmParser final : private PexAsmLexer
-{
+struct PexAsmParser final : private PexAsmLexer {
   explicit PexAsmParser(CapricaReportingContext& repCtx, const std::string& file) : PexAsmLexer(repCtx, file) { }
   PexAsmParser(const PexAsmParser&) = delete;
   ~PexAsmParser() = default;
@@ -21,14 +20,17 @@ struct PexAsmParser final : private PexAsmLexer
   PexFile* parseFile();
 
 private:
-  allocators::ChainedPool* alloc{ nullptr };
+  allocators::ChainedPool* alloc { nullptr };
   PexFunction* parseFunction(PexFile* file, PexDebugFunctionInfo* debInfo, std::string& funcNameOut);
 
   void expect(TokenType tp) {
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      reportingContext.fatal(cur.location, "Expected '%s' got '%s'!", Token::prettyTokenType(tp).c_str(), cur.prettyString().c_str());
+      reportingContext.fatal(cur.location,
+                             "Expected '%s' got '%s'!",
+                             Token::prettyTokenType(tp).c_str(),
+                             cur.prettyString().c_str());
     }
   }
 
@@ -64,9 +66,7 @@ private:
     return false;
   }
 
-  void expectConsumeEOL() {
-    expectConsume(TokenType::EOL);
-  }
+  void expectConsumeEOL() { expectConsume(TokenType::EOL); }
 
   std::string expectConsumeIdent() {
     expect(TokenType::Identifier);
@@ -81,13 +81,9 @@ private:
     return val;
   }
 
-  PexString expectConsumePexIdent(PexFile* file) {
-    return file->getString(expectConsumeIdent());
-  }
+  PexString expectConsumePexIdent(PexFile* file) { return file->getString(expectConsumeIdent()); }
 
-  PexString expectConsumePexIdentEOL(PexFile* file) {
-    return file->getString(expectConsumeIdentEOL());
-  }
+  PexString expectConsumePexIdentEOL(PexFile* file) { return file->getString(expectConsumeIdentEOL()); }
 
   PexString maybeConsumePexIdentEOL(PexFile* file) {
     PexString val;
@@ -112,13 +108,9 @@ private:
     return val;
   }
 
-  PexString expectConsumePexString(PexFile* file) {
-    return file->getString(expectConsumeString());
-  }
+  PexString expectConsumePexString(PexFile* file) { return file->getString(expectConsumeString()); }
 
-  PexString expectConsumePexStringEOL(PexFile* file) {
-    return file->getString(expectConsumeStringEOL());
-  }
+  PexString expectConsumePexStringEOL(PexFile* file) { return file->getString(expectConsumeStringEOL()); }
 
   int32_t expectConsumeInteger() {
     expect(TokenType::Integer);

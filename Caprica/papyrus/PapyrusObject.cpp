@@ -28,15 +28,13 @@ const PapyrusObject* PapyrusObject::tryGetParentClass() const {
 void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file) const {
   auto obj = file->alloc->make<pex::PexObject>();
   obj->name = file->getString(name);
-  if (auto parClass = tryGetParentClass()) {
+  if (auto parClass = tryGetParentClass())
     if (file->gameID != GameID::Skyrim || parClass->name != "__ScriptObject")
       obj->parentClassName = file->getString(parClass->name);
-    else {
+    else
       obj->parentClassName = file->getString("");
-    }
-  } else {
+  else
     obj->parentClassName = file->getString("");
-  }
   obj->documentationString = file->getString(documentationString);
   obj->isConst = isConst();
   if (autoState)
@@ -45,18 +43,16 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
     obj->autoStateName = file->getString("");
   obj->userFlags = userFlags.buildPex(file);
 
-  if (file->gameID > GameID::Skyrim){
+  if (file->gameID > GameID::Skyrim)
     for (auto s : structs)
       s->buildPex(repCtx, file, obj);
-  }
 
   for (auto v : variables)
     v->buildPex(repCtx, file, obj);
 
-  if (file->gameID == GameID::Starfield) {
+  if (file->gameID == GameID::Starfield)
     for (auto g : guards)
       g->buildPex(repCtx, file, obj);
-  }
 
   for (auto g : propertyGroups)
     g->buildPex(repCtx, file, obj);
@@ -69,10 +65,9 @@ void PapyrusObject::buildPex(CapricaReportingContext& repCtx, pex::PexFile* file
   }
 
   size_t initialValueCount = 0;
-  for (auto v : obj->variables) {
+  for (auto v : obj->variables)
     if (v->defaultValue.type != pex::PexValueType::None)
       initialValueCount++;
-  }
 
   EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_InitialValueCount, initialValueCount);
   EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexObject_NamedStateCount, namedStateCount);
@@ -114,7 +109,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   ctx->ensureNamesAreUnique(states, "state");
   ctx->ensureNamesAreUnique(customEvents, "custom event");
 
-  caseless_unordered_identifier_ref_map<std::pair<bool, const char*>> identMap{ };
+  caseless_unordered_identifier_ref_map<std::pair<bool, const char*>> identMap {};
   checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
 
   // The first pass resolves the types on the public API,
@@ -141,7 +136,8 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
         else
           ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.to_string().c_str());
       } else {
-        ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location, v->name.to_string().c_str());
+        ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location,
+                                                                                   v->name.to_string().c_str());
       }
     } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
       ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.to_string().c_str());
@@ -152,15 +148,26 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   resolutionState = PapyrusResoultionState::Semantic2Completed;
 }
 
-void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx, caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap, bool checkInheritedOnly) const {
+void PapyrusObject::checkForInheritedIdentifierConflicts(
+    CapricaReportingContext& repCtx,
+    caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap,
+    bool checkInheritedOnly) const {
   if (auto parent = tryGetParentClass())
     parent->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
 
-  const auto doError = [](CapricaReportingContext& repCtx, CapricaFileLocation loc, bool isParent, const char* otherType, const identifier_ref& identName) {
-    if (isParent)
+  const auto doError = [](CapricaReportingContext& repCtx,
+                          CapricaFileLocation loc,
+                          bool isParent,
+                          const char* otherType,
+                          const identifier_ref& identName) {
+    if (isParent) {
       repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType, identName.to_string().c_str());
-    else
-      repCtx.error(loc, "A %s named '%s' was already defined in this object.", otherType, identName.to_string().c_str());
+    } else {
+      repCtx.error(loc,
+                   "A %s named '%s' was already defined in this object.",
+                   otherType,
+                   identName.to_string().c_str());
+    }
   };
 
   for (auto pg : propertyGroups) {
@@ -197,24 +204,23 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(CapricaReportingContext
       if (f != identMap.end()) {
         // child class variables are allowed to shadow parent properties in Skyrim
         if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty &&
-              _stricmp(f->second.second, "property") == 0){
-          repCtx.warning_W7001_Skyrim_Child_Variable_Shadows_Parent_Property(
-                  v->location,
-                  v->name.to_string().c_str(),
-                  name.to_string().c_str(),
-                  parentClass.prettyString().c_str());
+            _stricmp(f->second.second, "property") == 0) {
+          repCtx.warning_W7001_Skyrim_Child_Variable_Shadows_Parent_Property(v->location,
+                                                                             v->name.to_string().c_str(),
+                                                                             name.to_string().c_str(),
+                                                                             parentClass.prettyString().c_str());
         } else {
           doError(repCtx, v->location, f->second.first, f->second.second, v->name);
         }
-      }
-      else
+      } else {
         identMap.emplace(v->name, std::make_pair(checkInheritedOnly, "variable"));
+      }
     }
   }
   // TODO: Make this configurable for Starfield
-  // TODO: Starfield: Verify that guards in child classes are not allowed to have the same name as guards in parent classes.
-  // guards
-  for (auto g : guards){
+  // TODO: Starfield: Verify that guards in child classes are not allowed to have the same name as guards in parent
+  // classes. guards
+  for (auto g : guards) {
     auto f = identMap.find(g->name);
     if (f != identMap.end())
       doError(repCtx, g->location, f->second.first, f->second.second, g->name);

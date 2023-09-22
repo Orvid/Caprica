@@ -10,22 +10,21 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-struct PapyrusSwitchStatement final : public PapyrusStatement
-{
-  struct CaseBody final
-  {
+struct PapyrusSwitchStatement final : public PapyrusStatement {
+  struct CaseBody final {
     PapyrusValue condition;
-    IntrusiveLinkedList<PapyrusStatement> body{ };
+    IntrusiveLinkedList<PapyrusStatement> body {};
 
-    CaseBody(PapyrusValue&& c, IntrusiveLinkedList<PapyrusStatement>&& b) : condition(std::move(c)), body(std::move(b)) { }
+    CaseBody(PapyrusValue&& c, IntrusiveLinkedList<PapyrusStatement>&& b)
+        : condition(std::move(c)), body(std::move(b)) { }
 
   private:
     friend IntrusiveLinkedList<CaseBody>;
-    CaseBody* next{ nullptr };
+    CaseBody* next { nullptr };
   };
-  expressions::PapyrusExpression* condition{ nullptr };
-  IntrusiveLinkedList<CaseBody> caseBodies{ };
-  IntrusiveLinkedList<PapyrusStatement> defaultStatements{ };
+  expressions::PapyrusExpression* condition { nullptr };
+  IntrusiveLinkedList<CaseBody> caseBodies {};
+  IntrusiveLinkedList<PapyrusStatement> defaultStatements {};
 
   explicit PapyrusSwitchStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusSwitchStatement(const PapyrusSwitchStatement&) = delete;
@@ -41,8 +40,10 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
 
     if (defaultStatements.size()) {
       cfg.addLeaf();
-      if (!cfg.processStatements(defaultStatements))
-        cfg.reportingContext.error(defaultStatements.front()->location, "Control is not allowed to fall through to the next case.");
+      if (!cfg.processStatements(defaultStatements)) {
+        cfg.reportingContext.error(defaultStatements.front()->location,
+                                   "Control is not allowed to fall through to the next case.");
+      }
     }
 
     bool isTerminal = !cfg.popBreakTerminal();
@@ -58,20 +59,20 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
 
     auto tmpDest = bldr.allocLongLivedTemp(condition->resultType());
     bldr << location;
-    bldr << op::assign{ tmpDest, condition->generateLoad(file, bldr) };
+    bldr << op::assign { tmpDest, condition->generateLoad(file, bldr) };
 
     pex::PexLabel* afterAll;
     bldr >> afterAll;
     bldr.pushBreakScope(afterAll);
-    pex::PexLabel* nextCondition{ nullptr };
+    pex::PexLabel* nextCondition { nullptr };
     for (auto& cBody : caseBodies) {
       if (nextCondition)
         bldr << nextCondition;
       bldr >> nextCondition;
       bldr << location;
       auto cond = bldr.allocTemp(PapyrusType::Bool(location));
-      bldr << op::cmpeq{ cond, tmpDest, cBody->condition.buildPex(file) };
-      bldr << op::jmpf{ cond, nextCondition };
+      bldr << op::cmpeq { cond, tmpDest, cBody->condition.buildPex(file) };
+      bldr << op::jmpf { cond, nextCondition };
       for (auto s : cBody->body)
         s->buildPex(file, bldr);
     }
@@ -87,29 +88,35 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     condition->semantic(ctx);
     ctx->checkForPoison(condition);
-    if (condition->resultType().type != PapyrusType::Kind::Int && condition->resultType().type != PapyrusType::Kind::String)
-      ctx->reportingContext.error(condition->location, "The condition of a switch statement can only be either an Int or a String, got '%s'!", condition->resultType().prettyString().c_str());
+    if (condition->resultType().type != PapyrusType::Kind::Int &&
+        condition->resultType().type != PapyrusType::Kind::String) {
+      ctx->reportingContext.error(
+          condition->location,
+          "The condition of a switch statement can only be either an Int or a String, got '%s'!",
+          condition->resultType().prettyString().c_str());
+    }
 
     ctx->pushBreakScope();
     for (auto i : caseBodies) {
-      if (i->condition.getPapyrusType() != condition->resultType())
-        ctx->reportingContext.error(i->condition.location, "The condition of a case statement must match the type of the expression being switched on! Expected '%s', got '%s'!", condition->resultType().prettyString().c_str(), i->condition.getPapyrusType().prettyString().c_str());
-      ctx->pushLocalVariableScope();
-      if (conf::Papyrus::game == GameID::Skyrim) {
-        for (auto s : i->body) {
-          s->semantic_skyrim_first_pass(ctx);
-        }
+      if (i->condition.getPapyrusType() != condition->resultType()) {
+        ctx->reportingContext.error(i->condition.location,
+                                    "The condition of a case statement must match the type of the expression being "
+                                    "switched on! Expected '%s', got '%s'!",
+                                    condition->resultType().prettyString().c_str(),
+                                    i->condition.getPapyrusType().prettyString().c_str());
       }
+      ctx->pushLocalVariableScope();
+      if (conf::Papyrus::game == GameID::Skyrim)
+        for (auto s : i->body)
+          s->semantic_skyrim_first_pass(ctx);
       for (auto s : i->body)
         s->semantic(ctx);
       ctx->popLocalVariableScope();
     }
     ctx->pushLocalVariableScope();
-    if (conf::Papyrus::game == GameID::Skyrim) {
-      for (auto s : defaultStatements) {
+    if (conf::Papyrus::game == GameID::Skyrim)
+      for (auto s : defaultStatements)
         s->semantic_skyrim_first_pass(ctx);
-      }
-    }
     for (auto s : defaultStatements)
       s->semantic(ctx);
     ctx->popLocalVariableScope();
@@ -119,10 +126,9 @@ struct PapyrusSwitchStatement final : public PapyrusStatement
   virtual void visit(PapyrusStatementVisitor& visitor) override {
     visitor.visit(this);
 
-    for (auto i : caseBodies) {
+    for (auto i : caseBodies)
       for (auto s : i->body)
         s->visit(visitor);
-    }
     for (auto s : defaultStatements)
       s->visit(visitor);
   }

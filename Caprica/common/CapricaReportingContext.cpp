@@ -18,23 +18,22 @@ void CapricaReportingContext::pushToErrorStream(std::string&& msg, bool isError)
 }
 
 void CapricaReportingContext::breakIfDebugging() {
-  if (IsDebuggerPresent()) {
+  if (IsDebuggerPresent())
     __debugbreak();
-  }
 }
 
 void CapricaReportingContext::exitIfErrors() {
   if (errorCount > 0) {
-    pushToErrorStream("Compilation of '" + filename + "' failed; " + std::to_string(warningCount) + " warnings and " + std::to_string(errorCount) + " errors were encountered.");
+    pushToErrorStream("Compilation of '" + filename + "' failed; " + std::to_string(warningCount) + " warnings and " +
+                      std::to_string(errorCount) + " errors were encountered.");
     throw std::runtime_error("");
   }
 }
 
 bool CapricaReportingContext::isWarningError(CapricaFileLocation /* location */, size_t warningNumber) const {
   // TODO: Support disabling warnings for specific sections of code.
-  if (warningNumber >= 2000 && warningNumber <= 2200) {
+  if (warningNumber >= 2000 && warningNumber <= 2200)
     return !conf::EngineLimits::ignoreLimits && conf::Warnings::warningsToIgnore.count(warningNumber) == 0;
-  }
   return conf::Warnings::treatWarningsAsErrors || conf::Warnings::warningsToHandleAsErrors.count(warningNumber);
 }
 
@@ -55,21 +54,20 @@ size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, si
   if (!lineOffsets.size())
     CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
   if (lastLineHint != 0) {
-    if (location.fileOffset >= lineOffsets.at(lastLineHint - 1)) {
+    if (location.fileOffset >= lineOffsets.at(lastLineHint - 1))
       return lastLineHint + 1;
-    }
     if (lastLineHint + 1 < lineOffsets.size()) {
-      if (location.fileOffset >= lineOffsets.at(lastLineHint - 1)) {
+      if (location.fileOffset >= lineOffsets.at(lastLineHint - 1))
         return lastLineHint + 1;
-      }
     }
   }
   auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.fileOffset);
   if (a == lineOffsets.end()) {
     // TODO: Fix line offsets during parsing for reals, remove this hack
-    //maybePushMessage(this, nullptr, "Warning:", 0, formatString("Unable to locate line at offset %zu, using last known line %zu...", location.fileOffset, lineOffsets.size()), true);
+    // maybePushMessage(this, nullptr, "Warning:", 0, formatString("Unable to locate line at offset %zu, using last
+    // known line %zu...", location.fileOffset, lineOffsets.size()), true);
     return lineOffsets.size();
-    //CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+    // CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
   }
   return std::distance(lineOffsets.begin(), a);
 }
@@ -82,12 +80,18 @@ std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) {
   return ret;
 }
 
-void CapricaReportingContext::maybePushMessage(CapricaReportingContext* ctx, CapricaFileLocation* location, const char* msgType, size_t warningNumber, const std::string& msg, bool forceAsError) {
+void CapricaReportingContext::maybePushMessage(CapricaReportingContext* ctx,
+                                               CapricaFileLocation* location,
+                                               const char* msgType,
+                                               size_t warningNumber,
+                                               const std::string& msg,
+                                               bool forceAsError) {
   if (warningNumber != 0) {
     if (ctx->isWarningEnabled(*location, warningNumber)) {
       if (ctx->isWarningError(*location, warningNumber)) {
         ctx->errorCount++;
-        pushToErrorStream(ctx->formatLocation(*location) + ": Error W" + std::to_string(warningNumber) + ": " + msg, true);
+        pushToErrorStream(ctx->formatLocation(*location) + ": Error W" + std::to_string(warningNumber) + ": " + msg,
+                          true);
       } else {
         ctx->warningCount++;
         pushToErrorStream(ctx->formatLocation(*location) + ": Warning W" + std::to_string(warningNumber) + ": " + msg);

@@ -6,16 +6,15 @@
 
 namespace caprica { namespace pex {
 
-PexObject * PexObject::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexObject* PexObject::read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType) {
   auto obj = alloc->make<PexObject>();
   obj->name = rdr.read<PexString>();
   // The size of the object, but we don't care about it.
   rdr.read<uint32_t>();
   obj->parentClassName = rdr.read<PexString>();
   obj->documentationString = rdr.read<PexString>();
-  if (gameType > GameID::Skyrim) {
+  if (gameType > GameID::Skyrim)
     obj->isConst = rdr.read<uint8_t>() != 0;
-  }
   obj->userFlags = rdr.read<PexUserFlags>();
   obj->autoStateName = rdr.read<PexString>();
   if (gameType > GameID::Skyrim) {
@@ -41,21 +40,20 @@ PexObject * PexObject::read(allocators::ChainedPool *alloc, PexReader &rdr, Game
   return obj;
 }
 
-void PexObject::write(PexWriter &wtr, GameID gameType) const {
+void PexObject::write(PexWriter& wtr, GameID gameType) const {
   wtr.write<PexString>(name);
   wtr.beginObject();
 
   wtr.write<PexString>(parentClassName);
   wtr.write<PexString>(documentationString);
-  if (gameType > GameID::Skyrim) {
+  if (gameType > GameID::Skyrim)
     wtr.write<uint8_t>(isConst ? 0x01 : 0x00);
-  }
   wtr.write<PexUserFlags>(userFlags);
   wtr.write<PexString>(autoStateName);
 
   if (gameType > GameID::Skyrim) {
     wtr.boundWrite<uint16_t>(structs.size());
-    for (auto s: structs)
+    for (auto s : structs)
       s->write(wtr);
   }
 
@@ -65,7 +63,7 @@ void PexObject::write(PexWriter &wtr, GameID gameType) const {
 
   if (gameType == GameID::Starfield) {
     wtr.boundWrite<uint16_t>(guards.size());
-    for (auto g: guards)
+    for (auto g : guards)
       g->write(wtr);
   }
 
@@ -79,7 +77,9 @@ void PexObject::write(PexWriter &wtr, GameID gameType) const {
 }
 
 void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.write(".object %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(parentClassName).to_string().c_str());
+  wtr.write(".object %s %s",
+            file->getStringValue(name).to_string().c_str(),
+            file->getStringValue(parentClassName).to_string().c_str());
   if (isConst)
     wtr.write(" const");
   wtr.writeln();
@@ -88,7 +88,7 @@ void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
   wtr.writeKV<PexUserFlags>("userFlags", userFlags);
   wtr.writeKV<std::string>("docString", file->getStringValue(documentationString).to_string());
   wtr.writeln(".autoState %s", file->getStringValue(autoStateName).to_string().c_str());
-  
+
   wtr.writeln(".structTable");
   wtr.ident++;
   for (auto s : structs)
@@ -121,11 +121,9 @@ void PexObject::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
   wtr.writeln(".propertyGroupTable");
   wtr.ident++;
   if (file->debugInfo) {
-    for (auto g : file->debugInfo->propertyGroups) {
-      if (file->getStringValue(g->objectName) == file->getStringValue(name)) {
+    for (auto g : file->debugInfo->propertyGroups)
+      if (file->getStringValue(g->objectName) == file->getStringValue(name))
         g->writeAsm(file, wtr);
-      }
-    }
   }
   wtr.ident--;
   wtr.writeln(".endPropertyGroupTable");

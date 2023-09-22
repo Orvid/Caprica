@@ -1,7 +1,7 @@
 #include <common/FSUtils.h>
 
-#include <io.h>
 #include <fcntl.h>
+#include <io.h>
 
 #include <cstring>
 #include <filesystem>
@@ -50,10 +50,8 @@ std::string_view parentPathAsRef(std::string_view file) {
 std::string canonical(const std::string& path) {
   if (path.size() > 3 && path[1] == ':') {
     // Shortcircuit for already canon paths.
-    if (path.find("/") == std::string::npos &&
-        path.find("..") == std::string::npos &&
-        path.find("\\.\\") == std::string::npos &&
-        path.find("\\\\") == std::string::npos) {
+    if (path.find("/") == std::string::npos && path.find("..") == std::string::npos &&
+        path.find("\\.\\") == std::string::npos && path.find("\\\\") == std::string::npos) {
       return path;
     }
   }

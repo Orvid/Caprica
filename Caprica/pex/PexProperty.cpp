@@ -6,7 +6,7 @@
 
 namespace caprica { namespace pex {
 
-PexProperty * PexProperty::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexProperty* PexProperty::read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType) {
   auto prop = alloc->make<PexProperty>();
   prop->name = rdr.read<PexString>();
   prop->typeName = rdr.read<PexString>();
@@ -61,7 +61,9 @@ void PexProperty::write(PexWriter& wtr) const {
 
 void PexProperty::writeAsm(const PexFile* file, const PexObject* obj, PexAsmWriter& wtr) const {
   // TODO: Handle the property group info in the debug info.
-  wtr.write(".property %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(typeName).to_string().c_str());
+  wtr.write(".property %s %s",
+            file->getStringValue(name).to_string().c_str(),
+            file->getStringValue(typeName).to_string().c_str());
   if (isAuto)
     wtr.write(" auto");
   wtr.writeln();
@@ -72,10 +74,14 @@ void PexProperty::writeAsm(const PexFile* file, const PexObject* obj, PexAsmWrit
   if (isAuto) {
     wtr.writeln(".autoVar %s", file->getStringValue(autoVar).to_string().c_str());
   } else {
-    if (isReadable)
-      readFunction->writeAsm(file, obj, nullptr, PexDebugFunctionType::Getter, file->getStringValue(name).to_string(), wtr);
-    if (isWritable)
-      writeFunction->writeAsm(file, obj, nullptr, PexDebugFunctionType::Setter, file->getStringValue(name).to_string(), wtr);
+    if (isReadable) {
+      readFunction
+          ->writeAsm(file, obj, nullptr, PexDebugFunctionType::Getter, file->getStringValue(name).to_string(), wtr);
+    }
+    if (isWritable) {
+      writeFunction
+          ->writeAsm(file, obj, nullptr, PexDebugFunctionType::Setter, file->getStringValue(name).to_string(), wtr);
+    }
   }
 
   wtr.ident--;

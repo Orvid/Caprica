@@ -17,8 +17,7 @@ struct PapyrusSwitchStatement;
 struct PapyrusTryGuardStatement;
 struct PapyrusWhileStatement;
 
-struct PapyrusStatementVisitor abstract
-{
+struct PapyrusStatementVisitor abstract {
   explicit PapyrusStatementVisitor() = default;
   PapyrusStatementVisitor(const PapyrusStatementVisitor&) = delete;
   virtual ~PapyrusStatementVisitor() = default;
@@ -39,8 +38,7 @@ struct PapyrusStatementVisitor abstract
   virtual void visit(PapyrusWhileStatement* s) = 0;
 };
 
-struct PapyrusSelectiveStatementVisitor abstract : public PapyrusStatementVisitor
-{
+struct PapyrusSelectiveStatementVisitor abstract : public PapyrusStatementVisitor {
   explicit PapyrusSelectiveStatementVisitor() = default;
   PapyrusSelectiveStatementVisitor(const PapyrusSelectiveStatementVisitor&) = delete;
   virtual ~PapyrusSelectiveStatementVisitor() = default;

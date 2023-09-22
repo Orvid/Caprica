@@ -4,7 +4,7 @@
 
 namespace caprica { namespace pex {
 
-PexVariable * PexVariable::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexVariable* PexVariable::read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType) {
   auto var = alloc->make<PexVariable>();
   var->name = rdr.read<PexString>();
   var->typeName = rdr.read<PexString>();
@@ -15,7 +15,7 @@ PexVariable * PexVariable::read(allocators::ChainedPool *alloc, PexReader &rdr, 
   return var;
 }
 
-void PexVariable::write(PexWriter &wtr, GameID gameType) const {
+void PexVariable::write(PexWriter& wtr, GameID gameType) const {
   wtr.write<PexString>(name);
   wtr.write<PexString>(typeName);
   wtr.write<PexUserFlags>(userFlags);
@@ -25,7 +25,9 @@ void PexVariable::write(PexWriter &wtr, GameID gameType) const {
 }
 
 void PexVariable::writeAsm(const PexFile* file, PexAsmWriter& wtr) const {
-  wtr.write(".variable %s %s", file->getStringValue(name).to_string().c_str(), file->getStringValue(typeName).to_string().c_str());
+  wtr.write(".variable %s %s",
+            file->getStringValue(name).to_string().c_str(),
+            file->getStringValue(typeName).to_string().c_str());
   if (isConst)
     wtr.write(" const");
   wtr.writeln();

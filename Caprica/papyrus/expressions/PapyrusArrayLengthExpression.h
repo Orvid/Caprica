@@ -1,7 +1,7 @@
 #pragma once
 
-#include <papyrus/PapyrusType.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusType.h>
 
 #include <pex/PexFile.h>
 #include <pex/PexFunctionBuilder.h>
@@ -9,8 +9,7 @@
 
 namespace caprica { namespace papyrus { namespace expressions {
 
-struct PapyrusArrayLengthExpression final : public PapyrusExpression
-{
+struct PapyrusArrayLengthExpression final : public PapyrusExpression {
   explicit PapyrusArrayLengthExpression(const CapricaFileLocation& loc) : PapyrusExpression(loc) { }
   PapyrusArrayLengthExpression(const PapyrusArrayLengthExpression&) = delete;
   virtual ~PapyrusArrayLengthExpression() override = default;
@@ -23,13 +22,9 @@ struct PapyrusArrayLengthExpression final : public PapyrusExpression
     ctx->reportingContext.fatal(location, "Illegal identifier: 'Length'!");
   }
 
-  virtual PapyrusType resultType() const override {
-    return PapyrusType::Int(location);
-  }
+  virtual PapyrusType resultType() const override { return PapyrusType::Int(location); }
 
-  virtual PapyrusArrayLengthExpression* asArrayLengthExpression() override {
-    return this;
-  }
+  virtual PapyrusArrayLengthExpression* asArrayLengthExpression() override { return this; }
 };
 
 }}}

@@ -10,9 +10,8 @@
 
 namespace caprica { namespace pex {
 
-template<typename T>
-struct FixedPexStringMap final
-{
+template <typename T>
+struct FixedPexStringMap final {
   T* findOrCreate(PexString str) {
     T* ret;
     if (!tryFind(str, ret)) {
@@ -44,8 +43,8 @@ struct FixedPexStringMap final
 
 private:
   static constexpr size_t MaxTotalEntries = std::numeric_limits<uint16_t>::max();
-  size_t maxUsedEntry{ 0 };
-  allocators::ChainedPool alloc{ 4 * 1024 };
+  size_t maxUsedEntry { 0 };
+  allocators::ChainedPool alloc { 4 * 1024 };
   T* entries[MaxTotalEntries];
 };
 

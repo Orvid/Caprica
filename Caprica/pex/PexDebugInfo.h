@@ -12,19 +12,18 @@
 
 namespace caprica { namespace pex {
 
-struct PexDebugInfo final
-{
-  time_t modificationTime{ };
-  IntrusiveLinkedList<PexDebugFunctionInfo> functions{ };
-  IntrusiveLinkedList<PexDebugPropertyGroup> propertyGroups{ };
-  IntrusiveLinkedList<PexDebugStructOrder> structOrders{ };
+struct PexDebugInfo final {
+  time_t modificationTime {};
+  IntrusiveLinkedList<PexDebugFunctionInfo> functions {};
+  IntrusiveLinkedList<PexDebugPropertyGroup> propertyGroups {};
+  IntrusiveLinkedList<PexDebugStructOrder> structOrders {};
 
   explicit PexDebugInfo() = default;
   PexDebugInfo(const PexDebugInfo&) = delete;
   ~PexDebugInfo() = default;
 
-  static PexDebugInfo *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
-  void write(PexWriter &wtr, GameID gameType) const;
+  static PexDebugInfo* read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType);
+  void write(PexWriter& wtr, GameID gameType) const;
 };
 
 }}

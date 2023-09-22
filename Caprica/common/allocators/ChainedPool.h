@@ -11,13 +11,12 @@
 
 namespace caprica { namespace allocators {
 
-struct ChainedPool
-{
+struct ChainedPool {
   explicit ChainedPool(size_t hpSize) : heapSize(hpSize), base(hpSize) { }
   ~ChainedPool();
 
   char* allocate(size_t size);
-  template<typename T, typename... Args>
+  template <typename T, typename... Args>
   __declspec(allocator) T* make(Args&&... args) {
     if (std::is_trivially_destructible<T>::value) {
       auto t = allocate(sizeof(T));
@@ -51,18 +50,16 @@ struct ChainedPool
   size_t totalAllocatedBytes() const { return totalSize; }
 
 protected:
-  struct DestructionNode final
-  {
-    void(*destructor)(void*){ nullptr };
-    DestructionNode* next{ nullptr };
+  struct DestructionNode final {
+    void (*destructor)(void*) { nullptr };
+    DestructionNode* next { nullptr };
   };
 
-  struct Heap final
-  {
+  struct Heap final {
     size_t allocedHeapSize;
     size_t freeBytes;
     void* baseAlloc;
-    Heap* next{ nullptr };
+    Heap* next { nullptr };
 
     Heap() = delete;
     Heap(const Heap&) = delete;
@@ -76,23 +73,23 @@ protected:
     bool tryAlloc(size_t size, void** retBuf);
   };
 
-  struct HeapIterator final
-  {
+  struct HeapIterator final {
     const char* data() const;
     size_t size() const;
-    bool operator !=(const HeapIterator& other) const;
-    HeapIterator& operator ++();
+    bool operator!=(const HeapIterator& other) const;
+    HeapIterator& operator++();
+
   private:
     friend ChainedPool;
-    const Heap* curHeap{ nullptr };
+    const Heap* curHeap { nullptr };
   };
 
   size_t heapSize;
-  size_t totalSize{ 0 };
-  Heap* current{ &base };
+  size_t totalSize { 0 };
+  Heap* current { &base };
   Heap base;
-  DestructionNode* rootDestructorChain{ nullptr };
-  DestructionNode* currentDestructorNode{ nullptr };
+  DestructionNode* rootDestructorChain { nullptr };
+  DestructionNode* currentDestructorNode { nullptr };
 
   void* allocHeap(size_t newHeapSize, size_t firstAllocSize);
 
@@ -101,15 +98,13 @@ public:
   HeapIterator end() const;
 };
 
-template<typename T>
-struct TypedChainedPool final : public ChainedPool
-{
+template <typename T>
+struct TypedChainedPool final : public ChainedPool {
 private:
-  struct TypedHeapIterator final
-  {
-    size_t index{ 0 };
+  struct TypedHeapIterator final {
+    size_t index { 0 };
 
-    TypedHeapIterator& operator ++() {
+    TypedHeapIterator& operator++() {
       if (curHeap == nullptr)
         return *this;
       index++;
@@ -129,32 +124,20 @@ private:
       return *this;
     }
 
-    T& operator *() {
-      return *heapI;
-    }
-    const T& operator *() const {
-      return *heapI;
-    }
-    T& operator ->() {
-      return *heapI;
-    }
-    const T& operator ->() const {
-      return *heapI;
-    }
+    T& operator*() { return *heapI; }
+    const T& operator*() const { return *heapI; }
+    T& operator->() { return *heapI; }
+    const T& operator->() const { return *heapI; }
 
-    bool operator ==(const TypedHeapIterator& other) const {
-      return curHeap == other.curHeap && heapI == other.heapI;
-    }
+    bool operator==(const TypedHeapIterator& other) const { return curHeap == other.curHeap && heapI == other.heapI; }
 
-    bool operator !=(const TypedHeapIterator& other) const {
-      return !(*this == other);
-    }
+    bool operator!=(const TypedHeapIterator& other) const { return !(*this == other); }
 
   private:
     friend TypedChainedPool;
 
-    Heap* curHeap{ nullptr };
-    T* heapI{ nullptr };
+    Heap* curHeap { nullptr };
+    T* heapI { nullptr };
 
     TypedHeapIterator() = default;
     TypedHeapIterator(Heap* cur) : curHeap(cur) {
@@ -172,9 +155,7 @@ public:
     return TypedHeapIterator(&base);
   }
 
-  TypedHeapIterator end() {
-    return TypedHeapIterator();
-  }
+  TypedHeapIterator end() { return TypedHeapIterator(); }
 };
 
 }}

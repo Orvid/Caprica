@@ -1,13 +1,13 @@
 #include <pex/PexFunctionBuilder.h>
 
-#include <common/CapricaReportingContext.h>
 #include <common/allocators/CachePool.h>
+#include <common/CapricaReportingContext.h>
 
 namespace caprica { namespace pex {
 
-static thread_local allocators::CachePool<FixedPexStringMap<detail::TempVarDescriptor>> stringMapCache{ };
+static thread_local allocators::CachePool<FixedPexStringMap<detail::TempVarDescriptor>> stringMapCache {};
 PexFunctionBuilder::PexFunctionBuilder(CapricaReportingContext& repCtx, CapricaFileLocation loc, PexFile* fl)
-  : reportingContext(repCtx), currentLocation(loc), file(fl), alloc(fl->alloc) {
+    : reportingContext(repCtx), currentLocation(loc), file(fl), alloc(fl->alloc) {
   tempVarMap = stringMapCache.acquire();
 }
 
@@ -24,15 +24,13 @@ void PexFunctionBuilder::populateFunction(PexFunction* func, PexDebugFunctionInf
     }
   }
 
-  for (auto l : labels) {
+  for (auto l : labels)
     if (l->targetIdx == (size_t)-1)
       CapricaReportingContext::logicalFatal("Unused unresolved label!");
-  }
 
-  for (auto tmp : tempVarRefs) {
+  for (auto tmp : tempVarRefs)
     if (tmp->var == nullptr)
       CapricaReportingContext::logicalFatal("Unresolved tmp var!");
-  }
 
   func->instructions = std::move(instructions);
   func->locals = std::move(locals);
@@ -68,16 +66,15 @@ void PexFunctionBuilder::freeValueIfTemp(const PexValue& v) {
 PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& typeName) {
   detail::TempVarDescriptor* desc;
   if (tempVarMap->tryFind(typeName, desc)) {
-    if (desc->freeVars.size()) {
+    if (desc->freeVars.size())
       return desc->freeVars.pop();
-    }
   }
 
   constexpr size_t PrefixLength = 6;
   char buf[PrefixLength + 5 + 1] = {
-    ':', ':', 't', 'e', 'm', 'p', // strlen() == PrefixLength
-    '\0', '\0', '\0', '\0', '\0', // strlen(UINT16_MAX)
-    '\0' // NUL
+    ':',  ':',  't',  'e',  'm',  'p', // strlen() == PrefixLength
+    '\0', '\0', '\0', '\0', '\0',      // strlen(UINT16_MAX)
+    '\0'                               // NUL
   };
   if (currentTempI > std::numeric_limits<uint16_t>::max())
     CapricaReportingContext::logicalFatal("Exceeded the maximum number of temp vars possible in a function!");
@@ -97,18 +94,23 @@ PexLocalVariable* PexFunctionBuilder::internalAllocateTempVar(const PexString& t
 
 PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
   for (auto& v : instr->args) {
-    if (v.type == PexValueType::Invalid)
-      reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
+    if (v.type == PexValueType::Invalid) {
+      reportingContext.fatal(currentLocation,
+                             "Attempted to use an invalid value as a value! (perhaps you tried to use the return value "
+                             "of a function that doesn't return?)");
+    }
     if (v.type == PexValueType::TemporaryVar && v.val.tmpVar->var)
       v = PexValue::Identifier(v.val.tmpVar->var);
     freeValueIfTemp(v);
   }
   for (auto it = instr->variadicArgs.beginInsertable(); it != instr->variadicArgs.endInsertable(); ++it) {
-    if ((*it)->type == PexValueType::Invalid)
-      reportingContext.fatal(currentLocation, "Attempted to use an invalid value as a value! (perhaps you tried to use the return value of a function that doesn't return?)");
-    if ((*it)->type == PexValueType::TemporaryVar && (*it)->val.tmpVar->var) {
-      instr->variadicArgs.replace(it, PexValue(PexValue::Identifier((*it)->val.tmpVar->var)));
+    if ((*it)->type == PexValueType::Invalid) {
+      reportingContext.fatal(currentLocation,
+                             "Attempted to use an invalid value as a value! (perhaps you tried to use the return value "
+                             "of a function that doesn't return?)");
     }
+    if ((*it)->type == PexValueType::TemporaryVar && (*it)->val.tmpVar->var)
+      instr->variadicArgs.replace(it, PexValue(PexValue::Identifier((*it)->val.tmpVar->var)));
     freeValueIfTemp(**it);
   }
 
@@ -119,14 +121,12 @@ PexFunctionBuilder& PexFunctionBuilder::fixup(PexInstruction* instr) {
     instr->args[destIdx] = PexValue::Identifier(loc);
   }
 
-  for (auto& v : instr->args) {
+  for (auto& v : instr->args)
     if (v.type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
-  }
-  for (auto& v : instr->variadicArgs) {
+  for (auto& v : instr->variadicArgs)
     if (v->type == PexValueType::TemporaryVar)
       reportingContext.fatal(currentLocation, "Attempted to use a temporary var before it's been assigned!");
-  }
 
   instructionLocations.make<CapricaFileLocation>(currentLocation);
   instructions.push_back(instr);

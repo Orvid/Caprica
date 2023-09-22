@@ -7,18 +7,22 @@
 
 namespace caprica { namespace parser {
 
-struct CapricaUserFlagsParser final : private CapricaUserFlagsLexer
-{
-  explicit CapricaUserFlagsParser(CapricaReportingContext& repCtx, const std::string& file) : CapricaUserFlagsLexer(repCtx, file) { }
+struct CapricaUserFlagsParser final : private CapricaUserFlagsLexer {
+  explicit CapricaUserFlagsParser(CapricaReportingContext& repCtx, const std::string& file)
+      : CapricaUserFlagsLexer(repCtx, file) { }
   CapricaUserFlagsParser(const CapricaUserFlagsParser&) = delete;
   ~CapricaUserFlagsParser() = default;
 
   void parseUserFlags(CapricaUserFlagsDefinition& def);
-  
+
 private:
   void expect(TokenType tp) {
-    if (cur.type != tp)
-      reportingContext.fatal(cur.location, "Expected '%s' got '%s'!", Token::prettyTokenType(tp).c_str(), cur.prettyString().c_str());
+    if (cur.type != tp) {
+      reportingContext.fatal(cur.location,
+                             "Expected '%s' got '%s'!",
+                             Token::prettyTokenType(tp).c_str(),
+                             cur.prettyString().c_str());
+    }
   }
 
   void expectConsume(TokenType tp) {

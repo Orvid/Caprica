@@ -20,7 +20,8 @@ void PapyrusProperty::buildPex(CapricaReportingContext& repCtx, pex::PexFile* fi
     auto func = file->alloc->make<pex::PexFunction>();
     func->returnTypeName = prop->typeName;
     func->documentationString = file->getString("");
-    func->instructions.push_back(file->alloc->make<pex::PexInstruction>(pex::PexOpCode::Return, defaultValue.buildPex(file)));
+    func->instructions.push_back(
+        file->alloc->make<pex::PexInstruction>(pex::PexOpCode::Return, defaultValue.buildPex(file)));
     prop->readFunction = func;
 
     if (file->debugInfo) {
@@ -80,8 +81,10 @@ void PapyrusProperty::semantic2(PapyrusResolutionContext* ctx) {
     readFunction->semantic2(ctx);
   }
   if (writeFunction) {
-    if (writeFunction->isGlobal() || writeFunction->isNative())
-      ctx->reportingContext.error(writeFunction->location, "A property function is not allowed to be global or native.");
+    if (writeFunction->isGlobal() || writeFunction->isNative()) {
+      ctx->reportingContext.error(writeFunction->location,
+                                  "A property function is not allowed to be global or native.");
+    }
     writeFunction->semantic2(ctx);
   }
 }

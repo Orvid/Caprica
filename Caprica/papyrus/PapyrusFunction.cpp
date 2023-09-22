@@ -19,7 +19,7 @@ bool PapyrusFunction::isDebugOnly() const {
   return userFlags.isDebugOnly || parentObject->isDebugOnly();
 }
 
-pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx, 
+pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
                                             pex::PexFile* file,
                                             pex::PexObject* obj,
                                             pex::PexState* state,
@@ -60,16 +60,19 @@ pex::PexFunction* PapyrusFunction::buildPex(CapricaReportingContext& repCtx,
   for (auto p : parameters)
     p->buildPex(file, obj, func);
 
-  pex::PexFunctionBuilder bldr{ repCtx, location, file };
+  pex::PexFunctionBuilder bldr { repCtx, location, file };
   for (auto s : statements)
     s->buildPex(file, bldr);
   bldr.populateFunction(func, fDebInfo);
 
-
   if (file->debugInfo)
     file->debugInfo->functions.push_back(fDebInfo);
 
-  EngineLimits::checkLimit(repCtx, location, EngineLimits::Type::PexFunction_ParameterCount, func->parameters.size(), name);
+  EngineLimits::checkLimit(repCtx,
+                           location,
+                           EngineLimits::Type::PexFunction_ParameterCount,
+                           func->parameters.size(),
+                           name);
   return func;
 }
 
@@ -95,11 +98,9 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   ctx->function = this;
   ctx->pushLocalVariableScope();
   // skyrim first pass
-  if (conf::Papyrus::game == GameID::Skyrim) {
-    for (auto s: statements) {
+  if (conf::Papyrus::game == GameID::Skyrim)
+    for (auto s : statements)
       s->semantic_skyrim_first_pass(ctx);
-    }
-  }
   for (auto s : statements)
     s->semantic(ctx);
   ctx->popLocalVariableScope();
@@ -107,14 +108,16 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
 
   // Don't build the CFG for the special functions.
   if (!isNative()) {
-    PapyrusCFG cfg{ ctx->reportingContext };
+    PapyrusCFG cfg { ctx->reportingContext };
     cfg.processStatements(statements);
 
     if (returnType.type != PapyrusType::Kind::None) {
       auto curNode = cfg.root;
       while (curNode != nullptr) {
-        if (curNode->edgeType == PapyrusControlFlowNodeEdgeType::Children || curNode->edgeType == PapyrusControlFlowNodeEdgeType::Return)
+        if (curNode->edgeType == PapyrusControlFlowNodeEdgeType::Children ||
+            curNode->edgeType == PapyrusControlFlowNodeEdgeType::Return) {
           break;
+        }
         curNode = curNode->nextSibling;
       }
 
@@ -123,7 +126,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
     }
 
     if (conf::Debug::debugControlFlowGraph) {
-      //std::cout << "CFG for " << name << ":" << std::endl;
+      // std::cout << "CFG for " << name << ":" << std::endl;
       cfg.dumpGraph();
     }
   }
@@ -131,10 +134,9 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   // We need to be able to distinguish between locals with the
   // same name defined in different scopes, so we have to mangle
   // the ones that are the same.
-  struct CheckLocalNamesStatementVisitor final : statements::PapyrusSelectiveStatementVisitor
-  {
+  struct CheckLocalNamesStatementVisitor final : statements::PapyrusSelectiveStatementVisitor {
     PapyrusResolutionContext* ctx;
-    caseless_unordered_identifier_ref_set allLocalNames{ };
+    caseless_unordered_identifier_ref_set allLocalNames {};
     CheckLocalNamesStatementVisitor(PapyrusResolutionContext* oCtx) : ctx(oCtx) { }
 
     virtual void visit(statements::PapyrusDeclareStatement* s) override {
@@ -157,13 +159,12 @@ bool PapyrusFunction::hasSameSignature(const PapyrusFunction* other) const {
     return false;
   if (returnType != other->returnType)
     return false;
-  for (
-    auto pbA = parameters.begin(),
-         pbB = other->parameters.begin(),
-         peA = parameters.end(),
-         peB = other->parameters.end();
-    pbA != peA && pbB != peB;
-    ++pbA, ++pbB) {
+  for (auto pbA = parameters.begin(),
+            pbB = other->parameters.begin(),
+            peA = parameters.end(),
+            peB = other->parameters.end();
+       pbA != peA && pbB != peB;
+       ++pbA, ++pbB) {
     if (pbA->type != pbB->type)
       return false;
   }

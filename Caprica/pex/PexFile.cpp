@@ -3,8 +3,8 @@
 #include <fstream>
 #include <iostream>
 
-#include <common/CapricaReportingContext.h>
 #include <common/allocators/AtomicCachePool.h>
+#include <common/CapricaReportingContext.h>
 
 namespace caprica { namespace pex {
 
@@ -31,10 +31,8 @@ PexDebugFunctionInfo* PexFile::tryFindFunctionDebugInfo(const PexObject* object,
     auto stateName = state ? getStringValue(state->name) : "";
 
     for (auto fi : debugInfo->functions) {
-      if (getStringValue(fi->objectName) == objectName &&
-          getStringValue(fi->stateName) == stateName &&
-          getStringValue(fi->functionName) == fName &&
-          fi->functionType == functionType) {
+      if (getStringValue(fi->objectName) == objectName && getStringValue(fi->stateName) == stateName &&
+          getStringValue(fi->functionName) == fName && fi->functionType == functionType) {
         return fi;
       }
     }
@@ -82,8 +80,8 @@ PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   auto file = alloc->make<PexFile>(alloc);
   rdr.endianness = Endianness::Little; // ensure that we're reading little endian to begin with
   auto magic = rdr.read<uint32_t>();
-  if (magic != PEX_MAGIC_NUM ) {
-    if (magic == PEX_MAGIC_NUM_BE ) {
+  if (magic != PEX_MAGIC_NUM) {
+    if (magic == PEX_MAGIC_NUM_BE) {
       // Big endian file, swap the endianness and continue.
       rdr.endianness = Endianness::Big;
     } else {
@@ -93,8 +91,10 @@ PexFile* PexFile::read(allocators::ChainedPool* alloc, PexReader& rdr) {
   if ((file->majorVersion = rdr.read<uint8_t>()) != 3)
     CapricaReportingContext::logicalFatal("We currently only support major version 3!");
   file->minorVersion = rdr.read<uint8_t>();
-  if (file->minorVersion > 15 || file->minorVersion < 1) // 3.1-2: Skyrim, 3.9: Fallout 4, 3.15: Fallout 76, 3.12: Starfield
+  if (file->minorVersion > 15 ||
+      file->minorVersion < 1) { // 3.1-2: Skyrim, 3.9: Fallout 4, 3.15: Fallout 76, 3.12: Starfield
     CapricaReportingContext::logicalFatal("We currently only support minor versions 1-15!");
+  }
   file->gameID = rdr.read<GameID>();
   file->compilationTime = rdr.read<time_t>();
   file->sourceFileName = alloc->allocateString(rdr.read<std::string>());

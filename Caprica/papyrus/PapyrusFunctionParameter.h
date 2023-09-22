@@ -17,16 +17,16 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusFunctionParameter final
-{
-  identifier_ref name{ "" };
+struct PapyrusFunctionParameter final {
+  identifier_ref name { "" };
   const size_t index;
   PapyrusType type;
-  PapyrusValue defaultValue{ PapyrusValue::Default() };
+  PapyrusValue defaultValue { PapyrusValue::Default() };
 
   const CapricaFileLocation location;
 
-  explicit PapyrusFunctionParameter(CapricaFileLocation loc, size_t idx, PapyrusType&& tp) : location(loc), index(idx), type(std::move(tp)) { }
+  explicit PapyrusFunctionParameter(CapricaFileLocation loc, size_t idx, PapyrusType&& tp)
+      : location(loc), index(idx), type(std::move(tp)) { }
   PapyrusFunctionParameter(const PapyrusFunctionParameter&) = delete;
   ~PapyrusFunctionParameter() = default;
 
@@ -36,7 +36,7 @@ struct PapyrusFunctionParameter final
     param->type = type.buildPex(file);
     func->parameters.push_back(param);
   }
-  
+
   void semantic(PapyrusResolutionContext* ctx) {
     type = ctx->resolveType(type, true);
     defaultValue = ctx->coerceDefaultValue(defaultValue, type);
@@ -44,12 +44,12 @@ struct PapyrusFunctionParameter final
 
 private:
   friend IntrusiveLinkedList<PapyrusFunctionParameter>;
-  template<typename T>
+  template <typename T>
   friend struct IntrusiveLinkedList;
-  template<typename T>
-  template<typename T2>
+  template <typename T>
+  template <typename T2>
   friend struct IntrusiveLinkedList<T>::LockstepIterator;
-  PapyrusFunctionParameter* next{ nullptr };
+  PapyrusFunctionParameter* next { nullptr };
 };
 
 }}

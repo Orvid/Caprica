@@ -4,10 +4,9 @@
 
 namespace caprica { namespace allocators {
 
-template<typename T>
-struct CachePool final
-{
-  static_assert(std::is_same<decltype(&T::reset), void(T::*)()>::value, "T must be resettable.");
+template <typename T>
+struct CachePool final {
+  static_assert(std::is_same<decltype(&T::reset), void (T::*)()>::value, "T must be resettable.");
 
   T* acquire() {
     Node* n = nullptr;
@@ -38,14 +37,13 @@ struct CachePool final
   }
 
 private:
-  struct Node final
-  {
-    T* value{ nullptr };
-    Node* next{ nullptr };
+  struct Node final {
+    T* value { nullptr };
+    Node* next { nullptr };
   };
 
-  Node* freeNodeList{ nullptr };
-  Node* freeValueList{ nullptr };
+  Node* freeNodeList { nullptr };
+  Node* freeValueList { nullptr };
 };
 
 }}

@@ -12,36 +12,37 @@
 #include <common/identifier_ref.h>
 #include <common/IntrusiveLinkedList.h>
 
+#include <common/GameID.h>
 #include <pex/PexAsmWriter.h>
 #include <pex/PexDebugInfo.h>
 #include <pex/PexObject.h>
 #include <pex/PexReader.h>
 #include <pex/PexString.h>
 #include <pex/PexWriter.h>
-#include <common/GameID.h>
 
 namespace caprica {
 
-namespace papyrus { struct PapyrusScript; }
+namespace papyrus {
+struct PapyrusScript;
+}
 
 namespace pex {
 
 constexpr uint32_t PEX_MAGIC_NUM = 0xFA57C0DE;
 constexpr uint32_t PEX_MAGIC_NUM_BE = 0xDE57C0FA;
 
-struct PexFile final
-{
+struct PexFile final {
   allocators::ChainedPool* alloc;
 
-  uint8_t majorVersion{ 3 };
-  uint8_t minorVersion{ 12 };
-  GameID gameID{ GameID::Starfield }; // Default to Starfield
-  time_t compilationTime{ };
-  std::string_view sourceFileName{ "" };
-  std::string userName{ "" };
-  std::string computerName{ "" };
-  PexDebugInfo* debugInfo{ nullptr };
-  IntrusiveLinkedList<PexObject> objects{ };
+  uint8_t majorVersion { 3 };
+  uint8_t minorVersion { 12 };
+  GameID gameID { GameID::Starfield }; // Default to Starfield
+  time_t compilationTime {};
+  std::string_view sourceFileName { "" };
+  std::string userName { "" };
+  std::string computerName { "" };
+  PexDebugInfo* debugInfo { nullptr };
+  IntrusiveLinkedList<PexObject> objects {};
 
   explicit PexFile(allocators::ChainedPool* p);
   PexFile(const PexFile&) = delete;
@@ -68,7 +69,7 @@ struct PexFile final
 
   void setGameAndVersion(GameID game) {
     gameID = game;
-    switch(game) {
+    switch (game) {
       case GameID::Skyrim:
         majorVersion = 3;
         minorVersion = 2; // Vanilla base game uses 3.1, vanilla expansions use 3.2, all SE and AE scripts use 3.2
@@ -106,4 +107,5 @@ private:
   std::unordered_map<size_t, size_t> userFlagTableLookup;
 };
 
-}}
+}
+}

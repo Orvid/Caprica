@@ -8,44 +8,43 @@
 #include <common/CapricaBinaryReader.h>
 #include <common/CapricaReportingContext.h>
 
+#include "common/GameID.h"
 #include <pex/PexString.h>
 #include <pex/PexUserFlags.h>
 #include <pex/PexValue.h>
-#include "common/GameID.h"
 
 namespace caprica { namespace pex {
 
-struct PexReader final : public CapricaBinaryReader
-{
+struct PexReader final : public CapricaBinaryReader {
   explicit PexReader(const std::string& file) : CapricaBinaryReader(file) { }
   PexReader(const PexReader&) = delete;
   ~PexReader() = default;
 
-  template<typename T>
+  template <typename T>
   T read() {
     return CapricaBinaryReader::read<T>();
   }
 
-  template<>
+  template <>
   GameID read() {
-    return (GameID) read<uint16_t>();
+    return (GameID)read<uint16_t>();
   }
 
-  template<>
+  template <>
   PexString read() {
     PexString val;
     val.index = read<uint16_t>();
     return val;
   }
 
-  template<>
+  template <>
   PexUserFlags read() {
     PexUserFlags val;
     val.data = read<uint32_t>();
     return val;
   }
 
-  template<>
+  template <>
   PexValue read() {
     PexValue val;
     val.type = (PexValueType)read<uint8_t>();
@@ -73,8 +72,6 @@ struct PexReader final : public CapricaBinaryReader
     }
     CapricaReportingContext::logicalFatal("Unknown PexValueType!");
   }
-
-
 };
 
 }}

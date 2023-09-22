@@ -14,21 +14,20 @@ namespace caprica { namespace pex {
 struct PexFile;
 struct PexObject;
 
-struct PexGuard final
-{
-  PexString name{ };
+struct PexGuard final {
+  PexString name {};
 
   explicit PexGuard() = default;
   PexGuard(const PexGuard&) = delete;
   ~PexGuard() = default;
 
-  static PexGuard *read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType);
+  static PexGuard* read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType);
   void write(PexWriter& wtr) const;
   void writeAsm(const PexFile* file, PexAsmWriter& wtr) const;
 
 private:
   friend IntrusiveLinkedList<PexGuard>;
-  PexGuard* next{ nullptr };
+  PexGuard* next { nullptr };
 };
 
 }}

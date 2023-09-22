@@ -18,19 +18,18 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusProperty final
-{
-  identifier_ref name{ "" };
-  identifier_ref autoVarName{ "" };
-  identifier_ref documentationComment{ "" };
+struct PapyrusProperty final {
+  identifier_ref name { "" };
+  identifier_ref autoVarName { "" };
+  identifier_ref documentationComment { "" };
   PapyrusType type;
-  PapyrusUserFlags userFlags{ };
-  PapyrusFunction* readFunction{ nullptr };
-  PapyrusFunction* writeFunction{ nullptr };
-  PapyrusValue defaultValue{ PapyrusValue::Default() };
+  PapyrusUserFlags userFlags {};
+  PapyrusFunction* readFunction { nullptr };
+  PapyrusFunction* writeFunction { nullptr };
+  PapyrusValue defaultValue { PapyrusValue::Default() };
 
   CapricaFileLocation location;
-  const PapyrusObject* parent{ nullptr };
+  const PapyrusObject* parent { nullptr };
 
   bool isAuto() const { return userFlags.isAuto; }
   bool isAutoReadOnly() const { return userFlags.isAutoReadOnly; }
@@ -38,12 +37,13 @@ struct PapyrusProperty final
 
   bool isFunctionBacked() const { return isAutoReadOnly() || readFunction || writeFunction; }
 
-  explicit PapyrusProperty(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par) : location(loc), type(std::move(tp)), parent(par) { }
+  explicit PapyrusProperty(CapricaFileLocation loc, PapyrusType&& tp, const PapyrusObject* par)
+      : location(loc), type(std::move(tp)), parent(par) { }
   PapyrusProperty(const PapyrusProperty&) = delete;
   ~PapyrusProperty() = default;
 
   void buildAutoVarName(allocators::ChainedPool* alloc) {
-    LargelyBufferedString buf{ "::" };
+    LargelyBufferedString buf { "::" };
     buf.append(name.to_string_view()).append("_var");
     this->autoVarName = alloc->allocateIdentifier(buf.data(), buf.size());
   }
@@ -54,7 +54,7 @@ struct PapyrusProperty final
 
 private:
   friend IntrusiveLinkedList<PapyrusProperty>;
-  PapyrusProperty* next{ nullptr };
+  PapyrusProperty* next { nullptr };
 };
 
 }}

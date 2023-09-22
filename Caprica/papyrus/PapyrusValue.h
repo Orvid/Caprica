@@ -12,8 +12,7 @@
 
 namespace caprica { namespace papyrus {
 
-enum class PapyrusValueType
-{
+enum class PapyrusValueType {
   Invalid = -1,
 
   None = 0,
@@ -23,12 +22,10 @@ enum class PapyrusValueType
   Bool,
 };
 
-struct PapyrusValue final
-{
-  PapyrusValueType type{ PapyrusValueType::None };
+struct PapyrusValue final {
+  PapyrusValueType type { PapyrusValueType::None };
   CapricaFileLocation location;
-  union Data
-  {
+  union Data {
     identifier_ref s;
     int32_t i;
     float f;
@@ -46,8 +43,8 @@ struct PapyrusValue final
   PapyrusValue(const Default&) : type(PapyrusValueType::Invalid), location(0) { }
   PapyrusValue(const PapyrusValue& other) = default;
   PapyrusValue(PapyrusValue&& other) = default;
-  PapyrusValue& operator =(const PapyrusValue&) = default;
-  PapyrusValue& operator =(PapyrusValue&&) = default;
+  PapyrusValue& operator=(const PapyrusValue&) = default;
+  PapyrusValue& operator=(PapyrusValue&&) = default;
   ~PapyrusValue() = default;
 
   static PapyrusValue None(CapricaFileLocation loc) {

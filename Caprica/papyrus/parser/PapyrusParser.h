@@ -5,30 +5,32 @@
 #include <common/CapricaReportingContext.h>
 #include <common/CapricaUserFlagsDefinition.h>
 
-#include <papyrus/PapyrusScript.h>
 #include <papyrus/expressions/PapyrusExpression.h>
+#include <papyrus/PapyrusScript.h>
 #include <papyrus/parser/PapyrusLexer.h>
 #include <papyrus/statements/PapyrusStatement.h>
 
 namespace caprica { namespace papyrus { namespace parser {
 
-struct PapyrusParser final : private PapyrusLexer
-{
-  explicit PapyrusParser(CapricaReportingContext& repCtx, const std::string& file, std::string_view data) : PapyrusLexer(repCtx, file, data) { }
+struct PapyrusParser final : private PapyrusLexer {
+  explicit PapyrusParser(CapricaReportingContext& repCtx, const std::string& file, std::string_view data)
+      : PapyrusLexer(repCtx, file, data) { }
   PapyrusParser(const PapyrusParser&) = delete;
   ~PapyrusParser() = default;
 
   PapyrusScript* parseScript();
-  
+
 private:
   PapyrusObject* parseObject(PapyrusScript* script);
   PapyrusState* parseState(PapyrusScript* script, PapyrusObject* object, bool isAuto);
   PapyrusStruct* parseStruct(PapyrusScript* script, PapyrusObject* object);
-  PapyrusStructMember* parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType&& tp);
+  PapyrusStructMember*
+  parseStructMember(PapyrusScript* script, PapyrusObject* object, PapyrusStruct* struc, PapyrusType&& tp);
   PapyrusPropertyGroup* parsePropertyGroup(PapyrusScript* script, PapyrusObject* object);
   PapyrusProperty* parseProperty(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type);
   PapyrusVariable* parseVariable(PapyrusScript* script, PapyrusObject* object, PapyrusType&& type);
-  PapyrusFunction* parseFunction(PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType&& returnType, TokenType endToken);
+  PapyrusFunction* parseFunction(
+      PapyrusScript* script, PapyrusObject* object, PapyrusState* state, PapyrusType&& returnType, TokenType endToken);
 
   statements::PapyrusStatement* parseStatement(PapyrusFunction* func);
 
@@ -53,7 +55,10 @@ private:
     if (cur.type != tp) {
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
-      reportingContext.fatal(cur.location, "Syntax error! Expected '%s' got '%s'.", Token::prettyTokenType(tp).c_str(), cur.prettyString().c_str());
+      reportingContext.fatal(cur.location,
+                             "Syntax error! Expected '%s' got '%s'.",
+                             Token::prettyTokenType(tp).c_str(),
+                             cur.prettyString().c_str());
     }
   }
 
@@ -74,7 +79,8 @@ private:
 
   ALWAYS_INLINE
   void maybeConsumeEOLs() {
-    while (maybeConsume(TokenType::EOL)) { }
+    while (maybeConsume(TokenType::EOL)) {
+    }
   }
 
   ALWAYS_INLINE

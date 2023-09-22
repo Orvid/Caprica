@@ -28,11 +28,17 @@ static PapyrusType reflectType(CapricaFileLocation loc, allocators::ChainedPool*
   return PapyrusType::Unresolved(loc, alloc->allocateIdentifier(name));
 }
 
-static PapyrusType reflectType(CapricaFileLocation loc, allocators::ChainedPool* alloc, PexFile* pex, PexString pexName) {
+static PapyrusType
+reflectType(CapricaFileLocation loc, allocators::ChainedPool* alloc, PexFile* pex, PexString pexName) {
   return reflectType(loc, alloc, alloc->allocateIdentifier(pex->getStringValue(pexName)));
 }
 
-static PapyrusFunction* reflectFunction(CapricaFileLocation loc, allocators::ChainedPool* alloc, PexFile* pex, PapyrusObject* obj, PexFunction* pFunc, const identifier_ref& funcName) {
+static PapyrusFunction* reflectFunction(CapricaFileLocation loc,
+                                        allocators::ChainedPool* alloc,
+                                        PexFile* pex,
+                                        PapyrusObject* obj,
+                                        PexFunction* pFunc,
+                                        const identifier_ref& funcName) {
   auto func = alloc->make<PapyrusFunction>(loc, reflectType(loc, alloc, pex, pFunc->returnTypeName));
   func->parentObject = obj;
   func->name = funcName;
@@ -40,7 +46,8 @@ static PapyrusFunction* reflectFunction(CapricaFileLocation loc, allocators::Cha
   func->userFlags.isNative = pFunc->isNative;
 
   for (auto pp : pFunc->parameters) {
-    auto param = alloc->make<PapyrusFunctionParameter>(loc, func->parameters.size(), reflectType(loc, alloc, pex, pp->type));
+    auto param =
+        alloc->make<PapyrusFunctionParameter>(loc, func->parameters.size(), reflectType(loc, alloc, pex, pp->type));
     param->name = alloc->allocateIdentifier(pex->getStringValue(pp->name));
     func->parameters.push_back(param);
   }
@@ -50,12 +57,12 @@ static PapyrusFunction* reflectFunction(CapricaFileLocation loc, allocators::Cha
 
 PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
   auto alloc = new allocators::ChainedPool(1024 * 4);
-  CapricaFileLocation loc{ 0 };
+  CapricaFileLocation loc { 0 };
 
   auto script = alloc->make<PapyrusScript>();
   script->allocator = alloc;
   script->sourceFileName = pex->sourceFileName;
-  
+
   for (auto po : pex->objects) {
     PapyrusType baseTp = PapyrusType::None(loc);
     if (pex->getStringValue(po->parentClassName) != "")
@@ -97,7 +104,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
 
     for (auto ps : po->states) {
       bool pushState = pex->getStringValue(ps->name) != "";
-      PapyrusState* state{ nullptr };
+      PapyrusState* state { nullptr };
       if (pushState) {
         state = alloc->make<PapyrusState>(loc);
         state->name = alloc->allocateIdentifier(pex->getStringValue(ps->name));
@@ -112,7 +119,7 @@ PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
           f->functionType = PapyrusFunctionType::Event;
         state->functions.emplace(f->name, f);
       }
-      
+
       if (pushState)
         obj->states.push_back(state);
     }

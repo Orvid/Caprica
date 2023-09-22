@@ -6,7 +6,7 @@
 
 namespace caprica { namespace pex {
 
-PexState * PexState::read(allocators::ChainedPool *alloc, PexReader &rdr, GameID gameType) {
+PexState* PexState::read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType) {
   auto state = alloc->make<PexState>();
   state->name = rdr.read<PexString>();
   auto fLen = rdr.read<uint16_t>();

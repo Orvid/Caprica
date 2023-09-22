@@ -13,14 +13,13 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-struct PexStructMember final
-{
-  PexString name{ };
-  PexString typeName{ };
-  PexUserFlags userFlags{ };
-  PexValue defaultValue{ };
-  bool isConst{ false };
-  PexString documentationString{ };
+struct PexStructMember final {
+  PexString name {};
+  PexString typeName {};
+  PexUserFlags userFlags {};
+  PexValue defaultValue {};
+  bool isConst { false };
+  PexString documentationString {};
 
   explicit PexStructMember() = default;
   PexStructMember(const PexStructMember&) = delete;
@@ -32,7 +31,7 @@ struct PexStructMember final
 
 private:
   friend IntrusiveLinkedList<PexStructMember>;
-  PexStructMember* next{ nullptr };
+  PexStructMember* next { nullptr };
 };
 
 }}

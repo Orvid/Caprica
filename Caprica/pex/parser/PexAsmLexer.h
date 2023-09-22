@@ -11,8 +11,7 @@
 
 namespace caprica { namespace pex { namespace parser {
 
-enum class TokenType : int32_t
-{
+enum class TokenType : int32_t {
   Unknown,
 
   EOL,
@@ -81,15 +80,13 @@ enum class TokenType : int32_t
   kVariableTable,
 };
 
-struct PexAsmLexer
-{
-  struct Token final
-  {
-    TokenType type{ TokenType::Unknown };
-    CapricaFileLocation location{ };
-    std::string sValue{ "" };
-    int64_t iValue{ };
-    float fValue{ };
+struct PexAsmLexer {
+  struct Token final {
+    TokenType type { TokenType::Unknown };
+    CapricaFileLocation location {};
+    std::string sValue { "" };
+    int64_t iValue {};
+    float fValue {};
 
     explicit Token(TokenType tp) : type(tp) { }
     explicit Token(TokenType tp, CapricaFileLocation loc) : type(tp), location(loc) { }
@@ -101,14 +98,12 @@ struct PexAsmLexer
           return "Identifier(" + sValue + ")";
         case TokenType::String:
           return "String(\"" + sValue + "\")";
-        case TokenType::Integer:
-        {
+        case TokenType::Integer: {
           std::ostringstream str;
           str << "Integer(" << iValue << ")";
           return str.str();
         }
-        case TokenType::Float:
-        {
+        case TokenType::Float: {
           std::ostringstream str;
           str << "Float(" << fValue << ")";
           return str.str();
@@ -122,11 +117,7 @@ struct PexAsmLexer
   };
 
   explicit PexAsmLexer(CapricaReportingContext& repCtx, const std::string& file)
-    : filename(file),
-      strm(file, std::ifstream::binary),
-      cur(TokenType::Unknown),
-      reportingContext(repCtx)
-  {
+      : filename(file), strm(file, std::ifstream::binary), cur(TokenType::Unknown), reportingContext(repCtx) {
     consume(); // set the first token.
   }
   PexAsmLexer(const PexAsmLexer&) = delete;
@@ -141,15 +132,13 @@ protected:
 
 private:
   std::ifstream strm;
-  CapricaFileLocation location{ };
+  CapricaFileLocation location {};
 
   int getChar() {
     location.fileOffset++;
     return strm.get();
   }
-  int peekChar() {
-    return strm.peek();
-  }
+  int peekChar() { return strm.peek(); }
   void setTok(TokenType tp, CapricaFileLocation loc);
   void setTok(Token& tok);
 };

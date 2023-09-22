@@ -9,22 +9,22 @@
 
 namespace caprica { namespace parser {
 
-static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNameMap{
-  { TokenType::Unknown, "Unknown" },
-  { TokenType::END, "EOF" },
-  { TokenType::Identifier, "Identifier" },
-  { TokenType::Integer, "Integer" },
-  { TokenType::LCurly, "{" },
-  { TokenType::RCurly, "}" },
-  { TokenType::And, "&" },
+static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNameMap {
+  {TokenType::Unknown,     "Unknown"   },
+  { TokenType::END,        "EOF"       },
+  { TokenType::Identifier, "Identifier"},
+  { TokenType::Integer,    "Integer"   },
+  { TokenType::LCurly,     "{"         },
+  { TokenType::RCurly,     "}"         },
+  { TokenType::And,        "&"         },
 
-  { TokenType::kFlag, "Flag" },
-  { TokenType::kFunction, "Function" },
-  { TokenType::kGroup, "Group" },
-  { TokenType::kProperty, "Property" },
-  { TokenType::kScript, "Script" },
+  { TokenType::kFlag,      "Flag"      },
+  { TokenType::kFunction,  "Function"  },
+  { TokenType::kGroup,     "Group"     },
+  { TokenType::kProperty,  "Property"  },
+  { TokenType::kScript,    "Script"    },
   { TokenType::kStructVar, "StructVar" },
-  { TokenType::kVariable, "Variable" },
+  { TokenType::kVariable,  "Variable"  },
 };
 
 const std::string CapricaUserFlagsLexer::Token::prettyTokenType(TokenType tp) {
@@ -43,20 +43,20 @@ void CapricaUserFlagsLexer::setTok(Token& tok) {
 }
 
 static const caseless_unordered_identifier_map<TokenType> keywordMap {
-  { "flag", TokenType::kFlag },
-  { "function", TokenType::kFunction },
-  { "group", TokenType::kGroup },
-  { "property", TokenType::kProperty },
-  { "script", TokenType::kScript },
-  { "structvar", TokenType::kStructVar },
-  { "variable", TokenType::kVariable },
+  {"flag",       TokenType::kFlag     },
+  { "function",  TokenType::kFunction },
+  { "group",     TokenType::kGroup    },
+  { "property",  TokenType::kProperty },
+  { "script",    TokenType::kScript   },
+  { "structvar", TokenType::kStructVar},
+  { "variable",  TokenType::kVariable },
 };
 
 void CapricaUserFlagsLexer::consume() {
 StartOver:
   auto baseLoc = location;
   auto c = getChar();
-  
+
   switch (c) {
     case -1:
       return setTok(TokenType::END, baseLoc);
@@ -76,8 +76,7 @@ StartOver:
     case '6':
     case '7':
     case '8':
-    case '9':
-    {
+    case '9': {
       std::string str;
       str.append(1, char(c));
 
@@ -141,8 +140,7 @@ StartOver:
     case 'W':
     case 'X':
     case 'Y':
-    case 'Z':
-    {
+    case 'Z': {
       std::string str;
       str.append(1, char(c));
 
@@ -158,8 +156,7 @@ StartOver:
       return setTok(tok);
     }
 
-    case '/':
-    {
+    case '/': {
       if (peekChar() == '*') {
         // Multiline comment.
         getChar();
@@ -190,8 +187,7 @@ StartOver:
     }
 
     case '\r':
-    case '\n':
-    {
+    case '\n': {
       if (c == '\r' && peekChar() == '\n')
         getChar();
       reportingContext.pushNextLineOffset(location);
@@ -199,8 +195,7 @@ StartOver:
     }
 
     case ' ':
-    case '\t':
-    {
+    case '\t': {
       while (peekChar() == ' ' || peekChar() == '\t')
         getChar();
       goto StartOver;

@@ -65,9 +65,10 @@ LargelyBufferedString& PapyrusType::getTypeStringAsRef(LargelyBufferedString& bu
       return buf.append(name.to_string_view());
     case Kind::ResolvedObject:
       return buf.append(resolved.obj->loweredName().to_string_view());
-    case Kind::ResolvedStruct:
-    {
-      auto& typeName = buf.append(resolved.struc->parentObject->name.to_string_view()).append("#").append(resolved.struc->name.to_string_view());
+    case Kind::ResolvedStruct: {
+      auto& typeName = buf.append(resolved.struc->parentObject->name.to_string_view())
+                           .append("#")
+                           .append(resolved.struc->name.to_string_view());
       identifierToLower(typeName.data(), typeName.size());
       return typeName;
     }
@@ -75,7 +76,7 @@ LargelyBufferedString& PapyrusType::getTypeStringAsRef(LargelyBufferedString& bu
   CapricaReportingContext::logicalFatal("Unknown PapyrusTypeKind!");
 }
 
-bool PapyrusType::operator !=(const PapyrusType& other) const {
+bool PapyrusType::operator!=(const PapyrusType& other) const {
   if (type == other.type) {
     switch (type) {
       case Kind::None:

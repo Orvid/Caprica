@@ -11,10 +11,9 @@ namespace caprica { namespace papyrus {
 
 struct PapyrusObject;
 
-struct PapyrusCustomEvent final
-{
-  identifier_ref name{ };
-  PapyrusObject* parentObject{ nullptr };
+struct PapyrusCustomEvent final {
+  identifier_ref name {};
+  PapyrusObject* parentObject { nullptr };
   CapricaFileLocation location;
 
   explicit PapyrusCustomEvent(CapricaFileLocation loc) : location(loc) { }
@@ -25,7 +24,7 @@ struct PapyrusCustomEvent final
 
 private:
   friend IntrusiveLinkedList<PapyrusCustomEvent>;
-  PapyrusCustomEvent* next{ nullptr };
+  PapyrusCustomEvent* next { nullptr };
 };
 
 }}

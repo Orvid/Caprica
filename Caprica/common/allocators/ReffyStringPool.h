@@ -1,15 +1,14 @@
 #pragma once
 
-#include <stdint.h>
 #include <limits>
+#include <stdint.h>
 
 #include <common/allocators/ChainedPool.h>
 #include <common/identifier_ref.h>
 
 namespace caprica { namespace allocators {
 
-struct ReffyStringPool final
-{
+struct ReffyStringPool final {
   static constexpr size_t MaxCapacity = std::numeric_limits<uint16_t>::max();
 
   ReffyStringPool() = default;
@@ -21,24 +20,22 @@ struct ReffyStringPool final
   size_t size() const { return count; };
 
 private:
-  struct StringHeader final
-  {
-    uint16_t length{ 0 };
-    const char* data{ nullptr };
+  struct StringHeader final {
+    uint16_t length { 0 };
+    const char* data { nullptr };
   };
-  struct HashEntry final
-  {
-    uint32_t generationNum{ 0 };
-    uint16_t stringIndex{ 0 };
-    uint16_t upperHash{ 0 };
+  struct HashEntry final {
+    uint32_t generationNum { 0 };
+    uint16_t stringIndex { 0 };
+    uint16_t upperHash { 0 };
   };
 
   static constexpr size_t mask = MaxCapacity;
-  uint32_t generationNumber{ 1 };
-  size_t count{ 0 };
-  ChainedPool alloc{ 1024 * 4 };
-  StringHeader* strings[MaxCapacity]{ };
-  HashEntry hashtable[MaxCapacity]{ };
+  uint32_t generationNumber { 1 };
+  size_t count { 0 };
+  ChainedPool alloc { 1024 * 4 };
+  StringHeader* strings[MaxCapacity] {};
+  HashEntry hashtable[MaxCapacity] {};
 
   HashEntry* find(const identifier_ref& str, size_t hash);
   size_t push_back_with_hash(const identifier_ref& str, size_t hash, HashEntry* entry);

@@ -11,10 +11,9 @@ namespace caprica { namespace pex {
 
 struct PexFile;
 
-struct PexFunctionParameter final
-{
-  PexString name{ };
-  PexString type{ };
+struct PexFunctionParameter final {
+  PexString name {};
+  PexString type {};
 
   explicit PexFunctionParameter() = default;
   PexFunctionParameter(const PexFunctionParameter&) = delete;
@@ -26,7 +25,7 @@ struct PexFunctionParameter final
 
 private:
   friend IntrusiveLinkedList<PexFunctionParameter>;
-  PexFunctionParameter* next{ nullptr };
+  PexFunctionParameter* next { nullptr };
 };
 
 }}

@@ -16,10 +16,9 @@ static Iterator find_not_of(Iterator first, Iterator last, const char* sData, si
   assert(sLength <= std::numeric_limits<int>::max());
   if (!sLength)
     return first;
-  for (; first != last; ++first) {
+  for (; first != last; ++first)
     if (std::memchr(sData, *first, (int)sLength) == 0)
       return first;
-  }
   return last;
 }
 
@@ -123,10 +122,9 @@ size_t identifier_ref::find_first_not_of(const identifier_ref& s) const {
 }
 
 size_t identifier_ref::find_first_not_of(char c) const {
-  for (auto iter = this->cbegin(); iter != this->cend(); ++iter) {
+  for (auto iter = this->cbegin(); iter != this->cend(); ++iter)
     if (c != *iter)
       return std::distance(this->cbegin(), iter);
-  }
   return npos;
 }
 
@@ -136,10 +134,9 @@ size_t identifier_ref::find_last_not_of(const identifier_ref& s) const {
 }
 
 size_t identifier_ref::find_last_not_of(char c) const {
-  for (auto iter = this->crbegin(); iter != this->crend(); ++iter) {
+  for (auto iter = this->crbegin(); iter != this->crend(); ++iter)
     if (c != *iter)
       return reverse_distance(this->crbegin(), iter);
-  }
   return npos;
 }
 
@@ -148,50 +145,51 @@ std::string identifier_ref::to_string() const {
 }
 
 std::string_view identifier_ref::to_string_view() const {
-    return std::string_view(mData, mLength);
+  return std::string_view(mData, mLength);
 }
 
-size_t identifier_ref::reverse_distance(std::reverse_iterator<const char*> first, std::reverse_iterator<const char*> last) const {
+size_t identifier_ref::reverse_distance(std::reverse_iterator<const char*> first,
+                                        std::reverse_iterator<const char*> last) const {
   return mLength - 1 - std::distance(first, last);
 }
 
-bool operator ==(const identifier_ref& x, const identifier_ref& y) {
+bool operator==(const identifier_ref& x, const identifier_ref& y) {
   return x.equals(y);
 }
 
-bool operator ==(const identifier_ref& x, const std::string& y) {
+bool operator==(const identifier_ref& x, const std::string& y) {
   return x == identifier_ref(y);
 }
 
-bool operator ==(const std::string& x, const identifier_ref& y) {
+bool operator==(const std::string& x, const identifier_ref& y) {
   return identifier_ref(x) == y;
 }
 
-bool operator ==(const identifier_ref& x, const char* y) {
+bool operator==(const identifier_ref& x, const char* y) {
   return x == identifier_ref(y);
 }
 
-bool operator ==(const char* x, const identifier_ref& y) {
+bool operator==(const char* x, const identifier_ref& y) {
   return identifier_ref(x) == y;
 }
 
-bool operator !=(const identifier_ref& x, const identifier_ref& y) {
+bool operator!=(const identifier_ref& x, const identifier_ref& y) {
   return !x.equals(y);
 }
 
-bool operator !=(const identifier_ref& x, const std::string& y) {
+bool operator!=(const identifier_ref& x, const std::string& y) {
   return x != identifier_ref(y);
 }
 
-bool operator !=(const std::string& x, const identifier_ref& y) {
+bool operator!=(const std::string& x, const identifier_ref& y) {
   return identifier_ref(x) != y;
 }
 
-bool operator !=(const identifier_ref& x, const char* y) {
+bool operator!=(const identifier_ref& x, const char* y) {
   return x != identifier_ref(y);
 }
 
-bool operator !=(const char* x, const identifier_ref& y) {
+bool operator!=(const char* x, const identifier_ref& y) {
   return identifier_ref(x) != y;
 }
 

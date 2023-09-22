@@ -13,12 +13,11 @@
 
 namespace caprica { namespace papyrus {
 
-struct PapyrusPropertyGroup final
-{
-  identifier_ref name{ "" };
-  identifier_ref documentationComment{ "" };
-  PapyrusUserFlags userFlags{ };
-  IntrusiveLinkedList<PapyrusProperty> properties{ };
+struct PapyrusPropertyGroup final {
+  identifier_ref name { "" };
+  identifier_ref documentationComment { "" };
+  PapyrusUserFlags userFlags {};
+  IntrusiveLinkedList<PapyrusProperty> properties {};
 
   CapricaFileLocation location;
 
@@ -55,7 +54,7 @@ struct PapyrusPropertyGroup final
 
 private:
   friend IntrusiveLinkedList<PapyrusPropertyGroup>;
-  PapyrusPropertyGroup* next{ nullptr };
+  PapyrusPropertyGroup* next { nullptr };
 };
 
 }}

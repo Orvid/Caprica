@@ -2,7 +2,8 @@
 
 namespace caprica { namespace papyrus {
 
-pex::PexUserFlags PapyrusUserFlags::buildPex(pex::PexFile* file, CapricaUserFlagsDefinition::ValidLocations limitLocations) const {
+pex::PexUserFlags PapyrusUserFlags::buildPex(pex::PexFile* file,
+                                             CapricaUserFlagsDefinition::ValidLocations limitLocations) const {
   pex::PexUserFlags pexFlags;
   size_t f = 1;
   for (uint8_t i = 0; i < sizeof(size_t) * 8; i++) {

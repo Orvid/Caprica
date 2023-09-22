@@ -14,8 +14,7 @@
 
 namespace caprica { namespace papyrus { namespace statements {
 
-enum class PapyrusAssignOperatorType
-{
+enum class PapyrusAssignOperatorType {
   None,
 
   Assign,
@@ -26,12 +25,11 @@ enum class PapyrusAssignOperatorType
   Modulus,
 };
 
-struct PapyrusAssignStatement final : public PapyrusStatement
-{
-  expressions::PapyrusExpression* lValue{ nullptr };
-  PapyrusAssignOperatorType operation{ PapyrusAssignOperatorType::None };
-  expressions::PapyrusExpression* rValue{ nullptr };
-  expressions::PapyrusBinaryOpExpression* binOpExpression{ nullptr };
+struct PapyrusAssignStatement final : public PapyrusStatement {
+  expressions::PapyrusExpression* lValue { nullptr };
+  PapyrusAssignOperatorType operation { PapyrusAssignOperatorType::None };
+  expressions::PapyrusExpression* rValue { nullptr };
+  expressions::PapyrusBinaryOpExpression* binOpExpression { nullptr };
 
   explicit PapyrusAssignStatement(CapricaFileLocation loc) : PapyrusStatement(loc) { }
   PapyrusAssignStatement(const PapyrusAssignStatement&) = delete;
@@ -45,19 +43,21 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
     pex::PexValue rVal;
-    if (binOpExpression)
+    if (binOpExpression) {
       rVal = binOpExpression->generateLoad(file, bldr);
-    else {
+    } else {
       rVal = rValue->generateLoad(file, bldr);
-      if (conf::Papyrus::game == GameID::Skyrim && rVal.type == pex::PexValueType::Invalid){
+      if (conf::Papyrus::game == GameID::Skyrim && rVal.type == pex::PexValueType::Invalid) {
         // check if if the rValue is the result of a function call
         auto travRValueExpression = rValue;
-        while (true){
+        while (true) {
           if (auto fc = travRValueExpression->asFunctionCallExpression()) {
             // this was a void method call that was assigned to this variable; change it to None and emit a warning
-            if (fc->resultType().type == PapyrusType::Kind::None){
+            if (fc->resultType().type == PapyrusType::Kind::None) {
               rVal = bldr.getNoneLocal(fc->location);
-              bldr.reportingContext.warning_W7004_Skyrim_Assignment_Of_Void_Call_Result(fc->location, fc->function.res.name.to_string().c_str());
+              bldr.reportingContext.warning_W7004_Skyrim_Assignment_Of_Void_Call_Result(
+                  fc->location,
+                  fc->function.res.name.to_string().c_str());
             }
             break;
           }
@@ -88,9 +88,8 @@ struct PapyrusAssignStatement final : public PapyrusStatement
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
-    if (auto id = lValue->asIdentifierExpression()) {
+    if (auto id = lValue->asIdentifierExpression())
       id->isAssignmentContext = true;
-    }
 
     if (operation == PapyrusAssignOperatorType::Assign) {
       lValue->semantic(ctx);
@@ -122,8 +121,11 @@ struct PapyrusAssignStatement final : public PapyrusStatement
       }(operation);
       binOpExpression->semantic(ctx);
       ctx->checkForPoison(binOpExpression);
-      if (lValue->resultType().type == PapyrusType::Kind::Array && !conf::Papyrus::enableLanguageExtensions)
-        ctx->reportingContext.error(location, "You can't do anything except assign to an array element unless you have language extensions enabled!");
+      if (lValue->resultType().type == PapyrusType::Kind::Array && !conf::Papyrus::enableLanguageExtensions) {
+        ctx->reportingContext.error(
+            location,
+            "You can't do anything except assign to an array element unless you have language extensions enabled!");
+      }
       rValue = ctx->coerceExpression(binOpExpression, lValue->resultType());
     }
 
@@ -140,9 +142,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement
     }
   }
 
-  virtual void visit(PapyrusStatementVisitor& visitor) override {
-    visitor.visit(this);
-  }
+  virtual void visit(PapyrusStatementVisitor& visitor) override { visitor.visit(this); }
 };
 
 }}}

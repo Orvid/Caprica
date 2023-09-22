@@ -7,8 +7,7 @@
 
 namespace caprica { namespace pex {
 
-struct PexReflector final
-{
+struct PexReflector final {
   static papyrus::PapyrusScript* reflectScript(PexFile* pex);
 };
 

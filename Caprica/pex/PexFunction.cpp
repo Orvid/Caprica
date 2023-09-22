@@ -8,7 +8,7 @@
 
 namespace caprica { namespace pex {
 
-PexFunction * PexFunction::read(allocators::ChainedPool *alloc, PexReader &rdr, bool isProperty, GameID gameType) {
+PexFunction* PexFunction::read(allocators::ChainedPool* alloc, PexReader& rdr, bool isProperty, GameID gameType) {
   auto func = alloc->make<PexFunction>();
   if (!isProperty)
     func->name = rdr.read<PexString>();
@@ -58,7 +58,12 @@ void PexFunction::write(PexWriter& wtr) const {
     i->write(wtr);
 }
 
-void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexState* state, PexDebugFunctionType funcType, std::string propName, PexAsmWriter& wtr) const {
+void PexFunction::writeAsm(const PexFile* file,
+                           const PexObject* obj,
+                           const PexState* state,
+                           PexDebugFunctionType funcType,
+                           std::string propName,
+                           PexAsmWriter& wtr) const {
   wtr.write(".function ");
   if (funcType == PexDebugFunctionType::Getter)
     wtr.write("get");
@@ -111,9 +116,8 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
 
     for (auto cur = instructions.begin(), end = instructions.end(); cur != end; ++cur) {
       auto f = labelMap.find(cur.index);
-      if (f != labelMap.end()) {
+      if (f != labelMap.end())
         wtr.writeln("label%llu:", f->second);
-      }
 
       wtr.write(PexInstruction::opCodeToPexAsm(cur->opCode));
 
@@ -134,17 +138,15 @@ void PexFunction::writeAsm(const PexFile* file, const PexObject* obj, const PexS
         }
       }
 
-      if (debInf && cur.index < debInf->instructionLineMap.size()) {
+      if (debInf && cur.index < debInf->instructionLineMap.size())
         wtr.write(" ;@line %u", debInf->instructionLineMap[cur.index]);
-      }
 
       wtr.writeln();
     }
 
     auto f = labelMap.find(instructions.size());
-    if (f != labelMap.end()) {
+    if (f != labelMap.end())
       wtr.writeln("label%llu:", f->second);
-    }
 
     wtr.ident--;
     wtr.writeln(".endCode");

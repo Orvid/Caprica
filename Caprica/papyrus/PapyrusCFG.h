@@ -9,11 +9,14 @@
 
 namespace caprica { namespace papyrus {
 
-namespace expressions { struct PapyrusExpression; }
-namespace statements { struct PapyrusStatement; }
+namespace expressions {
+struct PapyrusExpression;
+}
+namespace statements {
+struct PapyrusStatement;
+}
 
-enum class PapyrusControlFlowNodeEdgeType
-{
+enum class PapyrusControlFlowNodeEdgeType {
   None,
   Continue,
   Break,
@@ -24,12 +27,11 @@ enum class PapyrusControlFlowNodeEdgeType
   Children,
 };
 
-struct PapyrusControlFlowNode final
-{
-  int id{ };
-  PapyrusControlFlowNodeEdgeType edgeType{ PapyrusControlFlowNodeEdgeType::None };
-  IntrusiveLinkedList<PapyrusControlFlowNode> children{ };
-  PapyrusControlFlowNode* nextSibling{ nullptr };
+struct PapyrusControlFlowNode final {
+  int id {};
+  PapyrusControlFlowNodeEdgeType edgeType { PapyrusControlFlowNodeEdgeType::None };
+  IntrusiveLinkedList<PapyrusControlFlowNode> children {};
+  PapyrusControlFlowNode* nextSibling { nullptr };
 
   PapyrusControlFlowNode(int i) : id(i) { }
   ~PapyrusControlFlowNode() = default;
@@ -38,15 +40,14 @@ struct PapyrusControlFlowNode final
 
 private:
   friend IntrusiveLinkedList<PapyrusControlFlowNode>;
-  PapyrusControlFlowNode* next{ nullptr };
+  PapyrusControlFlowNode* next { nullptr };
   friend IntrusiveStack<PapyrusControlFlowNode>;
-  PapyrusControlFlowNode* nextInStack{ nullptr };
+  PapyrusControlFlowNode* nextInStack { nullptr };
 };
 
-struct PapyrusCFG final
-{
+struct PapyrusCFG final {
   CapricaReportingContext& reportingContext;
-  PapyrusControlFlowNode* root{ nullptr };
+  PapyrusControlFlowNode* root { nullptr };
 
   PapyrusCFG(CapricaReportingContext& repCtx) : reportingContext(repCtx) {
     root = alloc.make<PapyrusControlFlowNode>(nextNodeID++);
@@ -90,13 +91,9 @@ struct PapyrusCFG final
     nodeStack.push(n);
   }
 
-  void pushBreakTerminal() {
-    breakTargetStack.push(alloc.make<BreakTarget>());
-  }
+  void pushBreakTerminal() { breakTargetStack.push(alloc.make<BreakTarget>()); }
 
-  void markBreakTerminal() {
-    breakTargetStack.top()->isBreakTarget = true;
-  }
+  void markBreakTerminal() { breakTargetStack.top()->isBreakTarget = true; }
 
   bool popBreakTerminal() {
     bool b = breakTargetStack.top()->isBreakTarget;
@@ -104,24 +101,21 @@ struct PapyrusCFG final
     return b;
   }
 
-  void dumpGraph() {
-    root->dumpNode(0);
-  }
+  void dumpGraph() { root->dumpNode(0); }
 
 private:
-  struct BreakTarget final
-  {
-    bool isBreakTarget{ false };
+  struct BreakTarget final {
+    bool isBreakTarget { false };
 
   private:
     friend IntrusiveStack<BreakTarget>;
-    BreakTarget* nextInStack{ nullptr };
+    BreakTarget* nextInStack { nullptr };
   };
 
-  allocators::ChainedPool alloc{ 4 * 1024 };
-  int nextNodeID{ 0 };
-  IntrusiveStack<PapyrusControlFlowNode> nodeStack{ };
-  IntrusiveStack<BreakTarget> breakTargetStack{ };
+  allocators::ChainedPool alloc { 4 * 1024 };
+  int nextNodeID { 0 };
+  IntrusiveStack<PapyrusControlFlowNode> nodeStack {};
+  IntrusiveStack<BreakTarget> breakTargetStack {};
 };
 
 }}
