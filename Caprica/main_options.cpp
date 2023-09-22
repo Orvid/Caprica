@@ -22,7 +22,8 @@ bool addFilesFromDirectory(const std::string& f,
                            bool recursive,
                            const std::string& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
-                           caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
+                           caprica::papyrus::PapyrusCompilationNode::NodeType nodeType,
+                           const std::string& startingNS = "");
 void parseUserFlags(std::string&& flagsPath);
 bool handleImports(const std::vector<std::string>& f, caprica::CapricaJobManager* jobManager);
 bool addSingleFile(const std::string& f,
@@ -407,7 +408,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
                                    iterateCompiledDirectoriesRecursively,
                                    baseOutputDir,
                                    jobManager,
-                                   caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile)) {
+                                   caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
+                                   "")) {
           return false;
         }
       } else {

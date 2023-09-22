@@ -285,6 +285,13 @@ struct PapyrusNamespace final {
       c.second->awaitRead();
   }
 
+  void awaitParse() {
+    for (auto o : objects)
+      o.second->awaitParse();
+    for (auto c : children)
+      c.second->awaitParse();
+  }
+
   void queueCompile() {
     for (auto o : objects)
       o.second->queueCompile();
