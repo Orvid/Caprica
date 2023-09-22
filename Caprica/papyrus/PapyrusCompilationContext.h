@@ -42,6 +42,9 @@ struct PapyrusCompilationNode final
     jobManager(mgr),
     type(compileType) {
     baseName = FSUtils::basenameAsRef(sourceFilePath);
+    // TODO: fix Imports hack
+    if (type == NodeType::PapyrusImport)
+      reportingContext.m_QuietWarnings = true;
     jobManager->queueJob(&readJob);
   }
 

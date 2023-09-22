@@ -16,6 +16,8 @@ namespace caprica {
 struct CapricaReportingContext final
 {
   std::string filename;
+  // TODO: fix Imports hack
+  bool m_QuietWarnings{ false };
   size_t warningCount{ 0 };
   size_t errorCount{ 0 };
 
@@ -181,7 +183,9 @@ private:
   template<typename... Args>
   ALWAYS_INLINE
   void warning(CapricaFileLocation location, size_t warningNumber, const char* msg, Args&&... args) {
-    maybePushMessage(this, &location, nullptr, warningNumber, formatString(msg, std::forward<Args>(args)...));
+    // TODO: fix Imports hack
+    if (!m_QuietWarnings)
+      maybePushMessage(this, &location, nullptr, warningNumber, formatString(msg, std::forward<Args>(args)...));
   }
 
 };

@@ -32,10 +32,23 @@ PapyrusObject* PapyrusCompilationNode::awaitSemantic() {
 }
 
 void PapyrusCompilationNode::queueCompile() {
+  switch (type) {
+    case NodeType::PapyrusImport:
+    case NodeType::PasReflection:
+    case NodeType::PexReflection:
+      return;
+  }
   jobManager->queueJob(&writeJob);
 }
 
 void PapyrusCompilationNode::awaitWrite() {
+  switch (type) {
+    case NodeType::PapyrusImport:
+    case NodeType::PexDissassembly: // NOTE: Pex disassembly gets written during Compile, not during Write?
+    case NodeType::PasReflection:
+    case NodeType::PexReflection:
+      return;
+  }
   writeJob.await();
 }
 
@@ -96,7 +109,9 @@ void PapyrusCompilationNode::FileParseJob::run() {
   if (pathEq(ext, ".psc")) {
     auto parser = new parser::PapyrusParser(parent->reportingContext, parent->sourceFilePath, parent->readFileData);
     parent->loadedScript = parser->parseScript();
-    parent->reportingContext.exitIfErrors();
+    if (parent->type != NodeType::PapyrusImport) {
+      parent->reportingContext.exitIfErrors();
+    }
     delete parser;
   } else if (pathEq(ext, ".pex")) {
     pex::PexReader rdr(parent->sourceFilePath);
@@ -142,7 +157,9 @@ void PapyrusCompilationNode::FileParseJob::run() {
 void PapyrusCompilationNode::FileSemanticJob::run() {
   parent->parseJob.await();
   parent->loadedScript->semantic(parent->resolutionContext);
-  parent->reportingContext.exitIfErrors();
+  if (parent->type != NodeType::PapyrusImport) {
+    parent->reportingContext.exitIfErrors();
+  }
 }
 
 static constexpr bool disablePexBuild = false;
@@ -167,6 +184,10 @@ void PapyrusCompilationNode::FileCompileJob::run() {
         parent->pexFile->write(*parent->pexWriter);
 
         if (conf::Debug::dumpPexAsm) {
+          auto baseFileName = std::string(FSUtils::basenameAsRef(parent->sourceFilePath));
+          auto containingDir = std::filesystem::path(parent->outputDirectory);
+          if (!std::filesystem::exists(containingDir))
+            std::filesystem::create_directories(containingDir);
           std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas", std::ofstream::binary);
           asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
           pex::PexAsmWriter asmWtr(asmStrm);
@@ -179,6 +200,10 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       return;
     }
     case NodeType::PexDissassembly: {
+      auto baseFileName = std::string(FSUtils::basenameAsRef(parent->sourceFilePath));
+      auto containingDir = std::filesystem::path(parent->outputDirectory);
+      if (!std::filesystem::exists(containingDir))
+        std::filesystem::create_directories(containingDir);
       std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas", std::ofstream::binary);
       asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
@@ -200,10 +225,11 @@ void PapyrusCompilationNode::FileCompileJob::run() {
 
     // TODO: fix this hack
     case NodeType::PapyrusImport:
-      return;
-    case NodeType::Unknown:
     case NodeType::PasReflection:
     case NodeType::PexReflection:
+      return;
+    case NodeType::Unknown:
+    default:
       break;
   }
   CapricaReportingContext::logicalFatal("You shouldn't be trying to compile this!");
@@ -231,12 +257,12 @@ void PapyrusCompilationNode::FileWriteJob::run() {
     }
     // TODO: remove this hack
     case NodeType::PapyrusImport:
-      return;
-
-    case NodeType::Unknown:
     case NodeType::PexDissassembly:
     case NodeType::PasReflection:
     case NodeType::PexReflection:
+      return;
+    case NodeType::Unknown:
+    default:
       break;
   }
   CapricaReportingContext::logicalFatal("You shouldn't be trying to compile this!");
@@ -274,11 +300,10 @@ struct PapyrusNamespace final
   }
 
   void createNamespace(const identifier_ref& curPiece, caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
-    if (conf::Papyrus::game == GameID::Skyrim){
-      // skyrim has no namespacing
-      if (curPiece != "")
+    if (conf::Papyrus::game == GameID::Skyrim && curPiece != "") {
         CapricaReportingContext::logicalFatal("Invalid namespacing on Skyrim script: %s", curPiece.to_string().c_str());
-
+    }
+    if (curPiece == "") {
       if (!objects.empty()) {
         // we have to merge them
         for (auto &obj : map){
@@ -294,15 +319,10 @@ struct PapyrusNamespace final
             objects.emplace(std::move(obj.first), std::move(obj.second));
           }
         }
-        return;
       } else {
-        // we don't have any objects, so we can just move the map
+        //we don't have any objects, so we can just move the map
         objects = std::move(map);
-        return;
       }
-    }
-    if (curPiece == "") {
-      objects = std::move(map);
       return;
     }
 
