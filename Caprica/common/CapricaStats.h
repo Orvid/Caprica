@@ -10,8 +10,8 @@ private:
   {
     size_t val;
 
-    NopIncStruct& operator++(int) { return *this; }
-    NopIncStruct& operator=(size_t) { return *this; }
+    NopIncStruct& operator++(int) { val++; return *this; }
+    NopIncStruct& operator=(size_t f) { val = f; return *this; }
   };
 
 
@@ -22,12 +22,15 @@ private:
 public:
   static counter_type peekedTokenCount;
   static counter_type consumedTokenCount;
+  static counter_type importedFileCount;
   static counter_type inputFileCount;
   static counter_type lexedFilesCount;
   static counter_type allocatedHeapCount;
   static counter_type freedHeapCount;
 
   static void outputStats();
+  static void outputImportedCount();
+
 };
 
 }

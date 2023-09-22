@@ -44,8 +44,6 @@ static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
 
 bool handleImports(const std::vector<std::string>& f, caprica::CapricaJobManager* jobManager);
 PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir,const std::string &filePath);
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
                                 const std::string &baseOutputDir, const std::string &curDir,
                                 const std::string &absBaseDir, const WIN32_FIND_DATA &fileName);
 PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
@@ -141,6 +139,45 @@ bool addFilesFromDirectory(const std::string &f, bool recursive, const std::stri
 }
 
 
+PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
+                                const std::string &baseOutputDir,
+                                const std::string &curDir,
+                                const std::string &absBaseDir,
+                                const std::string &fileName,
+                                time_t lastModTime,
+                                size_t fileSize) {
+  std::string curDirFull;
+  if (curDir == "\\" || curDir == "")
+    curDirFull = absBaseDir;
+  else
+    curDirFull = absBaseDir + curDir;
+
+  std::string sourceFilePath = curDirFull + "\\" + fileName;
+  std::string filenameToDisplay;
+  std::string outputDir;
+  if (curDir == "\\" || curDir == "") {
+    filenameToDisplay = fileName;
+    outputDir = baseOutputDir;
+  } else {
+    filenameToDisplay = curDir.substr(1) + "\\" + fileName;
+    outputDir = baseOutputDir + curDir;
+  }
+  if (nodeType == PapyrusCompilationNode::NodeType::PapyrusImport || nodeType == PapyrusCompilationNode::NodeType::PasReflection || nodeType == PapyrusCompilationNode::NodeType::PexReflection) {
+    CapricaStats::importedFileCount++;
+  } else {
+    CapricaStats::inputFileCount++;
+  }
+  auto node = new caprica::papyrus::PapyrusCompilationNode(
+          jobManager,
+          nodeType,
+          std::move(filenameToDisplay),
+          std::move(outputDir),
+          std::move(sourceFilePath),
+          lastModTime,
+          fileSize
+  );
+  return node;
+}
 
 PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
                                 const std::string &baseOutputDir, const std::string &curDir,
@@ -180,79 +217,43 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
     }
     caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(tempMap));
   }
-
+  std::cout << "Importing files..." << std::endl;
   for (auto& dir : f) {
     if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport))
       return false;
   }
+  CapricaStats::outputImportedCount();
   return true;
-}
-
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir,
-                                const std::string &curDir,
-                                const std::string &absBaseDir,
-                                const std::string &fileName,
-                                time_t lastModTime,
-                                size_t fileSize) {
-  std::string curDirFull;
-  if (curDir == "\\" || curDir == "")
-    curDirFull = absBaseDir;
-  else
-    curDirFull = absBaseDir + curDir;
-
-  std::string sourceFilePath = curDirFull + "\\" + fileName;
-  std::string filenameToDisplay;
-  std::string outputDir;
-  if (curDir == "\\" || curDir == "") {
-    filenameToDisplay = fileName;
-    outputDir = baseOutputDir;
-  } else {
-    filenameToDisplay = curDir.substr(1) + "\\" + fileName;
-    outputDir = baseOutputDir + curDir;
-  }
-  CapricaStats::inputFileCount++;
-  auto node = new caprica::papyrus::PapyrusCompilationNode(
-          jobManager,
-          nodeType,
-          std::move(filenameToDisplay),
-          std::move(outputDir),
-          std::move(sourceFilePath),
-          lastModTime,
-          fileSize
-  );
-  return node;
-}
-
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType, CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir, const std::string &filePath) {
-  // Get the file size and last modified time using std::filesystem
-  std::error_code ec;
-  auto lastModTime = std::filesystem::last_write_time(filePath, ec);
-  if (ec) {
-    std::cout << "An error occured while trying to get the last modified time of '" << filePath << "'!" << std::endl;
-    return nullptr;
-  }
-  auto fileSize = std::filesystem::file_size(filePath, ec);
-  if (ec) {
-    std::cout << "An error occured while trying to get the file size of '" << filePath << "'!" << std::endl;
-    return nullptr;
-  }
-
-  // split filename into absolute path, and filename
-  auto abs = caprica::FSUtils::canonical(filePath);
-  auto absBaseDir = std::string(caprica::FSUtils::parentPathAsRef(abs));
-  auto filename = std::string(caprica::FSUtils::filenameAsRef(filePath));
-
-  return getNode(nodeType, jobManager, baseOutputDir, "", absBaseDir, filename, lastModTime.time_since_epoch().count(), fileSize);
 }
 
 bool addSingleFile(const std::string &f, const std::string &baseOutputDir, caprica::CapricaJobManager *jobManager,
                    PapyrusCompilationNode::NodeType nodeType) {
-  auto node = getNode(nodeType, jobManager, baseOutputDir, f);
-  if (!node)
+  // Get the file size and last modified time using std::filesystem
+  std::error_code ec;
+  auto lastModTime = std::filesystem::last_write_time(f, ec);
+  if (ec) {
+    std::cout << "An error occured while trying to get the last modified time of '" << f << "'!" << std::endl;
     return false;
-  caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>{ { caprica::identifier_ref(node->baseName), node } });
+  }
+  auto fileSize = std::filesystem::file_size(f, ec);
+  if (ec) {
+    std::cout << "An error occured while trying to get the file size of '" << f << "'!" << std::endl;
+    return false;
+  }
+
+  std::string namespaceDir = "\\";
+  auto path = std::filesystem::path(f);
+  auto filename = std::string(caprica::FSUtils::filenameAsRef(f));
+  std::string absBaseDir = std::filesystem::absolute(f).parent_path().string();
+  if (!path.is_absolute()){
+    namespaceDir = caprica::FSUtils::parentPathAsRef(f);
+  }
+  auto namespaceName = namespaceDir;
+  std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
+  namespaceName = namespaceName.substr(1);
+  std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
+  auto node = getNode(nodeType, jobManager, baseOutputDir, namespaceDir, absBaseDir, filename, lastModTime.time_since_epoch().count(), fileSize);
+  caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>{{caprica::identifier_ref(node->baseName), node } });
   return true;
 }
 
