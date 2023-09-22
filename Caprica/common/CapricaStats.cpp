@@ -8,6 +8,7 @@ namespace caprica {
 CapricaStats::counter_type CapricaStats::peekedTokenCount{ 0 };
 CapricaStats::counter_type CapricaStats::consumedTokenCount{ 0 };
 CapricaStats::counter_type CapricaStats::lexedFilesCount{ 0 };
+CapricaStats::counter_type CapricaStats::importedFileCount{ 0 };
 CapricaStats::counter_type CapricaStats::inputFileCount{ 0 };
 CapricaStats::counter_type CapricaStats::allocatedHeapCount{ 0 };
 CapricaStats::counter_type CapricaStats::freedHeapCount{ 0 };
@@ -35,6 +36,10 @@ static typename std::enable_if_t<std::is_same<CounterType, NopType>::value> inte
 
 void CapricaStats::outputStats() {
   internalOutputStats<decltype(CapricaStats::peekedTokenCount), CapricaStats::NopIncStruct>();
+}
+
+void CapricaStats::outputImportedCount() {
+  std::cout << "Imported " << importedFileCount.val << " files." << std::endl;
 }
 
 }

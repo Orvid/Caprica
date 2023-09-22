@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <papyrus/PapyrusCompilationContext.h>
 
 namespace conf = caprica::conf;
 namespace po = boost::program_options;
@@ -17,8 +18,12 @@ namespace filesystem = std::filesystem;
 namespace caprica {
 struct CapricaJobManager;
 
-bool addFilesFromDirectory(const std::string& f, bool recursive, const std::string& baseOutputDir, caprica::CapricaJobManager* jobManager);
+bool addFilesFromDirectory(const std::string &f, bool recursive, const std::string &baseOutputDir,
+                           caprica::CapricaJobManager *jobManager,
+                           caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
 void parseUserFlags(std::string&& flagsPath);
+bool handleImports(const std::vector<std::string>& f, caprica::CapricaJobManager* jobManager);
+bool addSingleFile(const std::string &f, const std::string &baseOutputDir, caprica::CapricaJobManager * jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
 
 static std::pair<std::string, std::string> parseOddArguments(const std::string& str) {
   if (str == "-WE")
@@ -290,6 +295,11 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
 
+    if (!handleImports(conf::Papyrus::importDirectories, jobManager)){
+      std::cout << "Import failed!" << std::endl;
+      return false;
+    }
+
     auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     for (auto& f : filesPassed) {
       if (!filesystem::exists(f)) {
@@ -297,19 +307,19 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         return false;
       }
       if (filesystem::is_directory(f)) {
-        if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, jobManager))
+        if (!addFilesFromDirectory(f, iterateCompiledDirectoriesRecursively, baseOutputDir, jobManager,
+                                   caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
           return false;
       } else {
+        std::cout << "WARNING: Loose input files are assumed as being in the root namespace." << std::endl;
         std::string_view ext = FSUtils::extensionAsRef(f);
         if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex")) {
           std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!" << std::endl;
           return false;
         }
-        auto canon = FSUtils::canonical(f);
         auto oDir = baseOutputDir;
-        // TODO: Implement correctly.
-        //filesToCompile.push_back(ScriptToCompile(std::move(f), std::move(oDir), std::move(canon), boost::filesystem::last_write_time(f), 0));
+        addSingleFile(std::move(f), std::move(oDir), jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile);
       }
     }
   } catch (const std::exception& ex) {
