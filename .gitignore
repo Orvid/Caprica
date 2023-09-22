@@ -11,3 +11,38 @@ build/
 cmake-build-*
 
 test_compile/
+
+
+# vcpkg
+vcpkg_installed/
+vcpkg_installed/**
+vcpkg-manifest-install.log
+# Default build directory
+build
+
+# Jetbrains IDEs
+.idea/
+cmake-build-*
+CMakeFiles/
+CMakeCache.txt
+
+cmake_install.cmake
+ALL_BUILD.vcxproj
+ALL_BUILD.vcxproj.filters
+ALL_BUILD.vcxproj.user
+INSTALL.vcxproj
+INSTALL.vcxproj.filters
+ZERO_CHECK.vcxproj
+ZERO_CHECK.vcxproj.filters
+Caprica.sln
+Caprica/Caprica.dir/
+Caprica/Caprica.vcxproj
+Caprica/Caprica.vcxproj.filters
+Caprica/Caprica.vcxproj.user
+Caprica/Debug/
+Caprica/Release/
+Caprica/INSTALL.vcxproj
+Caprica/INSTALL.vcxproj.filters
+Caprica/cmake_install.cmake
+
+x64/
