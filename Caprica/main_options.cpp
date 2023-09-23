@@ -131,6 +131,9 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "allow-var-shadow-parent",
         po::value<bool>(&conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty)->default_value(true),
         "Allow Object variable names in derived classes to shadow properties in parent classes.")(
+        "allow-local-shadow-parent",
+        po::value<bool>(&conf::Skyrim::skyrimAllowLocalVariableShadowingParentProperty)->default_value(true),
+        "Allow local variable names to shadow properties in parent classes.")(
         "allow-local-use-before-decl",
         po::value<bool>(&conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration)->default_value(true),
         "Allow local variables to be used before they are declared and initialized.")(
@@ -286,6 +289,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       // turn off skyrim options
       conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass = false;
       conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty = false;
+      conf::Skyrim::skyrimAllowLocalVariableShadowingParentProperty = false;
       conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration = false;
       conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult = false;
     }
@@ -410,7 +414,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       return false;
     }
     auto filesPassed = std::vector<std::string>();
-    for (auto &f : vm["input-file"].as<std::vector<std::string>>()){
+    for (auto& f : vm["input-file"].as<std::vector<std::string>>()) {
       if (f.find(';') != std::string::npos) {
         std::istringstream s(f);
         std::string sd;
