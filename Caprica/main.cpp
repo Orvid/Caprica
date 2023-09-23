@@ -37,18 +37,39 @@ namespace caprica {
 bool parseCommandLineArguments(int argc, char *argv[], caprica::CapricaJobManager *jobManager);
 
 // A hack to speed up identifying the base game script directory
-static caseless_unordered_identifier_ref_map<bool> starfieldBaseScriptDir = {
-        {"scriptobject",                     false},
-        {"form",                             false},
-        {"spellapplycameraattachedfxscript", false}
+static caseless_unordered_identifier_ref_set starfieldBaseScriptDirSet = {
+        "scriptobject",
+        "form",
+        "spellapplycameraattachedfxscript",
+        "addfactiontolinkedrefontrigger"
 };
-static bool gBaseFound = false;
 
-static caseless_unordered_identifier_ref_map<bool> fallout4BaseScriptDir = {
-        {"scriptobject",       false},
-        {"form",               false},
-        {"viciousdogfxscript", false}
+static bool gBaseFound = true;
+
+static caseless_unordered_identifier_ref_set fallout4BaseScriptDirSet = {
+        "scriptobject",
+        "form",
+        "viciousdogfxscript"
 };
+
+caseless_unordered_identifier_ref_map<bool> getBaseSigMap(GameID game) {
+  caseless_unordered_identifier_ref_map<bool> map{};
+  switch(game){
+    case GameID::Fallout4:
+      map.reserve(fallout4BaseScriptDirSet.size());
+      for (auto &id: fallout4BaseScriptDirSet)
+        map.emplace(id, false);
+      break;
+    case GameID::Starfield:
+      map.reserve(starfieldBaseScriptDirSet.size());
+      for (auto &id: starfieldBaseScriptDirSet)
+        map.emplace(id, false);
+      break;
+    default:
+      break;
+  }
+  return map;
+}
 
 static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
         "fake://skyrim/__ScriptObject.psc",
@@ -92,7 +113,7 @@ bool addFilesFromDirectory(const std::string &f,
   auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{};
   dirs.push_back("\\");
-  auto &baseDirMap = conf::Papyrus::game == GameID::Starfield ? starfieldBaseScriptDir : fallout4BaseScriptDir;
+  auto baseDirMap = getBaseSigMap(conf::Papyrus::game);
   auto l_startNS = startingNS;
   while (dirs.size()) {
     HANDLE hFind;
