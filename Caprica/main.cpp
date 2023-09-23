@@ -42,7 +42,7 @@ static caseless_unordered_identifier_ref_map<bool> starfieldBaseScriptDir = {
         {"form",                             false},
         {"spellapplycameraattachedfxscript", false}
 };
-static bool baseFound = false;
+static bool gBaseFound = false;
 
 static caseless_unordered_identifier_ref_map<bool> fallout4BaseScriptDir = {
         {"scriptobject",       false},
@@ -147,7 +147,7 @@ bool addFilesFromDirectory(const std::string &f,
             PapyrusCompilationNode *node = getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data);
 
             namespaceMap.emplace(caprica::identifier_ref(node->baseName), node);
-            if (!baseFound && (conf::Papyrus::game == GameID::Starfield || conf::Papyrus::game == GameID::Fallout4)) {
+            if (!gBaseFound && (conf::Papyrus::game == GameID::Starfield || conf::Papyrus::game == GameID::Fallout4)) {
               // get the filename without the extension using substr assuming that the last 4 characters are the
               // extension
               if (baseDirMap.count(node->baseName) != 0)
@@ -161,7 +161,7 @@ bool addFilesFromDirectory(const std::string &f,
 
     if (conf::Papyrus::game > GameID::Skyrim) {
       // check that all the values in the base script dir map are true
-      if (!baseFound && (conf::Papyrus::game == GameID::Starfield || conf::Papyrus::game == GameID::Fallout4)) {
+      if (!gBaseFound && (conf::Papyrus::game == GameID::Starfield || conf::Papyrus::game == GameID::Fallout4)) {
         bool allTrue = true;
         for (auto &pair: baseDirMap) {
           if (!pair.second) {
@@ -170,7 +170,8 @@ bool addFilesFromDirectory(const std::string &f,
           }
         }
         if (allTrue) {
-          baseFound = true;
+          // if it's true, then this is the base dir and the namespace should be root
+          gBaseFound = true;
           l_startNS = "";
         }
       }
@@ -268,10 +269,16 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
     caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(tempMap));
   }
   std::cout << "Importing files..." << std::endl;
-  for (auto &dir: f)
-    if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ""))
+  int i = 0;
+  for (auto& dir : f) {
+    std::string ns = "";
+    if (conf::Papyrus::game > GameID::Skyrim)
+      ns = "!!temp" + std::to_string(i++);
+    if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ns))
       return false;
+  }
   CapricaStats::outputImportedCount();
+  caprica::papyrus::PapyrusCompilationContext::RenameImports(jobManager);
   return true;
 }
 

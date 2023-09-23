@@ -62,8 +62,13 @@ struct PapyrusCompilationNode final {
   }
 
   void awaitRead();
-  PapyrusObject* awaitParse();
-  PapyrusObject* awaitSemantic();
+
+  PapyrusScript *awaitParse();
+
+  PapyrusObject *awaitPreSemantic();
+
+  PapyrusObject *awaitSemantic();
+
   void queueCompile();
   void awaitWrite();
 
@@ -79,6 +84,9 @@ private:
   size_t filesize;
   time_t lastModTime;
   std::string reportedName;
+  std::string objectName;
+  std::string objectNS;
+  bool isPexFile = false;
   std::string outputDirectory;
   std::string sourceFilePath;
   std::string_view readFileData {};
@@ -98,7 +106,14 @@ private:
   struct FileParseJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
-  } parseJob { this };
+  } parseJob{this};
+
+  struct FilePreSemanticJob final : public BaseJob {
+    using BaseJob::BaseJob;
+
+    virtual void run() override;
+  } preSemanticJob{this};
+
   struct FileSemanticJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
@@ -115,13 +130,18 @@ private:
 
 struct PapyrusCompilationContext final {
   static void awaitRead();
-  static void doCompile(CapricaJobManager* jobManager);
-  static void pushNamespaceFullContents(const std::string& namespaceName,
-                                        caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map);
-  static bool tryFindType(const identifier_ref& baseNamespace,
-                          const identifier_ref& typeName,
-                          PapyrusCompilationNode** retNode,
-                          identifier_ref* retStructName);
+
+  static void doCompile(CapricaJobManager *jobManager);
+
+  static void pushNamespaceFullContents(const std::string &namespaceName,
+                                        caseless_unordered_identifier_ref_map<PapyrusCompilationNode *> &&map);
+
+  static bool tryFindType(const identifier_ref &baseNamespace,
+                          const identifier_ref &typeName,
+                          PapyrusCompilationNode **retNode,
+                          identifier_ref *retStructName);
+
+  static void RenameImports(CapricaJobManager *jobManager);
 };
 
 }}
