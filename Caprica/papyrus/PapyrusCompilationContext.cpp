@@ -402,10 +402,12 @@ struct PapyrusNamespace final {
                     f->second = obj.second;
                     break;
                   default:
+                    nodesToCleanUp.push_back(obj.second);
                     break;
                 }
                 break;
               default:
+                nodesToCleanUp.push_back(obj.second);
                 break;
             }
           } else {
