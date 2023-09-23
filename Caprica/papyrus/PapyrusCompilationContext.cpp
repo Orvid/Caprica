@@ -21,6 +21,12 @@ void PapyrusCompilationNode::awaitRead() {
   readJob.await();
 }
 
+std::string PapyrusCompilationNode::awaitPreParse() {
+  preParseJob.await();
+  return objectName;
+}
+
+
 PapyrusScript* PapyrusCompilationNode::awaitParse() {
   parseJob.await();
   return loadedScript;
@@ -114,8 +120,52 @@ void PapyrusCompilationNode::FileReadJob::run() {
   }
 }
 
-void PapyrusCompilationNode::FileParseJob::run() {
+std::string_view findScriptName(const std::string_view& data, const std::string_view& startstring, bool stripWhitespace = false)
+{
+  size_t last = 0;
+  while (last < data.size()) {
+    auto next = data.find('\n', last);
+    if (next == std::string_view::npos)
+      next = data.size() - 1;
+    auto line = data.substr(last, next - last);
+    auto begin = stripWhitespace ? line.find_first_not_of(" \t") : 0;
+    if (strnicmp(line.substr(begin, startstring.size()).data(), startstring.data(), startstring.size()) == 0) {
+      auto first = line.find_first_not_of(" \t", startstring.size());
+      return line.substr(first, line.find_first_of(" \t", first) - first);
+    }
+    last = next + 1;
+  }
+  return {};
+}
+
+void PapyrusCompilationNode::FilePreParseJob::run() {
   parent->readJob.await();
+  auto ext = FSUtils::extensionAsRef(parent->sourceFilePath);
+  if (pathEq(ext, ".psc")) {
+    parent->objectName = findScriptName(parent->readFileData, "scriptname");
+  } else if (pathEq(ext, ".pex")) {
+    // have to read the whole pexfile in order to get the script name
+    pex::PexReader rdr(parent->sourceFilePath);
+    auto alloc = new allocators::ChainedPool(1024 * 4);
+    parent->pexFile = pex::PexFile::read(alloc, rdr);
+    parent->isPexFile = true;
+    if (parent->pexFile->objects.size() == 0) {
+      CapricaReportingContext::logicalFatal("Unable to find script name in '%s'.", parent->sourceFilePath.c_str());
+    }
+    parent->objectName = parent->pexFile->getStringValue(parent->pexFile->objects.front()->name).to_string();
+  } else if (pathEq(ext, ".pas")) {
+    parent->objectName = findScriptName(parent->readFileData, ".object", true);
+  } else {
+    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.",
+                                          parent->reportedName.c_str());
+  }
+  if (parent->objectName.empty()){
+    CapricaReportingContext::logicalFatal("Unable to find script name in '%s'.", parent->sourceFilePath.c_str());
+  }
+}
+
+void PapyrusCompilationNode::FileParseJob::run() {
+  parent->preParseJob.await();
   auto ext = FSUtils::extensionAsRef(parent->sourceFilePath);
   if (pathEq(ext, ".psc")) {
     auto parser = new parser::PapyrusParser(parent->reportingContext, parent->sourceFilePath, parent->readFileData);
@@ -124,12 +174,7 @@ void PapyrusCompilationNode::FileParseJob::run() {
       parent->reportingContext.exitIfErrors();
     delete parser;
   } else if (pathEq(ext, ".pex")) {
-    pex::PexReader rdr(parent->sourceFilePath);
-    auto alloc = new allocators::ChainedPool(1024 * 4);
-    parent->pexFile = pex::PexFile::read(alloc, rdr);
-    parent->isPexFile = true;
-    if (parent->type == NodeType::PexDissassembly)
-      return;
+    // nothing to do here
   } else if (pathEq(ext, ".pas")) {
     auto parser = new pex::parser::PexAsmParser(parent->reportingContext, parent->sourceFilePath);
     parent->pexFile = parser->parseFile();
@@ -294,6 +339,13 @@ struct PapyrusNamespace final {
       o.second->awaitRead();
     for (auto c : children)
       c.second->awaitRead();
+  }
+
+  void awaitPreParse() {
+    for (auto o : objects)
+      o.second->awaitPreParse();
+    for (auto c : children)
+      c.second->awaitPreParse();
   }
 
   void awaitParse() {
@@ -476,8 +528,9 @@ typedef caprica::caseless_unordered_identifier_ref_map<
 
 static void renameMap(const PapyrusNamespace* child, TempRenameMap& tempRenameMap) {
   for (auto& object : child->objects) {
-    auto papyrusScript = object.second->awaitParse();
-    auto namespaceName = papyrusScript->objects.front()->getNamespaceName();
+    auto objectName = object.second->awaitPreParse();
+    auto pos = objectName.find_last_of(':');
+    auto namespaceName = pos == identifier_ref::npos ? "" : objectName.substr(0, pos);
     if (tempRenameMap.count(namespaceName) == 0) {
       tempRenameMap[namespaceName] = caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>();
       tempRenameMap[namespaceName].reserve(child->objects.size());
@@ -497,7 +550,7 @@ void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
     // If this is a child beginning with `!`, this is a temporary import namespace
     if (child.first[0] == '!') {
       // await parsing
-      child.second->awaitParse();
+      child.second->awaitPreParse();
     }
   }
   TempRenameMap tempRenameMap;

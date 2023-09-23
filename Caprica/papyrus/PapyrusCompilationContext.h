@@ -63,6 +63,8 @@ struct PapyrusCompilationNode final {
 
   void awaitRead();
 
+  std::string awaitPreParse();
+
   PapyrusScript *awaitParse();
 
   PapyrusObject *awaitPreSemantic();
@@ -87,7 +89,6 @@ private:
   time_t lastModTime;
   std::string reportedName;
   std::string objectName;
-  std::string objectNS;
   bool isPexFile = false;
   std::string outputDirectory;
   std::string sourceFilePath;
@@ -105,6 +106,12 @@ private:
     using BaseJob::BaseJob;
     virtual void run() override;
   } readJob { this };
+
+  struct FilePreParseJob final : public BaseJob {
+    using BaseJob::BaseJob;
+    virtual void run() override;
+  } preParseJob{this};
+
   struct FileParseJob final : public BaseJob {
     using BaseJob::BaseJob;
     virtual void run() override;
