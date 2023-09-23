@@ -10,6 +10,14 @@ namespace General {
   bool quietCompile{ false };
 }
 
+namespace PCompiler {
+    // pCompiler compatibility mode.
+  bool pCompilerCompatibilityMode{false};
+  bool all{false};
+  bool norecurse{false};
+  bool ignorecwd{false};
+}
+
 namespace CodeGeneration {
   bool disableBetaCode{ false };
   bool disableDebugCode{ false };

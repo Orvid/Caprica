@@ -19,6 +19,15 @@ namespace General {
   extern bool quietCompile;
 }
 
+// options related to compatibility with PCompiler's CLI parsing and name resolution
+namespace PCompiler {
+    // pCompiler compatibility mode.
+    extern bool pCompilerCompatibilityMode;
+    extern bool all;
+    extern bool norecurse;
+    extern bool ignorecwd;
+}
+
 // Options related to code generation.
 namespace CodeGeneration {
   // If true, don't generate calls to BetaOnly functions.

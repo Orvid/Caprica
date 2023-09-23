@@ -32,6 +32,16 @@ bool addSingleFile(const std::string& f,
                    caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
 
 static std::pair<std::string, std::string> parseOddArguments(const std::string& str) {
+  // Boost refuses to allow short options to have equals signs, so we have to parse them manually.
+  if (str.starts_with("-i=")){
+    return std::make_pair("import", str.substr(3));
+  } else if (str.starts_with("-o=")){
+    return std::make_pair("output", str.substr(3));
+  } else if (str.starts_with("-f=")){
+    return std::make_pair("flags", str.substr(3));
+  } else if (str.starts_with("-g=")){
+    return std::make_pair("game", str.substr(3));
+  }
   if (str == "-WE")
     return std::make_pair("all-warnings-as-errors", "");
   else if (str.find("-we") == 0)
@@ -47,7 +57,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     bool iterateCompiledDirectoriesRecursively = false;
 
     po::options_description desc("General");
-    desc.add_options()("help,h", "Print usage information.")(
+    desc.add_options()("help,h,?", "Print usage information.")(
         "game,g",
         po::value<std::string>()->default_value("starfield"),
         "Set the game type to compile for. Valid values are: starfield, skyrim, fallout4, fallout76. (default: "
@@ -56,17 +66,17 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
                       "Set the compiler's import directories.")("flags,f",
                                                                 po::value<std::string>(),
                                                                 "Set the file defining the user flags.")(
-        "optimize,O",
+        "optimize,op,O",
         po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false),
         "Enable optimizations.")("output,o",
                                  po::value<std::string>()->default_value(filesystem::current_path().string()),
                                  "Set the directory to save compiler output to.")(
         "parallel-compile,p",
         po::bool_switch(&conf::General::compileInParallel)->default_value(false),
-        "Compile files in parallel.")("recurse,r",
+        "Compile files in parallel.")("recurse,R",
                                       po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false),
                                       "Recursively compile all scripts in the directories passed.")(
-        "release",
+        "release,r",
         po::bool_switch(&conf::CodeGeneration::disableDebugCode)->default_value(false),
         "Don't generate DebugOnly code.")("final",
                                           po::bool_switch(&conf::CodeGeneration::disableBetaCode)->default_value(false),
@@ -151,7 +161,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "async-write",
         po::value<bool>(&conf::Performance::asyncFileWrite)->default_value(true),
         "Allow writing output to disk on background threads.")(
-        "dump-asm,keep-asm",
+        "dump-asm,keepasm",
         po::bool_switch(&conf::Debug::dumpPexAsm)->default_value(false),
         "Dump the PEX assembly code for the input files.")(
         "enable-ck-optimizations",
@@ -182,6 +192,19 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
                                              po::bool_switch(&conf::Performance::dumpTiming)->default_value(false),
                                              "Dump timing info.");
 
+    // This is really only here for compatibility with Pyro
+    po::options_description pcompilerDesc("");
+    pcompilerDesc.add_options()
+      ("pcompiler",
+      po::bool_switch(&conf::PCompiler::pCompilerCompatibilityMode)->default_value(false),
+      "Enable PCompiler compatibility mode (default false).")
+      ("all,a", po::bool_switch(&conf::PCompiler::all)->default_value(false),"")
+      ("norecurse", po::bool_switch(&conf::PCompiler::norecurse)->default_value(false),"")
+      ("ignorecwd", po::bool_switch(&conf::PCompiler::ignorecwd)->default_value(false),"")
+      ("noasm", po::bool_switch()->default_value(false), "Does nothing on Caprica")
+      ("asmonly", po::bool_switch()->default_value(false), "Does nothing on Caprica")
+      ("debug,d", po::bool_switch()->default_value(false), "Does nothing on Caprica");
+    
     po::options_description engineLimitsDesc("");
     engineLimitsDesc.add_options()(
         "ignore-engine-limits",
@@ -230,11 +253,29 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
 
     po::options_description commandLineDesc("");
     commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc).add(strictChecksDesc);
-
+    auto default_style   = po::command_line_style::unix_style;
+    auto pcompiler_style = (po::command_line_style::style_t)
+                        (po::command_line_style::allow_short | 
+                        po::command_line_style::allow_long |
+                        po::command_line_style::allow_dash_for_short |
+                        po::command_line_style::long_allow_adjacent |
+                        po::command_line_style::short_allow_adjacent |
+                        po::command_line_style::allow_long_disguise);
+    bool pCompilerMode = false;
     po::variables_map vm;
+    // scan argv for `-pcompiler`
+    for (int i = 1; i < argc; i++) {
+      if (_stricmp(argv[i], "--pcompiler") == 0 || _stricmp(argv[i], "-pcompiler") == 0) {
+        default_style = pcompiler_style;
+        pCompilerMode = true;
+        commandLineDesc.add(pcompilerDesc);
+        break;
+      }
+    }
     po::store(po::command_line_parser(argc, argv)
                   .options(commandLineDesc)
                   .extra_parser(parseOddArguments)
+                  .style(default_style)
                   .positional(p)
                   .run(),
               vm);
@@ -353,6 +394,24 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
     }
 
+    if (vm.count("pcompiler")) {
+      conf::PCompiler::pCompilerCompatibilityMode = vm["pcompiler"].as<bool>();
+      conf::PCompiler::all = vm["all"].as<bool>();
+      conf::PCompiler::norecurse = vm["norecurse"].as<bool>();
+      if (conf::PCompiler::norecurse){
+        iterateCompiledDirectoriesRecursively = false;
+      }
+      conf::PCompiler::ignorecwd = vm["ignorecwd"].as<bool>();
+      if (vm["noasm"].as<bool>()){
+        conf::Debug::dumpPexAsm = false;
+      }
+      if (!conf::PCompiler::ignorecwd) {
+        std::string cwd = filesystem::current_path().string();
+        conf::Papyrus::importDirectories.reserve(1);
+        conf::Papyrus::importDirectories.emplace_back(cwd);
+      }
+    }
+
     if (vm.count("import")) {
       auto dirs = vm["import"].as<std::vector<std::string>>();
       conf::Papyrus::importDirectories.reserve(dirs.size());
@@ -425,6 +484,35 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
     }
 
+    // PCompiler input resolution
+    if (conf::PCompiler::pCompilerCompatibilityMode){
+      for (auto & f : filesPassed){
+        if (conf::PCompiler::all){
+          if (!addFilesFromDirectory(f,
+                            iterateCompiledDirectoriesRecursively,
+                            baseOutputDir,
+                            jobManager,
+                            caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
+                            "")) {
+            return false;
+          }
+        } else {
+          // need to replace any `:` with `\`
+          std::replace(f.begin(), f.end(), ':', '\\');
+          if (FSUtils::extensionAsRef(f).empty()){
+            f.append(".psc");
+          }
+          auto oDir = baseOutputDir;
+          addSingleFile(std::move(f),
+                        std::move(oDir),
+                        jobManager,
+                        caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile);
+        }
+      }
+      return true;
+    }
+
+    // normal resolution
     for (auto& f : filesPassed) {
       if (!filesystem::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
@@ -440,7 +528,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           return false;
         }
       } else {
-        std::cout << "WARNING: Loose input files are assumed as being in the root namespace." << std::endl;
         std::string_view ext = FSUtils::extensionAsRef(f);
         if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex")) {
           std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;

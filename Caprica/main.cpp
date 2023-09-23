@@ -208,7 +208,9 @@ PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType
     filenameToDisplay = fileName;
     outputDir = baseOutputDir;
   } else {
-    filenameToDisplay = curDir.substr(1) + "\\" + fileName;
+    filenameToDisplay = curDir + "\\" + fileName;
+    if (filenameToDisplay[0] == '\\')
+      filenameToDisplay = filenameToDisplay.substr(1);
     outputDir = baseOutputDir + curDir;
   }
   if (nodeType == PapyrusCompilationNode::NodeType::PapyrusImport ||
@@ -288,6 +290,10 @@ bool addSingleFile(const std::string &f,
                    PapyrusCompilationNode::NodeType nodeType) {
   // Get the file size and last modified time using std::filesystem
   std::error_code ec;
+  if (!std::filesystem::exists(f)) {
+    std::cout << "ERROR: File '" << f << "' does not exist!" << std::endl;
+    return false;
+  }
   auto lastModTime = std::filesystem::last_write_time(f, ec);
   if (ec) {
     std::cout << "An error occured while trying to get the last modified time of '" << f << "'!" << std::endl;
@@ -303,8 +309,13 @@ bool addSingleFile(const std::string &f,
   auto path = std::filesystem::path(f);
   auto filename = std::string(caprica::FSUtils::filenameAsRef(f));
   std::string absBaseDir = std::filesystem::absolute(f).parent_path().string();
-  if (!path.is_absolute())
-    namespaceDir = caprica::FSUtils::parentPathAsRef(f);
+  if (!path.is_absolute()) {
+    auto ppath = caprica::FSUtils::parentPathAsRef(f);
+    if (ppath.compare(filename.c_str()) != 0) {
+      namespaceDir += ppath;
+      absBaseDir = absBaseDir.find(namespaceDir) != std::string::npos ? absBaseDir.substr(0, absBaseDir.find(namespaceDir)) : absBaseDir;
+    }
+  }
   auto namespaceName = namespaceDir;
   std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
   namespaceName = namespaceName.substr(1);

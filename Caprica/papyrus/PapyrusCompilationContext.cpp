@@ -486,6 +486,9 @@ void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
       continue;
     rootNamespace.children.erase(it);
     it = rootNamespace.children.begin();
+    if (it == rootNamespace.children.end()){
+      break;
+    }
   }
 }
 
