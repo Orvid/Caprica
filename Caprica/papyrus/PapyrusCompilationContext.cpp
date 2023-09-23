@@ -174,7 +174,8 @@ void PapyrusCompilationNode::FileParseJob::run() {
       parent->reportingContext.exitIfErrors();
     delete parser;
   } else if (pathEq(ext, ".pex")) {
-    // nothing to do here
+    if (parent->type == NodeType::PexDissassembly)
+      return;
   } else if (pathEq(ext, ".pas")) {
     auto parser = new pex::parser::PexAsmParser(parent->reportingContext, parent->sourceFilePath);
     parent->pexFile = parser->parseFile();
