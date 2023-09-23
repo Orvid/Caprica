@@ -1,5 +1,9 @@
 
 #include <boost/program_options.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
 
 #include <common/CapricaConfig.h>
 #include <common/FSUtils.h>
@@ -51,7 +55,66 @@ static std::pair<std::string, std::string> parseOddArguments(const std::string& 
   else
     return std::make_pair(std::string(), std::string());
 }
+void SaveDefaultConfig(const po::options_description &descOptions, const std::string& configFilePath_, const boost::program_options::variables_map &vm )
+{
+    std::ofstream configFile(configFilePath_);
+    boost::property_tree::ptree tree;
 
+    for (auto& option : descOptions.options())
+    {
+        std::string name = option->long_name();
+        // don't write this to the config file
+        if (name == "write-config-file" || name == "input-file")
+          continue;
+        boost::any defaultValue;
+        boost::any realValue = vm[name].value();
+        option->semantic()->apply_default(defaultValue);
+        if (realValue.empty()){
+            realValue = defaultValue;
+        }
+        if (realValue.type() == typeid(std::string))
+        {
+            std::string val = boost::any_cast<std::string>(realValue);
+            tree.put(name, val);
+///Add here additional else.. type() == typeid() if neccesary
+        } else if (realValue.type() == typeid(bool))
+        {
+            bool val = boost::any_cast<bool>(realValue);
+            tree.put(name, val);
+        } else if (realValue.type() == typeid(size_t)) {
+            size_t val = boost::any_cast<size_t>(realValue);
+            tree.put(name, val);
+        } else if (realValue.type() == typeid(int)) {
+            int val = boost::any_cast<int>(realValue);
+            tree.put(name, val);
+        } else if (realValue.type() == typeid(double)) {
+            double val = boost::any_cast<double>(realValue);
+            tree.put(name, val);
+            
+        } else if (realValue.type() == typeid(std::vector<std::string>))
+        {
+            std::vector<std::string> val = boost::any_cast<std::vector<std::string>>(realValue);
+            std::string strVal;
+            for (auto& v : val)
+            {
+                strVal += v + ";";
+            }
+            tree.put(name, strVal);
+        } else if (realValue.type() == typeid(std::vector<size_t>))
+        {
+            std::vector<size_t> val = boost::any_cast<std::vector<size_t>>(realValue);
+            std::string strVal;
+            for (auto& v : val)
+            {
+                strVal += std::to_string(v) + ",";
+            }
+            tree.put(name, strVal);
+        }
+    }
+
+    //or write_ini
+    boost::property_tree::write_ini(configFile, tree);
+}
 bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManager* jobManager) {
   try {
     bool iterateCompiledDirectoriesRecursively = false;
@@ -190,7 +253,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
             po::bool_switch(&conf::Performance::performanceTestMode)->default_value(false),
             "Enable performance test mode.")("dump-timing",
                                              po::bool_switch(&conf::Performance::dumpTiming)->default_value(false),
-                                             "Dump timing info.");
+                                             "Dump timing info.")
+                                             ("write-config-file",
+                                              po::value<std::string>()->default_value(""),
+                                              "Write the config file to disk.");
 
     // This is really only here for compatibility with Pyro
     po::options_description pcompilerDesc("");
@@ -198,10 +264,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("pcompiler",
       po::bool_switch(&conf::PCompiler::pCompilerCompatibilityMode)->default_value(false),
       "Enable PCompiler compatibility mode (default false).")
-      ("all,a", po::bool_switch(&conf::PCompiler::all)->default_value(false),"")
-      ("norecurse", po::bool_switch(&conf::PCompiler::norecurse)->default_value(false),"")
-      ("ignorecwd", po::bool_switch(&conf::PCompiler::ignorecwd)->default_value(false),"")
-      ("noasm", po::bool_switch()->default_value(false), "Does nothing on Caprica")
+      ("all,a", po::bool_switch(&conf::PCompiler::all)->default_value(false), "Treat input objects as directories")
+      ("norecurse", po::bool_switch(&conf::PCompiler::norecurse)->default_value(false), "Don't recursively scan directories with -all")
+      ("ignorecwd", po::bool_switch(&conf::PCompiler::ignorecwd)->default_value(false), "Don't add the current working directory to the import list")
+      ("noasm", po::bool_switch()->default_value(false), "Turns off asm output if it was turned on.")
       ("asmonly", po::bool_switch()->default_value(false), "Does nothing on Caprica")
       ("debug,d", po::bool_switch()->default_value(false), "Does nothing on Caprica");
     
@@ -252,7 +318,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     visibleDesc.add(desc).add(champollionCompatDesc).add(skyrimCompatibilityDesc).add(advancedDesc);
 
     po::options_description commandLineDesc("");
-    commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc).add(strictChecksDesc);
+    commandLineDesc.add(visibleDesc).add(hiddenDesc).add(engineLimitsDesc).add(strictChecksDesc).add(pcompilerDesc);
     auto default_style   = po::command_line_style::unix_style;
     auto pcompiler_style = (po::command_line_style::style_t)
                         (po::command_line_style::allow_short | 
@@ -267,8 +333,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     for (int i = 1; i < argc; i++) {
       if (_stricmp(argv[i], "--pcompiler") == 0 || _stricmp(argv[i], "-pcompiler") == 0) {
         default_style = pcompiler_style;
-        pCompilerMode = true;
-        commandLineDesc.add(pcompilerDesc);
         break;
       }
     }
@@ -280,21 +344,28 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
                   .run(),
               vm);
     po::notify(vm);
-
     std::string confFilePath = vm["config-file"].as<std::string>();
     auto progamBasePath = filesystem::absolute(filesystem::path(argv[0]).parent_path()).string();
     bool loadedConfigFile = false;
     if (filesystem::exists(progamBasePath + "\\" + confFilePath)) {
       loadedConfigFile = true;
       std::ifstream ifs(progamBasePath + "\\" + confFilePath);
-      po::store(po::parse_config_file(ifs, commandLineDesc), vm);
+      auto config_opts = po::parse_config_file(ifs, commandLineDesc);
+      po::store(config_opts, vm);
       po::notify(vm);
     }
-    if (filesystem::exists(confFilePath) &&
-        _stricmp(filesystem::current_path().string().c_str(), progamBasePath.c_str())) {
+    if (filesystem::exists(confFilePath)) {
       loadedConfigFile = true;
-      std::ifstream ifs(progamBasePath + "\\" + confFilePath);
-      po::store(po::parse_config_file(ifs, commandLineDesc), vm);
+      auto path = std::filesystem::absolute(confFilePath);
+      std::ifstream ifs{path};
+      // check if ifs is open
+      if (!ifs.is_open()) {
+        std::cout << "Unable to open config file '" << path.string() << "'." << std::endl;
+        return false;
+      }
+      // read the entire thing into a string
+      auto config_opts = po::parse_config_file(ifs, commandLineDesc);
+      po::store(config_opts, vm);
       po::notify(vm);
     }
     if (!loadedConfigFile && confFilePath != "caprica.cfg") {
@@ -483,7 +554,9 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         filesPassed.push_back(f);
       }
     }
-
+    if (!vm["write-config-file"].as<std::string>().empty()) {
+      SaveDefaultConfig(commandLineDesc, vm["write-config-file"].as<std::string>(), vm);
+    }
     // PCompiler input resolution
     if (conf::PCompiler::pCompilerCompatibilityMode){
       for (auto & f : filesPassed){
@@ -547,7 +620,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       std::cout << ex.what() << std::endl;
     return false;
   }
-
   return true;
 }
 
