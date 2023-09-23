@@ -37,6 +37,7 @@ namespace caprica {
 bool parseCommandLineArguments(int argc, char *argv[], caprica::CapricaJobManager *jobManager);
 
 // A hack to speed up identifying the base game script directory
+// Each of these are in the 
 static caseless_unordered_identifier_ref_set starfieldBaseScriptDirSet = {
         "scriptobject",
         "form",
@@ -51,6 +52,18 @@ static caseless_unordered_identifier_ref_set fallout4BaseScriptDirSet = {
         "form",
         "viciousdogfxscript"
 };
+
+// lower bound of the number of files in the root of the base script dir
+constexpr size_t getBaseLowerFileCountLimit(GameID game) {
+  switch (game) {
+    case GameID::Fallout4:
+      return 900;
+    case GameID::Starfield:
+      return 1400;
+    default:
+      return 0;
+  }
+}
 
 caseless_unordered_identifier_ref_map<bool> getBaseSigMap(GameID game) {
   caseless_unordered_identifier_ref_map<bool> map{};
@@ -168,7 +181,7 @@ bool addFilesFromDirectory(const std::string &f,
             PapyrusCompilationNode *node = getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data);
 
             namespaceMap.emplace(caprica::identifier_ref(node->baseName), node);
-            if (!gBaseFound && (conf::Papyrus::game == GameID::Starfield || conf::Papyrus::game == GameID::Fallout4)) {
+            if (!gBaseFound && !baseDirMap.empty()) {
               // get the filename without the extension using substr assuming that the last 4 characters are the
               // extension
               if (baseDirMap.count(node->baseName) != 0)
@@ -182,7 +195,7 @@ bool addFilesFromDirectory(const std::string &f,
 
     if (conf::Papyrus::game > GameID::Skyrim) {
       // check that all the values in the base script dir map are true
-      if (!gBaseFound && (conf::Papyrus::game == GameID::Starfield || conf::Papyrus::game == GameID::Fallout4)) {
+      if (!gBaseFound && !baseDirMap.empty()) {
         bool allTrue = true;
         for (auto &pair: baseDirMap) {
           if (!pair.second) {
@@ -190,7 +203,7 @@ bool addFilesFromDirectory(const std::string &f,
             break;
           }
         }
-        if (allTrue) {
+        if (allTrue && namespaceMap.size() >= getBaseLowerFileCountLimit(conf::Papyrus::game)) {
           // if it's true, then this is the base dir and the namespace should be root
           gBaseFound = true;
           l_startNS = "";
@@ -204,6 +217,8 @@ bool addFilesFromDirectory(const std::string &f,
     } else {
       caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(namespaceMap));
     }
+    // We don't repopulate it because it's either in the root of whatever was imported or it's not in this import at all
+    baseDirMap.clear();
   }
   return true;
 }
