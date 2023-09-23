@@ -57,6 +57,11 @@ void PapyrusCompilationNode::awaitWrite() {
   writeJob.await();
 }
 
+PapyrusCompilationNode::NodeType PapyrusCompilationNode::getType() const {
+  // TODO: This probably isn't thread safe
+  return type;
+}
+
 allocators::AtomicChainedPool readAllocator { 1024 * 1024 * 4 };
 void PapyrusCompilationNode::FileReadJob::run() {
   if (parent->type == NodeType::PapyrusCompile || parent->type == NodeType::PasCompile ||
@@ -276,7 +281,7 @@ void PapyrusCompilationNode::FileWriteJob::run() {
 }
 
 namespace {
-
+static std::vector<PapyrusCompilationNode*> nodesToCleanUp {};
 struct PapyrusNamespace final {
   std::string name { "" };
   PapyrusNamespace* parent { nullptr };
@@ -329,16 +334,39 @@ struct PapyrusNamespace final {
         for (auto& obj : map) {
           auto f = objects.find(obj.first);
           if (f != objects.end()) {
-            // we have a duplicate
-            if (_stricmp(f->second->baseName.data(), obj.second->baseName.data()) == 0) {
-              // we have a problem
-              CapricaReportingContext::logicalFatal("Conflicting script name: %s", obj.first.to_string().c_str());
+            // we have a duplicate; we usually ignore this, but if the old object is just an import and the new object
+            // is a compile node, we have to replace it
+            // TODO: This will create issues later when we allow for reloads and such, but for now it's fine, we do this
+            // before we actually get a resolved object to reference
+            switch (f->second->getType()) {
+              case PapyrusCompilationNode::NodeType::PapyrusImport:
+              case PapyrusCompilationNode::NodeType::PasReflection:
+              case PapyrusCompilationNode::NodeType::PexReflection:
+                switch (obj.second->getType()) {
+                  case PapyrusCompilationNode::NodeType::PapyrusCompile:
+                  case PapyrusCompilationNode::NodeType::PasCompile:
+                  case PapyrusCompilationNode::NodeType::PexDissassembly:
+                    nodesToCleanUp.push_back(f->second);
+                    f->second = obj.second;
+                    break;
+                  default:
+                    break;
+                }
+                break;
+              default:
+                break;
             }
           } else {
             // we don't have a duplicate, so we can just add it
             objects.emplace(std::move(obj.first), std::move(obj.second));
           }
         }
+        // TODO: make this thread-safe
+        // TODO: Orvid, calling `delete` on this node causes a crash, so I'm just leaking it for now
+        // for (auto &node : nodesToCleanUp){
+        //   delete node;
+        // }
+        // nodesToCleanUp.clear();
       } else {
         // we don't have any objects, so we can just move the map
         objects = std::move(map);
@@ -461,6 +489,7 @@ static void renameMap(const PapyrusNamespace* child, TempRenameMap& tempRenameMa
 }
 
 void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
+  // TODO: Make sure that this is actually idempotent; we call it again in main()
   if (conf::General::compileInParallel)
     jobManager->startup((uint32_t)std::thread::hardware_concurrency());
 
@@ -476,9 +505,11 @@ void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
     if (child.first[0] != '!')
       continue;
     renameMap(child.second, tempRenameMap);
+    // this has to be done in the same import order; earlier overrides later
+    for (auto& newChildMap : tempRenameMap)
+      pushNamespaceFullContents(newChildMap.first.to_string(), std::move(newChildMap.second));
+    tempRenameMap.clear();
   }
-  for (auto& newChildMap : tempRenameMap)
-    pushNamespaceFullContents(newChildMap.first.to_string(), std::move(newChildMap.second));
 
   // remove the children
   for (auto it = rootNamespace.children.begin(); it != rootNamespace.children.end(); ++it) {

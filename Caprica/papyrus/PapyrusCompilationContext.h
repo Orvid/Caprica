@@ -72,6 +72,8 @@ struct PapyrusCompilationNode final {
   void queueCompile();
   void awaitWrite();
 
+  NodeType getType() const;
+
 private:
   struct BaseJob : public CapricaJob {
     BaseJob(PapyrusCompilationNode* par) : parent(par) { }
