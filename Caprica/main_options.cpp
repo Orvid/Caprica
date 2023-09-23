@@ -148,7 +148,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "async-write",
         po::value<bool>(&conf::Performance::asyncFileWrite)->default_value(true),
         "Allow writing output to disk on background threads.")(
-        "dump-asm",
+        "dump-asm,keep-asm",
         po::bool_switch(&conf::Debug::dumpPexAsm)->default_value(false),
         "Dump the PEX assembly code for the input files.")(
         "enable-ck-optimizations",
@@ -353,6 +353,19 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       auto dirs = vm["import"].as<std::vector<std::string>>();
       conf::Papyrus::importDirectories.reserve(dirs.size());
       for (auto& d : dirs) {
+        // check if string contains `;`
+        if (d.find(';') != std::string::npos) {
+          std::istringstream f(d);
+          std::string sd;
+          while (getline(f, sd, ';')) {
+            if (!filesystem::exists(sd)) {
+              std::cout << "Unable to find the import directory '" << sd << "'!" << std::endl;
+              return false;
+            }
+            conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(sd));
+          }
+          continue;
+        }
         if (!filesystem::exists(d)) {
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
@@ -396,8 +409,18 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       std::cout << "Import failed!" << std::endl;
       return false;
     }
+    auto filesPassed = std::vector<std::string>();
+    for (auto &f : vm["input-file"].as<std::vector<std::string>>()){
+      if (f.find(';') != std::string::npos) {
+        std::istringstream s(f);
+        std::string sd;
+        while (getline(s, sd, ';'))
+          filesPassed.push_back(sd);
+      } else {
+        filesPassed.push_back(f);
+      }
+    }
 
-    auto filesPassed = vm["input-file"].as<std::vector<std::string>>();
     for (auto& f : filesPassed) {
       if (!filesystem::exists(f)) {
         std::cout << "Unable to locate input file '" << f << "'." << std::endl;
