@@ -18,6 +18,7 @@ struct CapricaJob abstract {
   ~CapricaJob() = default;
 
   void await();
+  bool hasRun();
 
 protected:
   virtual void run() = 0;

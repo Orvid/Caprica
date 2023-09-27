@@ -10,7 +10,9 @@ void CapricaJob::await() {
     ranCondition.wait(ranLock, [this] { return hasRan.load(std::memory_order_consume); });
   }
 }
-
+bool CapricaJob::hasRun() {
+  return hasRan.load(std::memory_order_acquire);
+}
 bool CapricaJob::tryRun() {
   if (!hasRan.load(std::memory_order_acquire)) {
     bool r = runningLock.load(std::memory_order_acquire);

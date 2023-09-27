@@ -357,7 +357,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   }
 
   for (auto node : importedNodes) {
-    auto obj = lazy ? node->awaitParse() : node->awaitSemantic();
+    auto obj = lazy ? node->awaitPreSemantic() : node->awaitSemantic();
     for (auto struc : obj->structs)
       if (idEq(struc->name, tp.name))
         return PapyrusType::ResolvedStruct(tp.location, struc);
@@ -372,7 +372,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
     reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.to_string().c_str());
   }
 
-  PapyrusObject* foundObj = lazy ? retNode->awaitParse() : retNode->awaitSemantic();
+  PapyrusObject* foundObj = lazy ? retNode->awaitPreSemantic() : retNode->awaitSemantic();
   if (retStructName.size() == 0)
     return PapyrusType::ResolvedObject(tp.location, foundObj);
 

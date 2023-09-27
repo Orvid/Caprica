@@ -15,7 +15,8 @@
       "description": "Build as a standalone program",
       "dependencies": [
         "boost-filesystem",
-        "boost-program-options"
+        "boost-program-options",
+        "boost-property-tree"
       ]
     }
   },

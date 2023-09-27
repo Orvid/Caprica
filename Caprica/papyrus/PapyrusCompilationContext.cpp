@@ -21,8 +21,19 @@ void PapyrusCompilationNode::awaitRead() {
   readJob.await();
 }
 
-PapyrusObject* PapyrusCompilationNode::awaitParse() {
+std::string PapyrusCompilationNode::awaitPreParse() {
+  preParseJob.await();
+  return objectName;
+}
+
+
+PapyrusScript* PapyrusCompilationNode::awaitParse() {
   parseJob.await();
+  return loadedScript;
+}
+
+PapyrusObject* PapyrusCompilationNode::awaitPreSemantic() {
+  preSemanticJob.await();
   return resolvedObject;
 }
 
@@ -50,6 +61,11 @@ void PapyrusCompilationNode::awaitWrite() {
       return;
   }
   writeJob.await();
+}
+
+PapyrusCompilationNode::NodeType PapyrusCompilationNode::getType() const {
+  // TODO: This probably isn't thread safe
+  return type;
 }
 
 allocators::AtomicChainedPool readAllocator { 1024 * 1024 * 4 };
@@ -104,9 +120,52 @@ void PapyrusCompilationNode::FileReadJob::run() {
   }
 }
 
-void PapyrusCompilationNode::FileParseJob::run() {
+std::string_view findScriptName(const std::string_view& data, const std::string_view& startstring, bool stripWhitespace = false)
+{
+  size_t last = 0;
+  while (last < data.size()) {
+    auto next = data.find('\n', last);
+    if (next == std::string_view::npos)
+      next = data.size() - 1;
+    auto line = data.substr(last, next - last);
+    auto begin = stripWhitespace ? line.find_first_not_of(" \t") : 0;
+    if (strnicmp(line.substr(begin, startstring.size()).data(), startstring.data(), startstring.size()) == 0) {
+      auto first = line.find_first_not_of(" \t", startstring.size());
+      return line.substr(first, line.find_first_of(" \t", first) - first);
+    }
+    last = next + 1;
+  }
+  return {};
+}
+
+void PapyrusCompilationNode::FilePreParseJob::run() {
   parent->readJob.await();
-  bool isPexFile = false;
+  auto ext = FSUtils::extensionAsRef(parent->sourceFilePath);
+  if (pathEq(ext, ".psc")) {
+    parent->objectName = findScriptName(parent->readFileData, "scriptname");
+  } else if (pathEq(ext, ".pex")) {
+    // have to read the whole pexfile in order to get the script name
+    pex::PexReader rdr(parent->sourceFilePath);
+    auto alloc = new allocators::ChainedPool(1024 * 4);
+    parent->pexFile = pex::PexFile::read(alloc, rdr);
+    parent->isPexFile = true;
+    if (parent->pexFile->objects.size() == 0) {
+      CapricaReportingContext::logicalFatal("Unable to find script name in '%s'.", parent->sourceFilePath.c_str());
+    }
+    parent->objectName = parent->pexFile->getStringValue(parent->pexFile->objects.front()->name).to_string();
+  } else if (pathEq(ext, ".pas")) {
+    parent->objectName = findScriptName(parent->readFileData, ".object", true);
+  } else {
+    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.",
+                                          parent->reportedName.c_str());
+  }
+  if (parent->objectName.empty()){
+    CapricaReportingContext::logicalFatal("Unable to find script name in '%s'.", parent->sourceFilePath.c_str());
+  }
+}
+
+void PapyrusCompilationNode::FileParseJob::run() {
+  parent->preParseJob.await();
   auto ext = FSUtils::extensionAsRef(parent->sourceFilePath);
   if (pathEq(ext, ".psc")) {
     auto parser = new parser::PapyrusParser(parent->reportingContext, parent->sourceFilePath, parent->readFileData);
@@ -115,10 +174,6 @@ void PapyrusCompilationNode::FileParseJob::run() {
       parent->reportingContext.exitIfErrors();
     delete parser;
   } else if (pathEq(ext, ".pex")) {
-    pex::PexReader rdr(parent->sourceFilePath);
-    auto alloc = new allocators::ChainedPool(1024 * 4);
-    parent->pexFile = pex::PexFile::read(alloc, rdr);
-    isPexFile = true;
     if (parent->type == NodeType::PexDissassembly)
       return;
   } else if (pathEq(ext, ".pas")) {
@@ -126,7 +181,7 @@ void PapyrusCompilationNode::FileParseJob::run() {
     parent->pexFile = parser->parseFile();
     parent->reportingContext.exitIfErrors();
     delete parser;
-    isPexFile = true;
+    parent->isPexFile = true;
     if (parent->type == NodeType::PasCompile)
       return;
   } else {
@@ -142,22 +197,24 @@ void PapyrusCompilationNode::FileParseJob::run() {
   }
 
   assert(parent->loadedScript != nullptr);
+  if (parent->loadedScript->objects.size() != 1)
+    CapricaReportingContext::logicalFatal("The script had either no objects or more than one!");
+}
 
+void PapyrusCompilationNode::FilePreSemanticJob::run() {
+  parent->parseJob.await();
   for (auto o : parent->loadedScript->objects)
     o->compilationNode = parent;
   parent->resolutionContext = new PapyrusResolutionContext(parent->reportingContext);
   parent->resolutionContext->allocator = parent->loadedScript->allocator;
-  parent->resolutionContext->isPexResolution = isPexFile;
+  parent->resolutionContext->isPexResolution = parent->isPexFile;
   parent->loadedScript->preSemantic(parent->resolutionContext);
   parent->reportingContext.exitIfErrors();
-
-  if (parent->loadedScript->objects.size() != 1)
-    CapricaReportingContext::logicalFatal("The script had either no objects or more than one!");
   parent->resolvedObject = parent->loadedScript->objects.front();
 }
 
 void PapyrusCompilationNode::FileSemanticJob::run() {
-  parent->parseJob.await();
+  parent->preSemanticJob.await();
   parent->loadedScript->semantic(parent->resolutionContext);
   if (parent->type != NodeType::PapyrusImport)
     parent->reportingContext.exitIfErrors();
@@ -270,7 +327,7 @@ void PapyrusCompilationNode::FileWriteJob::run() {
 }
 
 namespace {
-
+static std::vector<PapyrusCompilationNode*> nodesToCleanUp {};
 struct PapyrusNamespace final {
   std::string name { "" };
   PapyrusNamespace* parent { nullptr };
@@ -283,6 +340,27 @@ struct PapyrusNamespace final {
       o.second->awaitRead();
     for (auto c : children)
       c.second->awaitRead();
+  }
+
+  void awaitPreParse() {
+    for (auto o : objects)
+      o.second->awaitPreParse();
+    for (auto c : children)
+      c.second->awaitPreParse();
+  }
+
+  void awaitParse() {
+    for (auto o : objects)
+      o.second->awaitParse();
+    for (auto c : children)
+      c.second->awaitParse();
+  }
+
+  void awaitPreSemantic() {
+    for (auto o : objects)
+      o.second->awaitPreSemantic();
+    for (auto c : children)
+      c.second->awaitPreSemantic();
   }
 
   void queueCompile() {
@@ -309,16 +387,41 @@ struct PapyrusNamespace final {
         for (auto& obj : map) {
           auto f = objects.find(obj.first);
           if (f != objects.end()) {
-            // we have a duplicate
-            if (_stricmp(f->second->baseName.data(), obj.second->baseName.data()) == 0) {
-              // we have a problem
-              CapricaReportingContext::logicalFatal("Conflicting script name: %s", obj.first.to_string().c_str());
+            // we have a duplicate; we usually ignore this, but if the old object is just an import and the new object
+            // is a compile node, we have to replace it
+            // TODO: This will create issues later when we allow for reloads and such, but for now it's fine, we do this
+            // before we actually get a resolved object to reference
+            switch (f->second->getType()) {
+              case PapyrusCompilationNode::NodeType::PapyrusImport:
+              case PapyrusCompilationNode::NodeType::PasReflection:
+              case PapyrusCompilationNode::NodeType::PexReflection:
+                switch (obj.second->getType()) {
+                  case PapyrusCompilationNode::NodeType::PapyrusCompile:
+                  case PapyrusCompilationNode::NodeType::PasCompile:
+                  case PapyrusCompilationNode::NodeType::PexDissassembly:
+                    nodesToCleanUp.push_back(f->second);
+                    f->second = obj.second;
+                    break;
+                  default:
+                    nodesToCleanUp.push_back(obj.second);
+                    break;
+                }
+                break;
+              default:
+                nodesToCleanUp.push_back(obj.second);
+                break;
             }
           } else {
             // we don't have a duplicate, so we can just add it
             objects.emplace(std::move(obj.first), std::move(obj.second));
           }
         }
+        // TODO: make this thread-safe
+        // TODO: Orvid, calling `delete` on this node causes a crash, so I'm just leaking it for now
+        // for (auto &node : nodesToCleanUp){
+        //   delete node;
+        // }
+        // nodesToCleanUp.clear();
       } else {
         // we don't have any objects, so we can just move the map
         objects = std::move(map);
@@ -420,6 +523,60 @@ void PapyrusCompilationContext::doCompile(CapricaJobManager* jobManager) {
   rootNamespace.queueCompile();
   jobManager->setQueueInitialized();
   jobManager->enjoin();
+}
+
+typedef caprica::caseless_unordered_identifier_ref_map<
+    caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>>
+    TempRenameMap;
+
+static void renameMap(const PapyrusNamespace* child, TempRenameMap& tempRenameMap) {
+  for (auto& object : child->objects) {
+    auto objectName = object.second->awaitPreParse();
+    auto pos = objectName.find_last_of(':');
+    auto namespaceName = pos == identifier_ref::npos ? "" : objectName.substr(0, pos);
+    if (tempRenameMap.count(namespaceName) == 0) {
+      tempRenameMap[namespaceName] = caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>();
+      tempRenameMap[namespaceName].reserve(child->objects.size());
+    }
+    tempRenameMap[namespaceName].emplace(std::move(object.first), std::move(object.second));
+  }
+  for (auto& child2 : child->children)
+    renameMap(child2.second, tempRenameMap);
+}
+
+void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
+  // TODO: Make sure that this is actually idempotent; we call it again in main()
+  if (conf::General::compileInParallel)
+    jobManager->startup((uint32_t)std::thread::hardware_concurrency());
+
+  for (auto& child : rootNamespace.children) {
+    // If this is a child beginning with `!`, this is a temporary import namespace
+    if (child.first[0] == '!') {
+      // await parsing
+      child.second->awaitPreParse();
+    }
+  }
+  TempRenameMap tempRenameMap;
+  for (auto& child : rootNamespace.children) {
+    if (child.first[0] != '!')
+      continue;
+    renameMap(child.second, tempRenameMap);
+    // this has to be done in the same import order; earlier overrides later
+    for (auto& newChildMap : tempRenameMap)
+      pushNamespaceFullContents(newChildMap.first.to_string(), std::move(newChildMap.second));
+    tempRenameMap.clear();
+  }
+
+  // remove the children
+  for (auto it = rootNamespace.children.begin(); it != rootNamespace.children.end(); ++it) {
+    if ((*it).first[0] != '!')
+      continue;
+    rootNamespace.children.erase(it);
+    it = rootNamespace.children.begin();
+    if (it == rootNamespace.children.end()){
+      break;
+    }
+  }
 }
 
 bool PapyrusCompilationContext::tryFindType(const identifier_ref& baseNamespace,
