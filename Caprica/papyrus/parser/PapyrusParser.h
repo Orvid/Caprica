@@ -57,7 +57,7 @@ private:
         return;
       reportingContext.fatal(cur.location,
                              "Syntax error! Expected '%s' got '%s'.",
-                             Token::prettyTokenType(tp).c_str(),
+                             Token::prettyTokenType(tp).data(),
                              cur.prettyString().c_str());
     }
   }

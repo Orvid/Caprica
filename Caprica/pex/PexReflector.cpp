@@ -57,7 +57,7 @@ static PapyrusFunction* reflectFunction(CapricaFileLocation loc,
 
 PapyrusScript* PexReflector::reflectScript(PexFile* pex) {
   auto alloc = new allocators::ChainedPool(1024 * 4);
-  CapricaFileLocation loc { 0 };
+  CapricaFileLocation loc {  };
 
   auto script = alloc->make<PapyrusScript>();
   script->allocator = alloc;

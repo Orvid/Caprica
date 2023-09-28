@@ -29,7 +29,7 @@ static pex::PexFunction* makeGetState(CapricaReportingContext& repCtx, pex::PexF
   getState->userFlags = pex::PexUserFlags();
   getState->isGlobal = false;
   getState->isNative = false;
-  CapricaFileLocation loc(0);
+  CapricaFileLocation loc {};
   pex::PexFunctionBuilder bldr { repCtx, loc, file };
   bldr << pex::op::ret { pex::PexValue::Identifier(file->getString("::State")) };
   bldr.populateFunction(getState, fDebInfo);
@@ -55,7 +55,7 @@ static pex::PexFunction* makeGotoState(CapricaReportingContext& repCtx, pex::Pex
   newState->type = file->getString("String");
   gotoState->parameters.push_back(newState);
   auto selfstring = file->getString("self");
-  CapricaFileLocation loc(0);
+  CapricaFileLocation loc {};
   pex::PexFunctionBuilder bldr { repCtx, loc, file };
   bldr << pex::op::callmethod { file->getString("onEndState"),
                                 pex::PexValue::Identifier(selfstring),
