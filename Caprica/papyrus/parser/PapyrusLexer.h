@@ -189,11 +189,11 @@ struct PapyrusLexer {
         case TokenType::Float:
           return "Float(" + std::to_string(val.f) + ")";
         default:
-          return prettyTokenType(type);
+          return std::string(prettyTokenType(type));
       }
     }
 
-    static const std::string prettyTokenType(TokenType tp);
+    static std::string_view prettyTokenType(TokenType tp);
   };
 
   explicit PapyrusLexer(CapricaReportingContext& repCtx, const std::string& file, std::string_view data)

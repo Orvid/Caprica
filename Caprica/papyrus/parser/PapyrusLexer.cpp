@@ -15,7 +15,7 @@
 namespace caprica { namespace papyrus { namespace parser {
 
 #define MAX_INTEGER_DIGITS 10
-static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap {
+static const std::unordered_map<TokenType, std::string_view> prettyTokenTypeNameMap {
   {TokenType::Unknown,           "Unknown"              },
   { TokenType::EOL,              "EOL"                  },
   { TokenType::END,              "EOF"                  },
@@ -122,7 +122,7 @@ static const std::unordered_map<TokenType, const char*> prettyTokenTypeNameMap {
   { TokenType::kTo,              "To"                   },
 };
 
-const std::string PapyrusLexer::Token::prettyTokenType(TokenType tp) {
+std::string_view PapyrusLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
     CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
