@@ -52,22 +52,22 @@ bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation /* location *
 
 size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) {
   if (!lineOffsets.size())
-    CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+    CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.startOffset);
   if (lastLineHint != 0) {
-    if (location.fileOffset >= lineOffsets.at(lastLineHint - 1))
+    if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
       return lastLineHint + 1;
     if (lastLineHint + 1 < lineOffsets.size()) {
-      if (location.fileOffset >= lineOffsets.at(lastLineHint - 1))
+      if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
         return lastLineHint + 1;
     }
   }
-  auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.fileOffset);
+  auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.startOffset);
   if (a == lineOffsets.end()) {
     // TODO: Fix line offsets during parsing for reals, remove this hack
     // maybePushMessage(this, nullptr, "Warning:", 0, formatString("Unable to locate line at offset %zu, using last
-    // known line %zu...", location.fileOffset, lineOffsets.size()), true);
+    // known line %zu...", location.startOffset, lineOffsets.size()), true);
     return lineOffsets.size();
-    // CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.fileOffset);
+    // CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.startOffset);
   }
   return std::distance(lineOffsets.begin(), a);
 }
@@ -76,7 +76,7 @@ std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) {
   std::string ret = filename + " (";
   auto line = getLocationLine(loc);
   ret += std::to_string(line) + ", ";
-  ret += std::to_string(loc.fileOffset - lineOffsets.at(line - 1) + 1) + ")";
+  ret += std::to_string(loc.startOffset - lineOffsets.at(line - 1) + 1) + ")";
   return ret;
 }
 

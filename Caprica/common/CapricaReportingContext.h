@@ -30,7 +30,7 @@ struct CapricaReportingContext final {
   ~CapricaReportingContext() = default;
 
   size_t getLocationLine(CapricaFileLocation location, size_t lastLineHint = 0);
-  void pushNextLineOffset(CapricaFileLocation location) { lineOffsets.push_back(location.fileOffset); }
+  void pushNextLineOffset(CapricaFileLocation location) { lineOffsets.push_back(location.startOffset); }
 
   NEVER_INLINE
   static void breakIfDebugging();

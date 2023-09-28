@@ -81,7 +81,7 @@ private:
   CapricaFileLocation location {};
 
   int getChar() {
-    location.fileOffset++;
+    location.startOffset++;
     return strm.get();
   }
   int peekChar() { return strm.peek(); }

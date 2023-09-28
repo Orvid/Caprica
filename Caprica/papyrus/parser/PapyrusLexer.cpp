@@ -133,8 +133,8 @@ ALWAYS_INLINE
 void PapyrusLexer::setTok(TokenType tp, CapricaFileLocation loc, int consumeChars) {
   cur.type = tp;
   cur.location = loc;
-  for (int i = 0; i < consumeChars; i++)
-    getChar();
+  cur.location.endOffset = location.startOffset + consumeChars;
+  advanceChars(consumeChars);
 }
 
 TokenType PapyrusLexer::peekTokenType(int distance) {

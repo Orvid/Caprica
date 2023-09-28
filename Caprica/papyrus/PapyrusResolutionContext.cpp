@@ -462,7 +462,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
       for (auto n : stack->locals) {
         if (idEq(n->name, ident.res.name)) {
           if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration &&
-              ident.location.fileOffset < n->declareStatement->location.fileOffset) {
+              ident.location.startOffset < n->declareStatement->location.startOffset) {
             reportingContext.warning_W7003_Skyrim_Local_Use_Before_Declaration(ident.location,
                                                                                ident.res.name.to_string().c_str());
           }

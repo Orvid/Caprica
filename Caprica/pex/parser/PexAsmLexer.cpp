@@ -82,6 +82,7 @@ const std::string PexAsmLexer::Token::prettyTokenType(TokenType tp) {
 
 void PexAsmLexer::setTok(TokenType tp, CapricaFileLocation loc) {
   cur = Token(tp, loc);
+  cur.location.endOffset = location.startOffset;
 }
 
 void PexAsmLexer::setTok(Token& tok) {

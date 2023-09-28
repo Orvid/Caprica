@@ -243,7 +243,7 @@ private:
   int getChar() {
     if (strmI >= strmLen)
       return -1;
-    location.fileOffset++;
+    location.startOffset++;
     strmI++;
     auto c = *strm;
     strm++;
@@ -252,7 +252,7 @@ private:
 
   ALWAYS_INLINE
   void advanceChars(int distance) {
-    location.fileOffset += distance;
+    location.startOffset += distance;
     strmI += distance;
     strm += distance;
   }

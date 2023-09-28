@@ -36,6 +36,7 @@ const std::string CapricaUserFlagsLexer::Token::prettyTokenType(TokenType tp) {
 
 void CapricaUserFlagsLexer::setTok(TokenType tp, CapricaFileLocation loc) {
   cur = Token(tp, loc);
+  cur.location.endOffset = location.startOffset;
 }
 
 void CapricaUserFlagsLexer::setTok(Token& tok) {
