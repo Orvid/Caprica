@@ -525,7 +525,7 @@ void PapyrusCompilationContext::doCompile(CapricaJobManager* jobManager) {
   jobManager->enjoin();
 }
 
-typedef caprica::caseless_unordered_identifier_ref_map<
+typedef caprica::caseless_unordered_identifier_map<
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>>
     TempRenameMap;
 
@@ -535,7 +535,7 @@ static void renameMap(const PapyrusNamespace* child, TempRenameMap& tempRenameMa
     auto pos = objectName.find_last_of(':');
     auto namespaceName = pos == identifier_ref::npos ? "" : objectName.substr(0, pos);
     if (tempRenameMap.count(namespaceName) == 0) {
-      tempRenameMap[namespaceName] = caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>();
+      tempRenameMap[namespaceName] = caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>();
       tempRenameMap[namespaceName].reserve(child->objects.size());
     }
     tempRenameMap[namespaceName].emplace(std::move(object.first), std::move(object.second));
@@ -562,7 +562,7 @@ void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
     renameMap(child.second, tempRenameMap);
     // this has to be done in the same import order; earlier overrides later
     for (auto& newChildMap : tempRenameMap)
-      pushNamespaceFullContents(newChildMap.first.to_string(), std::move(newChildMap.second));
+      pushNamespaceFullContents(newChildMap.first, std::move(newChildMap.second));
     tempRenameMap.clear();
   }
 
