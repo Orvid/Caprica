@@ -194,26 +194,28 @@ bool addFilesFromDirectory(const std::string &f,
     FindClose(hFind);
 
     if (conf::Papyrus::game > GameID::Skyrim) {
-      // check that all the values in the base script dir map are true
-      if (!gBaseFound && !baseDirMap.empty()) {
-        bool allTrue = true;
-        for (auto &pair: baseDirMap) {
-          if (!pair.second) {
-            allTrue = false;
-            break;
+      if (!namespaceMap.empty()) {
+        // check that all the values in the base script dir map are true
+        if (!gBaseFound && !baseDirMap.empty()) {
+          bool allTrue = true;
+          for (auto& pair : baseDirMap) {
+            if (!pair.second) {
+              allTrue = false;
+              break;
+            }
+          }
+          if (allTrue && namespaceMap.size() >= getBaseLowerFileCountLimit(conf::Papyrus::game)) {
+            // if it's true, then this is the base dir and the namespace should be root
+            gBaseFound = true;
+            l_startNS = "";
           }
         }
-        if (allTrue && namespaceMap.size() >= getBaseLowerFileCountLimit(conf::Papyrus::game)) {
-          // if it's true, then this is the base dir and the namespace should be root
-          gBaseFound = true;
-          l_startNS = "";
-        }
+        // if it's true, then this is the base dir and the namespace should be root
+        auto namespaceName = l_startNS + curDir;
+        std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
+        namespaceName = namespaceName.substr(1);
+        caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
       }
-      // if it's true, then this is the base dir and the namespace should be root
-      auto namespaceName = l_startNS + curDir;
-      std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-      namespaceName = namespaceName.substr(1);
-      caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
     } else {
       caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(namespaceMap));
     }
