@@ -1,5 +1,5 @@
 #include "FakeScripts.h"
-#include "common/GameID.h"
+#include <common/GameID.h>
 
 namespace caprica {
 constexpr const char* FAKE_SKYRIM_SCRIPTOBJECT_SCRIPT =
@@ -66,6 +66,57 @@ Function DropWall(ObjectReference WallEffect)
 EndFunction
 )";
 
+constexpr const char* STARFIELD_FAKE_FLAGS_FILE =
+R"(// Starfield flags file, by NikitaLita
+// This file is conjecture, based on the userflags set by the base starfield game scripts.
+
+// Flag hides the script or property from the game editor
+        Flag Hidden 0
+        {
+          Script
+                  Property
+          StructVar
+        }
+
+// Flag on an object designates it as the script the condition system will look at
+// Flag on a variable allows the script variable to be examined by the condition system
+        Flag Conditional 1
+        {
+          Script
+                  Variable
+        }
+
+// Flags the specified script as a default script, for filtering in the editor
+        Flag Default 2
+        {
+          Script
+        }
+
+// Flags this group as collapsed on the reference in the editor
+        Flag CollapsedOnRef 3
+        {
+          Group
+        }
+
+// Flags this group as collapsed on the base object in the editor
+        Flag CollapsedOnBase 4
+        {
+          Group
+        }
+
+// Flags this group as collapsed (on both ref and base) in the editor
+        Flag Collapsed CollapsedOnRef & CollapsedOnBase
+
+// Flags a property as mandatory - in other words, will spit out a warning in
+// the editor if it isn't given a value
+        Flag Mandatory 5
+        {
+          Property
+        }
+)";
+
+
+
 static const caseless_unordered_identifier_ref_map<identifier_ref> FAKE_SCRIPTS = {
   {"fake://skyrim/__ScriptObject.psc",        FAKE_SKYRIM_SCRIPTOBJECT_SCRIPT    },
   { "fake://skyrim/DLC1SCWispWallScript.psc", MISSING_DLC1SCWispWallScript_SKYRIM},
@@ -87,5 +138,12 @@ size_t FakeScripts::getSizeOfFakeScript(const identifier_ref& name, GameID game)
     return 0;
   return it->second.size();
 }
+
+identifier_ref FakeScripts::getFakeFlagsFile(GameID game) {
+  if (game != GameID::Starfield)
+    return {};
+  return STARFIELD_FAKE_FLAGS_FILE;
+}
+
 
 }

@@ -62,10 +62,7 @@ struct CapricaUserFlagsLexer {
     static const std::string prettyTokenType(TokenType tp);
   };
 
-  explicit CapricaUserFlagsLexer(CapricaReportingContext& repCtx, const std::string& file)
-      : filename(file), strm(file, std::ifstream::binary), cur(TokenType::Unknown), reportingContext(repCtx) {
-    consume(); // set the first token.
-  }
+  explicit CapricaUserFlagsLexer(CapricaReportingContext& repCtx, const std::string& file);
   CapricaUserFlagsLexer(const CapricaUserFlagsLexer&) = delete;
   ~CapricaUserFlagsLexer() = default;
 
@@ -77,14 +74,16 @@ protected:
   void consume();
 
 private:
-  std::ifstream strm;
+  std::istream * strm;
+  std::istringstream strmString;
+  std::ifstream strmFile;
   CapricaFileLocation location {};
 
   int getChar() {
     location.startOffset++;
-    return strm.get();
+    return strm->get();
   }
-  int peekChar() { return strm.peek(); }
+  int peekChar() { return strm->peek(); }
   void setTok(TokenType tp, CapricaFileLocation loc);
   void setTok(Token& tok);
 };

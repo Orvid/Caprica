@@ -537,7 +537,13 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
 
       parseUserFlags(std::move(flagsPath));
+    } else {
+      if (conf::Papyrus::game == GameID::Starfield){
+        std::cout << "No flags specified, Using default Starfield flags file." << std::endl;
+        parseUserFlags("fake://Starfield/Starfield_Papyrus_Flags.flg");
+      }
     }
+
 
     if (!handleImports(conf::Papyrus::importDirectories, jobManager)) {
       std::cout << "Import failed!" << std::endl;
