@@ -122,7 +122,7 @@ void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
       }
 
       if (curNode == nullptr)
-        ctx->reportingContext.warning_W1000_Strict_Not_All_Control_Paths_Return(location, name.to_string().c_str());
+        ctx->reportingContext.warning_W1000_Strict_Not_All_Control_Paths_Return(location, name);
     }
 
     if (conf::Debug::debugControlFlowGraph) {

@@ -58,8 +58,8 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
 
   if (innerExpression->resultType() == targetType) {
     ctx->reportingContext.warning_W4001_Unecessary_Cast(location,
-                                                        innerExpression->resultType().prettyString().c_str(),
-                                                        targetType.prettyString().c_str());
+                                                        innerExpression->resultType().prettyString(),
+                                                        targetType.prettyString());
   }
 
   if (!ctx->canExplicitlyCast(innerExpression->location, innerExpression->resultType(), targetType)) {

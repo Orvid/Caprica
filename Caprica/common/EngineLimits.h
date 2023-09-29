@@ -43,7 +43,7 @@ struct EngineLimits final {
         if (exceedsLimit(value, conf::EngineLimits::maxParametersPerFunction)) {
           repCtx.warning_W2003_EngineLimits_PexFunction_ParameterCount(location,
                                                                        value,
-                                                                       referenceName.to_string().c_str(),
+                                                                       referenceName,
                                                                        conf::EngineLimits::maxParametersPerFunction);
         }
         break;
@@ -95,7 +95,7 @@ struct EngineLimits final {
         if (exceedsLimit(value, conf::EngineLimits::maxFunctionsPerState)) {
           repCtx.warning_W2010_EngineLimits_PexState_FunctionCount(location,
                                                                    value,
-                                                                   referenceName.to_string().c_str(),
+                                                                   referenceName,
                                                                    conf::EngineLimits::maxFunctionsPerState);
         }
         break;

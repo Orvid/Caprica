@@ -517,7 +517,7 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       if (le && le->value.type == PapyrusValueType::String) {
         auto targetStateName = le->value.val.s;
         if (!ctx->tryResolveState(targetStateName))
-          ctx->reportingContext.warning_W4003_State_Doesnt_Exist(le->location, targetStateName.to_string().c_str());
+          ctx->reportingContext.warning_W4003_State_Doesnt_Exist(le->location, targetStateName);
       }
     }
   }

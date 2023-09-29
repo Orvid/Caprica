@@ -85,8 +85,8 @@ bool PapyrusResolutionContext::canExplicitlyCast(CapricaFileLocation loc,
         if (isObjectSomeParentOf(src.getElementType().resolved.obj, dest.getElementType().resolved.obj)) {
           reportingContext.warning_W6004_Experimental_Downcast_Arrays(
               loc,
-              (src.getElementType().resolved.obj->name.to_string() + "[]").c_str(),
-              (dest.getElementType().resolved.obj->name.to_string() + "[]").c_str());
+              src.getElementType().prettyString(),
+              dest.getElementType().prettyString());
           return true;
         }
         return false;
@@ -462,7 +462,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
           if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration &&
               ident.location.startOffset < n->declareStatement->location.startOffset) {
             reportingContext.warning_W7003_Skyrim_Local_Use_Before_Declaration(ident.location,
-                                                                               ident.res.name.to_string().c_str());
+                                                                               ident.res.name);
           }
           resolvedIds.push_back(PapyrusIdentifier::DeclStatement(ident.location, n->declareStatement));
         }
@@ -511,8 +511,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
         if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowLocalVariableShadowingParentProperty) {
           reportingContext.warning_W7002_Skyrim_Local_Variable_Shadows_Parent_Property(
               rIdent.location,
-              ident.res.name.to_string().c_str(),
-              getMemberParent(parentIdent)->name.to_string().c_str());
+              ident.res.name,
+              getMemberParent(parentIdent)->name);
           continue;
         }
         reportingContext.error(rIdent.location,
@@ -525,8 +525,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
         // in all PCompilers you're allowed to shadow a parent property with a parameter
         reportingContext.warning_W1005_Function_Parameter_Shadows_Parent_Property(
             rIdent.location,
-            ident.res.name.to_string().c_str(),
-            getMemberParent(parentIdent)->name.to_string().c_str());
+            ident.res.name,
+            getMemberParent(parentIdent)->name);
       } else {
         if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty) {
           // Warning here already was emitted caught by the object's inheritence checker.
@@ -559,7 +559,7 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
           // TODO: Verify Starfield allows this
           // in all PCompilers you're allowed to shadow a script property with a parameter
           reportingContext.warning_W1004_Function_Parameter_Shadows_Property(shadow_ident.location,
-                                                                             ident.res.name.to_string().c_str());
+                                                                             ident.res.name);
         } else {
           reportingContext.error(shadow_ident.location,
                                  "{} '{}' already defined as {} in script",

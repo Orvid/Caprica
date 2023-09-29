@@ -57,7 +57,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement {
               rVal = bldr.getNoneLocal(fc->location);
               bldr.reportingContext.warning_W7004_Skyrim_Assignment_Of_Void_Call_Result(
                   fc->location,
-                  fc->function.res.name.to_string().c_str());
+                  fc->function.res.name);
             }
             break;
           }

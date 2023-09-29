@@ -280,7 +280,7 @@ struct CapricaReportingContext final {
                     eventName,
                     identifier_ref,
                     sourceType,
-                    std::string_view,
+                    identifier_ref,
                     parentType);
   DEFINE_WARNING_A3(7001,
                     Skyrim_Child_Variable_Shadows_Parent_Property,
@@ -289,14 +289,14 @@ struct CapricaReportingContext final {
                     varName,
                     identifier_ref,
                     sourceType,
-                    std::string_view,
+                    identifier_ref,
                     parentType);
   DEFINE_WARNING_A2(7002,
                     Skyrim_Local_Variable_Shadows_Parent_Property,
                     "Local variable '{}' shadows parent class '{}' property, using parent property",
                     identifier_ref,
                     varName,
-                    std::string_view,
+                    identifier_ref,
                     parentType)
   DEFINE_WARNING_A1(7003,
                     Skyrim_Local_Use_Before_Declaration,

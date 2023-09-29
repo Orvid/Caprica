@@ -132,15 +132,15 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
     if (!v->referenceState.isRead) {
       if (!v->referenceState.isInitialized) {
         if (v->referenceState.isWritten)
-          ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name.to_string().c_str());
+          ctx->reportingContext.warning_W4006_Script_Variable_Only_Written(v->location, v->name);
         else
-          ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name.to_string().c_str());
+          ctx->reportingContext.warning_W4004_Unreferenced_Script_Variable(v->location, v->name);
       } else {
         ctx->reportingContext.warning_W4007_Script_Variable_Initialized_Never_Used(v->location,
-                                                                                   v->name.to_string().c_str());
+                                                                                   v->name);
       }
     } else if (!v->referenceState.isInitialized && !v->referenceState.isWritten) {
-      ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name.to_string().c_str());
+      ctx->reportingContext.warning_W4005_Unwritten_Script_Variable(v->location, v->name);
     }
   }
   ctx->clearImports();

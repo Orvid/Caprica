@@ -161,7 +161,7 @@ TokenType PapyrusLexer::peekTokenType(int distance) {
 }
 
 static const caseless_unordered_identifier_ref_map<TokenType> keywordMap {
-  {"as",               TokenType::kAs             },
+  { "as",              TokenType::kAs             },
   { "auto",            TokenType::kAuto           },
   { "autoreadonly",    TokenType::kAutoReadOnly   },
   { "bool",            TokenType::kBool           },

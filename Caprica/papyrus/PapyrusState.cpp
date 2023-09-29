@@ -56,9 +56,9 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
         if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass) {
           ctx->reportingContext.warning_W7000_Skyrim_Unknown_Event_On_Non_Native_Class(
               f.second->location,
-              f.second->name.to_string().c_str(),
-              ctx->object->name.to_string().c_str(),
-              parentClass->name.to_string().c_str());
+              f.second->name,
+              ctx->object->name,
+              parentClass->name);
         } else {
           ctx->reportingContext.error(f.second->location, "Non-native scripts cannot define new events.");
         }
