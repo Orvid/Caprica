@@ -164,7 +164,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
                                                   "Enable strict checking of control flow, poisoning, and more sane "
                                                   "implicit conversions. It is strongly recommended to enable these.")(
         "ignorecwd",
-        po::bool_switch()->default_value(false),
+        po::bool_switch()->default_value(false)->implicit_value(true),
         "Do not add the current working directory to the beginning of the import list.");
 
     po::options_description champollionCompatDesc("Champollion Compatibility");

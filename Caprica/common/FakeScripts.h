@@ -4,7 +4,6 @@
 
 
 namespace caprica {
-struct CapricaUserFlagsDefinition;
 struct FakeScripts {
   static identifier_ref getFakeScript(const identifier_ref& name, GameID game);
   static size_t getSizeOfFakeScript(const identifier_ref& name, GameID game);
