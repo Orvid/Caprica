@@ -46,6 +46,8 @@ private:
 };
 
 struct CaselessStringEqual final {
+  using is_transparent = int;
+
   bool operator()(const char* lhs, const char* rhs) const = delete;
   bool operator()(const std::string& lhs, const std::string& rhs) const { return caselessEq(lhs, rhs); }
 };
@@ -65,6 +67,8 @@ struct CaselessPathEqual final {
 };
 
 struct CaselessIdentifierHasher final {
+  using is_transparent = int;
+
   template <bool isNullTerminated>
   static uint32_t hash(const char* s, size_t len);
 
@@ -83,6 +87,8 @@ extern template uint32_t CaselessIdentifierHasher::hash<true>(const char*, size_
 extern template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size_t);
 
 struct CaselessIdentifierEqual final {
+  using is_transparent = int;
+
   template <bool isNullTerminated>
   static bool equal(const char* a, const char* b, size_t len);
 
