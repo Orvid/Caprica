@@ -34,17 +34,17 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
       if (!baseFunc) {
         ctx->reportingContext.error(
             f.second->location,
-            "Function '%s' cannot be defined in state '%s' without also being defined in the empty state!",
-            f.second->name.to_string().c_str(),
-            name.to_string().c_str());
+            "Function '{}' cannot be defined in state '{}' without also being defined in the empty state!",
+            f.second->name,
+            name);
       } else if (!baseFunc->hasSameSignature(f.second)) {
         ctx->reportingContext.error(f.second->location,
-                                    "The signature of the '%s' function (%s) in the '%s' state doesn't match the "
-                                    "signature in the root state. The expected signature is '%s'.",
-                                    f.second->name.to_string().c_str(),
-                                    f.second->prettySignature().c_str(),
-                                    name.to_string().c_str(),
-                                    baseFunc->prettySignature().c_str());
+                                    "The signature of the '{}' function ({}) in the '{}' state doesn't match the "
+                                    "signature in the root state. The expected signature is '{}'.",
+                                    f.second->name,
+                                    f.second->prettySignature(),
+                                    name,
+                                    baseFunc->prettySignature());
       }
     }
   }
@@ -65,12 +65,12 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
       }
       if (baseFunc && !baseFunc->hasSameSignature(f.second)) {
         ctx->reportingContext.error(f.second->location,
-                                    "The signature of the '%s' function (%s) doesn't match the signature in the parent "
-                                    "class '%s'. The expected signature is '%s'.",
-                                    f.second->name.to_string().c_str(),
-                                    f.second->prettySignature().c_str(),
-                                    baseFunc->parentObject->name.to_string().c_str(),
-                                    baseFunc->prettySignature().c_str());
+                                    "The signature of the '{}' function ({}) doesn't match the signature in the parent "
+                                    "class '{}'. The expected signature is '{}'.",
+                                    f.second->name,
+                                    f.second->prettySignature(),
+                                    baseFunc->parentObject->name,
+                                    baseFunc->prettySignature());
       }
     }
   }

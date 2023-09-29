@@ -28,9 +28,9 @@ private:
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
       reportingContext.fatal(cur.location,
-                             "Expected '%s' got '%s'!",
-                             Token::prettyTokenType(tp).c_str(),
-                             cur.prettyString().c_str());
+                             "Expected '{}' got '{}'!",
+                             Token::prettyTokenType(tp),
+                             cur.prettyString());
     }
   }
 
@@ -116,7 +116,7 @@ private:
     expect(TokenType::Integer);
     auto val = cur.iValue;
     if (val >= std::numeric_limits<int32_t>::max() || val <= std::numeric_limits<int32_t>::min())
-      reportingContext.fatal(cur.location, "Integer value '%ll' outside of the range of 32-bits!", val);
+      reportingContext.fatal(cur.location, "Integer value '{}' outside of the range of 32-bits!", val);
     consume();
     return (int32_t)val;
   }

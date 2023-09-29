@@ -115,7 +115,7 @@ private:
 
   void
   checkForInheritedIdentifierConflicts(CapricaReportingContext& repCtx,
-                                       caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap,
+                                       caseless_unordered_identifier_ref_map<std::pair<bool, identifier_ref>>& identMap,
                                        bool checkInheritedOnly) const;
 };
 

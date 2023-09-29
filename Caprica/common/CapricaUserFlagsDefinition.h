@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -42,7 +43,7 @@ struct CapricaUserFlagsDefinition final {
   };
 
   void registerUserFlag(CapricaReportingContext& repCtx, const UserFlag& flag);
-  const UserFlag& findFlag(CapricaReportingContext& repCtx, CapricaFileLocation loc, const std::string& name) const;
+  const UserFlag& findFlag(CapricaReportingContext& repCtx, CapricaFileLocation loc, identifier_ref name) const;
   // Not that flag num is NOT the flag's bit index, it is instead
   // the flag's index in the user flags vector.
   const UserFlag& getFlag(size_t flagNum) const;

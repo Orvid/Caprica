@@ -19,11 +19,16 @@ bool CapricaUserFlagsDefinition::UserFlag::isValidOn(ValidLocations loc) const {
 }
 
 void CapricaUserFlagsDefinition::registerUserFlag(CapricaReportingContext& repCtx, const UserFlag& flag) {
-  if (flagNameMap.count(flag.name))
-    repCtx.fatal(flag.location, "A flag by the name of '%s' was already defined!", flag.name.c_str());
-  for (auto& f : userFlags)
-    if (f.bitIndex == flag.bitIndex && !f.flagData && !flag.flagData)
-      repCtx.fatal(flag.location, "Another flag is already defined with bit index %i!", (int)flag.bitIndex);
+  if (flagNameMap.count(flag.name)) {
+    repCtx.error(flag.location, "A flag by the name of '{}' was already defined!", flag.name);
+    return;
+  }
+  for (auto& f : userFlags) {
+    if (f.bitIndex == flag.bitIndex && !f.flagData && !flag.flagData) {
+      repCtx.error(flag.location, "Another flag is already defined with bit index {}!", (int)flag.bitIndex);
+      return;
+    }
+  }
   userFlags.push_back(flag);
   userFlags.back().flagNum = userFlags.size() - 1;
   flagNameMap.insert({ flag.name, userFlags.size() - 1 });
@@ -31,10 +36,14 @@ void CapricaUserFlagsDefinition::registerUserFlag(CapricaReportingContext& repCt
 
 const CapricaUserFlagsDefinition::UserFlag& CapricaUserFlagsDefinition::findFlag(CapricaReportingContext& repCtx,
                                                                                  CapricaFileLocation loc,
-                                                                                 const std::string& name) const {
+                                                                                 identifier_ref name) const {
   auto a = flagNameMap.find(name);
-  if (a == flagNameMap.end())
-    repCtx.fatal(loc, "Unknown flag '%s'!", name.c_str());
+  if (a == flagNameMap.end()) {
+    repCtx.error(loc, "Unknown flag '{}'!", name);
+    if (!flagNameMap.empty())
+      return userFlags.front();
+    repCtx.fatal(loc, "No user flags have been defined.");
+  }
   return userFlags[a->second];
 }
 

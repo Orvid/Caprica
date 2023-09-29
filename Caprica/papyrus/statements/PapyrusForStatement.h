@@ -152,8 +152,8 @@ struct PapyrusForStatement final : public PapyrusStatement {
         initialValue->resultType().type != PapyrusType::Kind::Float) {
       ctx->reportingContext.error(
           initialValue->location,
-          "For statements only support Int and Float counter values, got an initial value of type '%s'!",
-          initialValue->resultType().prettyString().c_str());
+          "For statements only support Int and Float counter values, got an initial value of type '{}'!",
+          initialValue->resultType());
     }
     targetValue->semantic(ctx);
     ctx->checkForPoison(targetValue);
@@ -161,15 +161,15 @@ struct PapyrusForStatement final : public PapyrusStatement {
         targetValue->resultType().type != PapyrusType::Kind::Float) {
       ctx->reportingContext.error(
           initialValue->location,
-          "For statements only support Int and Float counter values, got a target value of type '%s'!",
-          targetValue->resultType().prettyString().c_str());
+          "For statements only support Int and Float counter values, got a target value of type '{}'!",
+          targetValue->resultType());
     }
     // TODO: Allow some implicit coercion and add checks about the declare/iterator/step expressions' types as well.
     if (targetValue->resultType() != initialValue->resultType()) {
       ctx->reportingContext.error(initialValue->location,
-                                  "The intial value, of type '%s', does not match the target value type '%s'!",
-                                  initialValue->resultType().prettyString().c_str(),
-                                  targetValue->resultType().prettyString().c_str());
+                                  "The initial value, of type '{}', does not match the target value type '{}'!",
+                                  initialValue->resultType(),
+                                  targetValue->resultType());
     }
     if (stepValue) {
       stepValue->semantic(ctx);
@@ -178,8 +178,8 @@ struct PapyrusForStatement final : public PapyrusStatement {
           stepValue->resultType().type != PapyrusType::Kind::Float) {
         ctx->reportingContext.error(
             initialValue->location,
-            "For statements only support Int and Float counter values, got a step value of type '%s'!",
-            stepValue->resultType().prettyString().c_str());
+            "For statements only support Int and Float counter values, got a step value of type '{}'!",
+            stepValue->resultType());
       }
     }
 
@@ -195,8 +195,8 @@ struct PapyrusForStatement final : public PapyrusStatement {
           declareStatement->type.type != PapyrusType::Kind::Float) {
         ctx->reportingContext.error(
             initialValue->location,
-            "For statements only support Int and Float counter values, got a counter of type '%s'!",
-            declareStatement->type.prettyString().c_str());
+            "For statements only support Int and Float counter values, got a counter of type '{}'!",
+            declareStatement->type);
       }
     } else {
       *iteratorVariable = ctx->resolveIdentifier(*iteratorVariable);
@@ -206,8 +206,8 @@ struct PapyrusForStatement final : public PapyrusStatement {
           iteratorVariable->resultType().type != PapyrusType::Kind::Float) {
         ctx->reportingContext.error(
             initialValue->location,
-            "For statements only support Int and Float counter values, got a counter of type '%s'!",
-            iteratorVariable->resultType().prettyString().c_str());
+            "For statements only support Int and Float counter values, got a counter of type '{}'!",
+            iteratorVariable->resultType());
       }
     }
     if (conf::Papyrus::game == GameID::Skyrim)

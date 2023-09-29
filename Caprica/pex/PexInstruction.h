@@ -163,8 +163,8 @@ struct PexInstruction final {
   static PexInstruction* read(allocators::ChainedPool* alloc, PexReader& rdr, GameID gameType);
   void write(PexWriter& wtr) const;
 
-  static PexOpCode tryParseOpCode(const std::string& str);
-  static std::string opCodeToPexAsm(PexOpCode op);
+  static PexOpCode tryParseOpCode(std::string_view str);
+  static std::string_view opCodeToPexAsm(PexOpCode op);
 
 private:
   friend IntrusiveLinkedList<PexInstruction>;

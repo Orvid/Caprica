@@ -92,8 +92,8 @@ struct PapyrusSwitchStatement final : public PapyrusStatement {
         condition->resultType().type != PapyrusType::Kind::String) {
       ctx->reportingContext.error(
           condition->location,
-          "The condition of a switch statement can only be either an Int or a String, got '%s'!",
-          condition->resultType().prettyString().c_str());
+          "The condition of a switch statement can only be either an Int or a String, got '{}'!",
+          condition->resultType());
     }
 
     ctx->pushBreakScope();
@@ -101,9 +101,9 @@ struct PapyrusSwitchStatement final : public PapyrusStatement {
       if (i->condition.getPapyrusType() != condition->resultType()) {
         ctx->reportingContext.error(i->condition.location,
                                     "The condition of a case statement must match the type of the expression being "
-                                    "switched on! Expected '%s', got '%s'!",
-                                    condition->resultType().prettyString().c_str(),
-                                    i->condition.getPapyrusType().prettyString().c_str());
+                                    "switched on! Expected '{}', got '{}'!",
+                                    condition->resultType(),
+                                    i->condition.getPapyrusType());
       }
       ctx->pushLocalVariableScope();
       if (conf::Papyrus::game == GameID::Skyrim)

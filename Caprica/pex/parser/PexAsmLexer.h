@@ -109,11 +109,11 @@ struct PexAsmLexer {
           return str.str();
         }
         default:
-          return prettyTokenType(type);
+          return std::string(prettyTokenType(type));
       }
     }
 
-    static const std::string prettyTokenType(TokenType tp);
+    static std::string_view prettyTokenType(TokenType tp);
   };
 
   explicit PexAsmLexer(CapricaReportingContext& repCtx, const std::string& file)

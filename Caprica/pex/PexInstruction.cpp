@@ -1,6 +1,7 @@
 #include <pex/PexInstruction.h>
 
 #include <limits>
+#include <string_view>
 #include <unordered_map>
 
 #include <common/CaselessStringComparer.h>
@@ -99,32 +100,32 @@ PexInstruction* PexInstruction::read(allocators::ChainedPool* alloc, PexReader& 
   inst->opCode = (PexOpCode)rdr.read<uint8_t>();
 
   if (inst->opCode >= PexOpCode::OPCODECOUNT)
-    CapricaReportingContext::logicalFatal("Unknown PexOpCode: %u", (unsigned)inst->opCode);
+    CapricaReportingContext::logicalFatal("Unknown PexOpCode: {}", (unsigned)inst->opCode);
   switch (gameType) {
     case GameID::Skyrim: {
       if (inst->opCode > PexOpCode::SkyrimOpcodeMax) {
-        CapricaReportingContext::logicalFatal("Invalid opcode for Skyrim: %s",
-                                              PexInstruction::opCodeToPexAsm(inst->opCode).c_str());
+        CapricaReportingContext::logicalFatal("Invalid opcode for Skyrim: {}",
+                                              PexInstruction::opCodeToPexAsm(inst->opCode));
       }
       break;
     }
     case GameID::Fallout4: {
       if (inst->opCode > PexOpCode::Fallout4OpcodeMax) {
-        CapricaReportingContext::logicalFatal("Invalid opcode for Fallout4: %s",
-                                              PexInstruction::opCodeToPexAsm(inst->opCode).c_str());
+        CapricaReportingContext::logicalFatal("Invalid opcode for Fallout4: {}",
+                                              PexInstruction::opCodeToPexAsm(inst->opCode));
       }
       break;
     }
     case GameID::Fallout76: {
       if (inst->opCode > PexOpCode::Fallout76OpcodeMax) {
-        CapricaReportingContext::logicalFatal("Invalid opcode for Fallout76: %s",
-                                              PexInstruction::opCodeToPexAsm(inst->opCode).c_str());
+        CapricaReportingContext::logicalFatal("Invalid opcode for Fallout76: {}",
+                                              PexInstruction::opCodeToPexAsm(inst->opCode));
       }
       break;
     }
     case GameID::Starfield: {
       if (inst->opCode > PexOpCode::StarfieldOpcodeMax)
-        CapricaReportingContext::logicalFatal("Unknown PexOpCode: %u", (unsigned)inst->opCode);
+        CapricaReportingContext::logicalFatal("Unknown PexOpCode: {}", (unsigned)inst->opCode);
       break;
     }
   }
@@ -255,15 +256,15 @@ static const caseless_unordered_identifier_map<PexOpCode> opCodeNameMap {
   { "trylockguards",              PexOpCode::TryLockGuards             },
 };
 
-PexOpCode PexInstruction::tryParseOpCode(const std::string& str) {
-  auto f = opCodeNameMap.find(str.c_str());
+PexOpCode PexInstruction::tryParseOpCode(std::string_view str) {
+  auto f = opCodeNameMap.find(str);
   if (f != opCodeNameMap.end())
     return f->second;
   else
     return PexOpCode::Invalid;
 }
 
-static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap {
+static const std::unordered_map<PexOpCode, std::string_view> opCodeToPexAsmNameMap {
   {PexOpCode::Invalid,                     "INVALID"                   },
   { PexOpCode::Nop,                        "NOOP"                      },
   { PexOpCode::IAdd,                       "IADD"                      },
@@ -318,12 +319,12 @@ static const std::unordered_map<PexOpCode, std::string> opCodeToPexAsmNameMap {
   { PexOpCode::TryLockGuards,              "TRYLOCKGUARDS"             },
 };
 
-std::string PexInstruction::opCodeToPexAsm(PexOpCode op) {
+std::string_view PexInstruction::opCodeToPexAsm(PexOpCode op) {
   auto f = opCodeToPexAsmNameMap.find(op);
   if (f != opCodeToPexAsmNameMap.end())
     return f->second;
   else
-    CapricaReportingContext::logicalFatal("Unknown PexOpCode '%u'!", (unsigned)op);
+    CapricaReportingContext::logicalFatal("Unknown PexOpCode '{}'!", (unsigned)op);
 }
 
 }}

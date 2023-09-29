@@ -41,8 +41,8 @@ struct PapyrusArrayIndexExpression final : public PapyrusExpression {
     ctx->checkForPoison(baseExpression);
     if (baseExpression->resultType().type != PapyrusType::Kind::Array) {
       ctx->reportingContext.error(baseExpression->location,
-                                  "You can only index arrays! Got '%s'!",
-                                  baseExpression->resultType().prettyString().c_str());
+                                  "You can only index arrays! Got '{}'!",
+                                  baseExpression->resultType());
     }
     indexExpression->semantic(ctx);
     ctx->checkForPoison(indexExpression);

@@ -1,14 +1,14 @@
 #include <pex/parser/PexAsmLexer.h>
 
 #include <cctype>
-#include <map>
+#include <string_view>
 #include <unordered_map>
 
 #include <common/CaselessStringComparer.h>
 
 namespace caprica { namespace pex { namespace parser {
 
-static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNameMap {
+static const std::unordered_map<TokenType, std::string_view> prettyTokenTypeNameMap {
   {TokenType::Unknown,                 "Unknown"               },
   { TokenType::EOL,                    "EOL"                   },
   { TokenType::END,                    "EOF"                   },
@@ -73,10 +73,10 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
   { TokenType::kVariableTable,         ".variableTable"        },
 };
 
-const std::string PexAsmLexer::Token::prettyTokenType(TokenType tp) {
+std::string_view PexAsmLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
-    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
+    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type {}!", (int32_t)tp);
   return f->second;
 }
 
@@ -165,7 +165,7 @@ StartOver:
       auto ident = str.str();
       auto f = dotIdentifierMap.find(ident);
       if (f == dotIdentifierMap.end())
-        reportingContext.fatal(baseLoc, "Unknown directive '.%s'!", ident.c_str());
+        reportingContext.fatal(baseLoc, "Unknown directive '.{}'!", ident);
       return setTok(f->second, baseLoc);
     }
 
@@ -320,7 +320,7 @@ StartOver:
             case -1:
               reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
             default:
-              reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
+              reportingContext.fatal(location, "Unrecognized escape sequence: '\\{}'", (char)escapeChar);
           }
         } else {
           str.put(char(getChar()));
@@ -363,7 +363,7 @@ StartOver:
     }
 
     default:
-      reportingContext.fatal(location, "Unexpected character '%c'!", (char)c);
+      reportingContext.fatal(location, "Unexpected character '{}'!", (char)c);
   }
 }
 

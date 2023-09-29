@@ -16,7 +16,8 @@
       "dependencies": [
         "boost-filesystem",
         "boost-program-options",
-        "boost-property-tree"
+        "boost-property-tree",
+        "fmt"
       ]
     }
   },

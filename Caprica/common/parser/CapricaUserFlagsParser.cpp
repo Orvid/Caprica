@@ -61,7 +61,7 @@ void CapricaUserFlagsParser::parseUserFlags(CapricaUserFlagsDefinition& def) {
               break;
             default:
               consume();
-              reportingContext.error(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
+              reportingContext.error(cur.location, "Unexpected token '{}'!", cur.prettyString());
               break;
           }
         }

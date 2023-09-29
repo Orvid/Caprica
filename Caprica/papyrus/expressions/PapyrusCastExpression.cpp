@@ -16,8 +16,8 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
     if (val.type == pex::PexValueType::Invalid) {
       if (!conf::Skyrim::skyrimAllowAssigningVoidMethodCallResult) {
         bldr.reportingContext.fatal(location,
-                                    "Cannot cast None method call result to '%s'!",
-                                    targetType.prettyString().c_str());
+                                    "Cannot cast None method call result to '{}'!",
+                                    targetType);
       }
       switch (targetType.type) {
         case PapyrusType::Kind::ResolvedObject:
@@ -28,19 +28,19 @@ pex::PexValue PapyrusCastExpression::generateLoad(pex::PexFile* file, pex::PexFu
         case PapyrusType::Kind::Array:
         case PapyrusType::Kind::None:
           bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location,
-                                                                              targetType.prettyString().c_str());
+                                                                              targetType.prettyString());
           val = bldr.getNoneLocal(location);
           break;
         default:
           if (conf::Papyrus::allowImplicitNoneCastsToAnyType) {
             bldr.reportingContext.warning_W7005_Skyrim_Casting_None_Call_Result(location,
-                                                                                targetType.prettyString().c_str());
+                                                                                targetType.prettyString());
             val = bldr.getNoneLocal(location);
             break;
           }
           bldr.reportingContext.fatal(location,
-                                      "Cannot cast None method call result to '%s'!",
-                                      targetType.prettyString().c_str());
+                                      "Cannot cast None method call result to '{}'!",
+                                      targetType);
           break;
       }
     }
@@ -65,9 +65,9 @@ void PapyrusCastExpression::semantic(PapyrusResolutionContext* ctx) {
   if (!ctx->canExplicitlyCast(innerExpression->location, innerExpression->resultType(), targetType)) {
     if (!ctx->canImplicitlyCoerceExpression(innerExpression, targetType)) {
       ctx->reportingContext.error(location,
-                                  "Cannot convert from '%s' to '%s'!",
-                                  innerExpression->resultType().prettyString().c_str(),
-                                  targetType.prettyString().c_str());
+                                  "Cannot convert from '{}' to '{}'!",
+                                  innerExpression->resultType(),
+                                  targetType);
     }
   }
 }

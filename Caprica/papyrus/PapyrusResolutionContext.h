@@ -46,7 +46,7 @@ struct PapyrusResolutionContext final {
   // a pex file.
   bool isPexResolution { false };
 
-  void addImport(const CapricaFileLocation& location, const identifier_ref& import);
+  void addImport(const CapricaFileLocation& location, identifier_ref import);
   void clearImports() { importedNodes.clear(); }
 
   static bool isObjectSomeParentOf(const PapyrusObject* child, const PapyrusObject* parent);
@@ -95,7 +95,7 @@ struct PapyrusResolutionContext final {
                                                  bool wantGlobal = false) const;
 
   template <typename T>
-  void ensureNamesAreUnique(const IntrusiveLinkedList<T>& nameset, const char* typeOfName) {
+  void ensureNamesAreUnique(const IntrusiveLinkedList<T>& nameset, identifier_ref typeOfName) {
     // If there's nothing in it, or only one thing,
     // it will always be unique.
     if (nameset.size() > 1) {
@@ -106,15 +106,15 @@ struct PapyrusResolutionContext final {
         auto f = foundNames.find(member->name);
         if (f != foundNames.end()) {
           // if this is a state, look up the previous state and see if it was an empty declaration
-          if (conf::Papyrus::game == GameID::Skyrim && _stricmp(typeOfName, "state") == 0) {
+          if (conf::Papyrus::game == GameID::Skyrim && typeOfName == "state") {
             auto state = tryResolveState(member->name, object);
             if (state && state->functions.size() == 0)
               continue;
           }
           reportingContext.error(member->location,
-                                 "A %s named '%s' was already defined in this scope.",
+                                 "A {} named '{}' was already defined in this scope.",
                                  typeOfName,
-                                 member->name.to_string().c_str());
+                                 member->name);
         } else {
           foundNames.insert(member->name);
         }

@@ -148,9 +148,9 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
   auto name = expectConsumeIdentRef();
   if (!doesScriptNameMatchNextPartOfDir(script->sourceFileName, name)) {
     reportingContext.error(cur.location,
-                           "The script name '%s' must match the name of the file '%s'!",
-                           name.to_string().c_str(),
-                           std::string(FSUtils::basenameAsRef(script->sourceFileName)).c_str());
+                           "The script name '{}' must match the name of the file '{}'!",
+                           name,
+                           std::string(FSUtils::basenameAsRef(script->sourceFileName)));
   }
 
   PapyrusObject* obj;
@@ -264,7 +264,7 @@ PapyrusObject* PapyrusParser::parseObject(PapyrusScript* script) {
       }
 
       default:
-        reportingContext.fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unexpected token '{}'!", cur.prettyString());
     }
   }
 
@@ -277,8 +277,8 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
   if (isAuto) {
     if (object->autoState != nullptr) {
       reportingContext.error(cur.location,
-                             "Only one state can be declared auto. '%s' was already declared as the auto state.",
-                             object->autoState->name.to_string().c_str());
+                             "Only one state can be declared auto. '{}' was already declared as the auto state.",
+                             object->autoState->name);
     }
     object->autoState = state;
   }
@@ -318,7 +318,7 @@ PapyrusState* PapyrusParser::parseState(PapyrusScript* script, PapyrusObject* ob
       }
 
       default:
-        reportingContext.fatal(cur.location, "Expected an event or function, got '%s'!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Expected an event or function, got '{}'!", cur.prettyString());
     }
   }
 
@@ -349,7 +349,7 @@ PapyrusStruct* PapyrusParser::parseStruct(PapyrusScript* script, PapyrusObject* 
         break;
 
       default:
-        reportingContext.fatal(cur.location, "Unexpected token '%s' while parsing struct!", cur.prettyString().c_str());
+        reportingContext.fatal(cur.location, "Unexpected token '{}' while parsing struct!", cur.prettyString());
     }
   }
 
@@ -405,8 +405,8 @@ PapyrusPropertyGroup* PapyrusParser::parsePropertyGroup(PapyrusScript* script, P
 
       default:
         reportingContext.fatal(cur.location,
-                               "Unexpected token '%s' while parsing property group!",
-                               cur.prettyString().c_str());
+                               "Unexpected token '{}' while parsing property group!",
+                               cur.prettyString());
     }
   }
 
@@ -485,8 +485,8 @@ PapyrusProperty* PapyrusParser::parseProperty(PapyrusScript* script, PapyrusObje
 
         default:
           reportingContext.fatal(cur.location,
-                                 "Expected the get/set functions of a full property, got '%s'!",
-                                 cur.prettyString().c_str());
+                                 "Expected the get/set functions of a full property, got '{}'!",
+                                 cur.prettyString());
       }
     }
 
@@ -762,7 +762,7 @@ statements::PapyrusStatement* PapyrusParser::parseStatement(PapyrusFunction* fun
             return ret;
 
           default:
-            reportingContext.fatal(cur.location, "Unexpected token in switch body '%s'!", cur.prettyString().c_str());
+            reportingContext.fatal(cur.location, "Unexpected token in switch body '{}'!", cur.prettyString());
         }
       }
     }
@@ -1170,7 +1170,7 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
       }
     }
     default:
-      reportingContext.fatal(cur.location, "Unexpected token '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Unexpected token '{}'!", cur.prettyString());
   }
 }
 
@@ -1207,7 +1207,7 @@ PapyrusType PapyrusParser::expectConsumePapyrusType() {
     }
 
     default:
-      reportingContext.fatal(cur.location, "Expected a type, got '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Expected a type, got '{}'!", cur.prettyString());
   }
 
   if (cur.type == TokenType::LSquare && peekTokenType() == TokenType::RSquare) {
@@ -1253,7 +1253,7 @@ PapyrusValue PapyrusParser::expectConsumePapyrusValue() {
       return val;
 
     default:
-      reportingContext.fatal(cur.location, "Expected a default value, got '%s'!", cur.prettyString().c_str());
+      reportingContext.fatal(cur.location, "Expected a default value, got '{}'!", cur.prettyString());
   }
 }
 
@@ -1299,7 +1299,7 @@ PapyrusUserFlags PapyrusParser::maybeConsumeUserFlags(CapricaUserFlagsDefinition
 
         auto& flg = conf::Papyrus::userFlagsDefinition.findFlag(reportingContext, loc, str);
         if (!flg.isValidOn(validLocs))
-          reportingContext.error(loc, "The flag '%s' is not valid in this location.", str.c_str());
+          reportingContext.error(loc, "The flag '{}' is not valid in this location.", str);
 
         PapyrusUserFlags newFlag;
         newFlag.data = flg.getData();

@@ -24,8 +24,7 @@ void CapricaReportingContext::breakIfDebugging() {
 
 void CapricaReportingContext::exitIfErrors() {
   if (errorCount > 0) {
-    pushToErrorStream("Compilation of '" + filename + "' failed; " + std::to_string(warningCount) + " warnings and " +
-                      std::to_string(errorCount) + " errors were encountered.");
+    pushToErrorStream(fmt::format("Compilation of '{}' failed; {} warnings and {} errors were encountered.", filename, warningCount, errorCount));
     throw std::runtime_error("");
   }
 }
@@ -52,7 +51,7 @@ bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation /* location *
 
 size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) {
   if (!lineOffsets.size())
-    CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.startOffset);
+    CapricaReportingContext::logicalFatal("Unable to locate line at offset {}.", location.startOffset);
   if (lastLineHint != 0) {
     if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
       return lastLineHint + 1;
@@ -64,25 +63,23 @@ size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, si
   auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.startOffset);
   if (a == lineOffsets.end()) {
     // TODO: Fix line offsets during parsing for reals, remove this hack
-    // maybePushMessage(this, nullptr, "Warning:", 0, formatString("Unable to locate line at offset %zu, using last
-    // known line %zu...", location.startOffset, lineOffsets.size()), true);
+    // maybePushMessage(this, nullptr, "Warning:", 0, fmt::format("Unable to locate line at offset {}, using last known line {}...", location.startOffset, lineOffsets.size()), true);
     return lineOffsets.size();
-    // CapricaReportingContext::logicalFatal("Unable to locate line at offset %zu.", location.startOffset);
+    // CapricaReportingContext::logicalFatal("Unable to locate line at offset {}.", location.startOffset);
   }
   return std::distance(lineOffsets.begin(), a);
 }
 
 std::string CapricaReportingContext::formatLocation(CapricaFileLocation loc) {
-  std::string ret = filename + " (";
   auto line = getLocationLine(loc);
-  ret += std::to_string(line) + ", ";
-  ret += std::to_string(loc.startOffset - lineOffsets.at(line - 1) + 1) + ")";
-  return ret;
+  auto column = loc.startOffset - lineOffsets.at(line - 1) + 1;
+  auto columnEnd = loc.endOffset - loc.startOffset + column;
+  return fmt::format("{} ({}, {}:{})", filename, line, column, columnEnd);
 }
 
 void CapricaReportingContext::maybePushMessage(CapricaReportingContext* ctx,
                                                CapricaFileLocation* location,
-                                               const char* msgType,
+                                               std::string_view msgType,
                                                size_t warningNumber,
                                                const std::string& msg,
                                                bool forceAsError) {
@@ -90,17 +87,16 @@ void CapricaReportingContext::maybePushMessage(CapricaReportingContext* ctx,
     if (ctx->isWarningEnabled(*location, warningNumber)) {
       if (ctx->isWarningError(*location, warningNumber)) {
         ctx->errorCount++;
-        pushToErrorStream(ctx->formatLocation(*location) + ": Error W" + std::to_string(warningNumber) + ": " + msg,
-                          true);
+        pushToErrorStream(fmt::format("{}: Error W{}: {}", ctx->formatLocation(*location), warningNumber, msg), true);
       } else {
         ctx->warningCount++;
-        pushToErrorStream(ctx->formatLocation(*location) + ": Warning W" + std::to_string(warningNumber) + ": " + msg);
+        pushToErrorStream(fmt::format("{}: Warning W{}: {}", ctx->formatLocation(*location), warningNumber, msg));
       }
     }
   } else if (location != nullptr) {
-    pushToErrorStream(ctx->formatLocation(*location) + ": " + msgType + ": " + msg, forceAsError);
+    pushToErrorStream(fmt::format("{}: {}: {}", ctx->formatLocation(*location), msgType, msg), forceAsError);
   } else {
-    pushToErrorStream(std::string(msgType) + ": " + msg, forceAsError);
+    pushToErrorStream(fmt::format("{}: {}", msgType, msg), forceAsError);
   }
 }
 

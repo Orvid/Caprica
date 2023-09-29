@@ -66,16 +66,16 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
       if (gCountId.type != PapyrusIdentifierType::Function) {
         ctx->reportingContext.error(
             tp.location,
-            "Unable to iterate over a value of type '%s' as it does not implement GetCount or GetSize.",
-            tp.prettyString().c_str());
+            "Unable to iterate over a value of type '{}' as it does not implement GetCount or GetSize.",
+            tp);
         return PapyrusType::None(tp.location);
       }
       if (gCountId.res.func->returnType.type != PapyrusType::Kind::Int) {
         ctx->reportingContext.error(
             tp.location,
-            "Unable to iterate over a value of type '%s' because GetCount has a return type of '%s', expected 'Int'!",
-            tp.prettyString().c_str(),
-            gCountId.res.func->returnType.prettyString().c_str());
+            "Unable to iterate over a value of type '{}' because GetCount has a return type of '{}', expected 'Int'!",
+            tp,
+            gCountId.res.func->returnType);
         return PapyrusType::None(tp.location);
       }
       this->getCountIdentifier = new PapyrusIdentifier(gCountId);
@@ -83,30 +83,31 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
       auto gAtId = ctx->tryResolveFunctionIdentifier(tp, PapyrusIdentifier::Unresolved(tp.location, "GetAt"));
       if (gAtId.type != PapyrusIdentifierType::Function) {
         ctx->reportingContext.error(tp.location,
-                                    "Unable to iterate over a value of type '%s' as it does not implement GetAt!",
-                                    tp.prettyString().c_str());
+                                    "Unable to iterate over a value of type '{}' as it does not implement GetAt!",
+                                    tp);
         return PapyrusType::None(tp.location);
       }
       if (gAtId.res.func->parameters.size() != 1) {
         ctx->reportingContext.error(
             tp.location,
-            "Unable to iterate over a value of type '%s' as its GetAt function does not accept exactly one parameter!",
-            tp.prettyString().c_str());
+            "Unable to iterate over a value of type '{}' as its GetAt function does not accept exactly one parameter!",
+            tp);
         return PapyrusType::None(tp.location);
       }
       if (gAtId.res.func->parameters.front()->type != gCountId.res.func->returnType) {
         ctx->reportingContext.error(tp.location,
-                                    "Unable to iterate over a value of type '%s' as its GetAt function has one "
-                                    "parameter, but it is of type '%s', not 'Int'!",
-                                    tp.prettyString().c_str(),
-                                    gAtId.res.func->parameters.front()->type.prettyString().c_str());
+                                    "Unable to iterate over a value of type '{}' as its GetAt function has one "
+                                    "parameter, but it is of type '{}', not '{}'!",
+                                    tp,
+                                    gAtId.res.func->parameters.front()->type,
+                                    gCountId.res.func->returnType);
         return PapyrusType::None(tp.location);
       }
       this->getAtIdentifier = new PapyrusIdentifier(gAtId);
 
       return gAtId.res.func->returnType;
     } else {
-      ctx->reportingContext.error(tp.location, "Cannot iterate over a value of type '%s'!", tp.prettyString().c_str());
+      ctx->reportingContext.error(tp.location, "Cannot iterate over a value of type '{}'!", tp);
       return PapyrusType::None(tp.location);
     }
   }(expressionToIterate->resultType());
@@ -121,13 +122,16 @@ void PapyrusForEachStatement::semantic(PapyrusResolutionContext* ctx) {
   // TODO: Perhaps allow declaring it as a parent object of the element type?
   if (declareStatement->type != elementType) {
     ctx->reportingContext.error(declareStatement->type.location,
-                                "Cannot declare the loop variable as '%s', expected '%s'!",
-                                declareStatement->type.prettyString().c_str(),
-                                elementType.prettyString().c_str());
+                                "Cannot declare the loop variable as '{}', because it's an array of '{}'!",
+                                declareStatement->type,
+                                elementType);
   }
-  if (conf::Papyrus::game == GameID::Skyrim)
+
+  if (conf::Papyrus::game == GameID::Skyrim) {
     for (auto s : body)
       s->semantic_skyrim_first_pass(ctx);
+  }
+
   for (auto s : body)
     s->semantic(ctx);
   ctx->popLocalVariableScope();

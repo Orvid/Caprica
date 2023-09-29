@@ -63,8 +63,8 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression {
           auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.res.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject) {
             ctx->reportingContext.fatal(baseExpression->location,
-                                        "Unresolved identifier '%s'!",
-                                        id->identifier.res.name.to_string().c_str());
+                                        "Unresolved identifier '{}'!",
+                                        id->identifier.res.name);
           }
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function, true);
           fc->semantic(ctx);

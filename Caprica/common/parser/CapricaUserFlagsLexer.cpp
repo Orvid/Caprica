@@ -3,6 +3,7 @@
 #include <cctype>
 #include <map>
 #include <unordered_map>
+#include <utility>
 
 #include <common/CapricaConfig.h>
 #include <common/CaselessStringComparer.h>
@@ -30,7 +31,7 @@ static const std::unordered_map<TokenType, const std::string> prettyTokenTypeNam
 const std::string CapricaUserFlagsLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
-    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
+    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type {}!", std::to_underlying(tp));
   return f->second;
 }
 
@@ -203,7 +204,7 @@ StartOver:
     }
 
     default:
-      reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+      reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
   }
 }
 

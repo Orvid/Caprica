@@ -39,13 +39,13 @@ struct PapyrusNewArrayExpression final : public PapyrusExpression {
     if (lengthExpression->resultType().type != PapyrusType::Kind::Int) {
       ctx->reportingContext.error(
           lengthExpression->location,
-          "The length expression of a new array expression must be an integral type, but got '%s'.",
-          lengthExpression->resultType().prettyString().c_str());
+          "The length expression of a new array expression must be an integral type, but got '{}'.",
+          lengthExpression->resultType());
     } else if (auto len = lengthExpression->asLiteralExpression()) {
       if (len->value.val.i < 0) {
         ctx->reportingContext.error(
             len->value.location,
-            "The length expression of a new array expression must be greater than or equal to zero. Got '%lli'.",
+            "The length expression of a new array expression must be greater than or equal to zero. Got '{}'.",
             (int64_t)len->value.val.i);
       } else {
         EngineLimits::checkLimit(ctx->reportingContext,

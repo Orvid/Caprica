@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <string_view>
+
+#include <fmt/format.h>
 
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
@@ -128,7 +131,7 @@ struct PapyrusIdentifier final {
   static PapyrusIdentifier
   ArrayFunction(CapricaFileLocation loc, PapyrusBuiltinArrayFunctionKind fk, PapyrusType* elemType);
 
-  static const char* prettyTypeString(PapyrusIdentifierType t) {
+  static std::string_view prettyTypeString(PapyrusIdentifierType t) {
     switch (t) {
       case PapyrusIdentifierType::Unresolved:
         return "Unresolved";
@@ -172,3 +175,19 @@ private:
 };
 
 }}
+
+namespace fmt {
+template <>
+struct formatter<caprica::papyrus::PapyrusIdentifierType> {
+  constexpr auto parse(format_parse_context& ctx) {
+    if (ctx.begin() != ctx.end())
+      throw format_error("invalid format");
+    return ctx.end();
+  }
+
+  template <class FormatContext>
+  auto format(const caprica::papyrus::PapyrusIdentifierType& tp, FormatContext& ctx) const {
+    return fmt::format_to(ctx.out(), "{}", caprica::papyrus::PapyrusIdentifier::prettyTypeString(tp));
+  }
+};
+}

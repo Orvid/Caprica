@@ -144,23 +144,23 @@ void PapyrusCompilationNode::FilePreParseJob::run() {
   if (pathEq(ext, ".psc")) {
     parent->objectName = findScriptName(parent->readFileData, "scriptname");
   } else if (pathEq(ext, ".pex")) {
-    // have to read the whole pexfile in order to get the script name
+    // have to read the whole pex file in order to get the script name
     pex::PexReader rdr(parent->sourceFilePath);
     auto alloc = new allocators::ChainedPool(1024 * 4);
     parent->pexFile = pex::PexFile::read(alloc, rdr);
     parent->isPexFile = true;
     if (parent->pexFile->objects.size() == 0) {
-      CapricaReportingContext::logicalFatal("Unable to find script name in '%s'.", parent->sourceFilePath.c_str());
+      CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
     }
     parent->objectName = parent->pexFile->getStringValue(parent->pexFile->objects.front()->name).to_string();
   } else if (pathEq(ext, ".pas")) {
     parent->objectName = findScriptName(parent->readFileData, ".object", true);
   } else {
-    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.",
-                                          parent->reportedName.c_str());
+    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '{}' as.",
+                                          parent->reportedName);
   }
   if (parent->objectName.empty()){
-    CapricaReportingContext::logicalFatal("Unable to find script name in '%s'.", parent->sourceFilePath.c_str());
+    CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
   }
 }
 
@@ -185,8 +185,8 @@ void PapyrusCompilationNode::FileParseJob::run() {
     if (parent->type == NodeType::PasCompile)
       return;
   } else {
-    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '%s' as.",
-                                          parent->reportedName.c_str());
+    CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '{}' as.",
+                                          parent->reportedName);
   }
 
   if (parent->pexFile) {
@@ -380,7 +380,7 @@ struct PapyrusNamespace final {
   void createNamespace(const identifier_ref& curPiece,
                        caseless_unordered_identifier_ref_map<PapyrusCompilationNode*>&& map) {
     if (conf::Papyrus::game == GameID::Skyrim && curPiece != "")
-      CapricaReportingContext::logicalFatal("Invalid namespacing on Skyrim script: %s", curPiece.to_string().c_str());
+      CapricaReportingContext::logicalFatal("Invalid namespacing on Skyrim script: {}", curPiece);
     if (curPiece == "") {
       if (!objects.empty()) {
         // we have to merge them

@@ -54,13 +54,13 @@ struct PexAsmWriter final {
   }
 
   template <typename... Args>
-  void write(const std::string& msg, Args&&... args) {
+  void write(std::string_view msg, Args&&... args) {
     ensureIndent();
     strm << formatString(msg, args...);
   }
 
   template <typename... Args>
-  void writeln(const std::string& msg, Args&&... args) {
+  void writeln(std::string_view msg, Args&&... args) {
     ensureIndent();
     strm << formatString(msg, args...);
     writeln();
@@ -114,15 +114,15 @@ private:
   }
 
   template <typename... Args>
-  static std::string formatString(const std::string& msg, Args&&... args) {
+  static std::string formatString(std::string_view msg, Args&&... args) {
     constexpr bool hasArgs = sizeof...(args) != 0;
     if (hasArgs) {
-      size_t size = std::snprintf(nullptr, 0, msg.c_str(), args...) + 1;
+      size_t size = std::snprintf(nullptr, 0, msg.data(), args...) + 1;
       std::unique_ptr<char[]> buf(new char[size]);
-      std::snprintf(buf.get(), size, msg.c_str(), args...);
+      std::snprintf(buf.get(), size, msg.data(), args...);
       return std::string(buf.get(), buf.get() + size - 1);
     } else {
-      return msg;
+      return std::string(msg);
     }
   }
 };

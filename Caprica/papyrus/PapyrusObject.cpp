@@ -109,7 +109,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
   ctx->ensureNamesAreUnique(states, "state");
   ctx->ensureNamesAreUnique(customEvents, "custom event");
 
-  caseless_unordered_identifier_ref_map<std::pair<bool, const char*>> identMap {};
+  caseless_unordered_identifier_ref_map<std::pair<bool, identifier_ref>> identMap {};
   checkForInheritedIdentifierConflicts(ctx->reportingContext, identMap, false);
 
   // The first pass resolves the types on the public API,
@@ -150,7 +150,7 @@ void PapyrusObject::semantic2(PapyrusResolutionContext* ctx) {
 
 void PapyrusObject::checkForInheritedIdentifierConflicts(
     CapricaReportingContext& repCtx,
-    caseless_unordered_identifier_ref_map<std::pair<bool, const char*>>& identMap,
+    caseless_unordered_identifier_ref_map<std::pair<bool, identifier_ref>>& identMap,
     bool checkInheritedOnly) const {
   if (auto parent = tryGetParentClass())
     parent->checkForInheritedIdentifierConflicts(repCtx, identMap, true);
@@ -158,15 +158,15 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(
   const auto doError = [](CapricaReportingContext& repCtx,
                           CapricaFileLocation loc,
                           bool isParent,
-                          const char* otherType,
-                          const identifier_ref& identName) {
+                          identifier_ref otherType,
+                          identifier_ref identName) {
     if (isParent) {
-      repCtx.error(loc, "A parent object already defines a %s named '%s'.", otherType, identName.to_string().c_str());
+      repCtx.error(loc, "A parent object already defines a {} named '{}'.", otherType, identName);
     } else {
       repCtx.error(loc,
-                   "A %s named '%s' was already defined in this object.",
+                   "A {} named '{}' was already defined in this object.",
                    otherType,
-                   identName.to_string().c_str());
+                   identName);
     }
   };
 
@@ -188,15 +188,16 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(
       identMap.emplace(s->name, std::make_pair(checkInheritedOnly, "struct"));
   }
 
-  /* Custom events are currently allowed to have the same names as properties -_-...
-  for (auto e : customEvents) {
-  auto f = identMap.find(e->name);
-  if (f != identMap.end())
-  doError(repCtx, e->location, f->second.first, f->second.second, e->name);
-  else
-  identMap.insert({ e->name, std::make_pair(checkInheritedOnly, "custom event") });
+  // Custom events are currently allowed to have the same names as properties -_-...
+  if constexpr (false) {
+    for (auto e : customEvents) {
+      auto f = identMap.find(e->name);
+      if (f != identMap.end())
+        doError(repCtx, e->location, f->second.first, f->second.second, e->name);
+      else
+        identMap.insert({ e->name, std::make_pair(checkInheritedOnly, "custom event") });
+    }
   }
-  */
 
   if (!checkInheritedOnly) {
     for (auto v : variables) {
@@ -204,11 +205,11 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(
       if (f != identMap.end()) {
         // child class variables are allowed to shadow parent properties in Skyrim
         if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty &&
-            _stricmp(f->second.second, "property") == 0) {
+            f->second.second == "property") {
           repCtx.warning_W7001_Skyrim_Child_Variable_Shadows_Parent_Property(v->location,
-                                                                             v->name.to_string().c_str(),
-                                                                             name.to_string().c_str(),
-                                                                             parentClass.prettyString().c_str());
+                                                                             v->name,
+                                                                             name,
+                                                                             parentClass.prettyString());
         } else {
           doError(repCtx, v->location, f->second.first, f->second.second, v->name);
         }
@@ -217,6 +218,7 @@ void PapyrusObject::checkForInheritedIdentifierConflicts(
       }
     }
   }
+
   // TODO: Make this configurable for Starfield
   // TODO: Starfield: Verify that guards in child classes are not allowed to have the same name as guards in parent
   // classes. guards

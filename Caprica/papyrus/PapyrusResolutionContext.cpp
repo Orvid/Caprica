@@ -22,20 +22,20 @@
 
 namespace caprica { namespace papyrus {
 
-void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, const identifier_ref& import) {
+void PapyrusResolutionContext::addImport(const CapricaFileLocation& location, identifier_ref import) {
   PapyrusCompilationNode* retNode;
   identifier_ref retStrucName;
   if (!PapyrusCompilationContext::tryFindType(object ? object->getNamespaceName() : "",
                                               import,
                                               &retNode,
                                               &retStrucName)) {
-    reportingContext.error(location, "Failed to find imported script '%s'!", import.to_string().c_str());
+    reportingContext.error(location, "Failed to find imported script '{}'!", import);
   }
   if (retStrucName.size())
-    reportingContext.error(location, "You cannot directly import a single struct '%s'!", import.to_string().c_str());
+    reportingContext.error(location, "You cannot directly import a single struct '{}'!", import);
   for (auto o : importedNodes)
     if (o == retNode)
-      reportingContext.error(location, "Duplicate import of '%s'.", import.to_string().c_str());
+      reportingContext.error(location, "Duplicate import of '{}'.", import);
   importedNodes.push_back(retNode);
 }
 
@@ -122,12 +122,12 @@ bool PapyrusResolutionContext::canImplicitlyCoerce(CapricaFileLocation loc,
       case PapyrusType::Kind::Var:
       case PapyrusType::Kind::String:
       case PapyrusType::Kind::Array:
-        reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString().c_str());
+        reportingContext.warning_W1003_Strict_None_Implicit_Conversion(loc, dest.prettyString());
         return true;
       default:
         break;
     }
-    reportingContext.error(loc, "Cannot convert None to '%s'!", dest.prettyString().c_str());
+    reportingContext.error(loc, "Cannot convert None to '{}'!", dest);
     return false;
   }
 
@@ -195,9 +195,9 @@ expressions::PapyrusExpression* PapyrusResolutionContext::coerceExpression(expre
 
     if (!canCast) {
       reportingContext.error(expr->location,
-                             "No implicit conversion from '%s' to '%s' exists!",
-                             expr->resultType().prettyString().c_str(),
-                             target.prettyString().c_str());
+                             "No implicit conversion from '{}' to '{}' exists!",
+                             expr->resultType(),
+                             target);
       return expr;
     }
     auto ce = allocator->make<expressions::PapyrusCastExpression>(expr->location, target);
@@ -226,9 +226,9 @@ PapyrusValue PapyrusResolutionContext::coerceDefaultValue(const PapyrusValue& va
       break;
   }
   reportingContext.error(val.location,
-                         "Cannot initialize a '%s' value with a '%s'!",
-                         target.prettyString().c_str(),
-                         val.getPapyrusType().prettyString().c_str());
+                         "Cannot initialize a '{}' value with a '{}'!",
+                         target,
+                         val.getPapyrusType());
   return val;
 }
 
@@ -332,8 +332,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
       auto strucName = tp.name.substr(pos + 1);
       auto sc = PapyrusScriptLoader::loadScript(scName, scName, "", PapyrusScriptLoader::LoadType::Reference);
       if (!sc)
-        reportingContext.fatal(tp.location, "Unable to find script '%s' referenced by '%s'!", scName.c_str(),
-  tp.name.c_str());
+        reportingContext.fatal(tp.location, "Unable to find script '{}' referenced by '{}'!", scName, tp.name);
 
       for (auto obj : sc->objects) {
         for (auto struc : obj->structs) {
@@ -342,8 +341,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
         }
       }
 
-      reportingContext.fatal(tp.location, "Unable to resolve a struct named '%s' in script '%s'!", strucName.c_str(),
-  scName.c_str());
+      reportingContext.fatal(tp.location, "Unable to resolve a struct named '{}' in script '{}'!", strucName, scName);
     }
   }*/
 
@@ -369,7 +367,7 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
                                               tp.name,
                                               &retNode,
                                               &retStructName)) {
-    reportingContext.fatal(tp.location, "Unable to resolve type '%s'!", tp.name.to_string().c_str());
+    reportingContext.fatal(tp.location, "Unable to resolve type '{}'!", tp.name);
   }
 
   PapyrusObject* foundObj = lazy ? retNode->awaitPreSemantic() : retNode->awaitSemantic();
@@ -380,9 +378,9 @@ PapyrusType PapyrusResolutionContext::resolveType(PapyrusType tp, bool lazy) {
   if (tryResolveStruct(foundObj, retStructName, &resStruct))
     return PapyrusType::ResolvedStruct(tp.location, resStruct);
   reportingContext.fatal(tp.location,
-                         "Unable to resolve a struct named '%s' in script '%s'!",
-                         retStructName.to_string().c_str(),
-                         foundObj->name.to_string().c_str());
+                         "Unable to resolve a struct named '{}' in script '{}'!",
+                         retStructName,
+                         foundObj->name);
 }
 
 void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatement* local) {
@@ -390,8 +388,8 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
     for (auto n : is->locals) {
       if (idEq(n->name, local->name)) {
         reportingContext.error(local->location,
-                               "Attempted to redefined '%s' which was already defined in a parent scope!",
-                               local->name.to_string().c_str());
+                               "Attempted to redefined '{}' which was already defined in a parent scope!",
+                               local->name);
         return;
       }
     }
@@ -404,7 +402,7 @@ void PapyrusResolutionContext::addLocalVariable(statements::PapyrusDeclareStatem
 PapyrusIdentifier PapyrusResolutionContext::resolveIdentifier(const PapyrusIdentifier& ident) const {
   auto id = tryResolveIdentifier(ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.res.name.to_string().c_str());
+    reportingContext.fatal(ident.location, "Unresolved identifier '{}'!", ident.res.name);
   return id;
 }
 const PapyrusObject* getMemberParent(PapyrusIdentifier ident) {
@@ -493,11 +491,10 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
   //  if (parentIdent.type == PapyrusIdentifierType::Guard){
   //    for (auto & rIdent : resolvedIds) {
   //      if (rIdent.type != PapyrusIdentifierType::Unresolved) {
-  //        reportingContext.error(rIdent.location, "%s '%s' conflicts with %s parent class Guard",
+  //        reportingContext.error(rIdent.location, "{} '{}' conflicts with {} parent class Guard",
   //                               PapyrusIdentifier::prettyTypeString(rIdent.type),
-  //                               ident.res.name.to_string().c_str(),
-  //                               getMemberParent(parentIdent) ? getMemberParent(parentIdent)->name.to_string().c_str()
-  //                               : "unknown");
+  //                               ident.res.name,
+  //                               getMemberParent(parentIdent) ? getMemberParent(parentIdent)->name : "unknown");
   //      }
   //    }
   //    // parent guard overrides local var/parameter
@@ -519,10 +516,10 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
           continue;
         }
         reportingContext.error(rIdent.location,
-                               "Local variable '%s' conflicts with %s parent class %s",
-                               ident.res.name.to_string().c_str(),
-                               getMemberParent(parentIdent)->name.to_string().c_str(),
-                               PapyrusIdentifier::prettyTypeString(parentIdent.type));
+                               "Local variable '{}' conflicts with {} parent class {}",
+                               ident.res.name,
+                               getMemberParent(parentIdent)->name,
+                               parentIdent.type);
       } else if (rIdent.type == PapyrusIdentifierType::Parameter) {
         // TODO: Verify Starfield allows this
         // in all PCompilers you're allowed to shadow a parent property with a parameter
@@ -537,11 +534,11 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
         }
         // if it's a script member, it's an error.
         reportingContext.error(rIdent.location,
-                               "%s '%s' conflicts with %s parent class %s",
-                               PapyrusIdentifier::prettyTypeString(rIdent.type),
-                               ident.res.name.to_string().c_str(),
-                               getMemberParent(parentIdent)->name.to_string().c_str(),
-                               PapyrusIdentifier::prettyTypeString(parentIdent.type));
+                               "{} '{}' conflicts with {} parent class {}",
+                               rIdent.type,
+                               ident.res.name,
+                               getMemberParent(parentIdent)->name,
+                               parentIdent.type);
       }
     }
     // parent property overrides local var/parameter
@@ -565,10 +562,10 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveIdentifier(const PapyrusId
                                                                              ident.res.name.to_string().c_str());
         } else {
           reportingContext.error(shadow_ident.location,
-                                 "%s '%s' already defined as %s in script",
-                                 PapyrusIdentifier::prettyTypeString(shadow_ident.type),
-                                 ident.res.name.to_string().c_str(),
-                                 PapyrusIdentifier::prettyTypeString(resolvedIds[i].type));
+                                 "{} '{}' already defined as {} in script",
+                                 shadow_ident.type,
+                                 ident.res.name,
+                                 resolvedIds[i].type);
         }
       }
     }
@@ -580,7 +577,7 @@ PapyrusIdentifier PapyrusResolutionContext::resolveMemberIdentifier(const Papyru
                                                                     const PapyrusIdentifier& ident) const {
   auto id = tryResolveMemberIdentifier(baseType, ident);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    reportingContext.fatal(ident.location, "Unresolved identifier '%s'!", ident.res.name.to_string().c_str());
+    reportingContext.fatal(ident.location, "Unresolved identifier '{}'!", ident.res.name);
   return id;
 }
 
@@ -614,7 +611,7 @@ PapyrusIdentifier PapyrusResolutionContext::resolveFunctionIdentifier(const Papy
                                                                       bool wantGlobal) const {
   auto id = tryResolveFunctionIdentifier(baseType, ident, wantGlobal);
   if (id.type == PapyrusIdentifierType::Unresolved)
-    reportingContext.fatal(ident.location, "Unresolved function name '%s'!", ident.res.name.to_string().c_str());
+    reportingContext.fatal(ident.location, "Unresolved function name '{}'!", ident.res.name);
   return id;
 }
 
@@ -632,8 +629,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
         if (wantGlobal && !func->second->isGlobal()) {
           reportingContext.error(
               ident.location,
-              "You cannot call non-global functions from within a global function. '%s' is not a global function.",
-              func->second->name.to_string().c_str());
+              "You cannot call non-global functions from within a global function. '{}' is not a global function.",
+              func->second->name);
         }
         return PapyrusIdentifier::Function(ident.location, func->second);
       }
@@ -675,13 +672,13 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       reportingContext.warning_W6001_Experimental_Syntax_ArrayGetAllMatchingStructs(ident.location);
     } else {
       reportingContext.fatal(ident.location,
-                             "Unknown function '%s' called on an array expression!",
-                             ident.res.name.to_string().c_str());
+                             "Unknown function '{}' called on an array expression!",
+                             ident.res.name);
     }
     if (!isArrayFunctionInGame(fk, conf::Papyrus::game)) {
       reportingContext.fatal(ident.location,
-                             "Array function '%s' is not available in %s scripts!",
-                             ident.res.name.to_string().c_str(),
+                             "Array function '{}' is not available in {} scripts!",
+                             ident.res.name,
                              GameIDToString(conf::Papyrus::game));
     }
     return PapyrusIdentifier::ArrayFunction(baseType.location,
@@ -693,8 +690,8 @@ PapyrusIdentifier PapyrusResolutionContext::tryResolveFunctionIdentifier(const P
       if (func != rootState->functions.end()) {
         if (!wantGlobal && func->second->isGlobal()) {
           reportingContext.error(ident.location,
-                                 "You cannot call the global function '%s' on an object.",
-                                 func->second->name.to_string().c_str());
+                                 "You cannot call the global function '{}' on an object.",
+                                 func->second->name);
         }
         return PapyrusIdentifier::Function(ident.location, func->second);
       }

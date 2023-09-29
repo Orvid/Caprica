@@ -18,16 +18,12 @@ project(${PACKAGE_NAME} VERSION ${PACKAGE_VERSION} LANGUAGES CXX)
 include(GNUInstallDirs)
 
 
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 option(CAPRICA_STATIC_LIBRARY "Build Caprica as a static library" OFF)
 option(CAPRICA_USE_STATIC_RUNTIME "Compile Caprica with static runtime" OFF)
 
-if (NOT CAPRICA_STATIC_LIBRARY)
-  set(CMAKE_CXX_STANDARD 20)
-else()
-  set(CMAKE_CXX_STANDARD 17)
-endif()
+set(CMAKE_CXX_STANDARD 23)
 
 
 # Automatically create source_group directives for the sources passed in.
@@ -100,7 +96,8 @@ if(CAPRICA_STATIC_LIBRARY)
 
   add_library("${PROJECT_NAME}" STATIC ${HEADER_FILES} ${SOURCE_FILES})
   find_package(Boost COMPONENTS container REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PRIVATE Boost::container)
+  find_package(fmt REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PRIVATE Boost::container fmt::fmt)
 
   target_include_directories(
     "${PROJECT_NAME}"
@@ -136,13 +133,14 @@ if(CAPRICA_STATIC_LIBRARY)
   DESTINATION ${CAPRICA_CONFIG_INSTALL_DIR})
 else()
   find_package(Boost COMPONENTS filesystem program_options container REQUIRED)
+  find_package(fmt REQUIRED)
   include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/Caprica
     ${Boost_INCLUDE_DIRS}
   )
   add_subdirectory(Caprica)
   add_dependencies(${PROJECT_NAME} Caprica)
-  target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options Boost::container)
+  target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options Boost::container fmt::fmt)
 
   install(
     TARGETS Caprica

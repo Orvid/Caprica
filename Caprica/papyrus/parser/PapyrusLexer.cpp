@@ -125,7 +125,7 @@ static const std::unordered_map<TokenType, std::string_view> prettyTokenTypeName
 std::string_view PapyrusLexer::Token::prettyTokenType(TokenType tp) {
   auto f = prettyTokenTypeNameMap.find(tp);
   if (f == prettyTokenTypeNameMap.end())
-    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type %i!", (int32_t)tp);
+    CapricaReportingContext::logicalFatal("Unable to determine the pretty form of token type {}!", (int32_t)tp);
   return f->second;
 }
 
@@ -471,7 +471,7 @@ StartOver:
 
       if (c == ':') {
         if (!conf::Papyrus::allowCompilerIdentifiers || peekChar() != ':')
-          reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+          reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
         getChar();
       }
 
@@ -530,7 +530,7 @@ StartOver:
             case -1:
               reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
             default:
-              reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)escapeChar);
+              reportingContext.fatal(location, "Unrecognized escape sequence: '\\{}'", (char)escapeChar);
           }
         } else {
           getChar();
@@ -563,7 +563,7 @@ StartOver:
                 buf[i++] = '"';
                 break;
               default:
-                reportingContext.fatal(location, "Unrecognized escape sequence: '\\%c'", (char)baseStrm[i2 - 1]);
+                reportingContext.fatal(location, "Unrecognized escape sequence: '\\{}'", (char)baseStrm[i2 - 1]);
             }
           } else {
             buf[i++] = baseStrm[i2++];
@@ -680,7 +680,7 @@ StartOver:
     }
 
     default:
-      reportingContext.fatal(baseLoc, "Unexpected character '%c'!", (char)c);
+      reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
   }
 }
 

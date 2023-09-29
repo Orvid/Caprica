@@ -56,9 +56,9 @@ private:
       if (tp == TokenType::EOL && cur.type == TokenType::END)
         return;
       reportingContext.fatal(cur.location,
-                             "Syntax error! Expected '%s' got '%s'.",
-                             Token::prettyTokenType(tp).data(),
-                             cur.prettyString().c_str());
+                             "Syntax error! Expected '{}' got '{}'.",
+                             Token::prettyTokenType(tp),
+                             cur.prettyString());
     }
   }
 

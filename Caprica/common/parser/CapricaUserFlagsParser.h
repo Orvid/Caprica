@@ -19,9 +19,9 @@ private:
   void expect(TokenType tp) {
     if (cur.type != tp) {
       reportingContext.fatal(cur.location,
-                             "Expected '%s' got '%s'!",
-                             Token::prettyTokenType(tp).c_str(),
-                             cur.prettyString().c_str());
+                             "Expected '{}' got '{}'!",
+                             Token::prettyTokenType(tp),
+                             cur.prettyString());
     }
   }
 
