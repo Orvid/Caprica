@@ -413,7 +413,13 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
               auto a = *iter;
               ++iter;
               a->argIndex = p->index;
-              newArgs.insertBefore(newArgsIter, a);
+              if (newArgsIter != newArgs.endInsertable() && idEq(newArgsIter->name, a->name)) {
+                ctx->reportingContext.error(a->value->location,
+                                            "Duplicate named parameter provided '{}'!",
+                                            a->name);
+              } else {
+                newArgs.insertBefore(newArgsIter, a);
+              }
               goto ContinueOuterLoop;
             }
             if (newArgsIter != newArgs.endInsertable() && newArgsIter->argIndex <= p->index)
