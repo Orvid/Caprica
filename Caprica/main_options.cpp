@@ -482,6 +482,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     if (!vm["ignorecwd"].as<bool>()) {
       conf::Papyrus::importDirectories.reserve(1);
       conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
+      if (!conf::General::quietCompile) {
+        std::cout << "Adding current working directory to import list: " << conf::Papyrus::importDirectories[0]
+                  << std::endl;
+      }
     }
 
     if (vm.count("import")) {
@@ -498,6 +502,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
               return false;
             }
             conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(sd));
+            if (!conf::General::quietCompile)
+              std::cout << "Adding import directory: " << conf::Papyrus::importDirectories.back() << std::endl;
           }
           continue;
         }
@@ -506,6 +512,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           return false;
         }
         conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(d));
+        if (!conf::General::quietCompile)
+          std::cout << "Adding import directory: " << conf::Papyrus::importDirectories.back() << std::endl;
       }
     }
 
@@ -583,10 +591,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
             f.append(".psc");
           }
           auto oDir = baseOutputDir;
-          addSingleFile(std::move(f),
-                        std::move(oDir),
-                        jobManager,
-                        caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile);
+          if (!addSingleFile(f, oDir, jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
+            return false;
         }
       }
       return true;
@@ -616,10 +622,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           return false;
         }
         auto oDir = baseOutputDir;
-        addSingleFile(std::move(f),
-                      std::move(oDir),
-                      jobManager,
-                      caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile);
+        if (!addSingleFile(f, oDir, jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
+          return false;
       }
     }
   } catch (const std::exception& ex) {
