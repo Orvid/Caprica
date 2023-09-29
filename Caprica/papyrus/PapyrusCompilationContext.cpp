@@ -545,7 +545,6 @@ static void renameMap(const PapyrusNamespace* child, TempRenameMap& tempRenameMa
 }
 
 void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
-  // TODO: Make sure that this is actually idempotent; we call it again in main()
   if (conf::General::compileInParallel)
     jobManager->startup((uint32_t)std::thread::hardware_concurrency());
 
