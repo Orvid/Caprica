@@ -149,9 +149,8 @@ void PapyrusCompilationNode::FilePreParseJob::run() {
     auto alloc = new allocators::ChainedPool(1024 * 4);
     parent->pexFile = pex::PexFile::read(alloc, rdr);
     parent->isPexFile = true;
-    if (parent->pexFile->objects.size() == 0) {
+    if (parent->pexFile->objects.size() == 0)
       CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
-    }
     parent->objectName = parent->pexFile->getStringValue(parent->pexFile->objects.front()->name).to_string();
   } else if (pathEq(ext, ".pas")) {
     parent->objectName = findScriptName(parent->readFileData, ".object", true);
@@ -159,8 +158,34 @@ void PapyrusCompilationNode::FilePreParseJob::run() {
     CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '{}' as.",
                                           parent->reportedName);
   }
-  if (parent->objectName.empty()){
+  if (parent->objectName.empty())
     CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
+
+  // Check if we have the correct namespace
+  switch (parent->type) {
+    case NodeType::PapyrusCompile: // only check for this on compile nodes
+    case NodeType::PasCompile: {
+      // check the object name with the reportedname
+      auto nsName = std::string(FSUtils::parentPathAsRef(parent->reportedName));
+      if (nsName == parent->reportedName)
+        nsName = "";
+      // replace `\` with `:`
+      std::replace(nsName.begin(), nsName.end(), '\\', ':');
+      auto objectNS = parent->objectName.find(':') != std::string::npos
+                          ? parent->objectName.substr(0, parent->objectName.find_last_of(':'))
+                          : "";
+      if (_strnicmp(objectNS.c_str(), nsName.c_str(), objectNS.size()) != 0) {
+        CapricaReportingContext::logicalFatal(
+            "{}: The script namespace '{}' does not match the expected namespace '{}'.\n"
+            "Check your imports and your CWD.",
+            parent->reportedName,
+            objectNS,
+            nsName);
+      }
+    } break;
+    default: // We don't check for this on other jobs; imports will likely have different names than their reported
+             // names
+      break;
   }
 }
 
