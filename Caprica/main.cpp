@@ -377,7 +377,8 @@ bool addSingleFile(const std::string &f,
   auto namespaceName = namespaceDir;
   std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
   namespaceName = namespaceName.substr(1);
-  std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
+  if (!conf::General::quietCompile)
+    std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
   auto node = getNode(nodeType,
                       jobManager,
                       baseOutputDir,

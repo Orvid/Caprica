@@ -162,7 +162,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Do not report progress, only failures.")("strict",
                                                   po::value<bool>()->default_value(false)->implicit_value(true),
                                                   "Enable strict checking of control flow, poisoning, and more sane "
-                                                  "implicit conversions. It is strongly recommended to enable these.");
+                                                  "implicit conversions. It is strongly recommended to enable these.")(
+        "ignorecwd",
+        po::bool_switch()->default_value(false),
+        "Do not add the current working directory to the beginning of the import list.");
 
     po::options_description champollionCompatDesc("Champollion Compatibility");
     champollionCompatDesc.add_options()(
@@ -266,7 +269,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       "Enable PCompiler compatibility mode (default false).")
       ("all,a", po::bool_switch(&conf::PCompiler::all)->default_value(false), "Treat input objects as directories")
       ("norecurse", po::bool_switch(&conf::PCompiler::norecurse)->default_value(false), "Don't recursively scan directories with -all")
-      ("ignorecwd", po::bool_switch(&conf::PCompiler::ignorecwd)->default_value(false), "Don't add the current working directory to the import list")
       ("noasm", po::bool_switch()->default_value(false), "Turns off asm output if it was turned on.")
       ("asmonly", po::bool_switch()->default_value(false), "Does nothing on Caprica")
       ("debug,d", po::bool_switch()->default_value(false), "Does nothing on Caprica");
@@ -472,15 +474,14 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       if (conf::PCompiler::norecurse){
         iterateCompiledDirectoriesRecursively = false;
       }
-      conf::PCompiler::ignorecwd = vm["ignorecwd"].as<bool>();
       if (vm["noasm"].as<bool>()){
         conf::Debug::dumpPexAsm = false;
       }
-      if (!conf::PCompiler::ignorecwd) {
-        std::string cwd = filesystem::current_path().string();
-        conf::Papyrus::importDirectories.reserve(1);
-        conf::Papyrus::importDirectories.emplace_back(cwd);
-      }
+    }
+
+    if (!vm["ignorecwd"].as<bool>()) {
+      conf::Papyrus::importDirectories.reserve(1);
+      conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
     }
 
     if (vm.count("import")) {

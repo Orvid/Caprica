@@ -15,7 +15,6 @@ namespace PCompiler {
   bool pCompilerCompatibilityMode{false};
   bool all{false};
   bool norecurse{false};
-  bool ignorecwd{false};
 }
 
 namespace CodeGeneration {
