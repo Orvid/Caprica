@@ -200,7 +200,7 @@ template uint32_t CaselessIdentifierHasher::hash<false>(const char*, size_t);
 
 NEVER_INLINE
 size_t CaselessIdentifierHasher::operator()(const std::string& k) const {
-  auto r = CaselessIdentifierHasher::hash<true>(k.c_str(), k.size());
+  auto r = CaselessIdentifierHasher::hash<false>(k.c_str(), k.size());
   return ((size_t)r << 32) | r;
 }
 
