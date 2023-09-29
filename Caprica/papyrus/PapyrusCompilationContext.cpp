@@ -73,7 +73,7 @@ void PapyrusCompilationNode::FileReadJob::run() {
   if (parent->type == NodeType::PapyrusCompile || parent->type == NodeType::PasCompile ||
       parent->type == NodeType::PexDissassembly) {
     if (!conf::General::quietCompile)
-      std::cout << "Compiling " << parent->reportedName << std::endl;
+      std::cout << "Compiling " + parent->reportedName + "\n";
   }
   // TODO: remove this hack when imports are working
   if (parent->sourceFilePath.starts_with("fake://")) {
