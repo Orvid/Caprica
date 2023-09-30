@@ -77,8 +77,7 @@ void PapyrusCompilationNode::FileReadJob::run() {
   }
   // TODO: remove this hack when imports are working
   if (parent->sourceFilePath.starts_with("fake://")) {
-    parent->ownedReadFileData =
-        std::move(FakeScripts::getFakeScript(parent->sourceFilePath, conf::Papyrus::game).to_string());
+    parent->ownedReadFileData = FakeScripts::getFakeScript(parent->sourceFilePath, conf::Papyrus::game).to_string();
     parent->readFileData = parent->ownedReadFileData;
     return;
   }

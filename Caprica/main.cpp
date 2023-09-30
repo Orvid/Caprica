@@ -299,9 +299,9 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
       auto node =
               new PapyrusCompilationNode(jobManager,
                                          PapyrusCompilationNode::NodeType::PapyrusImport,
-                                         std::move(std::string(basename)),
+                                         std::string(basename),
                                          "",
-                                         std::move(std::string(fake_script)),
+                                         std::string(fake_script),
                                          0,
                                          caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game));
       tempMap.emplace(caprica::identifier_ref(node->baseName), node);
