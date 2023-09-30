@@ -84,7 +84,7 @@ struct CapricaReportingContext final {
   static inline bool m_Warn_##num##_##id_emitted { false };                            \
   NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location) {              \
     if (!m_Warn_##num##_##id_emitted) {                                                \
-      warning(location, num, msg##"\n\tFurther {} warnings will be suppressed.", num); \
+      warning(location, num, msg "\n\tFurther {} warnings will be suppressed.", num); \
       m_Warn_##num##_##id_emitted = true;                                              \
     }                                                                                  \
   }
@@ -92,7 +92,7 @@ struct CapricaReportingContext final {
   static inline bool m_Warn_##num##_##id_emitted { false };                                      \
   NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name) {     \
     if (!m_Warn_##num##_##id_emitted) {                                                          \
-      warning(location, num, msg##"\n\tFurther {} warnings will be suppressed.", arg1Name, num); \
+      warning(location, num, msg "\n\tFurther {} warnings will be suppressed.", arg1Name, num); \
       m_Warn_##num##_##id_emitted = true;                                                        \
     }                                                                                            \
   }
@@ -100,7 +100,7 @@ struct CapricaReportingContext final {
   static inline bool m_Warn_##num##_##id_emitted { false };                                                     \
   NEVER_INLINE void warning_W##num##_##id(CapricaFileLocation location, arg1Type arg1Name, arg2Type arg2Name) { \
     if (!m_Warn_##num##_##id_emitted) {                                                                         \
-      warning(location, num, msg##"\n\tFurther {} warnings will be suppressed.", arg1Name, arg2Name, num);      \
+      warning(location, num, msg "\n\tFurther {} warnings will be suppressed.", arg1Name, arg2Name, num);      \
       m_Warn_##num##_##id_emitted = true;                                                                       \
     }                                                                                                           \
   }
