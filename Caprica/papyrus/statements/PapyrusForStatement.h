@@ -110,7 +110,7 @@ struct PapyrusForStatement final : public PapyrusStatement {
                (sVal.type == pex::PexValueType::Float && sVal.val.f < 0)) {
       bldr << op::cmpgte { bTemp, loadedCounter, tVal };
     } else {
-      bldr.reportingContext.fatal(location, "Attempted to step by a literal 0!");
+      bldr.reportingContext.error(location, "Attempted to step by a literal 0!");
     }
     bldr << op::jmpf { bTemp, afterAll };
 

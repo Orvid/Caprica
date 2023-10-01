@@ -327,13 +327,13 @@ StartOver:
 
     case '|':
       if (peekChar() != '|') {
-        reportingContext.fatal(baseLoc,
+        reportingContext.error(baseLoc,
                                "Bitwise OR is unsupported. Did you intend to use a logical or (\"||\") instead?");
       }
       return setTok(TokenType::BooleanOr, baseLoc, 1);
     case '&':
       if (peekChar() != '&') {
-        reportingContext.fatal(baseLoc,
+        reportingContext.error(baseLoc,
                                "Bitwise AND is unsupported. Did you intend to use a logical and (\"&&\") instead?");
       }
       return setTok(TokenType::BooleanAnd, baseLoc, 1);
@@ -379,7 +379,7 @@ StartOver:
         if (conf::Papyrus::enableLanguageExtensions && peekChar() == 'e') {
           str.push_back((char)getChar());
           if (getChar() != '+')
-            reportingContext.fatal(location, "Unexpected character 'e'!");
+            reportingContext.error(location, "Unexpected character 'e'!");
           str.push_back('+');
 
           while (isAsciiDigit(peekChar()))
@@ -471,7 +471,7 @@ StartOver:
 
       if (c == ':') {
         if (!conf::Papyrus::allowCompilerIdentifiers || peekChar() != ':')
-          reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
+          reportingContext.error(baseLoc, "Unexpected character '{}'!", (char)c);
         getChar();
       }
 
@@ -528,9 +528,12 @@ StartOver:
             case '"':
               break;
             case -1:
-              reportingContext.fatal(location, "Unexpected EOF before the end of the string.");
+              reportingContext.error(location, "Unexpected EOF before the end of the string.");
+              continue;
             default:
-              reportingContext.fatal(location, "Unrecognized escape sequence: '\\{}'", (char)escapeChar);
+              reportingContext.error(location, "Unrecognized escape sequence: '\\{}'", (char)escapeChar);
+              charsRequired += 2;
+              break;
           }
         } else {
           getChar();
@@ -540,8 +543,9 @@ StartOver:
       identifier_ref str { baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() != '"')
-        reportingContext.fatal(location, "Unclosed string!");
-      getChar();
+        reportingContext.error(location, "Unclosed string!");
+      else
+        getChar();
 
       setTok(TokenType::String, baseLoc);
       if (charsRequired != str.size()) {
@@ -563,7 +567,10 @@ StartOver:
                 buf[i++] = '"';
                 break;
               default:
-                reportingContext.fatal(location, "Unrecognized escape sequence: '\\{}'", (char)baseStrm[i2 - 1]);
+                reportingContext.error(location, "Unrecognized escape sequence: '\\{}'", (char)baseStrm[i2 - 1]);
+                buf[i++] = baseStrm[i2 - 2];
+                buf[i++] = baseStrm[i2 - 1];
+                break;
             }
           } else {
             buf[i++] = baseStrm[i2++];
@@ -595,7 +602,7 @@ StartOver:
           }
         }
 
-        reportingContext.fatal(location, "Unexpected EOF before the end of a multiline comment!");
+        reportingContext.error(location, "Unexpected EOF before the end of a multiline comment!");
       }
 
       // Single line comment.
@@ -629,8 +636,9 @@ StartOver:
       identifier_ref str { baseStrm, (size_t)(strm - baseStrm) };
 
       if (peekChar() == -1)
-        reportingContext.fatal(location, "Unexpected EOF before the end of a documentation comment!");
-      getChar();
+        reportingContext.error(location, "Unexpected EOF before the end of a documentation comment!");
+      else
+        getChar(); // Consume final '}'
 
       setTok(TokenType::DocComment, baseLoc);
       // Trim trailing whitespace.
@@ -660,7 +668,7 @@ StartOver:
     case '\\': {
       consume();
       if (cur.type != TokenType::EOL)
-        reportingContext.fatal(baseLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
+        reportingContext.error(baseLoc, "Unexpected '\\'! Division is done with a forward slash '/'.");
       goto StartOver;
     }
 
@@ -680,7 +688,8 @@ StartOver:
     }
 
     default:
-      reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
+      reportingContext.error(baseLoc, "Unexpected character '{}'!", (char)c);
+      goto StartOver;
   }
 }
 

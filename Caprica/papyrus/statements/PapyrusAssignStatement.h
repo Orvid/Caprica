@@ -138,7 +138,7 @@ struct PapyrusAssignStatement final : public PapyrusStatement {
       if (auto ident = ma->accessExpression->asIdentifierExpression())
         ident->identifier.ensureAssignable(ctx->reportingContext);
     } else {
-      ctx->reportingContext.fatal(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
+      ctx->reportingContext.error(lValue->location, "Invalid Lefthand Side for PapyrusAssignStatement!");
     }
   }
 

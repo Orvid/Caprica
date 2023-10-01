@@ -30,12 +30,14 @@ struct PapyrusUnaryOpExpression final : public PapyrusExpression {
     bldr << location;
     switch (operation) {
       case PapyrusUnaryOperatorType::Negate:
-        if (innerExpression->resultType().type == PapyrusType::Kind::Float)
+        if (innerExpression->resultType().type == PapyrusType::Kind::Float) {
           bldr << op::fneg { dest, iVal };
-        else if (innerExpression->resultType().type == PapyrusType::Kind::Int)
+        } else if (innerExpression->resultType().type == PapyrusType::Kind::Int) {
           bldr << op::ineg { dest, iVal };
-        else
-          bldr.reportingContext.fatal(location, "You can only negate integers and floats!");
+        } else {
+          bldr.reportingContext.error(location, "You can only negate integers and floats!");
+          bldr << op::assign { dest, iVal };
+        }
         return dest;
       case PapyrusUnaryOperatorType::Not:
         bldr << op::_not { dest, iVal };

@@ -105,7 +105,7 @@ void PapyrusIdentifier::generateStore(pex::PexFile* file,
   switch (type) {
     case PapyrusIdentifierType::Property:
       if (res.prop->isAutoReadOnly())
-        bldr.reportingContext.fatal(location, "Attempted to generate a store to a read-only property!");
+        bldr.reportingContext.error(location, "Attempted to generate a store to a read-only property!");
       if (conf::CodeGeneration::enableCKOptimizations && res.prop->isAuto() && !res.prop->isAutoReadOnly() &&
           !base.tmpVar && file->getStringValue(base.name) == "self") {
         // We can only do this for properties on ourselves. (CK does this even on parents)

@@ -178,9 +178,9 @@ StartOver:
           }
         }
 
-        reportingContext.fatal(location, "Unexpected EOF before the end of a multiline comment!");
+        reportingContext.error(location, "Unexpected EOF before the end of a multiline comment!");
       } else if (peekChar() != '/') {
-        reportingContext.fatal(location, "Unexpected character '/'!");
+        reportingContext.error(location, "Unexpected character '/'!");
       }
 
       // Single line comment.

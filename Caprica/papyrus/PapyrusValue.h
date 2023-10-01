@@ -127,6 +127,8 @@ struct PapyrusValue final {
     }
     CapricaReportingContext::logicalFatal("Unknown PapyrusValueType!");
   }
+
+  static PapyrusValue defaultFromType(PapyrusResolutionContext* ctx, const PapyrusType& tp);
 };
 
 }}

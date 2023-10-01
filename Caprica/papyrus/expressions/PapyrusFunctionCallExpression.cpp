@@ -201,12 +201,12 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       case PapyrusBuiltinArrayFunctionKind::FindStruct: {
         getArgs("FindStruct", 2, 3);
         if (args[0]->value->resultType().type != PapyrusType::Kind::String) {
-          ctx->reportingContext.fatal(location,
+          ctx->reportingContext.fatal(args[0]->value->location,
                                       "Expected the literal name of the struct member as a string to compare against!");
         }
 
         auto memberName = args[0]->value->asLiteralExpression()->value.val.s;
-        PapyrusType elemType = PapyrusType::Default();
+        PapyrusType elemType = PapyrusType::None(args[0]->value->location);
         for (auto m : function.res.arrayFuncElementType->resolved.struc->members) {
           if (idEq(m->name, memberName)) {
             elemType = m->type;
@@ -407,7 +407,6 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
         if (iter->name != "") {
           hadNamedArgs = true;
           auto newArgsIter = newArgs.beginInsertable();
-          size_t newArgIndex = 0;
           for (auto p : function.res.func->parameters) {
             if (idEq(p->name, iter->name)) {
               auto a = *iter;
@@ -424,14 +423,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
             }
             if (newArgsIter != newArgs.endInsertable() && newArgsIter->argIndex <= p->index)
               ++newArgsIter;
-            newArgIndex++;
           }
-          ctx->reportingContext.fatal(iter->value->location,
+          ctx->reportingContext.error(iter->value->location,
                                       "Unable to find a parameter named '{}'!",
                                       iter->name);
+          goto ContinueOuterLoop;
         }
         if (hadNamedArgs) {
-          ctx->reportingContext.fatal(iter->value->location,
+          ctx->reportingContext.error(iter->value->location,
                                       "No normal arguments are allowed after the first named argument!");
         }
 
@@ -448,11 +447,14 @@ void PapyrusFunctionCallExpression::semantic(PapyrusResolutionContext* ctx, Papy
       auto newArgsIter = newArgs.beginInsertable();
       for (auto p : function.res.func->parameters) {
         if (newArgsIter == newArgs.endInsertable() || newArgsIter->argIndex != p->index) {
-          if (p->defaultValue.type == PapyrusValueType::Invalid)
-            ctx->reportingContext.fatal(location, "Not enough arguments provided.");
           auto newP = ctx->allocator->make<Parameter>();
           newP->argIndex = p->index;
-          newP->value = ctx->allocator->make<PapyrusLiteralExpression>(location, p->defaultValue);
+          if (p->defaultValue.type == PapyrusValueType::Invalid) {
+            ctx->reportingContext.error(location, "Not enough arguments provided.");
+            newP->value = ctx->allocator->make<PapyrusLiteralExpression>(location, PapyrusValue::defaultFromType(ctx, p->type));
+          } else {
+            newP->value = ctx->allocator->make<PapyrusLiteralExpression>(location, p->defaultValue);
+          }
           newArgs.insertBefore(newArgsIter, newP);
         } else {
           ++newArgsIter;

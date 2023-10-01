@@ -555,8 +555,10 @@ PapyrusFunction* PapyrusParser::parseFunction(
     while (cur.type != endToken && cur.type != TokenType::END)
       func->statements.push_back(parseStatement(func));
 
-    if (cur.type == TokenType::END)
-      reportingContext.fatal(cur.location, "Unexpected EOF in state body!");
+    if (cur.type == TokenType::END) {
+      reportingContext.error(cur.location, "Unexpected EOF in state body!");
+      return func;
+    }
     consume();
     expectConsumeEOLs();
   }

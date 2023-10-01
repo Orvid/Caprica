@@ -27,9 +27,9 @@ struct PapyrusParentExpression final : public PapyrusExpression {
   virtual void semantic(PapyrusResolutionContext* ctx) override {
     type = ctx->resolveType(type);
     if (ctx->object->parentClass != type)
-      ctx->reportingContext.fatal(location, "An error occured while resolving the parent type!");
+      ctx->reportingContext.fatal(location, "An error occurred while resolving the parent type!");
     if (ctx->object->parentClass.type == PapyrusType::Kind::None)
-      ctx->reportingContext.fatal(location, "Parent is invalid in a script with no parent!");
+      ctx->reportingContext.error(location, "Parent is invalid in a script with no parent!");
   }
 
   virtual PapyrusType resultType() const override { return type; }

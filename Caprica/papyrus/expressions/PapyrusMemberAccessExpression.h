@@ -3,6 +3,7 @@
 #include <papyrus/expressions/PapyrusArrayLengthExpression.h>
 #include <papyrus/expressions/PapyrusExpression.h>
 #include <papyrus/expressions/PapyrusIdentifierExpression.h>
+#include <papyrus/expressions/PapyrusFunctionCallExpression.h>
 #include <papyrus/PapyrusType.h>
 
 #include <pex/PexFile.h>
@@ -62,9 +63,10 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression {
         if (id->identifier.type == PapyrusIdentifierType::Unresolved) {
           auto tp = ctx->resolveType(PapyrusType::Unresolved(id->location, id->identifier.res.name));
           if (tp.type != PapyrusType::Kind::ResolvedObject) {
-            ctx->reportingContext.fatal(baseExpression->location,
+            ctx->reportingContext.error(baseExpression->location,
                                         "Unresolved identifier '{}'!",
                                         id->identifier.res.name);
+            return;
           }
           fc->function = ctx->resolveFunctionIdentifier(tp, fc->function, true);
           fc->semantic(ctx);
@@ -83,7 +85,7 @@ struct PapyrusMemberAccessExpression final : public PapyrusExpression {
         id->semantic(ctx);
       } else if (auto al = accessExpression->asArrayLengthExpression()) {
         if (baseExpression->resultType().type != PapyrusType::Kind::Array)
-          ctx->reportingContext.fatal(al->location, "Attempted to access the .Length property of a non-array value!");
+          ctx->reportingContext.error(al->location, "Attempted to access the .Length property of a non-array value!");
       } else {
         CapricaReportingContext::logicalFatal("Invalid access expression for PapyrusMemberAccessExpression!");
       }
