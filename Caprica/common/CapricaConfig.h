@@ -25,7 +25,6 @@ namespace PCompiler {
     extern bool pCompilerCompatibilityMode;
     extern bool all;
     extern bool norecurse;
-    extern bool ignorecwd;
 }
 
 // Options related to code generation.

@@ -162,7 +162,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Do not report progress, only failures.")("strict",
                                                   po::value<bool>()->default_value(false)->implicit_value(true),
                                                   "Enable strict checking of control flow, poisoning, and more sane "
-                                                  "implicit conversions. It is strongly recommended to enable these.");
+                                                  "implicit conversions. It is strongly recommended to enable these.")(
+        "ignorecwd",
+        po::bool_switch()->default_value(false)->implicit_value(true),
+        "Do not add the current working directory to the beginning of the import list.");
 
     po::options_description champollionCompatDesc("Champollion Compatibility");
     champollionCompatDesc.add_options()(
@@ -266,7 +269,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       "Enable PCompiler compatibility mode (default false).")
       ("all,a", po::bool_switch(&conf::PCompiler::all)->default_value(false), "Treat input objects as directories")
       ("norecurse", po::bool_switch(&conf::PCompiler::norecurse)->default_value(false), "Don't recursively scan directories with -all")
-      ("ignorecwd", po::bool_switch(&conf::PCompiler::ignorecwd)->default_value(false), "Don't add the current working directory to the import list")
       ("noasm", po::bool_switch()->default_value(false), "Turns off asm output if it was turned on.")
       ("asmonly", po::bool_switch()->default_value(false), "Does nothing on Caprica")
       ("debug,d", po::bool_switch()->default_value(false), "Does nothing on Caprica");
@@ -472,14 +474,17 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       if (conf::PCompiler::norecurse){
         iterateCompiledDirectoriesRecursively = false;
       }
-      conf::PCompiler::ignorecwd = vm["ignorecwd"].as<bool>();
       if (vm["noasm"].as<bool>()){
         conf::Debug::dumpPexAsm = false;
       }
-      if (!conf::PCompiler::ignorecwd) {
-        std::string cwd = filesystem::current_path().string();
-        conf::Papyrus::importDirectories.reserve(1);
-        conf::Papyrus::importDirectories.emplace_back(cwd);
+    }
+
+    if (!vm["ignorecwd"].as<bool>()) {
+      conf::Papyrus::importDirectories.reserve(1);
+      conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
+      if (!conf::General::quietCompile) {
+        std::cout << "Adding current working directory to import list: " << conf::Papyrus::importDirectories[0]
+                  << std::endl;
       }
     }
 
@@ -497,6 +502,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
               return false;
             }
             conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(sd));
+            if (!conf::General::quietCompile)
+              std::cout << "Adding import directory: " << conf::Papyrus::importDirectories.back() << std::endl;
           }
           continue;
         }
@@ -505,6 +512,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           return false;
         }
         conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(d));
+        if (!conf::General::quietCompile)
+          std::cout << "Adding import directory: " << conf::Papyrus::importDirectories.back() << std::endl;
       }
     }
 
@@ -537,7 +546,13 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
 
       parseUserFlags(std::move(flagsPath));
+    } else {
+      if (conf::Papyrus::game == GameID::Starfield) {
+        std::cout << "No flags specified, Using default Starfield flags file." << std::endl;
+        parseUserFlags("fake://Starfield/Starfield_Papyrus_Flags.flg");
+      }
     }
+
 
     if (!handleImports(conf::Papyrus::importDirectories, jobManager)) {
       std::cout << "Import failed!" << std::endl;
@@ -576,10 +591,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
             f.append(".psc");
           }
           auto oDir = baseOutputDir;
-          addSingleFile(std::move(f),
-                        std::move(oDir),
-                        jobManager,
-                        caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile);
+          if (!addSingleFile(f, oDir, jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
+            return false;
         }
       }
       return true;
@@ -609,10 +622,8 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           return false;
         }
         auto oDir = baseOutputDir;
-        addSingleFile(std::move(f),
-                      std::move(oDir),
-                      jobManager,
-                      caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile);
+        if (!addSingleFile(f, oDir, jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
+          return false;
       }
     }
   } catch (const std::exception& ex) {

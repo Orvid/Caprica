@@ -52,16 +52,16 @@ bool CapricaReportingContext::isWarningEnabled(CapricaFileLocation /* location *
 size_t CapricaReportingContext::getLocationLine(CapricaFileLocation location, size_t lastLineHint) {
   if (!lineOffsets.size())
     CapricaReportingContext::logicalFatal("Unable to locate line at offset {}.", location.startOffset);
-  if (lastLineHint != 0) {
-    if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
-      return lastLineHint + 1;
-    if (lastLineHint + 1 < lineOffsets.size()) {
-      if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
-        return lastLineHint + 1;
-    }
-  }
   auto a = std::lower_bound(lineOffsets.begin(), lineOffsets.end(), location.startOffset);
   if (a == lineOffsets.end()) {
+    if (lastLineHint != 0) {
+      if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
+        return lastLineHint + 1;
+      if (lastLineHint + 1 < lineOffsets.size()) {
+        if (location.startOffset >= lineOffsets.at(lastLineHint - 1))
+          return lastLineHint + 1;
+      }
+    }
     // TODO: Fix line offsets during parsing for reals, remove this hack
     // maybePushMessage(this, nullptr, "Warning:", 0, fmt::format("Unable to locate line at offset {}, using last known line {}...", location.startOffset, lineOffsets.size()), true);
     return lineOffsets.size();

@@ -88,7 +88,7 @@ static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
         "fake://skyrim/__ScriptObject.psc",
         "fake://skyrim/DLC1SCWispWallScript.psc",
 };
-
+static caseless_unordered_identifier_set abs_import_dirs {};
 bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager *jobManager);
 
 PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType,
@@ -194,26 +194,28 @@ bool addFilesFromDirectory(const std::string &f,
     FindClose(hFind);
 
     if (conf::Papyrus::game > GameID::Skyrim) {
-      // check that all the values in the base script dir map are true
-      if (!gBaseFound && !baseDirMap.empty()) {
-        bool allTrue = true;
-        for (auto &pair: baseDirMap) {
-          if (!pair.second) {
-            allTrue = false;
-            break;
+      if (!namespaceMap.empty()) {
+        // check that all the values in the base script dir map are true
+        if (!gBaseFound && !baseDirMap.empty()) {
+          bool allTrue = true;
+          for (auto& pair : baseDirMap) {
+            if (!pair.second) {
+              allTrue = false;
+              break;
+            }
+          }
+          if (allTrue && namespaceMap.size() >= getBaseLowerFileCountLimit(conf::Papyrus::game)) {
+            // if it's true, then this is the base dir and the namespace should be root
+            gBaseFound = true;
+            l_startNS = "";
           }
         }
-        if (allTrue && namespaceMap.size() >= getBaseLowerFileCountLimit(conf::Papyrus::game)) {
-          // if it's true, then this is the base dir and the namespace should be root
-          gBaseFound = true;
-          l_startNS = "";
-        }
+        // if it's true, then this is the base dir and the namespace should be root
+        auto namespaceName = l_startNS + curDir;
+        std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
+        namespaceName = namespaceName.substr(1);
+        caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
       }
-      // if it's true, then this is the base dir and the namespace should be root
-      auto namespaceName = l_startNS + curDir;
-      std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-      namespaceName = namespaceName.substr(1);
-      caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
     } else {
       caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(namespaceMap));
     }
@@ -308,12 +310,14 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
   }
   std::cout << "Importing files..." << std::endl;
   int i = 0;
+  abs_import_dirs.reserve(f.size());
   for (auto& dir : f) {
     std::string ns = "";
     if (conf::Papyrus::game > GameID::Skyrim)
       ns = "!!temp" + std::to_string(i++);
     if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ns))
       return false;
+    abs_import_dirs.emplace(std::filesystem::absolute(dir).string());
   }
   CapricaStats::outputImportedCount();
   caprica::papyrus::PapyrusCompilationContext::RenameImports(jobManager);
@@ -349,13 +353,34 @@ bool addSingleFile(const std::string &f,
     auto ppath = caprica::FSUtils::parentPathAsRef(f);
     if (ppath.compare(filename.c_str()) != 0) {
       namespaceDir += ppath;
-      absBaseDir = absBaseDir.find(namespaceDir) != std::string::npos ? absBaseDir.substr(0, absBaseDir.find(namespaceDir)) : absBaseDir;
+      absBaseDir = absBaseDir.rfind(namespaceDir) != std::string::npos
+                       ? absBaseDir.substr(0, absBaseDir.rfind(namespaceDir))
+                       : absBaseDir;
+    }
+  } else {
+    // PCompiler-like namespace resolution by scanning imports
+    bool found = false;
+    for (auto& dir : abs_import_dirs) {
+      auto relPath = std::filesystem::relative(f, dir);
+      // check if relpath begins with ".."
+      if (relPath != path && !relPath.string().starts_with("..")) {
+        namespaceDir += relPath.parent_path().string();
+        absBaseDir = dir;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      std::cout << "ERROR: Absolute file path '" << f << "' is not in an import directory, cannot resolve namespace!"
+                << std::endl;
+      return false;
     }
   }
   auto namespaceName = namespaceDir;
   std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
   namespaceName = namespaceName.substr(1);
-  std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
+  if (!conf::General::quietCompile)
+    std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
   auto node = getNode(nodeType,
                       jobManager,
                       baseOutputDir,

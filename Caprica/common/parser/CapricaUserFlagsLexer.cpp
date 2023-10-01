@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <common/FakeScripts.h>
 #include <common/CapricaConfig.h>
 #include <common/CaselessStringComparer.h>
 
@@ -206,6 +207,20 @@ StartOver:
     default:
       reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
   }
+}
+CapricaUserFlagsLexer::CapricaUserFlagsLexer(CapricaReportingContext& repCtx, const std::string& file)
+    : filename(file), cur(TokenType::Unknown), reportingContext(repCtx) {
+  if (filename.starts_with("fake://")){
+    strmString.str(FakeScripts::getFakeFlagsFile(conf::Papyrus::game).to_string());
+    strm = &strmString;
+  } else {
+    strmFile.open(filename, std::ifstream::binary);
+    if (!strmFile.is_open()) {
+      CapricaReportingContext::logicalFatal("Unable to open file '%s'!", filename.c_str());
+    }
+    strm = &strmFile;
+  }
+  consume(); // set the first token.
 }
 
 }}
