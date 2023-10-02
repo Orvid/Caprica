@@ -205,7 +205,8 @@ StartOver:
     }
 
     default:
-      reportingContext.fatal(baseLoc, "Unexpected character '{}'!", (char)c);
+      reportingContext.error(baseLoc, "Unexpected character '{}'!", (char)c);
+      goto StartOver;
   }
 }
 CapricaUserFlagsLexer::CapricaUserFlagsLexer(CapricaReportingContext& repCtx, const std::string& file)
