@@ -314,7 +314,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     if (vm.count("help") || !vm.count("input-file")) {
-      std::cout << "Caprica Papyrus Compiler v0.2.0" << std::endl;
+      std::cout << "Caprica Papyrus Compiler v0.3.0" << std::endl;
       std::cout << "Usage: Caprica <sourceFile / directory>" << std::endl;
       std::cout << "Note that when passing a directory, only Papyrus script files (*.psc) in it will be compiled. Pex "
                    "(*.pex) and Pex assembly (*.pas) files will be ignored."
