@@ -122,7 +122,7 @@ bool addFilesFromDirectory(const std::string &f,
   // faster than boost::filesystem::recursive_directory_iterator,
   // at 40ms vs. 200ms for the boost solution, and the raw API
   // solution also gets us the relative paths, absolute paths,
-  // last write time, and filesize, all without any extra processing.
+  // last write time, and file size, all without any extra processing.
   auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{};
   dirs.push_back("\\");
@@ -139,7 +139,7 @@ bool addFilesFromDirectory(const std::string &f,
 
     hFind = FindFirstFileA(curSearchPattern.c_str(), &data);
     if (hFind == INVALID_HANDLE_VALUE) {
-      std::cout << "An error occured while trying to iterate the files in '" << curSearchPattern << "'!" << std::endl;
+      std::cout << "An error occurred while trying to iterate the files in '" << curSearchPattern << "'!" << std::endl;
       return false;
     }
 
@@ -336,12 +336,12 @@ bool addSingleFile(const std::string &f,
   }
   auto lastModTime = std::filesystem::last_write_time(f, ec);
   if (ec) {
-    std::cout << "An error occured while trying to get the last modified time of '" << f << "'!" << std::endl;
+    std::cout << "An error occurred while trying to get the last modified time of '" << f << "'!" << std::endl;
     return false;
   }
   auto fileSize = std::filesystem::file_size(f, ec);
   if (ec) {
-    std::cout << "An error occured while trying to get the file size of '" << f << "'!" << std::endl;
+    std::cout << "An error occurred while trying to get the file size of '" << f << "'!" << std::endl;
     return false;
   }
 
