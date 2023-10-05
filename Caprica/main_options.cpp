@@ -6,6 +6,7 @@
 
 #include <common/CapricaConfig.h>
 #include <common/FSUtils.h>
+#include <common/parser/CapricaPPJParser.h>
 
 #include <filesystem>
 #include <fstream>
@@ -13,7 +14,6 @@
 #include <papyrus/PapyrusCompilationContext.h>
 #include <string>
 #include <utility>
-
 namespace conf = caprica::conf;
 namespace po = boost::program_options;
 namespace filesystem = std::filesystem;
@@ -103,6 +103,24 @@ void SaveDefaultConfig(const po::options_description& descOptions,
   // or write_ini
   boost::property_tree::write_ini(configFile, tree);
 }
+
+std::string
+findFlags(const std::string& flagsPath, const std::string& progamBasePath, const std::string& baseOutputDir) {
+  if (filesystem::exists(flagsPath))
+    return flagsPath;
+
+  for (auto& i : conf::Papyrus::importDirectories)
+    if (filesystem::exists(i + "\\" + flagsPath))
+      return i + "\\" + flagsPath;
+
+  if (filesystem::exists(baseOutputDir + "\\" + flagsPath))
+    return baseOutputDir + "\\" + flagsPath;
+  if (filesystem::exists(progamBasePath + "\\" + flagsPath))
+    return progamBasePath + "\\" + flagsPath;
+
+  return "";
+};
+
 bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManager* jobManager) {
   try {
     bool iterateCompiledDirectoriesRecursively = false;
@@ -322,6 +340,72 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       std::cout << visibleDesc << std::endl;
       return false;
     }
+    // ensure cwd is placed first if this isn't turned on; this isn't overridden by the ppj
+    if (!vm["ignorecwd"].as<bool>()) {
+      conf::Papyrus::importDirectories.reserve(1);
+      conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
+      if (!conf::General::quietCompile) {
+        std::cout << "Adding current working directory to import list: " << conf::Papyrus::importDirectories[0]
+                  << std::endl;
+      }
+    }
+
+    // we have to put this at the beginning, because flags passed override this
+    PapyrusProject ppj;
+    auto inputFiles = vm["input-file"].as<std::vector<std::string>>();
+    for (auto& f : inputFiles) {
+      auto ext = filesystem::path(f).extension().string();
+      if (ext == ".ppj") {
+        if (ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+          std::cout << "Only one project file can be specified!" << std::endl;
+          return false;
+        }
+        CapricaPPJParser ppjParser;
+        ppj = ppjParser.Parse(f);
+        std::cout << "Loaded project." << std::endl;
+        for (auto& f : ppj.folders)
+          std::cout << "Folder: " << f.path << std::endl;
+
+        for (auto& s : ppj.scripts)
+          std::cout << "Script: " << s << std::endl;
+      }
+    }
+
+    if (ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+      // set all the options in the ppj
+      conf::Papyrus::game =
+          ppj.game == PapyrusProject::PapyrusGame::SkyrimSpecialEdition ? GameID::Skyrim : (GameID)ppj.game;
+      conf::General::anonymizeOutput = ppj.anonymize;
+      conf::General::outputDirectory = ppj.output;
+      if (conf::Papyrus::importDirectories.empty()) {
+        conf::Papyrus::importDirectories = ppj.imports;
+      } else {
+        conf::Papyrus::importDirectories.insert(conf::Papyrus::importDirectories.end(),
+                                                ppj.imports.begin(),
+                                                ppj.imports.end());
+      }
+      conf::CodeGeneration::disableDebugCode = ppj.release;
+      conf::CodeGeneration::disableBetaCode = ppj.finalAttr;
+      conf::CodeGeneration::enableOptimizations = ppj.optimize;
+
+      switch (ppj.asmAttr) {
+        case PapyrusProject::AsmType::None:
+        case PapyrusProject::AsmType::Discard:
+          conf::Debug::dumpPexAsm = false;
+          break;
+        case PapyrusProject::AsmType::Keep:
+        case PapyrusProject::AsmType::Only: // TODO: HANDLE THIS
+          conf::Debug::dumpPexAsm = true;
+          break;
+      }
+      for (auto& f : ppj.folders)
+        inputFiles.push_back(f.path);
+      for (auto& f : ppj.scripts)
+        inputFiles.push_back(f);
+
+      // handle the inputs
+    }
+    // set the options according to this
 
     std::string gameType = vm["game"].as<std::string>();
     if (_stricmp(gameType.c_str(), "Starfield") == 0) {
@@ -415,14 +499,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         conf::Debug::dumpPexAsm = false;
     }
 
-    if (!vm["ignorecwd"].as<bool>()) {
-      conf::Papyrus::importDirectories.reserve(1);
-      conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
-      if (!conf::General::quietCompile) {
-        std::cout << "Adding current working directory to import list: " << conf::Papyrus::importDirectories[0]
-                  << std::endl;
-      }
-    }
 
     if (vm.count("import")) {
       auto dirs = vm["import"].as<std::vector<std::string>>();
@@ -459,25 +535,11 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     baseOutputDir = FSUtils::canonical(baseOutputDir);
 
     if (vm.count("flags")) {
-      const auto findFlags = [progamBasePath, baseOutputDir](const std::string& flagsPath) -> std::string {
-        if (filesystem::exists(flagsPath))
-          return flagsPath;
+      auto flags = vm["flags"].as<std::string>();
 
-        for (auto& i : conf::Papyrus::importDirectories)
-          if (filesystem::exists(i + "\\" + flagsPath))
-            return i + "\\" + flagsPath;
-
-        if (filesystem::exists(baseOutputDir + "\\" + flagsPath))
-          return baseOutputDir + "\\" + flagsPath;
-        if (filesystem::exists(progamBasePath + "\\" + flagsPath))
-          return progamBasePath + "\\" + flagsPath;
-
-        return "";
-      };
-
-      auto flagsPath = findFlags(vm["flags"].as<std::string>());
+      auto flagsPath = findFlags(flags, progamBasePath, baseOutputDir);
       if (flagsPath == "") {
-        std::cout << "Unable to locate flags file '" << vm["flags"].as<std::string>() << "'." << std::endl;
+        std::cout << "Unable to locate flags file '" << flags << "'." << std::endl;
         return false;
       }
 
@@ -546,7 +608,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         }
       } else {
         std::string_view ext = FSUtils::extensionAsRef(f);
-        if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex")) {
+        if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex") && !pathEq(ext, ".ppj")) {
           std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
           std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!"
                     << std::endl;

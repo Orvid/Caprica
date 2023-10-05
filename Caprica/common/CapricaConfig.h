@@ -5,8 +5,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include <common/CapricaUserFlagsDefinition.h>
 #include "GameID.h"
+#include <common/CapricaUserFlagsDefinition.h>
+#include <common/parser/PapyrusProject.h>
 
 namespace caprica { namespace conf {
 
@@ -17,7 +18,11 @@ namespace General {
   extern bool compileInParallel;
   // If true, only report failures, not progress.
   extern bool quietCompile;
-}
+  // self-explanatory
+  extern std::string outputDirectory;
+  // If true, remove identifying information from the header.
+  extern bool anonymizeOutput;
+  }
 
 // options related to compatibility with PCompiler's CLI parsing and name resolution
 namespace PCompiler {
