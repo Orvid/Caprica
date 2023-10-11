@@ -187,6 +187,13 @@ enum RecurseSetting {
   Recurse,
   NoRecurse
 };
+
+enum class BoolSetting : uint8_t {
+  False,
+  True,
+  NOT_SET = 0xFF,
+};
+
 struct RecursablePath {
   bool noRecurse = false;
   std::string path = "";
@@ -241,27 +248,29 @@ struct PapyrusProject {
     Fallout4 = 2,
     Fallout76 = 3,
     Starfield = 4,
-    SkyrimSpecialEdition = 5
+    SkyrimSpecialEdition = 0xFF01,
+    NOT_SET = UNKNOWN
   };
 
   enum class AsmType : uint8_t {
     None,
     Keep,
     Only,
-    Discard
+    Discard,
+    NOT_SET = 0xFF,
   };
 
   // Attributes
-  PapyrusGame game = PapyrusGame::UNKNOWN;
-  bool optimize = false;
-  bool release = false;
-  bool finalAttr = false;
-  bool anonymize = false;
-  bool package = false;
-  bool zip = false;
+  PapyrusGame game = PapyrusGame::NOT_SET;
+  BoolSetting optimize = BoolSetting::NOT_SET;
+  BoolSetting release = BoolSetting::NOT_SET;
+  BoolSetting finalAttr = BoolSetting::NOT_SET;
+  BoolSetting anonymize = BoolSetting::NOT_SET;
+  BoolSetting package = BoolSetting::NOT_SET;
+  BoolSetting zip = BoolSetting::NOT_SET;
   std::string output; // required
   std::string flags;  // required
-  AsmType asmAttr = AsmType::None;
+  AsmType asmAttr = AsmType::NOT_SET;
 
   // elements
   VariableList variables;

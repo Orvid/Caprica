@@ -25,11 +25,12 @@ bool addFilesFromDirectory(const std::string& f,
                            bool recursive,
                            const std::string& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
-                           caprica::papyrus::PapyrusCompilationNode::NodeType nodeType,
+                           papyrus::PapyrusCompilationNode::NodeType nodeType,
+                           const std::string& subdir = "",
                            const std::string& startingNS = "");
 void parseUserFlags(std::string&& flagsPath);
 bool handleImports(const std::vector<std::string>& f, caprica::CapricaJobManager* jobManager);
-bool addSingleFile(const std::string& f,
+bool addSingleFile(const conf::InputFile& input,
                    const std::string& baseOutputDir,
                    caprica::CapricaJobManager* jobManager,
                    caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
@@ -121,6 +122,11 @@ findFlags(const std::string& flagsPath, const std::string& progamBasePath, const
   return "";
 };
 
+void setPPJBool(BoolSetting value, bool& setting) {
+  if (value != BoolSetting::NOT_SET)
+    setting = value == BoolSetting::True ? true : false;
+};
+
 bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManager* jobManager) {
   try {
     bool iterateCompiledDirectoriesRecursively = false;
@@ -129,7 +135,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     po::options_description desc("General");
     desc.add_options()
       ("help,h,?", "Print usage information.")
-      ("game,g", po::value<std::string>()->default_value("starfield"),
+      ("game,g", po::value<std::string>(),
         "Set the game type to compile for. Valid values are: starfield, skyrim, fallout4, fallout76. (default: starfield)")
       ("import,i", po::value<std::vector<std::string>>()->composing(),
         "Set the compiler's import directories.")
@@ -141,10 +147,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Enable optimizations.")
       ("parallel-compile,p", po::bool_switch(&conf::General::compileInParallel)->default_value(false),
         "Compile files in parallel.")
-      ("recurse,R", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false),
-        "Recursively compile all scripts in the directories passed.")
       ("release,r", po::bool_switch(&conf::CodeGeneration::disableDebugCode)->default_value(false),
         "Don't generate DebugOnly code.")
+      ("recurse,R", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false),
+        "Recursively compile all scripts in the directories passed.")
       ("final", po::bool_switch(&conf::CodeGeneration::disableBetaCode)->default_value(false),
         "Don't generate BetaOnly code.")
       ("all-warnings-as-errors",
@@ -340,54 +346,76 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       std::cout << visibleDesc << std::endl;
       return false;
     }
-    // ensure cwd is placed first if this isn't turned on; this isn't overridden by the ppj
-    if (!vm["ignorecwd"].as<bool>()) {
-      conf::Papyrus::importDirectories.reserve(1);
-      conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
-      if (!conf::General::quietCompile) {
-        std::cout << "Adding current working directory to import list: " << conf::Papyrus::importDirectories[0]
-                  << std::endl;
+
+    auto filesPassed = std::vector<std::string>();
+    for (auto& f : vm["input-file"].as<std::vector<std::string>>()) {
+      if (f.find(';') != std::string::npos) {
+        std::istringstream s(f);
+        std::string sd;
+        while (getline(s, sd, ';'))
+          filesPassed.push_back(sd);
+      } else {
+        filesPassed.push_back(f);
       }
     }
 
+    std::string flags;
+    std::string baseOutputDir;
     // we have to put this at the beginning, because flags passed override this
     PapyrusProject ppj;
-    auto inputFiles = vm["input-file"].as<std::vector<std::string>>();
-    for (auto& f : inputFiles) {
+    std::string ppjPath;
+    auto filesToRemove = std::vector<std::string>();
+    for (auto& f : filesPassed) {
       auto ext = filesystem::path(f).extension().string();
       if (ext == ".ppj") {
-        if (ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+        if (!ppjPath.empty()) {
           std::cout << "Only one project file can be specified!" << std::endl;
           return false;
         }
         CapricaPPJParser ppjParser;
         ppj = ppjParser.Parse(f);
-        std::cout << "Loaded project." << std::endl;
-        for (auto& f : ppj.folders)
-          std::cout << "Folder: " << f.path << std::endl;
-
-        for (auto& s : ppj.scripts)
-          std::cout << "Script: " << s << std::endl;
+        filesToRemove.push_back(f);
+        ppjPath = f;
       }
     }
+    // Remove the project file from the input files.
+    for (auto& f : filesToRemove) {
+      auto it = std::find(filesPassed.begin(), filesPassed.end(), f);
+      if (it != filesPassed.end())
+        filesPassed.erase(it);
+    }
 
-    if (ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+    if (vm.count("pcompiler")) {
+      conf::PCompiler::pCompilerCompatibilityMode = vm["pcompiler"].as<bool>();
+      conf::PCompiler::all = vm["all"].as<bool>();
+      conf::PCompiler::norecurse = vm["norecurse"].as<bool>();
+      if (conf::PCompiler::norecurse)
+        iterateCompiledDirectoriesRecursively = false;
+    }
+
+    if (!ppjPath.empty()) {
+      auto baseDir = filesystem::path(ppjPath).parent_path();
+      if (!baseDir.empty())
+        baseDir = FSUtils::canonical(baseDir.string());
+      else
+        baseDir = filesystem::current_path();
       // set all the options in the ppj
-      conf::Papyrus::game =
-          ppj.game == PapyrusProject::PapyrusGame::SkyrimSpecialEdition ? GameID::Skyrim : (GameID)ppj.game;
-      conf::General::anonymizeOutput = ppj.anonymize;
-      conf::General::outputDirectory = ppj.output;
-      if (conf::Papyrus::importDirectories.empty()) {
-        conf::Papyrus::importDirectories = ppj.imports;
-      } else {
-        conf::Papyrus::importDirectories.insert(conf::Papyrus::importDirectories.end(),
-                                                ppj.imports.begin(),
-                                                ppj.imports.end());
+      if (ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+        conf::Papyrus::game =
+            ppj.game == PapyrusProject::PapyrusGame::SkyrimSpecialEdition ? GameID::Skyrim : (GameID)ppj.game;
       }
-      conf::CodeGeneration::disableDebugCode = ppj.release;
-      conf::CodeGeneration::disableBetaCode = ppj.finalAttr;
-      conf::CodeGeneration::enableOptimizations = ppj.optimize;
 
+      conf::Papyrus::importDirectories.reserve(conf::Papyrus::importDirectories.size() + ppj.imports.size());
+      for (auto& i : ppj.imports) {
+        std::filesystem::path ipath = i;
+        if (!ipath.is_absolute())
+          ipath = (baseDir / i);
+        conf::Papyrus::importDirectories.emplace_back(FSUtils::canonical(ipath.string()));
+      }
+      setPPJBool(ppj.anonymize, conf::General::anonymizeOutput);
+      setPPJBool(ppj.release, conf::CodeGeneration::disableDebugCode);
+      setPPJBool(ppj.finalAttr, conf::CodeGeneration::disableBetaCode);
+      setPPJBool(ppj.optimize, conf::CodeGeneration::enableOptimizations);
       switch (ppj.asmAttr) {
         case PapyrusProject::AsmType::None:
         case PapyrusProject::AsmType::Discard:
@@ -397,28 +425,60 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         case PapyrusProject::AsmType::Only: // TODO: HANDLE THIS
           conf::Debug::dumpPexAsm = true;
           break;
+        default:
+          break;
       }
+      auto outputDir = std::filesystem::path(ppj.output);
+      if (outputDir.is_relative())
+        outputDir = (baseDir / ppj.output);
+      baseOutputDir = outputDir.string();
+
+      conf::General::inputFiles.reserve(conf::General::inputFiles.size() + ppj.folders.size() + ppj.scripts.size());
       for (auto& f : ppj.folders)
-        inputFiles.push_back(f.path);
+        conf::General::inputFiles.emplace_back(f.path, f.noRecurse, baseDir);
       for (auto& f : ppj.scripts)
-        inputFiles.push_back(f);
-
-      // handle the inputs
+        conf::General::inputFiles.emplace_back(f, false, baseDir);
+      flags = ppj.flags;
+    } else { // if we're not doing a project file...
+      // ensure cwd is placed first
+      if (!vm["ignorecwd"].as<bool>()) {
+        conf::Papyrus::importDirectories.reserve(1);
+        conf::Papyrus::importDirectories.emplace_back(filesystem::current_path().string());
+        if (!conf::General::quietCompile) {
+          std::cout << "Adding current working directory to import list: " << conf::Papyrus::importDirectories[0]
+                    << std::endl;
+        }
+      }
     }
-    // set the options according to this
+    if (conf::Papyrus::game == GameID::UNKNOWN) {
+      std::string gameType;
+      if (vm.count("game"))
+        gameType = vm["game"].as<std::string>();
+      else
+        gameType = "Starfield";
+      if (_stricmp(gameType.c_str(), "Starfield") == 0) {
+        conf::Papyrus::game = GameID::Starfield;
+      } else if (_stricmp(gameType.c_str(), "Skyrim") == 0) {
+        conf::Papyrus::game = GameID::Skyrim;
+      } else if (_stricmp(gameType.c_str(), "Fallout4") == 0) {
+        conf::Papyrus::game = GameID::Fallout4;
+      } else if (_stricmp(gameType.c_str(), "Fallout76") == 0) {
+        conf::Papyrus::game = GameID::Fallout76;
+      } else {
+        std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
+        return false;
+      }
+    }
 
-    std::string gameType = vm["game"].as<std::string>();
-    if (_stricmp(gameType.c_str(), "Starfield") == 0) {
-      conf::Papyrus::game = GameID::Starfield;
-    } else if (_stricmp(gameType.c_str(), "Skyrim") == 0) {
-      conf::Papyrus::game = GameID::Skyrim;
-    } else if (_stricmp(gameType.c_str(), "Fallout4") == 0) {
-      conf::Papyrus::game = GameID::Fallout4;
-    } else if (_stricmp(gameType.c_str(), "Fallout76") == 0) {
-      conf::Papyrus::game = GameID::Fallout76;
-    } else {
-      std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
-      return false;
+    if (vm.count("flags"))
+      flags = vm["flags"].as<std::string>();
+    if (vm.count("output"))
+      baseOutputDir = vm["output"].as<std::string>();
+    else if (baseOutputDir.empty())
+      baseOutputDir = filesystem::current_path().string();
+    if (vm.count("pcompiler")) {
+      if (vm["noasm"].as<bool>())
+        conf::Debug::dumpPexAsm = false;
     }
 
     if (conf::Papyrus::game != GameID::Skyrim) {
@@ -489,17 +549,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       }
     }
 
-    if (vm.count("pcompiler")) {
-      conf::PCompiler::pCompilerCompatibilityMode = vm["pcompiler"].as<bool>();
-      conf::PCompiler::all = vm["all"].as<bool>();
-      conf::PCompiler::norecurse = vm["norecurse"].as<bool>();
-      if (conf::PCompiler::norecurse)
-        iterateCompiledDirectoriesRecursively = false;
-      if (vm["noasm"].as<bool>())
-        conf::Debug::dumpPexAsm = false;
-    }
-
-
     if (vm.count("import")) {
       auto dirs = vm["import"].as<std::vector<std::string>>();
       conf::Papyrus::importDirectories.reserve(dirs.size());
@@ -513,7 +562,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
               std::cout << "Unable to find the import directory '" << sd << "'!" << std::endl;
               return false;
             }
-            conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(sd));
+            conf::Papyrus::importDirectories.push_back(FSUtils::canonical(sd));
             if (!conf::General::quietCompile)
               std::cout << "Adding import directory: " << conf::Papyrus::importDirectories.back() << std::endl;
           }
@@ -523,59 +572,50 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           std::cout << "Unable to find the import directory '" << d << "'!" << std::endl;
           return false;
         }
-        conf::Papyrus::importDirectories.push_back(caprica::FSUtils::canonical(d));
+        conf::Papyrus::importDirectories.push_back(FSUtils::canonical(d));
         if (!conf::General::quietCompile)
           std::cout << "Adding import directory: " << conf::Papyrus::importDirectories.back() << std::endl;
       }
     }
 
-    std::string baseOutputDir = vm["output"].as<std::string>();
     if (!filesystem::exists(baseOutputDir))
       filesystem::create_directories(baseOutputDir);
     baseOutputDir = FSUtils::canonical(baseOutputDir);
+    conf::General::outputDirectory = baseOutputDir;
 
-    if (vm.count("flags")) {
-      auto flags = vm["flags"].as<std::string>();
+    std::string flagsPath;
+    if (!flags.empty()) {
+      flagsPath = findFlags(flags, progamBasePath, baseOutputDir);
+    } else if (conf::Papyrus::game == GameID::Starfield) {
+      std::cout << "No flags specified, Using default Starfield flags file." << std::endl;
+      flagsPath = "fake://Starfield/Starfield_Papyrus_Flags.flg";
+    }
 
-      auto flagsPath = findFlags(flags, progamBasePath, baseOutputDir);
-      if (flagsPath == "") {
+    if (flagsPath == "") {
+      if (conf::Papyrus::game != GameID::Starfield) {
         std::cout << "Unable to locate flags file '" << flags << "'." << std::endl;
         return false;
       }
-
-      parseUserFlags(std::move(flagsPath));
-    } else if (conf::Papyrus::game == GameID::Starfield) {
-      std::cout << "No flags specified, Using default Starfield flags file." << std::endl;
-      parseUserFlags("fake://Starfield/Starfield_Papyrus_Flags.flg");
+      std::cout << "Could not find flags file, using default Starfield flags..." << std::endl;
+      flagsPath = "fake://Starfield/Starfield_Papyrus_Flags.flg";
     }
+    parseUserFlags(std::move(flagsPath));
 
     if (!handleImports(conf::Papyrus::importDirectories, jobManager)) {
       std::cout << "Import failed!" << std::endl;
       return false;
     }
-    auto filesPassed = std::vector<std::string>();
-    for (auto& f : vm["input-file"].as<std::vector<std::string>>()) {
-      if (f.find(';') != std::string::npos) {
-        std::istringstream s(f);
-        std::string sd;
-        while (getline(s, sd, ';'))
-          filesPassed.push_back(sd);
-      } else {
-        filesPassed.push_back(f);
-      }
-    }
     if (!vm["write-config-file"].as<std::string>().empty())
       SaveDefaultConfig(commandLineDesc, vm["write-config-file"].as<std::string>(), vm);
+
+    conf::General::inputFiles.reserve(conf::General::inputFiles.size() + filesPassed.size());
+
     // PCompiler input resolution
     if (conf::PCompiler::pCompilerCompatibilityMode) {
       for (auto& f : filesPassed) {
         if (conf::PCompiler::all) {
-          if (!addFilesFromDirectory(f,
-                                     iterateCompiledDirectoriesRecursively,
-                                     baseOutputDir,
-                                     jobManager,
-                                     caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
-                                     "")) {
+          if (!std::filesystem::is_directory(f)) {
+            std::cout << "Unable to locate input directory '" << f << "'." << std::endl;
             return false;
           }
         } else {
@@ -583,40 +623,61 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           std::replace(f.begin(), f.end(), ':', '\\');
           if (FSUtils::extensionAsRef(f).empty())
             f.append(".psc");
-          auto oDir = baseOutputDir;
-          if (!addSingleFile(f, oDir, jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
-            return false;
+        }
+        auto input = conf::General::inputFiles.emplace_back(f, iterateCompiledDirectoriesRecursively);
+        if (!std::filesystem::exists(input.resolved_absolute())) {
+          std::cout << "Unable to locate input file '" << f << "'." << std::endl;
+          return false;
         }
       }
-      return true;
+    } else {
+      // normal resolution
+      for (auto& f : filesPassed) {
+        if (!filesystem::is_directory(f)) {
+          std::string_view ext = FSUtils::extensionAsRef(f);
+          if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex") && !pathEq(ext, ".ppj")) {
+            std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
+            std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!"
+                      << std::endl;
+            return false;
+          }
+        }
+        auto input = conf::General::inputFiles.emplace_back(f, iterateCompiledDirectoriesRecursively);
+        if (!std::filesystem::exists(input.resolved_absolute())) {
+          std::cout << "Unable to locate input file '" << f << "'." << std::endl;
+          return false;
+        }
+      }
     }
 
-    // normal resolution
-    for (auto& f : filesPassed) {
-      if (!filesystem::exists(f)) {
-        std::cout << "Unable to locate input file '" << f << "'." << std::endl;
-        return false;
-      }
-      if (filesystem::is_directory(f)) {
-        if (!addFilesFromDirectory(f,
-                                   iterateCompiledDirectoriesRecursively,
+    for (auto& input : conf::General::inputFiles) {
+      auto absPath = input.resolved_absolute();
+      if (std::filesystem::is_directory(absPath)) {
+        auto startingDir = input.resolved_relative().string();
+        if (startingDir == ".")
+          startingDir = "";
+        auto inputDir = input.resolved_absolute_basedir().string();
+        //        auto startingNS = input.resolved_relative().string();
+        //        // replace all `\` with `:`
+        //        std::replace(startingNS.begin(), startingNS.end(), '\\', ':');
+        //        if (startingNS[0] == ':')
+        //          startingNS = startingNS.substr(1);
+        if (!addFilesFromDirectory(inputDir,
+                                   !input.noRecurse,
                                    baseOutputDir,
                                    jobManager,
-                                   caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
+                                   papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
+                                   startingDir,
                                    "")) {
+          std::cout << "Unable to add input directory '" << absPath << "'." << std::endl;
           return false;
         }
-      } else {
-        std::string_view ext = FSUtils::extensionAsRef(f);
-        if (!pathEq(ext, ".psc") && !pathEq(ext, ".pas") && !pathEq(ext, ".pex") && !pathEq(ext, ".ppj")) {
-          std::cout << "Don't know how to handle input file '" << f << "'!" << std::endl;
-          std::cout << "Expected either a Papyrus file (*.psc), Pex assembly file (*.pas), or a Pex file (*.pex)!"
-                    << std::endl;
-          return false;
-        }
-        auto oDir = baseOutputDir;
-        if (!addSingleFile(f, oDir, jobManager, caprica::papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile))
-          return false;
+      } else if (!addSingleFile(input,
+                                baseOutputDir,
+                                jobManager,
+                                papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile)) {
+        std::cout << "Unable to add input file '" << absPath << "'." << std::endl;
+        return false;
       }
     }
   } catch (const std::exception& ex) {

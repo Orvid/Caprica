@@ -107,17 +107,18 @@ PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType
                                 time_t lastModTime,
                                 size_t fileSize);
 
-bool addSingleFile(const std::string &f,
+bool addSingleFile(const conf::InputFile& input,
                    const std::string &baseOutputDir,
                    caprica::CapricaJobManager *jobManager,
                    PapyrusCompilationNode::NodeType nodeType);
 
-bool addFilesFromDirectory(const std::string &f,
+bool addFilesFromDirectory(const std::string& f,
                            bool recursive,
-                           const std::string &baseOutputDir,
-                           caprica::CapricaJobManager *jobManager,
+                           const std::string& baseOutputDir,
+                           caprica::CapricaJobManager* jobManager,
                            PapyrusCompilationNode::NodeType nodeType,
-                           const std::string &startingNS = "") {
+                           const std::string& subdir = "",
+                           const std::string& startingNS = "") {
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
   // at 40ms vs. 200ms for the boost solution, and the raw API
@@ -125,7 +126,7 @@ bool addFilesFromDirectory(const std::string &f,
   // last write time, and file size, all without any extra processing.
   auto absBaseDir = caprica::FSUtils::canonical(f);
   std::vector<std::string> dirs{};
-  dirs.push_back("\\");
+  dirs.push_back(subdir.empty() ? "\\" : "\\" + subdir);
   auto baseDirMap = getBaseSigMap(conf::Papyrus::game);
   auto l_startNS = startingNS;
   while (dirs.size()) {
@@ -213,7 +214,8 @@ bool addFilesFromDirectory(const std::string &f,
         // if it's true, then this is the base dir and the namespace should be root
         auto namespaceName = l_startNS + curDir;
         std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-        namespaceName = namespaceName.substr(1);
+        while (namespaceName[0] == ':')
+          namespaceName = namespaceName.substr(1);
         caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
       }
     } else {
@@ -315,7 +317,7 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
     std::string ns = "";
     if (conf::Papyrus::game > GameID::Skyrim)
       ns = "!!temp" + std::to_string(i++);
-    if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ns))
+    if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, "", ns))
       return false;
     abs_import_dirs.emplace(std::filesystem::absolute(dir).string());
   }
@@ -324,61 +326,37 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
   return true;
 }
 
-bool addSingleFile(const std::string &f,
-                   const std::string &baseOutputDir,
-                   caprica::CapricaJobManager *jobManager,
+bool addSingleFile(const conf::InputFile& input,
+                   const std::string& baseOutputDir,
+                   caprica::CapricaJobManager* jobManager,
                    PapyrusCompilationNode::NodeType nodeType) {
   // Get the file size and last modified time using std::filesystem
   std::error_code ec;
-  if (!std::filesystem::exists(f)) {
-    std::cout << "ERROR: File '" << f << "' does not exist!" << std::endl;
-    return false;
-  }
-  auto lastModTime = std::filesystem::last_write_time(f, ec);
-  if (ec) {
-    std::cout << "An error occurred while trying to get the last modified time of '" << f << "'!" << std::endl;
-    return false;
-  }
-  auto fileSize = std::filesystem::file_size(f, ec);
-  if (ec) {
-    std::cout << "An error occurred while trying to get the file size of '" << f << "'!" << std::endl;
-    return false;
-  }
 
-  std::string namespaceDir = "\\";
-  auto path = std::filesystem::path(f);
-  auto filename = std::string(caprica::FSUtils::filenameAsRef(f));
-  std::string absBaseDir = std::filesystem::absolute(f).parent_path().string();
-  if (!path.is_absolute()) {
-    auto ppath = caprica::FSUtils::parentPathAsRef(f);
-    if (ppath.compare(filename.c_str()) != 0) {
-      namespaceDir += ppath;
-      absBaseDir = absBaseDir.rfind(namespaceDir) != std::string::npos
-                       ? absBaseDir.substr(0, absBaseDir.rfind(namespaceDir))
-                       : absBaseDir;
-    }
-  } else {
-    // PCompiler-like namespace resolution by scanning imports
-    bool found = false;
-    for (auto& dir : abs_import_dirs) {
-      auto relPath = std::filesystem::relative(f, dir);
-      // check if relpath begins with ".."
-      if (relPath != path && !relPath.string().starts_with("..")) {
-        namespaceDir += relPath.parent_path().string();
-        absBaseDir = dir;
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      std::cout << "ERROR: Absolute file path '" << f << "' is not in an import directory, cannot resolve namespace!"
-                << std::endl;
-      return false;
-    }
+  auto relPath = input.resolved_relative();
+  std::string namespaceDir = relPath.parent_path().string();
+  auto absPath = input.resolved_absolute();
+  auto filename = absPath.filename().string();
+  std::string absBaseDir = input.resolved_absolute_basedir().string() + "\\";
+  if (!std::filesystem::exists(absPath)) {
+    std::cout << "ERROR: Resolved file path '" << absPath
+              << "' is not in an import directory, cannot resolve namespace!" << std::endl;
+    return false;
   }
-  auto namespaceName = namespaceDir;
+  auto lastModTime = std::filesystem::last_write_time(absPath, ec);
+  if (ec) {
+    std::cout << "An error occurred while trying to get the last modified time of '" << absPath << "'!" << std::endl;
+    return false;
+  }
+  auto fileSize = std::filesystem::file_size(absPath, ec);
+  if (ec) {
+    std::cout << "An error occurred while trying to get the file size of '" << absPath << "'!" << std::endl;
+    return false;
+  }
+  auto namespaceName = relPath.parent_path().string();
   std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-  namespaceName = namespaceName.substr(1);
+  if (namespaceName[0] == ':')
+    namespaceName = namespaceName.substr(1);
   if (!conf::General::quietCompile)
     std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
   auto node = getNode(nodeType,

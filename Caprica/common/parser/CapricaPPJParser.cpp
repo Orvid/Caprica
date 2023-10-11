@@ -211,6 +211,16 @@ static std::vector<std::string> rootAttributes {
   "xmlns" // ignore xmlns attribute
 };
 
+inline BoolSetting ParseBoolTypeAttribute(const pugi::xml_node& node, const char* name) {
+  std::string attr = node.attribute(name).as_string();
+  if (attr.empty())
+    return BoolSetting::NOT_SET;
+  auto it = BOOL_MAP.find(attr);
+  if (it == BOOL_MAP.end())
+    throw std::runtime_error("PapyrusProject has an invalid " + std::string(name) + " attribute!");
+  return it->second ? BoolSetting::True : BoolSetting::False;
+}
+
 // variables are case insensitive and ascii-only
 std::string CapricaPPJParser::substituteString(const char* text) {
   if (strlen(text) == 0)
@@ -295,15 +305,6 @@ inline PapyrusProject::AsmType ParseAsmAttribute(const pugi::xml_node& root) {
     throw std::runtime_error("PapyrusProject has an invalid Asm attribute!");
   return it->second;
 }
-inline bool ParseBoolTypeAttribute(const pugi::xml_node& node, const char* name, bool defaultValue = false) {
-  std::string attr = node.attribute(name).as_string();
-  if (attr.empty())
-    return defaultValue;
-  auto it = BOOL_MAP.find(attr);
-  if (it == BOOL_MAP.end())
-    throw std::runtime_error("PapyrusProject has an invalid " + std::string(name) + " attribute!");
-  return it->second;
-}
 
 bool CapricaPPJParser::ParseVariables(const pugi::xml_node& node) {
   for (pugi::xml_node& child : node.children()) {
@@ -364,7 +365,7 @@ PapyrusProject CapricaPPJParser::Parse(const std::string& path) {
     if (strcmp(child.name(), "Imports") == 0) {
       for (pugi::xml_node& import : child.children())
         if (strcmp(import.name(), "Import") == 0)
-          project.imports.emplace_back();
+          project.imports.emplace_back(ParseString(import));
     } else if (strcmp(child.name(), "Folders") == 0) {
       for (pugi::xml_node& folderElement : child.children()) {
         if (strcmp(folderElement.name(), "Folder") == 0) {

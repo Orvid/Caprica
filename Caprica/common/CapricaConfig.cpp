@@ -1,5 +1,7 @@
+#include "CapricaConfig.h"
 #include <common/CapricaConfig.h>
-
+#include <common/FSUtils.h>
+#include <filesystem>
 namespace caprica { namespace conf {
 
 // These should always be defaulted to false/empty, and their real
@@ -8,10 +10,14 @@ namespace caprica { namespace conf {
 namespace General {
   bool compileInParallel{ false };
   bool quietCompile{ false };
-}
+  bool recursive { false };
+  std::string outputDirectory;
+  bool anonymizeOutput;
+  std::vector<InputFile> inputFiles;
+  }
 
-namespace PCompiler {
-    // pCompiler compatibility mode.
+  namespace PCompiler {
+  // pCompiler compatibility mode.
   bool pCompilerCompatibilityMode{false};
   bool all{false};
   bool norecurse{false};
@@ -46,9 +52,9 @@ namespace EngineLimits {
 }
 
 namespace Papyrus {
-  GameID game;
-  bool allowCompilerIdentifiers{ false };
-  bool allowDecompiledStructNameRefs{ false };
+GameID game { GameID::UNKNOWN };
+bool allowCompilerIdentifiers { false };
+bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
@@ -81,4 +87,55 @@ namespace Warnings {
   std::unordered_set<size_t> warningsToEnable{ };
 }
 
-}}
+  std::filesystem::path InputFile::resolved_relative() const {
+    for (auto& dir : Papyrus::importDirectories)
+      if (dirContains(dir))
+        return get_relative_path(dir);
+    return {}; // not found
+  }
+
+  std::filesystem::path InputFile::resolved_absolute() const {
+    // find the file among the import directories
+    for (auto& dir : Papyrus::importDirectories)
+      if (dirContains(dir))
+        return get_absolute_path(dir);
+    return {}; // not found
+  }
+
+  std::filesystem::path InputFile::resolved_absolute_basedir() const {
+    // find the file among the import directories
+    for (auto& dir : Papyrus::importDirectories)
+      if (dirContains(dir))
+        return dir;
+    return {}; // not found
+  }
+
+  std::filesystem::path InputFile::get_absolute_path(const std::filesystem::path& absDir) const {
+    if (path.is_absolute())
+      return FSUtils::canonical(path.string());
+    else
+      return FSUtils::canonical((absDir / path).string());
+  }
+
+  std::filesystem::path InputFile::get_relative_path(const std::filesystem::path& absDir) const {
+    std::filesystem::path cpath;
+    if (path.is_absolute())
+      cpath = FSUtils::canonical(path.string());
+    else
+      cpath = FSUtils::canonical((absDir / path).string());
+    return cpath.lexically_relative(absDir);
+  }
+
+  bool InputFile::dirContains(const std::filesystem::path& dir) const {
+
+    if (path.is_absolute()) {
+      // check if the path is contained in the import directory
+      if (!path.lexically_relative(dir).string().starts_with(".."))
+        return true;
+    } else {
+      if (std::filesystem::exists(dir / path))
+        return true;
+    }
+    return false;
+  }
+  }}

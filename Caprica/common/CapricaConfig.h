@@ -8,8 +8,40 @@
 #include "GameID.h"
 #include <common/CapricaUserFlagsDefinition.h>
 #include <common/parser/PapyrusProject.h>
-
+#include <common/FSUtils.h>
+#include <filesystem>
 namespace caprica { namespace conf {
+
+struct InputFile {
+  bool noRecurse = true;
+  std::filesystem::path path;
+  std::filesystem::path cwd;
+  bool resolved = false;
+  std::filesystem::path resolved_relative() const;
+  std::filesystem::path resolved_absolute() const;
+  std::filesystem::path resolved_absolute_basedir() const;
+  InputFile(const std::filesystem::path& _path,
+            bool noRecurse = true,
+            const std::filesystem::path& _cwd = std::filesystem::current_path())
+      : noRecurse(noRecurse),
+        path(std::move(_path)),
+        cwd(_cwd.empty() ? std::filesystem::current_path() : std::move(_cwd)) {
+
+    //special handler; this points to something relative to the cwd, not an object path to be resolved
+    if (path.string().starts_with(".\\") || path.string().starts_with("./") || path.string().contains(".."))
+    {
+      if (!path.is_absolute()){
+        path = cwd / path;
+      }
+      path = FSUtils::canonical(path.string());
+    }
+  }
+
+  private:
+  std::filesystem::path get_absolute_path(const std::filesystem::path& absDir) const;
+  std::filesystem::path get_relative_path(const std::filesystem::path&  dir) const;
+  bool dirContains(const std::filesystem::path&  dir) const;
+};
 
 // Options that don't fit in any other category.
 namespace General {
@@ -18,11 +50,15 @@ namespace General {
   extern bool compileInParallel;
   // If true, only report failures, not progress.
   extern bool quietCompile;
+  // If true, recurse into subdirectories when compiling.
+  extern bool recursive;
   // self-explanatory
   extern std::string outputDirectory;
   // If true, remove identifying information from the header.
   extern bool anonymizeOutput;
-  }
+  // input files
+  extern std::vector<InputFile> inputFiles;
+}
 
 // options related to compatibility with PCompiler's CLI parsing and name resolution
 namespace PCompiler {
