@@ -13,34 +13,35 @@
 namespace caprica { namespace conf {
 
 struct InputFile {
+  virtual std::filesystem::path resolved_relative() const;
+  virtual std::filesystem::path resolved_absolute() const;
+  virtual std::filesystem::path resolved_absolute_basedir() const;
+  std::filesystem::path get_unresolved_path() const { return path; }
+  bool isRecursive() const { return !noRecurse; }
+  bool isImport() const { return import; }
+  bool exists() const;
+  InputFile(const std::filesystem::path& _path,
+            bool noRecurse = true,
+            const std::filesystem::path& _cwd = std::filesystem::current_path());
+
+protected:
   bool noRecurse = true;
   std::filesystem::path path;
   std::filesystem::path cwd;
   bool resolved = false;
-  std::filesystem::path resolved_relative() const;
-  std::filesystem::path resolved_absolute() const;
-  std::filesystem::path resolved_absolute_basedir() const;
-  InputFile(const std::filesystem::path& _path,
-            bool noRecurse = true,
-            const std::filesystem::path& _cwd = std::filesystem::current_path())
-      : noRecurse(noRecurse),
-        path(std::move(_path)),
-        cwd(_cwd.empty() ? std::filesystem::current_path() : std::move(_cwd)) {
-
-    //special handler; this points to something relative to the cwd, not an object path to be resolved
-    if (path.string().starts_with(".\\") || path.string().starts_with("./") || path.string().contains(".."))
-    {
-      if (!path.is_absolute()){
-        path = cwd / path;
-      }
-      path = FSUtils::canonical(path.string());
-    }
-  }
-
-  private:
-  std::filesystem::path get_absolute_path(const std::filesystem::path& absDir) const;
-  std::filesystem::path get_relative_path(const std::filesystem::path&  dir) const;
+  bool import = false;
+  virtual std::filesystem::path get_absolute_path(const std::filesystem::path& absDir) const;
+  virtual std::filesystem::path get_relative_path(const std::filesystem::path& dir) const;
   bool dirContains(const std::filesystem::path&  dir) const;
+};
+
+struct ImportFile : public InputFile {
+  ImportFile(const std::filesystem::path& _path,
+             bool noRecurse = true,
+             const std::filesystem::path& _cwd = std::filesystem::current_path());
+  virtual std::filesystem::path resolved_relative() const override;
+  virtual std::filesystem::path resolved_absolute() const override;
+  virtual std::filesystem::path resolved_absolute_basedir() const override;
 };
 
 // Options that don't fit in any other category.
@@ -143,7 +144,7 @@ namespace Papyrus {
   extern bool allowImplicitNoneCastsToAnyType;
   // The directories to search in for imported types and
   // unknown types.
-  extern std::vector<std::string> importDirectories;
+  extern std::vector<ImportFile> importDirectories;
   // The user flags definition.
   extern CapricaUserFlagsDefinition userFlagsDefinition;
 }

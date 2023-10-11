@@ -59,7 +59,7 @@ bool allowDecompiledStructNameRefs{ false };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
   bool allowImplicitNoneCastsToAnyType{ false };
-  std::vector<std::string> importDirectories{ };
+  std::vector<ImportFile> importDirectories {};
   CapricaUserFlagsDefinition userFlagsDefinition{ };
 }
 
@@ -89,24 +89,24 @@ namespace Warnings {
 
   std::filesystem::path InputFile::resolved_relative() const {
     for (auto& dir : Papyrus::importDirectories)
-      if (dirContains(dir))
-        return get_relative_path(dir);
+      if (dirContains(dir.resolved_absolute()))
+        return get_relative_path(dir.resolved_absolute());
     return {}; // not found
   }
 
   std::filesystem::path InputFile::resolved_absolute() const {
     // find the file among the import directories
     for (auto& dir : Papyrus::importDirectories)
-      if (dirContains(dir))
-        return get_absolute_path(dir);
+      if (dirContains(dir.resolved_absolute()))
+        return get_absolute_path(dir.resolved_absolute());
     return {}; // not found
   }
 
   std::filesystem::path InputFile::resolved_absolute_basedir() const {
     // find the file among the import directories
     for (auto& dir : Papyrus::importDirectories)
-      if (dirContains(dir))
-        return dir;
+      if (dirContains(dir.resolved_absolute()))
+        return dir.resolved_absolute();
     return {}; // not found
   }
 
@@ -138,4 +138,42 @@ namespace Warnings {
     }
     return false;
   }
+  InputFile::InputFile(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
+      : noRecurse(noRecurse),
+        path(std::move(_path)),
+        cwd(_cwd.empty() ? std::filesystem::current_path() : std::move(_cwd)) {
+
+    // special handler; this points to something relative to the cwd, not an object path to be resolved
+    if (path.string().starts_with(".\\") || path.string().starts_with("./") || path.string().contains("..")) {
+      if (!path.is_absolute())
+        path = cwd / path;
+      path = FSUtils::canonical(path.string());
+    }
+  }
+
+  bool InputFile::exists() const {
+    return std::filesystem::exists(resolved_absolute());
+  }
+
+  ImportFile::ImportFile(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
+      : InputFile(_path, noRecurse, _cwd) {
+    import = true;
+    // make the import path absolute
+    if (!path.is_absolute())
+      path = cwd / path;
+    path = FSUtils::canonical(path.string());
+  }
+
+  std::filesystem::path ImportFile::resolved_relative() const {
+    return {};
+  }
+
+  std::filesystem::path ImportFile::resolved_absolute() const {
+    return path; // we always return the absolute path for imports
+  }
+
+  std::filesystem::path ImportFile::resolved_absolute_basedir() const {
+    return path;
+  }
+
   }}

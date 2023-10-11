@@ -88,8 +88,8 @@ static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
         "fake://skyrim/__ScriptObject.psc",
         "fake://skyrim/DLC1SCWispWallScript.psc",
 };
-static caseless_unordered_identifier_set abs_import_dirs {};
-bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager *jobManager);
+
+bool handleImports(const std::vector<conf::ImportFile>& f, caprica::CapricaJobManager* jobManager);
 
 PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType,
                                 CapricaJobManager *jobManager,
@@ -112,21 +112,29 @@ bool addSingleFile(const conf::InputFile& input,
                    caprica::CapricaJobManager *jobManager,
                    PapyrusCompilationNode::NodeType nodeType);
 
-bool addFilesFromDirectory(const std::string& f,
-                           bool recursive,
+bool addFilesFromDirectory(const conf::InputFile& input,
                            const std::string& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
                            PapyrusCompilationNode::NodeType nodeType,
-                           const std::string& subdir = "",
                            const std::string& startingNS = "") {
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
   // at 40ms vs. 200ms for the boost solution, and the raw API
   // solution also gets us the relative paths, absolute paths,
   // last write time, and file size, all without any extra processing.
-  auto absBaseDir = caprica::FSUtils::canonical(f);
+  if (!input.exists()) {
+    std::cout << "ERROR: Input file '" << input.get_unresolved_path() << "' was not found!" << std::endl;
+    return false;
+  }
+  auto absBaseDir = input.resolved_absolute_basedir().string() + "\\";
+  auto subdir = input.resolved_relative().string();
+  if (subdir == "." || subdir.empty())
+    subdir = "\\";
+  else if (subdir[0] != '\\')
+    subdir = "\\" + subdir;
+  bool recursive = input.isRecursive();
   std::vector<std::string> dirs{};
-  dirs.push_back(subdir.empty() ? "\\" : "\\" + subdir);
+  dirs.push_back(subdir);
   auto baseDirMap = getBaseSigMap(conf::Papyrus::game);
   auto l_startNS = startingNS;
   while (dirs.size()) {
@@ -291,7 +299,7 @@ PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType
   return getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data.cFileName, lastModTime, fileSize);
 }
 
-bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager *jobManager) {
+bool handleImports(const std::vector<conf::ImportFile>& f, caprica::CapricaJobManager* jobManager) {
   // Skyrim hacks; we need to import Skyrim's fake scripts into the global namespace first.
   if (conf::Papyrus::game == GameID::Skyrim) {
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode *> tempMap{};
@@ -312,14 +320,12 @@ bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager
   }
   std::cout << "Importing files..." << std::endl;
   int i = 0;
-  abs_import_dirs.reserve(f.size());
   for (auto& dir : f) {
     std::string ns = "";
     if (conf::Papyrus::game > GameID::Skyrim)
       ns = "!!temp" + std::to_string(i++);
-    if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, "", ns))
+    if (!addFilesFromDirectory(dir, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ns))
       return false;
-    abs_import_dirs.emplace(std::filesystem::absolute(dir).string());
   }
   CapricaStats::outputImportedCount();
   caprica::papyrus::PapyrusCompilationContext::RenameImports(jobManager);
