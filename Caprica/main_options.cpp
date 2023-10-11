@@ -135,10 +135,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Set the compiler's import directories.")
       ("flags,f", po::value<std::string>(),
         "Set the file defining the user flags.")
+      ("output,o", po::value<std::string>(),
+        "Set the directory to save compiler output to.")
       ("optimize,op,O", po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false),
         "Enable optimizations.")
-      ("output,o", po::value<std::string>()->default_value(filesystem::current_path().string()),
-        "Set the directory to save compiler output to.")
       ("parallel-compile,p", po::bool_switch(&conf::General::compileInParallel)->default_value(false),
         "Compile files in parallel.")
       ("recurse,R", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false),
