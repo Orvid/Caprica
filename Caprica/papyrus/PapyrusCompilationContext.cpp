@@ -119,15 +119,14 @@ void PapyrusCompilationNode::FileReadJob::run() {
   }
 }
 
-std::string_view findScriptName(const std::string_view& data, const std::string_view& startstring, bool stripWhitespace = false)
-{
+std::string_view findScriptName(const std::string_view& data, const std::string_view& startstring) {
   size_t last = 0;
   while (last < data.size()) {
     auto next = data.find('\n', last);
     if (next == std::string_view::npos)
       next = data.size() - 1;
     auto line = data.substr(last, next - last);
-    auto begin = stripWhitespace ? line.find_first_not_of(" \t") : 0;
+    auto begin = line.find_first_not_of(" \t");
     if (strnicmp(line.substr(begin, startstring.size()).data(), startstring.data(), startstring.size()) == 0) {
       auto first = line.find_first_not_of(" \t", startstring.size());
       return line.substr(first, line.find_first_of(" \t", first) - first);
@@ -152,7 +151,7 @@ void PapyrusCompilationNode::FilePreParseJob::run() {
       CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
     parent->objectName = parent->pexFile->getStringValue(parent->pexFile->objects.front()->name).to_string();
   } else if (pathEq(ext, ".pas")) {
-    parent->objectName = findScriptName(parent->readFileData, ".object", true);
+    parent->objectName = findScriptName(parent->readFileData, ".object");
   } else {
     CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '{}' as.",
                                           parent->reportedName);
