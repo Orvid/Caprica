@@ -25,8 +25,8 @@ protected:
   bool dirContains(const std::filesystem::path&  dir) const;
 };
 
-struct ImportFile : public InputFile {
-  ImportFile(const std::filesystem::path& _path,
+struct ImportDir : public InputFile {
+  ImportDir(const std::filesystem::path& _path,
              bool noRecurse = true,
              const std::filesystem::path& _cwd = std::filesystem::current_path());
   virtual std::filesystem::path resolved_relative() const override;

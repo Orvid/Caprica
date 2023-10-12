@@ -113,7 +113,7 @@ namespace Papyrus {
   extern bool allowImplicitNoneCastsToAnyType;
   // The directories to search in for imported types and
   // unknown types.
-  extern std::vector<ImportFile> importDirectories;
+  extern std::vector<ImportDir> importDirectories;
   // The user flags definition.
   extern CapricaUserFlagsDefinition userFlagsDefinition;
 }

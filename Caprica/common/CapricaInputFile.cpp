@@ -77,7 +77,7 @@ namespace caprica{
     return std::filesystem::exists(resolved_absolute());
   }
 
-  ImportFile::ImportFile(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
+  ImportDir::ImportDir(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
       : InputFile(_path, noRecurse, _cwd) {
     import = true;
     // make the import path absolute
@@ -86,15 +86,15 @@ namespace caprica{
     path = FSUtils::canonicalFS(path);
   }
 
-  std::filesystem::path ImportFile::resolved_relative() const {
+  std::filesystem::path ImportDir::resolved_relative() const {
     return {};
   }
 
-  std::filesystem::path ImportFile::resolved_absolute() const {
+  std::filesystem::path ImportDir::resolved_absolute() const {
     return path; // we always return the absolute path for imports
   }
 
-  std::filesystem::path ImportFile::resolved_absolute_basedir() const {
+  std::filesystem::path ImportDir::resolved_absolute_basedir() const {
     return path;
   }
 

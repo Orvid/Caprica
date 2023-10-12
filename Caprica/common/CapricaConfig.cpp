@@ -59,7 +59,7 @@ GameID game { GameID::UNKNOWN };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
   bool allowImplicitNoneCastsToAnyType{ false };
-  std::vector<ImportFile> importDirectories {};
+  std::vector<ImportDir> importDirectories {};
   CapricaUserFlagsDefinition userFlagsDefinition{};
 }
 

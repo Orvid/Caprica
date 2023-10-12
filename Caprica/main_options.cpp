@@ -27,7 +27,7 @@ bool addFilesFromDirectory(const InputFile& input,
                            papyrus::PapyrusCompilationNode::NodeType nodeType,
                            const std::string& startingNS = "");
 void parseUserFlags(std::string&& flagsPath);
-bool handleImports(const std::vector<ImportFile>& f, caprica::CapricaJobManager* jobManager);
+bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* jobManager);
 bool addSingleFile(const InputFile& input,
                    const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager* jobManager,

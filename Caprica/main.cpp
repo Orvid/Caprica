@@ -89,7 +89,7 @@ static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
         "fake://skyrim/DLC1SCWispWallScript.psc",
 };
 
-bool handleImports(const std::vector<ImportFile>& f, caprica::CapricaJobManager* jobManager);
+bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* jobManager);
 
 PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType,
                                 CapricaJobManager* jobManager,
@@ -287,7 +287,7 @@ PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType
   return getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data.cFileName, lastModTime, fileSize);
 }
 
-bool handleImports(const std::vector<ImportFile>& f, caprica::CapricaJobManager* jobManager) {
+bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* jobManager) {
   // Skyrim hacks; we need to import Skyrim's fake scripts into the global namespace first.
   if (conf::Papyrus::game == GameID::Skyrim) {
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode *> tempMap{};
