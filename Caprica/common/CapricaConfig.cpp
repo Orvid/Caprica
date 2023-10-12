@@ -53,14 +53,14 @@ namespace EngineLimits {
 
 namespace Papyrus {
 GameID game { GameID::UNKNOWN };
-bool allowCompilerIdentifiers { false };
-bool allowDecompiledStructNameRefs{ false };
+  bool allowCompilerIdentifiers { false };
+  bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
   bool allowImplicitNoneCastsToAnyType{ false };
   std::vector<ImportFile> importDirectories {};
-  CapricaUserFlagsDefinition userFlagsDefinition{ };
+  CapricaUserFlagsDefinition userFlagsDefinition{};
 }
 
 namespace Skyrim {
@@ -146,7 +146,8 @@ namespace Warnings {
     path = path.make_preferred();
     // special handler; this points to something relative to the cwd, not an object path to be resolved
     auto str = path.string();
-    if (str.starts_with(".\\") || str.starts_with("./") || str.contains("..\\") || str.contains("../")) {
+    if (str == "." || str == ".." || str.starts_with(".\\") || str.starts_with("./") || str.contains("..\\") ||
+        str.contains("../")) {
       if (!path.is_absolute())
         path = cwd / path;
       path = FSUtils::canonicalFS(path);
