@@ -622,7 +622,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           if (FSUtils::extensionAsRef(f).empty())
             f.append(".psc");
         }
-        auto input = conf::General::inputFiles.emplace_back(f, iterateCompiledDirectoriesRecursively);
+        auto input = conf::General::inputFiles.emplace_back(f, !iterateCompiledDirectoriesRecursively);
         if (!std::filesystem::exists(input.resolved_absolute())) {
           std::cout << "Unable to locate input file '" << f << "'." << std::endl;
           return false;
@@ -640,7 +640,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
             return false;
           }
         }
-        auto& input = conf::General::inputFiles.emplace_back(f, iterateCompiledDirectoriesRecursively);
+        auto& input = conf::General::inputFiles.emplace_back(f, !iterateCompiledDirectoriesRecursively);
         if (!std::filesystem::exists(input.resolved_absolute())) {
           std::cout << "Unable to locate input file '" << f << "'." << std::endl;
           return false;
