@@ -21,14 +21,14 @@ namespace filesystem = std::filesystem;
 namespace caprica {
 struct CapricaJobManager;
 
-bool addFilesFromDirectory(const conf::InputFile& input,
+bool addFilesFromDirectory(const InputFile& input,
                            const std::filesystem::path& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
                            papyrus::PapyrusCompilationNode::NodeType nodeType,
                            const std::string& startingNS = "");
 void parseUserFlags(std::string&& flagsPath);
-bool handleImports(const std::vector<conf::ImportFile>& f, caprica::CapricaJobManager* jobManager);
-bool addSingleFile(const conf::InputFile& input,
+bool handleImports(const std::vector<ImportFile>& f, caprica::CapricaJobManager* jobManager);
+bool addSingleFile(const InputFile& input,
                    const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager* jobManager,
                    caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
