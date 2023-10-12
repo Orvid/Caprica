@@ -123,7 +123,7 @@ inline PapyrusProject::PapyrusGame ParseGameAttribute(const pugi::xml_node& root
 inline PapyrusProject::AsmType ParseAsmAttribute(const pugi::xml_node& root) {
   std::string asmAttr = root.attribute("Asm").as_string();
   if (asmAttr.empty())
-    return PapyrusProject::AsmType::None;
+    return PapyrusProject::AsmType::NOT_SET;
   auto it = ASM_MAP.find(asmAttr);
   if (it == ASM_MAP.end())
     throw std::runtime_error("PapyrusProject has an invalid Asm attribute!");
