@@ -126,6 +126,24 @@ void setPPJBool(BoolSetting value, bool& setting) {
     setting = value == BoolSetting::True ? true : false;
 };
 
+caseless_unordered_identifier_map<GameID> gameIDMap = {
+  {"Starfield",  GameID::Starfield},
+  { "Skyrim",    GameID::Skyrim   },
+  { "Fallout4",  GameID::Fallout4 },
+  { "Fallout76", GameID::Fallout76},
+};
+
+bool setGame(std::string gameType) {
+  auto it = gameIDMap.find(gameType);
+  if (it != gameIDMap.end()) {
+    conf::Papyrus::game = it->second;
+    return true;
+  }
+  return false;
+}
+
+constexpr const char* DEFAULT_GAME = "Starfield";
+
 bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManager* jobManager) {
   try {
     bool iterateCompiledDirectoriesRecursively = false;
@@ -142,16 +160,17 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Set the file defining the user flags.")
       ("output,o", po::value<std::string>(),
         "Set the directory to save compiler output to.")
-      ("optimize,op,O", po::bool_switch(&conf::CodeGeneration::enableOptimizations)->default_value(false),
+      ("optimize,op,O",
         "Enable optimizations.")
       ("parallel-compile,p", po::bool_switch(&conf::General::compileInParallel)->default_value(false),
         "Compile files in parallel.")
-      ("release,r", po::bool_switch(&conf::CodeGeneration::disableDebugCode)->default_value(false),
+      ("release,r",
         "Don't generate DebugOnly code.")
       ("recurse,R", po::bool_switch(&iterateCompiledDirectoriesRecursively)->default_value(false),
         "Recursively compile all scripts in the directories passed.")
-      ("final", po::bool_switch(&conf::CodeGeneration::disableBetaCode)->default_value(false),
+      ("final",
         "Don't generate BetaOnly code.")
+      ("anonymize", "Anonymize script header information.")
       ("all-warnings-as-errors",
         po::bool_switch(&conf::Warnings::treatWarningsAsErrors)->default_value(false),
         "Treat all warnings as if they were errors.")
@@ -211,7 +230,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Allow async file reading. This is primarily useful on SSDs.")
       ("async-write", po::value<bool>(&conf::Performance::asyncFileWrite)->default_value(true),
         "Allow writing output to disk on background threads.")
-      ("dump-asm,keepasm", po::bool_switch(&conf::Debug::dumpPexAsm)->default_value(false),
+      ("dump-asm,keepasm",
         "Dump the PEX assembly code for the input files.")
       ("enable-ck-optimizations", po::value<bool>(&conf::CodeGeneration::enableCKOptimizations)->default_value(true),
         "Enable optimizations that the CK compiler normally does regardless of the -optimize switch.")
@@ -245,7 +264,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         "Enable PCompiler compatibility mode (default false).")
       ("all,a", po::bool_switch(&conf::PCompiler::all)->default_value(false), "Treat input objects as directories")
       ("norecurse", po::bool_switch(&conf::PCompiler::norecurse)->default_value(false), "Don't recursively scan directories with -all")
-      ("noasm", po::bool_switch()->default_value(false), "Turns off asm output if it was turned on.")
+      ("noasm", "Turns off asm output if it was turned on.")
       ("asmonly", po::bool_switch()->default_value(false), "Does nothing on Caprica")
       ("debug,d", po::bool_switch()->default_value(false), "Does nothing on Caprica");
 
@@ -360,7 +379,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
 
     std::string flags;
     std::filesystem::path baseOutputDir;
-    // we have to put this at the beginning, because flags passed override this
+
     PapyrusProject ppj;
     std::string ppjPath;
     auto filesToRemove = std::vector<std::string>();
@@ -392,36 +411,56 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         iterateCompiledDirectoriesRecursively = false;
     }
 
+    // we have to make sure that the game value is set for sure here
+    // CLI flags override the project file
+    if (vm.count("game")) {
+      if (!ppjPath.empty() && ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+        std::cout << "Warning: Game type specified in both project file and command line, using command line value '"
+                  << vm["game"].as<std::string>() << "'." << std::endl;
+      }
+      if (!setGame(vm["game"].as<std::string>())) {
+        std::cout << "Unrecognized game type '" << vm["game"].as<std::string>() << "'!" << std::endl;
+        return false;
+      }
+    } else if (!ppjPath.empty() && ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
+      conf::Papyrus::game =
+          ppj.game == PapyrusProject::PapyrusGame::SkyrimSpecialEdition ? GameID::Skyrim : (GameID)ppj.game;
+    } else {
+      setGame(DEFAULT_GAME);
+    }
+
     if (!ppjPath.empty()) {
       auto baseDir = filesystem::path(ppjPath).parent_path();
       if (!baseDir.empty())
         baseDir = FSUtils::canonicalFS(baseDir);
       else
         baseDir = filesystem::current_path();
-      // set all the options in the ppj
-      if (ppj.game != PapyrusProject::PapyrusGame::UNKNOWN) {
-        conf::Papyrus::game =
-            ppj.game == PapyrusProject::PapyrusGame::SkyrimSpecialEdition ? GameID::Skyrim : (GameID)ppj.game;
-      }
 
       conf::Papyrus::importDirectories.reserve(conf::Papyrus::importDirectories.size() + ppj.imports.size());
       for (auto& i : ppj.imports)
         conf::Papyrus::importDirectories.emplace_back(i, false, baseDir);
-      setPPJBool(ppj.anonymize, conf::General::anonymizeOutput);
-      setPPJBool(ppj.release, conf::CodeGeneration::disableDebugCode);
-      setPPJBool(ppj.finalAttr, conf::CodeGeneration::disableBetaCode);
-      setPPJBool(ppj.optimize, conf::CodeGeneration::enableOptimizations);
-      switch (ppj.asmAttr) {
-        case PapyrusProject::AsmType::None:
-        case PapyrusProject::AsmType::Discard:
-          conf::Debug::dumpPexAsm = false;
-          break;
-        case PapyrusProject::AsmType::Keep:
-        case PapyrusProject::AsmType::Only: // TODO: HANDLE THIS
-          conf::Debug::dumpPexAsm = true;
-          break;
-        default:
-          break;
+
+      if (!vm.count("anonymize"))
+        setPPJBool(ppj.anonymize, conf::General::anonymizeOutput);
+      if (!vm.count("release"))
+        setPPJBool(ppj.release, conf::CodeGeneration::disableDebugCode);
+      if (!vm.count("final"))
+        setPPJBool(ppj.finalAttr, conf::CodeGeneration::disableBetaCode);
+      if (!vm.count("optimize"))
+        setPPJBool(ppj.optimize, conf::CodeGeneration::enableOptimizations);
+      if (!vm.count("dump-asm") && !vm.count("keep-asm") && !vm.count("noasm")) {
+        switch (ppj.asmAttr) {
+          case PapyrusProject::AsmType::None:
+          case PapyrusProject::AsmType::Discard:
+            conf::Debug::dumpPexAsm = false;
+            break;
+          case PapyrusProject::AsmType::Keep:
+          case PapyrusProject::AsmType::Only: // TODO: HANDLE THIS
+            conf::Debug::dumpPexAsm = true;
+            break;
+          default:
+            break;
+        }
       }
       auto outputDir = std::filesystem::path(ppj.output);
       if (outputDir.is_relative())
@@ -445,25 +484,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
         }
       }
     }
-    if (conf::Papyrus::game == GameID::UNKNOWN) {
-      std::string gameType;
-      if (vm.count("game"))
-        gameType = vm["game"].as<std::string>();
-      else
-        gameType = "Starfield";
-      if (_stricmp(gameType.c_str(), "Starfield") == 0) {
-        conf::Papyrus::game = GameID::Starfield;
-      } else if (_stricmp(gameType.c_str(), "Skyrim") == 0) {
-        conf::Papyrus::game = GameID::Skyrim;
-      } else if (_stricmp(gameType.c_str(), "Fallout4") == 0) {
-        conf::Papyrus::game = GameID::Fallout4;
-      } else if (_stricmp(gameType.c_str(), "Fallout76") == 0) {
-        conf::Papyrus::game = GameID::Fallout76;
-      } else {
-        std::cout << "Unrecognized game type '" << gameType << "'!" << std::endl;
-        return false;
-      }
-    }
 
     if (vm.count("flags"))
       flags = vm["flags"].as<std::string>();
@@ -471,10 +491,19 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       baseOutputDir = vm["output"].as<std::string>();
     else if (baseOutputDir.empty())
       baseOutputDir = filesystem::current_path();
-    if (vm.count("pcompiler")) {
-      if (vm["noasm"].as<bool>())
-        conf::Debug::dumpPexAsm = false;
-    }
+
+    if (vm.count("anonymize"))
+      conf::General::anonymizeOutput = true;
+    if (vm.count("release"))
+      conf::CodeGeneration::disableDebugCode = true;
+    if (vm.count("final"))
+      conf::CodeGeneration::disableBetaCode = true;
+    if (vm.count("optimize"))
+      conf::CodeGeneration::enableOptimizations = true;
+    if (vm.count("dump-asm") || vm.count("keepasm"))
+      conf::Debug::dumpPexAsm = true;
+    if (vm.count("pcompiler") && vm.count("noasm"))
+      conf::Debug::dumpPexAsm = false;
 
     if (conf::Papyrus::game != GameID::Skyrim) {
       // turn off skyrim options
@@ -486,7 +515,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     // TODO: enable this eventually
-    if (vm["optimize"].as<bool>() && conf::Papyrus::game != GameID::Fallout4) {
+    if (conf::CodeGeneration::enableOptimizations && conf::Papyrus::game != GameID::Fallout4) {
       if (!vm["force-enable-optimizations"].as<bool>()) {
         conf::CodeGeneration::enableOptimizations = false;
         std::cout << "Warning: Optimization is currently only supported for Fallout 4, disabling..." << std::endl;
