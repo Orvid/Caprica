@@ -22,14 +22,14 @@ namespace caprica {
 struct CapricaJobManager;
 
 bool addFilesFromDirectory(const conf::InputFile& input,
-                           const std::string& baseOutputDir,
+                           const std::filesystem::path& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
                            papyrus::PapyrusCompilationNode::NodeType nodeType,
                            const std::string& startingNS = "");
 void parseUserFlags(std::string&& flagsPath);
 bool handleImports(const std::vector<conf::ImportFile>& f, caprica::CapricaJobManager* jobManager);
 bool addSingleFile(const conf::InputFile& input,
-                   const std::string& baseOutputDir,
+                   const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager* jobManager,
                    caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
 
@@ -103,21 +103,22 @@ void SaveDefaultConfig(const po::options_description& descOptions,
   boost::property_tree::write_ini(configFile, tree);
 }
 
-std::string
-findFlags(const std::string& flagsPath, const std::string& progamBasePath, const std::string& baseOutputDir) {
+std::string findFlags(const std::filesystem::path& flagsPath,
+                      const std::filesystem::path& progamBasePath,
+                      const std::filesystem::path& baseOutputDir) {
   if (filesystem::exists(flagsPath))
-    return flagsPath;
+    return flagsPath.string();
 
   for (auto& i : conf::Papyrus::importDirectories)
     if (filesystem::exists(i.resolved_absolute() / flagsPath))
       return (i.resolved_absolute() / flagsPath).string();
 
-  if (filesystem::exists(baseOutputDir + "\\" + flagsPath))
-    return baseOutputDir + "\\" + flagsPath;
-  if (filesystem::exists(progamBasePath + "\\" + flagsPath))
-    return progamBasePath + "\\" + flagsPath;
+  if (filesystem::exists(baseOutputDir / flagsPath))
+    return (baseOutputDir / flagsPath).string();
+  if (filesystem::exists(progamBasePath / flagsPath))
+    return (progamBasePath / flagsPath).string();
 
-  return "";
+  return {};
 };
 
 void setPPJBool(BoolSetting value, bool& setting) {
@@ -307,11 +308,11 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
               vm);
     po::notify(vm);
     std::string confFilePath = vm["config-file"].as<std::string>();
-    auto progamBasePath = filesystem::absolute(filesystem::path(argv[0]).parent_path()).string();
+    auto progamBasePath = filesystem::absolute(filesystem::path(argv[0]).parent_path());
     bool loadedConfigFile = false;
-    if (filesystem::exists(progamBasePath + "\\" + confFilePath)) {
+    if (filesystem::exists(progamBasePath / confFilePath)) {
       loadedConfigFile = true;
-      std::ifstream ifs(progamBasePath + "\\" + confFilePath);
+      std::ifstream ifs(progamBasePath / confFilePath);
       auto config_opts = po::parse_config_file(ifs, commandLineDesc);
       po::store(config_opts, vm);
       po::notify(vm);
@@ -358,7 +359,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     std::string flags;
-    std::string baseOutputDir;
+    std::filesystem::path baseOutputDir;
     // we have to put this at the beginning, because flags passed override this
     PapyrusProject ppj;
     std::string ppjPath;
@@ -394,7 +395,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     if (!ppjPath.empty()) {
       auto baseDir = filesystem::path(ppjPath).parent_path();
       if (!baseDir.empty())
-        baseDir = FSUtils::canonical(baseDir.string());
+        baseDir = FSUtils::canonicalFS(baseDir);
       else
         baseDir = filesystem::current_path();
       // set all the options in the ppj
@@ -425,7 +426,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       auto outputDir = std::filesystem::path(ppj.output);
       if (outputDir.is_relative())
         outputDir = (baseDir / ppj.output);
-      baseOutputDir = outputDir.string();
+      baseOutputDir = outputDir;
 
       conf::General::inputFiles.reserve(conf::General::inputFiles.size() + ppj.folders.size() + ppj.scripts.size());
       for (auto& f : ppj.folders)
@@ -469,7 +470,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     if (vm.count("output"))
       baseOutputDir = vm["output"].as<std::string>();
     else if (baseOutputDir.empty())
-      baseOutputDir = filesystem::current_path().string();
+      baseOutputDir = filesystem::current_path();
     if (vm.count("pcompiler")) {
       if (vm["noasm"].as<bool>())
         conf::Debug::dumpPexAsm = false;
@@ -578,7 +579,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
 
     if (!filesystem::exists(baseOutputDir))
       filesystem::create_directories(baseOutputDir);
-    baseOutputDir = FSUtils::canonical(baseOutputDir);
+    baseOutputDir = FSUtils::canonicalFS(baseOutputDir);
     conf::General::outputDirectory = baseOutputDir;
 
     std::string flagsPath;
@@ -649,21 +650,24 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     for (auto& input : conf::General::inputFiles) {
-      auto absPath = input.resolved_absolute();
-      if (std::filesystem::is_directory(absPath)) {
+      if (!input.exists()) {
+        std::cout << "Unable to locate input file '" << input.get_unresolved_path() << "'." << std::endl;
+        return false;
+      }
+      if (std::filesystem::is_directory(input.resolved_absolute())) {
         if (!addFilesFromDirectory(input,
                                    baseOutputDir,
                                    jobManager,
                                    papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
                                    "")) {
-          std::cout << "Unable to add input directory '" << absPath << "'." << std::endl;
+          std::cout << "Unable to add input directory '" << input.get_unresolved_path() << "'." << std::endl;
           return false;
         }
       } else if (!addSingleFile(input,
                                 baseOutputDir,
                                 jobManager,
                                 papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile)) {
-        std::cout << "Unable to add input file '" << absPath << "'." << std::endl;
+        std::cout << "Unable to add input file '" << input.get_unresolved_path() << "'." << std::endl;
         return false;
       }
     }

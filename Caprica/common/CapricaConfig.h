@@ -54,7 +54,7 @@ namespace General {
   // If true, recurse into subdirectories when compiling.
   extern bool recursive;
   // self-explanatory
-  extern std::string outputDirectory;
+  extern std::filesystem::path outputDirectory;
   // If true, remove identifying information from the header.
   extern bool anonymizeOutput;
   // input files

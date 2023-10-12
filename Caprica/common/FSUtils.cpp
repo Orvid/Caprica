@@ -46,15 +46,25 @@ std::string_view parentPathAsRef(std::string_view file) {
   return file;
 }
 
-// Borrowed and modified from http://stackoverflow.com/a/1750710/776797
-std::string canonical(const std::string& path) {
+bool shouldShortCircuit(const std::string& path) {
   if (path.size() > 3 && path[1] == ':') {
     // Shortcircuit for already canon paths.
     if (path.find("/") == std::string::npos && path.find("..") == std::string::npos &&
         path.find("\\.\\") == std::string::npos && path.find("\\\\") == std::string::npos) {
-      return path;
+      return true;
     }
   }
+  return false;
+}
+
+// Borrowed and modified from http://stackoverflow.com/a/1750710/776797
+std::string canonical(const std::string& path) {
+  return canonicalFS(path).string();
+}
+
+std::filesystem::path canonicalFS(const std::filesystem::path& path) {
+  if (shouldShortCircuit(path.string()))
+    return path;
   auto absPath = std::filesystem::absolute(path);
   if (conf::Performance::resolveSymlinks) {
     return std::filesystem::canonical(absPath).make_preferred().string();
@@ -76,7 +86,7 @@ std::string canonical(const std::string& path) {
         result /= *it;
       }
     }
-    return result.make_preferred().string();
+    return result.make_preferred();
   }
 }
 

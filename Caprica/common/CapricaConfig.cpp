@@ -11,7 +11,7 @@ namespace General {
   bool compileInParallel{ false };
   bool quietCompile{ false };
   bool recursive { false };
-  std::string outputDirectory;
+  std::filesystem::path outputDirectory;
   bool anonymizeOutput;
   std::vector<InputFile> inputFiles;
   }
@@ -112,17 +112,17 @@ namespace Warnings {
 
   std::filesystem::path InputFile::get_absolute_path(const std::filesystem::path& absDir) const {
     if (path.is_absolute())
-      return FSUtils::canonical(path.string());
+      return FSUtils::canonicalFS(path);
     else
-      return FSUtils::canonical((absDir / path).string());
+      return FSUtils::canonicalFS((absDir / path));
   }
 
   std::filesystem::path InputFile::get_relative_path(const std::filesystem::path& absDir) const {
     std::filesystem::path cpath;
     if (path.is_absolute())
-      cpath = FSUtils::canonical(path.string());
+      cpath = FSUtils::canonicalFS(path);
     else
-      cpath = FSUtils::canonical((absDir / path).string());
+      cpath = FSUtils::canonicalFS((absDir / path));
     return cpath.lexically_relative(absDir);
   }
 
@@ -142,12 +142,13 @@ namespace Warnings {
       : noRecurse(noRecurse),
         path(std::move(_path)),
         cwd(_cwd.empty() ? std::filesystem::current_path() : std::move(_cwd)) {
-
+    path = path.make_preferred();
     // special handler; this points to something relative to the cwd, not an object path to be resolved
-    if (path.string().starts_with(".\\") || path.string().starts_with("./") || path.string().contains("..")) {
+    auto str = path.string();
+    if (str.starts_with(".\\") || str.starts_with("./") || str.contains("..\\") || str.contains("../")) {
       if (!path.is_absolute())
         path = cwd / path;
-      path = FSUtils::canonical(path.string());
+      path = FSUtils::canonicalFS(path);
     }
   }
 
@@ -161,7 +162,7 @@ namespace Warnings {
     // make the import path absolute
     if (!path.is_absolute())
       path = cwd / path;
-    path = FSUtils::canonical(path.string());
+    path = FSUtils::canonicalFS(path);
   }
 
   std::filesystem::path ImportFile::resolved_relative() const {
