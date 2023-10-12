@@ -130,7 +130,8 @@ namespace Warnings {
 
     if (path.is_absolute()) {
       // check if the path is contained in the import directory
-      if (!path.lexically_relative(dir).string().starts_with(".."))
+      auto rel = path.lexically_relative(dir).string();
+      if (!rel.empty() && !rel.starts_with(".."))
         return true;
     } else {
       if (std::filesystem::exists(dir / path))
