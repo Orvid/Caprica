@@ -27,7 +27,7 @@ namespace General {
   // If true, remove identifying information from the header.
   extern bool anonymizeOutput;
   // input files
-  extern std::vector<InputFile> inputFiles;
+  extern std::vector<std::shared_ptr<IInputFile>> inputFiles;
 }
 
 // options related to compatibility with PCompiler's CLI parsing and name resolution

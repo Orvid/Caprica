@@ -13,7 +13,7 @@ namespace General {
   bool recursive { false };
   std::filesystem::path outputDirectory;
   bool anonymizeOutput;
-  std::vector<InputFile> inputFiles;
+  std::vector<std::shared_ptr<IInputFile>> inputFiles;
   }
 
   namespace PCompiler {

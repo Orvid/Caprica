@@ -21,14 +21,14 @@ namespace filesystem = std::filesystem;
 namespace caprica {
 struct CapricaJobManager;
 
-bool addFilesFromDirectory(const InputFile& input,
+bool addFilesFromDirectory(const IInputFile& input,
                            const std::filesystem::path& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
                            papyrus::PapyrusCompilationNode::NodeType nodeType,
                            const std::string& startingNS = "");
 void parseUserFlags(std::string&& flagsPath);
 bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* jobManager);
-bool addSingleFile(const InputFile& input,
+bool addSingleFile(const IInputFile& input,
                    const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager* jobManager,
                    caprica::papyrus::PapyrusCompilationNode::NodeType nodeType);
@@ -468,10 +468,11 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       baseOutputDir = outputDir;
 
       conf::General::inputFiles.reserve(conf::General::inputFiles.size() + ppj.folders.size() + ppj.scripts.size());
-      for (auto& f : ppj.folders)
-        conf::General::inputFiles.emplace_back(f.path, f.noRecurse, baseDir);
+      for (auto& f : ppj.folders){     
+        conf::General::inputFiles.emplace_back(std::make_shared<PCompInputFile>(f.path, f.noRecurse, true, baseDir));
+      }
       for (auto& f : ppj.scripts)
-        conf::General::inputFiles.emplace_back(f, false, baseDir);
+        conf::General::inputFiles.emplace_back(std::make_shared<PCompInputFile>(f, true, false, baseDir));
       flags = ppj.flags;
     } else { // if we're not doing a project file...
       // ensure cwd is placed first
@@ -641,6 +642,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     // PCompiler input resolution
     if (conf::PCompiler::pCompilerCompatibilityMode) {
       for (auto& f : filesPassed) {
+        bool isFolder = conf::PCompiler::all;
         if (conf::PCompiler::all) {
           if (!std::filesystem::is_directory(f)) {
             std::cout << "Unable to locate input directory '" << f << "'." << std::endl;
@@ -652,11 +654,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           if (FSUtils::extensionAsRef(f).empty())
             f.append(".psc");
         }
-        auto input = conf::General::inputFiles.emplace_back(f, !iterateCompiledDirectoriesRecursively);
-        if (!std::filesystem::exists(input.resolved_absolute())) {
-          std::cout << "Unable to locate input file '" << f << "'." << std::endl;
-          return false;
-        }
+        auto & input = conf::General::inputFiles.emplace_back(std::make_shared<PCompInputFile>(f, !iterateCompiledDirectoriesRecursively, isFolder));
       }
     } else {
       // normal resolution
@@ -670,33 +668,32 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
             return false;
           }
         }
-        auto& input = conf::General::inputFiles.emplace_back(f, !iterateCompiledDirectoriesRecursively);
-        if (!std::filesystem::exists(input.resolved_absolute())) {
-          std::cout << "Unable to locate input file '" << f << "'." << std::endl;
-          return false;
-        }
+        auto& input = conf::General::inputFiles.emplace_back(std::make_shared<InputFile>(f, !iterateCompiledDirectoriesRecursively));
       }
     }
 
     for (auto& input : conf::General::inputFiles) {
-      if (!input.exists()) {
-        std::cout << "Unable to locate input file '" << input.get_unresolved_path() << "'." << std::endl;
+      if (!input){
+        throw std::runtime_error("Input file is null!");
+      }
+      if (!input->resolve()) {
+        std::cout << "Unable to locate input file '" << input->get_unresolved_path() << "'." << std::endl;
         return false;
       }
-      if (std::filesystem::is_directory(input.resolved_absolute())) {
-        if (!addFilesFromDirectory(input,
+      if (std::filesystem::is_directory(input->resolved_absolute())) {
+        if (!addFilesFromDirectory(*input,
                                    baseOutputDir,
                                    jobManager,
                                    papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile,
                                    "")) {
-          std::cout << "Unable to add input directory '" << input.get_unresolved_path() << "'." << std::endl;
+          std::cout << "Unable to add input directory '" << input->get_unresolved_path() << "'." << std::endl;
           return false;
         }
-      } else if (!addSingleFile(input,
+      } else if (!addSingleFile(*input,
                                 baseOutputDir,
                                 jobManager,
                                 papyrus::PapyrusCompilationNode::NodeType::PapyrusCompile)) {
-        std::cout << "Unable to add input file '" << input.get_unresolved_path() << "'." << std::endl;
+        std::cout << "Unable to add input file '" << input->get_unresolved_path() << "'." << std::endl;
         return false;
       }
     }

@@ -107,12 +107,12 @@ PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType
                                 time_t lastModTime,
                                 size_t fileSize);
 
-bool addSingleFile(const InputFile& input,
+bool addSingleFile(const IInputFile& input,
                    const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager *jobManager,
                    PapyrusCompilationNode::NodeType nodeType);
 
-bool addFilesFromDirectory(const InputFile& input,
+bool addFilesFromDirectory(const IInputFile& input,
                            const std::filesystem::path& baseOutputDir,
                            caprica::CapricaJobManager* jobManager,
                            PapyrusCompilationNode::NodeType nodeType,
@@ -320,7 +320,7 @@ bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* 
   return true;
 }
 
-bool addSingleFile(const InputFile& input,
+bool addSingleFile(const IInputFile& input,
                    const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager* jobManager,
                    PapyrusCompilationNode::NodeType nodeType) {
