@@ -381,7 +381,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     std::filesystem::path baseOutputDir;
 
     PapyrusProject ppj;
-    std::string ppjPath;
+    std::filesystem::path ppjPath;
     auto filesToRemove = std::vector<std::string>();
     for (auto& f : filesPassed) {
       auto ext = filesystem::path(f).extension().string();
@@ -430,7 +430,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
     }
 
     if (!ppjPath.empty()) {
-      auto baseDir = filesystem::path(ppjPath).parent_path();
+      auto baseDir = ppjPath.parent_path();
       if (!baseDir.empty())
         baseDir = FSUtils::canonicalFS(baseDir);
       else
@@ -650,7 +650,7 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
           }
         } else {
           // need to replace any `:` with `\`
-          std::replace(f.begin(), f.end(), ':', '\\');
+          std::replace(f.begin(), f.end(), ':', FSUtils::SEP);
           if (FSUtils::extensionAsRef(f).empty())
             f.append(".psc");
         }

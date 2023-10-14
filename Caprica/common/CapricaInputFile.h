@@ -2,7 +2,7 @@
 #include <filesystem>
 namespace caprica{
 struct IInputFile;
-struct IInputFile : std::enable_shared_from_this<IInputFile>{
+struct IInputFile {
   virtual std::filesystem::path resolved_relative() const = 0;
   virtual std::filesystem::path resolved_absolute() const = 0;
   virtual std::filesystem::path resolved_absolute_basedir() const = 0;
@@ -30,6 +30,7 @@ protected:
   static std::filesystem::path find_import_dir(const std::filesystem::path& _path);
   static bool dirContains(const std::filesystem::path& _path, const std::filesystem::path& dir);
 };
+
 struct InputFile : public IInputFile {
   virtual std::filesystem::path resolved_relative() const override;
   virtual std::filesystem::path resolved_absolute() const override;

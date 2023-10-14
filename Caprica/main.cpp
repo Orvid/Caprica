@@ -216,11 +216,8 @@ bool addFilesFromDirectory(const IInputFile& input,
             l_startNS = "";
           }
         }
-        // if it's true, then this is the base dir and the namespace should be root
-        auto namespaceName = l_startNS + curDir.lexically_normal().string();
-        std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-        while (namespaceName[0] == ':')
-          namespaceName = namespaceName.substr(1);
+        auto curDirNS = FSUtils::pathToObjectName(curDir);
+        auto namespaceName = l_startNS.empty() ? curDirNS : (l_startNS + ":" + curDirNS);
         caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
       }
     } else {
@@ -327,11 +324,11 @@ bool addSingleFile(const IInputFile& input,
   // Get the file size and last modified time using std::filesystem
   std::error_code ec;
 
-  auto relPath = input.resolved_relative();
-  auto namespaceDir = relPath.parent_path();
-  auto absPath = input.resolved_absolute();
-  auto filename = absPath.filename();
-  auto absBaseDir = input.resolved_absolute_basedir();
+  const auto relPath = input.resolved_relative();
+  const auto namespaceDir = relPath.parent_path();
+  const auto absPath = input.resolved_absolute();
+  const auto filename = absPath.filename();
+  const auto absBaseDir = input.resolved_absolute_basedir();
   if (!input.exists()) {
     std::cout << "ERROR: Resolved file path '" << absPath
               << "' is not in an import directory, cannot resolve namespace!" << std::endl;
@@ -347,10 +344,8 @@ bool addSingleFile(const IInputFile& input,
     std::cout << "An error occurred while trying to get the file size of '" << absPath << "'!" << std::endl;
     return false;
   }
-  auto namespaceName = relPath.parent_path().string();
-  std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-  if (namespaceName[0] == ':')
-    namespaceName = namespaceName.substr(1);
+
+  auto namespaceName = FSUtils::pathToObjectName(namespaceDir);
   if (!conf::General::quietCompile)
     std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
   auto node = getNode(nodeType,

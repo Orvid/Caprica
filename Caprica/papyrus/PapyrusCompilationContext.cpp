@@ -164,20 +164,13 @@ void PapyrusCompilationNode::FilePreParseJob::run() {
     case NodeType::PapyrusCompile: // only check for this on compile nodes
     case NodeType::PasCompile: {
       // check the object name with the reportedname
-      auto nsName = std::string(FSUtils::parentPathAsRef(parent->reportedName));
-      if (nsName == parent->reportedName)
-        nsName = "";
-      // replace `\` with `:`
-      std::replace(nsName.begin(), nsName.end(), '\\', ':');
-      auto objectNS = parent->objectName.find(':') != std::string::npos
-                          ? parent->objectName.substr(0, parent->objectName.find_last_of(':'))
-                          : "";
-      if (_strnicmp(objectNS.c_str(), nsName.c_str(), objectNS.size()) != 0) {
+      auto nsName = FSUtils::pathToObjectName(parent->reportedName);
+      if (_strnicmp(parent->objectName.c_str(), nsName.c_str(), parent->objectName.size()) != 0) {
         CapricaReportingContext::logicalFatal(
             "{}: The script namespace '{}' does not match the expected namespace '{}'.\n"
             "Check your imports and your CWD.",
             parent->reportedName,
-            objectNS,
+            parent->objectName,
             nsName);
       }
     } break;
@@ -269,7 +262,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
           auto containingDir = std::filesystem::path(parent->outputDirectory);
           if (!std::filesystem::exists(containingDir))
             std::filesystem::create_directories(containingDir);
-          std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas",
+          std::ofstream asmStrm(parent->outputDirectory + FSUtils::SEP + std::string(parent->baseName) + ".pas",
                                 std::ofstream::binary);
           asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
           pex::PexAsmWriter asmWtr(asmStrm);
@@ -286,7 +279,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       auto containingDir = std::filesystem::path(parent->outputDirectory);
       if (!std::filesystem::exists(containingDir))
         std::filesystem::create_directories(containingDir);
-      std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas",
+      std::ofstream asmStrm(parent->outputDirectory + FSUtils::SEP + std::string(parent->baseName) + ".pas",
                             std::ofstream::binary);
       asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
@@ -328,7 +321,7 @@ void PapyrusCompilationNode::FileWriteJob::run() {
         auto containingDir = std::filesystem::path(parent->outputDirectory);
         if (!std::filesystem::exists(containingDir))
           std::filesystem::create_directories(containingDir);
-        std::ofstream destFile { parent->outputDirectory + "\\" + baseFileName + ".pex", std::ifstream::binary };
+        std::ofstream destFile { parent->outputDirectory + FSUtils::SEP + baseFileName + ".pex", std::ifstream::binary };
         destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         parent->pexWriter->applyToBuffers([&](const char* data, size_t size) { destFile.write(data, size); });
       }

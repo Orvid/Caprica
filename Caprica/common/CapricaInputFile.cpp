@@ -59,7 +59,7 @@ namespace caprica{
   }
 
   bool InputFile::resolve() {
-    auto normalPath = rawPath.lexically_normal();
+    auto normalPath = FSUtils::normalize(rawPath);
     auto str = normalPath.string();
     if (!normalPath.is_absolute()) {
       absPath = FSUtils::canonicalFS(cwd / normalPath);
@@ -150,22 +150,18 @@ namespace caprica{
   bool PCompInputFile::exists() const {
     return std::filesystem::exists(resolved_absolute());
   }
+  
+  static constexpr char const curDir[3] = {'.', FSUtils::SEP, 0};
+  static constexpr char const parent[4] = {'.', '.', FSUtils::SEP, 0};
 
   bool PCompInputFile::resolve() {
-    auto normalPath = rawPath;
-    auto str = normalPath.string();
-    // replace all ':' with preferred seperator
-    std::replace(str.begin(), str.end(), ':', FSUtils::SEP);
-    normalPath = str;
+    std::filesystem::path normalPath = FSUtils::objectNameToPath(rawPath.string());
     if (!__isFolder && normalPath.extension().empty())
       normalPath.replace_extension(".psc");
-    normalPath = normalPath.lexically_normal();
-    std::string sep = {FSUtils::SEP};
-    str = normalPath.string();
-
-
+    normalPath = FSUtils::normalize(normalPath);
+    std::string str = normalPath.string();
     // special case for relative paths that contain parent/cwd refs
-    if (!normalPath.is_absolute() && (str == "." || str == ".." || str.starts_with("." + sep) || str.contains(".." + sep))) {
+    if (!normalPath.is_absolute() && (str == "." || str == ".." || str.starts_with(curDir) || str.contains(parent))) {
       absPath = FSUtils::canonicalFS(cwd / normalPath);
       absBaseDir = cwd;
       
