@@ -62,6 +62,7 @@ bool shouldShortCircuit(const std::string& path) {
 // Borrowed and modified from http://stackoverflow.com/a/1750710/776797
 std::filesystem::path normalize(const std::filesystem::path& path) {
 #ifdef _WIN32
+  if (!path.is_absolute()) return path.lexically_normal();
   std::filesystem::path result;
   for (auto it = path.begin(); it != path.end(); ++it) {
     if (!wcscmp(it->c_str(), L"..")) {

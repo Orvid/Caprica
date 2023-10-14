@@ -13,6 +13,7 @@ struct IInputFile {
   bool isResolved() const { return resolved; }
   virtual bool exists() const;
   virtual bool isDir() const;
+  bool requiresRemap() const;
   virtual bool resolve() = 0;
   IInputFile(const std::filesystem::path& _path, bool noRecurse = true, const std::filesystem::path& _cwd = "");
   virtual ~IInputFile() = default;

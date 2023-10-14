@@ -73,12 +73,34 @@ bool IInputFile::isDir() const {
   return std::filesystem::is_directory(resolved_absolute());
 }
 
+bool IInputFile::requiresRemap() const {
+  return requiresPreParse;
+}
+
+static constexpr char const curDir[3] = { '.', FSUtils::SEP, 0 };
+static constexpr char const parent[4] = { '.', '.', FSUtils::SEP, 0 };
+
+std::filesystem::path getCorrectBaseDir(const std::filesystem::path& normalPath,
+                                        const std::filesystem::path& absBaseDir) {
+  // for every 2 ..s in the path, remove a directory from the base dir
+  auto str = normalPath.string();
+  auto ret = absBaseDir;
+  while (str.starts_with(parent)) {
+    ret = ret.parent_path();
+    str = str.substr(3);
+  }
+  return ret;
+}
+
 bool InputFile::resolve() {
   auto normalPath = FSUtils::normalize(rawPath);
-  auto str = normalPath.string();
   if (!normalPath.is_absolute()) {
     absPath = FSUtils::canonicalFS(cwd / normalPath);
-    absBaseDir = cwd;
+    absBaseDir = find_import_dir(absPath);
+    if (absBaseDir.empty()) {
+      absBaseDir = getCorrectBaseDir(normalPath, cwd);
+      requiresPreParse = true;
+    }
     if (std::filesystem::exists(absPath)) {
       resolved = true;
       return true;
@@ -135,9 +157,6 @@ PCompInputFile::PCompInputFile(const std::filesystem::path& _path,
   __isFolder = isFolder;
 }
 
-static constexpr char const curDir[3] = { '.', FSUtils::SEP, 0 };
-static constexpr char const parent[4] = { '.', '.', FSUtils::SEP, 0 };
-
 bool PCompInputFile::resolve() {
   std::filesystem::path normalPath = FSUtils::objectNameToPath(rawPath.string());
   if (!__isFolder && normalPath.extension().empty())
@@ -147,7 +166,7 @@ bool PCompInputFile::resolve() {
   // special case for relative paths that contain parent/cwd refs
   if (!normalPath.is_absolute() && (str == "." || str == ".." || str.starts_with(curDir) || str.contains(parent))) {
     absPath = FSUtils::canonicalFS(cwd / normalPath);
-    absBaseDir = cwd;
+    absBaseDir = getCorrectBaseDir(normalPath, cwd);
 
     if (!std::filesystem::exists(absPath))
       return false;
@@ -157,7 +176,7 @@ bool PCompInputFile::resolve() {
 
   // if this is a relative folder path, and the folder is in the cwd, use cwd as the base dir
   if (__isFolder && !normalPath.is_absolute() && dirContains(normalPath, cwd))
-    absBaseDir = cwd;
+    absBaseDir = getCorrectBaseDir(normalPath, cwd);
   else
     absBaseDir = find_import_dir(normalPath);
 
