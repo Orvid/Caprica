@@ -11,9 +11,9 @@ struct IInputFile {
   bool isRecursive() const { return !noRecurse; }
   bool isImport() const { return import; }
   bool isResolved() const { return resolved; }
-  virtual bool exists() const;
-  virtual bool isDir() const;
-  bool requiresRemap() const;
+  bool isDir() const { return isFolder; }
+  bool exists() const;
+  bool requiresRemap() const { return requiresPreParse; }
   virtual bool resolve() = 0;
   IInputFile(const std::filesystem::path& _path, bool noRecurse = true, const std::filesystem::path& _cwd = "");
   virtual ~IInputFile() = default;
@@ -30,6 +30,7 @@ protected:
   bool resolved = false;
   bool import = false;
   bool requiresPreParse = false;
+  bool isFolder = false;
 };
 
 struct InputFile : public IInputFile {
@@ -43,16 +44,11 @@ struct PCompInputFile : public IInputFile {
                  bool noRecurse = true,
                  bool isFolder = false,
                  const std::filesystem::path& _cwd = "");
-  virtual bool isDir() const override { return __isFolder; }
   virtual bool resolve() override;
-
-private:
-  bool __isFolder = false;
 };
 
 struct ImportDir : public IInputFile {
   ImportDir(const std::filesystem::path& _path, bool noRecurse = true, const std::filesystem::path& _cwd = "");
-  virtual bool isDir() const override { return true; }
   virtual bool resolve() override;
 
 private:

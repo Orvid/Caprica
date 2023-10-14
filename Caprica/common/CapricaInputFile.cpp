@@ -69,17 +69,8 @@ bool IInputFile::exists() const {
   return std::filesystem::exists(resolved_absolute());
 }
 
-bool IInputFile::isDir() const {
-  return std::filesystem::is_directory(resolved_absolute());
-}
-
-bool IInputFile::requiresRemap() const {
-  return requiresPreParse;
-}
-
 static constexpr char const curDir[3] = { '.', FSUtils::SEP, 0 };
 static constexpr char const parent[4] = { '.', '.', FSUtils::SEP, 0 };
-
 std::filesystem::path getCorrectBaseDir(const std::filesystem::path& normalPath,
                                         const std::filesystem::path& absBaseDir) {
   // for every 2 ..s in the path, remove a directory from the base dir
@@ -92,6 +83,11 @@ std::filesystem::path getCorrectBaseDir(const std::filesystem::path& normalPath,
   return ret;
 }
 
+InputFile::InputFile(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
+    : IInputFile(_path, noRecurse, _cwd) {
+  requiresPreParse = true; // we always require pre-parse for non-PCompiler-compatible input files
+}
+
 bool InputFile::resolve() {
   auto normalPath = FSUtils::normalize(rawPath);
   if (!normalPath.is_absolute()) {
@@ -99,24 +95,18 @@ bool InputFile::resolve() {
     absBaseDir = find_import_dir(absPath);
     if (absBaseDir.empty()) {
       absBaseDir = getCorrectBaseDir(normalPath, cwd);
-      requiresPreParse = true;
-    }
-    if (std::filesystem::exists(absPath)) {
-      resolved = true;
-      return true;
-    } else {
-      return false;
     }
   } else {
     absPath = FSUtils::canonicalFS(normalPath);
     absBaseDir = find_import_dir(absPath);
     if (absBaseDir.empty()) {
       absBaseDir = absPath.parent_path();
-      requiresPreParse = true;
     }
   }
 
   if (std::filesystem::exists(absPath)) {
+    if (std::filesystem::is_directory(absPath))
+      isFolder = true;
     resolved = true;
     return true;
   }
@@ -124,15 +114,11 @@ bool InputFile::resolve() {
   return false;
 }
 
-InputFile::InputFile(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
-    : IInputFile(_path, noRecurse, _cwd) {
-  requiresPreParse = true; // we always require pre-parse for non-PCompiler-compatible input files
-}
-
 ImportDir::ImportDir(const std::filesystem::path& _path, bool noRecurse, const std::filesystem::path& _cwd)
     : IInputFile(_path, noRecurse, _cwd) {
   requiresPreParse = true; // we always require pre-parse for import dirs
   import = true;
+  isFolder = true;
   resolve(); // we resolve import dirs immediately
 }
 
@@ -154,12 +140,12 @@ PCompInputFile::PCompInputFile(const std::filesystem::path& _path,
                                bool isFolder,
                                const std::filesystem::path& _cwd)
     : IInputFile(_path, noRecurse, _cwd) {
-  __isFolder = isFolder;
+  isFolder = isFolder;
 }
 
 bool PCompInputFile::resolve() {
   std::filesystem::path normalPath = FSUtils::objectNameToPath(rawPath.string());
-  if (!__isFolder && normalPath.extension().empty())
+  if (!isFolder && normalPath.extension().empty())
     normalPath.replace_extension(".psc");
   normalPath = FSUtils::normalize(normalPath);
   std::string str = normalPath.string();
@@ -175,7 +161,7 @@ bool PCompInputFile::resolve() {
   }
 
   // if this is a relative folder path, and the folder is in the cwd, use cwd as the base dir
-  if (__isFolder && !normalPath.is_absolute() && dirContains(normalPath, cwd))
+  if (isFolder && !normalPath.is_absolute() && dirContains(normalPath, cwd))
     absBaseDir = getCorrectBaseDir(normalPath, cwd);
   else
     absBaseDir = find_import_dir(normalPath);
@@ -190,7 +176,7 @@ bool PCompInputFile::resolve() {
 
   if (!std::filesystem::exists(absPath))
     return false;
-  if (__isFolder && !std::filesystem::is_directory(absPath))
+  if (isFolder && !std::filesystem::is_directory(absPath))
     return false;
 
   resolved = true;
