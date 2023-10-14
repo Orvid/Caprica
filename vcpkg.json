@@ -17,7 +17,8 @@
         "boost-filesystem",
         "boost-program-options",
         "boost-property-tree",
-        "fmt"
+        "fmt",
+        "pugixml"
       ]
     }
   },

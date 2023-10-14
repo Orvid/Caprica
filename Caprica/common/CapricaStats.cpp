@@ -5,13 +5,13 @@
 
 namespace caprica {
 
-CapricaStats::counter_type CapricaStats::peekedTokenCount { 0 };
-CapricaStats::counter_type CapricaStats::consumedTokenCount { 0 };
-CapricaStats::counter_type CapricaStats::lexedFilesCount { 0 };
+CapricaStats::NopIncStruct CapricaStats::peekedTokenCount { 0 };
+CapricaStats::NopIncStruct CapricaStats::consumedTokenCount { 0 };
+CapricaStats::NopIncStruct CapricaStats::lexedFilesCount { 0 };
 CapricaStats::counter_type CapricaStats::importedFileCount { 0 };
 CapricaStats::counter_type CapricaStats::inputFileCount { 0 };
-CapricaStats::counter_type CapricaStats::allocatedHeapCount { 0 };
-CapricaStats::counter_type CapricaStats::freedHeapCount { 0 };
+CapricaStats::NopIncStruct CapricaStats::allocatedHeapCount { 0 };
+CapricaStats::NopIncStruct CapricaStats::freedHeapCount { 0 };
 
 template <typename CounterType, typename NopType>
 static std::enable_if_t<!std::is_same<CounterType, NopType>::value> internalOutputStats() {
@@ -43,7 +43,8 @@ void CapricaStats::outputStats() {
 }
 
 void CapricaStats::outputImportedCount() {
-  std::cout << "Imported " << importedFileCount.val << " files." << std::endl;
+  std::cout << "Imported " << importedFileCount << " files." << std::endl;
+  std::cout << "Compiling " << inputFileCount << " files..." << std::endl;
 }
 
 }

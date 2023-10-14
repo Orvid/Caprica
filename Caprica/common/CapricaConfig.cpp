@@ -1,5 +1,7 @@
+#include "CapricaConfig.h"
 #include <common/CapricaConfig.h>
-
+#include <common/FSUtils.h>
+#include <filesystem>
 namespace caprica { namespace conf {
 
 // These should always be defaulted to false/empty, and their real
@@ -8,10 +10,14 @@ namespace caprica { namespace conf {
 namespace General {
   bool compileInParallel{ false };
   bool quietCompile{ false };
-}
+  bool recursive { false };
+  std::filesystem::path outputDirectory;
+  bool anonymizeOutput;
+  std::vector<std::shared_ptr<IInputFile>> inputFiles;
+  }
 
-namespace PCompiler {
-    // pCompiler compatibility mode.
+  namespace PCompiler {
+  // pCompiler compatibility mode.
   bool pCompilerCompatibilityMode{false};
   bool all{false};
   bool norecurse{false};
@@ -46,15 +52,15 @@ namespace EngineLimits {
 }
 
 namespace Papyrus {
-  GameID game;
-  bool allowCompilerIdentifiers{ false };
+GameID game { GameID::UNKNOWN };
+  bool allowCompilerIdentifiers { false };
   bool allowDecompiledStructNameRefs{ false };
   bool allowNegativeLiteralAsBinaryOp{ false };
   bool enableLanguageExtensions{ false };
   bool ignorePropertyNameLocalConflicts{ false };
   bool allowImplicitNoneCastsToAnyType{ false };
-  std::vector<std::string> importDirectories{ };
-  CapricaUserFlagsDefinition userFlagsDefinition{ };
+  std::vector<ImportDir> importDirectories {};
+  CapricaUserFlagsDefinition userFlagsDefinition{};
 }
 
 namespace Skyrim {
@@ -81,4 +87,4 @@ namespace Warnings {
   std::unordered_set<size_t> warningsToEnable{ };
 }
 
-}}
+  }}
