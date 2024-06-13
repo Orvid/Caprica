@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <ostream>
@@ -88,56 +89,75 @@ static const std::unordered_set FAKE_SKYRIM_SCRIPTS_SET = {
         "fake://skyrim/__ScriptObject.psc",
         "fake://skyrim/DLC1SCWispWallScript.psc",
 };
-static caseless_unordered_identifier_set abs_import_dirs {};
-bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager *jobManager);
 
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType,
-                                CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir,
-                                const std::string &curDir,
-                                const std::string &absBaseDir,
-                                const WIN32_FIND_DATA &fileName);
+bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* jobManager);
 
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType,
-                                CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir,
-                                const std::string &curDir,
-                                const std::string &absBaseDir,
-                                const std::string &fileName,
+PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType,
+                                CapricaJobManager* jobManager,
+                                const std::filesystem::path& baseOutputDir,
+                                const std::filesystem::path& curDir,
+                                const std::filesystem::path& absBaseDir,
+                                const WIN32_FIND_DATA& data,
+                                bool strictNS);
+
+PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType,
+                                CapricaJobManager* jobManager,
+                                const std::filesystem::path& baseOutputDir,
+                                const std::filesystem::path& curDir,
+                                const std::filesystem::path& absBaseDir,
+                                const std::filesystem::path& fileName,
                                 time_t lastModTime,
-                                size_t fileSize);
+                                size_t fileSize,
+                                bool strictNS);
 
-bool addSingleFile(const std::string &f,
-                   const std::string &baseOutputDir,
+bool addSingleFile(const IInputFile& input,
+                   const std::filesystem::path& baseOutputDir,
                    caprica::CapricaJobManager *jobManager,
                    PapyrusCompilationNode::NodeType nodeType);
 
-bool addFilesFromDirectory(const std::string &f,
-                           bool recursive,
-                           const std::string &baseOutputDir,
-                           caprica::CapricaJobManager *jobManager,
+bool addFilesFromDirectory(const IInputFile& input,
+                           const std::filesystem::path& baseOutputDir,
+                           caprica::CapricaJobManager* jobManager,
                            PapyrusCompilationNode::NodeType nodeType,
-                           const std::string &startingNS = "") {
+                           const std::string& startingNS = "") {
   // Blargle flargle.... Using the raw Windows API is 5x
   // faster than boost::filesystem::recursive_directory_iterator,
   // at 40ms vs. 200ms for the boost solution, and the raw API
   // solution also gets us the relative paths, absolute paths,
   // last write time, and file size, all without any extra processing.
-  auto absBaseDir = caprica::FSUtils::canonical(f);
-  std::vector<std::string> dirs{};
-  dirs.push_back("\\");
+  if (!input.exists()) {
+    std::cout << "ERROR: Input file '" << input.get_unresolved_path() << "' was not found!" << std::endl;
+    return false;
+  }
+  auto abspath = input.resolved_absolute();
+  auto absBaseDir = input.resolved_absolute_basedir();
+  auto subdir = input.resolved_relative();
+  if (subdir == ".")
+    subdir = "";
+  bool recursive = input.isRecursive();
+  std::vector<std::filesystem::path> dirs {};
+  dirs.push_back(subdir);
   auto baseDirMap = getBaseSigMap(conf::Papyrus::game);
   auto l_startNS = startingNS;
+  if (l_startNS == "") {
+    if (conf::Papyrus::game > GameID::Skyrim) {
+      if (input.requiresRemap())
+        l_startNS = "!!temp" + abspath.filename().string() + std::to_string(rand());
+    }
+  }
+  const auto DOTDOT = std::string_view("..");
+  const auto DOT = std::string_view(".");
+
   while (dirs.size()) {
     HANDLE hFind;
     WIN32_FIND_DATA data;
     auto curDir = dirs.back();
     dirs.pop_back();
-    auto curSearchPattern = absBaseDir + curDir + "\\*";
+    auto curSearchPattern = absBaseDir / curDir / "*";
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode *> namespaceMap{};
     namespaceMap.reserve(8000);
 
-    hFind = FindFirstFileA(curSearchPattern.c_str(), &data);
+    hFind = FindFirstFileA(curSearchPattern.string().c_str(), &data);
     if (hFind == INVALID_HANDLE_VALUE) {
       std::cout << "An error occurred while trying to iterate the files in '" << curSearchPattern << "'!" << std::endl;
       return false;
@@ -145,14 +165,10 @@ bool addFilesFromDirectory(const std::string &f,
 
     do {
       std::string_view filenameRef = data.cFileName;
-      if (filenameRef != std::string_view(".") && filenameRef != std::string_view("..")) {
+      if (filenameRef != DOT && filenameRef != DOTDOT) {
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-          if (recursive) {
-            if (curDir == "\\")
-              dirs.push_back(curDir + data.cFileName);
-            else
-              dirs.push_back(curDir + "\\" + data.cFileName);
-          }
+          if (recursive)
+            dirs.push_back(curDir / data.cFileName);
         } else {
           auto ext = FSUtils::extensionAsRef(filenameRef);
           bool skip = false;
@@ -178,7 +194,8 @@ bool addFilesFromDirectory(const std::string &f,
               break;
           }
           if (!skip) {
-            PapyrusCompilationNode *node = getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data);
+            PapyrusCompilationNode* node =
+                getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data, !input.requiresRemap());
 
             namespaceMap.emplace(caprica::identifier_ref(node->baseName), node);
             if (!gBaseFound && !baseDirMap.empty()) {
@@ -210,10 +227,8 @@ bool addFilesFromDirectory(const std::string &f,
             l_startNS = "";
           }
         }
-        // if it's true, then this is the base dir and the namespace should be root
-        auto namespaceName = l_startNS + curDir;
-        std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-        namespaceName = namespaceName.substr(1);
+        auto curDirNS = FSUtils::pathToObjectName(curDir);
+        auto namespaceName = l_startNS.empty() ? curDirNS : (l_startNS + ":" + curDirNS);
         caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(namespaceName, std::move(namespaceMap));
       }
     } else {
@@ -225,32 +240,23 @@ bool addFilesFromDirectory(const std::string &f,
   return true;
 }
 
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType,
-                                CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir,
-                                const std::string &curDir,
-                                const std::string &absBaseDir,
-                                const std::string &fileName,
+PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType,
+                                CapricaJobManager* jobManager,
+                                const std::filesystem::path& baseOutputDir,
+                                const std::filesystem::path& curDir,
+                                const std::filesystem::path& absBaseDir,
+                                const std::filesystem::path& fileName,
                                 time_t lastModTime,
-                                size_t fileSize) {
-  std::string curDirFull;
-  if (curDir == "\\" || curDir == "")
-    curDirFull = absBaseDir;
+                                size_t fileSize,
+                                bool strictNS) {
+  std::filesystem::path cur;
+  if (curDir == ".")
+    cur = "";
   else
-    curDirFull = absBaseDir + curDir;
+    cur = curDir;
+  std::filesystem::path sourceFilePath = absBaseDir / cur / fileName;
+  std::filesystem::path filenameToDisplay = cur / fileName;
 
-  std::string sourceFilePath = curDirFull + "\\" + fileName;
-  std::string filenameToDisplay;
-  std::string outputDir;
-  if (curDir == "\\" || curDir == "") {
-    filenameToDisplay = fileName;
-    outputDir = baseOutputDir;
-  } else {
-    filenameToDisplay = curDir + "\\" + fileName;
-    if (filenameToDisplay[0] == '\\')
-      filenameToDisplay = filenameToDisplay.substr(1);
-    outputDir = baseOutputDir + curDir;
-  }
   if (nodeType == PapyrusCompilationNode::NodeType::PapyrusImport ||
       nodeType == PapyrusCompilationNode::NodeType::PasReflection ||
       nodeType == PapyrusCompilationNode::NodeType::PexReflection) {
@@ -260,20 +266,22 @@ PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType
   }
   auto node = new caprica::papyrus::PapyrusCompilationNode(jobManager,
                                                            nodeType,
-                                                           std::move(filenameToDisplay),
-                                                           std::move(outputDir),
-                                                           std::move(sourceFilePath),
+                                                           std::move(filenameToDisplay.string()),
+                                                           std::move(baseOutputDir.string()),
+                                                           std::move(sourceFilePath.string()),
                                                            lastModTime,
-                                                           fileSize);
+                                                           fileSize,
+                                                           strictNS);
   return node;
 }
 
-PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType,
-                                CapricaJobManager *jobManager,
-                                const std::string &baseOutputDir,
-                                const std::string &curDir,
-                                const std::string &absBaseDir,
-                                const WIN32_FIND_DATA &data) {
+PapyrusCompilationNode* getNode(const PapyrusCompilationNode::NodeType& nodeType,
+                                CapricaJobManager* jobManager,
+                                const std::filesystem::path& baseOutputDir,
+                                const std::filesystem::path& curDir,
+                                const std::filesystem::path& absBaseDir,
+                                const WIN32_FIND_DATA& data,
+                                bool strictNS) {
   const auto lastModTime = [](FILETIME ft) -> time_t {
     ULARGE_INTEGER ull;
     ull.LowPart = ft.dwLowDateTime;
@@ -286,101 +294,77 @@ PapyrusCompilationNode *getNode(const PapyrusCompilationNode::NodeType &nodeType
     ull.HighPart = high;
     return ull.QuadPart;
   }(data.nFileSizeLow, data.nFileSizeHigh);
-  return getNode(nodeType, jobManager, baseOutputDir, curDir, absBaseDir, data.cFileName, lastModTime, fileSize);
+  return getNode(nodeType,
+                 jobManager,
+                 baseOutputDir,
+                 curDir,
+                 absBaseDir,
+                 data.cFileName,
+                 lastModTime,
+                 fileSize,
+                 strictNS);
 }
 
-bool handleImports(const std::vector<std::string> &f, caprica::CapricaJobManager *jobManager) {
+bool handleImports(const std::vector<ImportDir>& f, caprica::CapricaJobManager* jobManager) {
   // Skyrim hacks; we need to import Skyrim's fake scripts into the global namespace first.
   if (conf::Papyrus::game == GameID::Skyrim) {
     caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode *> tempMap{};
     for (auto &fake_script: FAKE_SKYRIM_SCRIPTS_SET) {
       auto basename = caprica::FSUtils::filenameAsRef(fake_script);
-
       auto node =
-              new PapyrusCompilationNode(jobManager,
-                                         PapyrusCompilationNode::NodeType::PapyrusImport,
-                                         std::string(basename),
-                                         "",
-                                         std::string(fake_script),
-                                         0,
-                                         caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game));
+          new PapyrusCompilationNode(jobManager,
+                                     PapyrusCompilationNode::NodeType::PapyrusImport,
+                                     std::string(basename),
+                                     "",
+                                     std::string(fake_script),
+                                     0,
+                                     caprica::FakeScripts::getSizeOfFakeScript(fake_script, conf::Papyrus::game),
+                                     false);
       tempMap.emplace(caprica::identifier_ref(node->baseName), node);
     }
     caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents("", std::move(tempMap));
   }
   std::cout << "Importing files..." << std::endl;
   int i = 0;
-  abs_import_dirs.reserve(f.size());
   for (auto& dir : f) {
     std::string ns = "";
     if (conf::Papyrus::game > GameID::Skyrim)
       ns = "!!temp" + std::to_string(i++);
-    if (!addFilesFromDirectory(dir, true, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ns))
+    if (!addFilesFromDirectory(dir, "", jobManager, PapyrusCompilationNode::NodeType::PapyrusImport, ns))
       return false;
-    abs_import_dirs.emplace(std::filesystem::absolute(dir).string());
   }
-  CapricaStats::outputImportedCount();
-  caprica::papyrus::PapyrusCompilationContext::RenameImports(jobManager);
   return true;
 }
 
-bool addSingleFile(const std::string &f,
-                   const std::string &baseOutputDir,
-                   caprica::CapricaJobManager *jobManager,
+bool addSingleFile(const IInputFile& input,
+                   const std::filesystem::path& baseOutputDir,
+                   caprica::CapricaJobManager* jobManager,
                    PapyrusCompilationNode::NodeType nodeType) {
   // Get the file size and last modified time using std::filesystem
   std::error_code ec;
-  if (!std::filesystem::exists(f)) {
-    std::cout << "ERROR: File '" << f << "' does not exist!" << std::endl;
+
+  const auto relPath = input.resolved_relative();
+  const auto namespaceDir = relPath.parent_path();
+  const auto absPath = input.resolved_absolute();
+  const auto filename = absPath.filename();
+  const auto absBaseDir = input.resolved_absolute_basedir();
+  auto lastModTime = std::filesystem::last_write_time(absPath, ec);
+  if (ec) {
+    std::cout << "An error occurred while trying to get the last modified time of '" << absPath << "'!" << std::endl;
     return false;
   }
-  auto lastModTime = std::filesystem::last_write_time(f, ec);
+  auto fileSize = std::filesystem::file_size(absPath, ec);
   if (ec) {
-    std::cout << "An error occurred while trying to get the last modified time of '" << f << "'!" << std::endl;
-    return false;
-  }
-  auto fileSize = std::filesystem::file_size(f, ec);
-  if (ec) {
-    std::cout << "An error occurred while trying to get the file size of '" << f << "'!" << std::endl;
+    std::cout << "An error occurred while trying to get the file size of '" << absPath << "'!" << std::endl;
     return false;
   }
 
-  std::string namespaceDir = "\\";
-  auto path = std::filesystem::path(f);
-  auto filename = std::string(caprica::FSUtils::filenameAsRef(f));
-  std::string absBaseDir = std::filesystem::absolute(f).parent_path().string();
-  if (!path.is_absolute()) {
-    auto ppath = caprica::FSUtils::parentPathAsRef(f);
-    if (ppath.compare(filename.c_str()) != 0) {
-      namespaceDir += ppath;
-      absBaseDir = absBaseDir.rfind(namespaceDir) != std::string::npos
-                       ? absBaseDir.substr(0, absBaseDir.rfind(namespaceDir))
-                       : absBaseDir;
-    }
-  } else {
-    // PCompiler-like namespace resolution by scanning imports
-    bool found = false;
-    for (auto& dir : abs_import_dirs) {
-      auto relPath = std::filesystem::relative(f, dir);
-      // check if relpath begins with ".."
-      if (relPath != path && !relPath.string().starts_with("..")) {
-        namespaceDir += relPath.parent_path().string();
-        absBaseDir = dir;
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      std::cout << "ERROR: Absolute file path '" << f << "' is not in an import directory, cannot resolve namespace!"
-                << std::endl;
-      return false;
-    }
+  auto namespaceName = FSUtils::pathToObjectName(namespaceDir);
+  if (conf::Papyrus::game > GameID::Skyrim) {
+    if (input.requiresRemap())
+      namespaceName = "!!temp" + absPath.filename().string() + std::to_string(rand()) + ":" + namespaceName;
   }
-  auto namespaceName = namespaceDir;
-  std::replace(namespaceName.begin(), namespaceName.end(), '\\', ':');
-  namespaceName = namespaceName.substr(1);
-  if (!conf::General::quietCompile)
-    std::cout << "Adding file '" << filename << "' to namespace '" << namespaceName << "'." << std::endl;
+
   auto node = getNode(nodeType,
                       jobManager,
                       baseOutputDir,
@@ -388,7 +372,8 @@ bool addSingleFile(const std::string &f,
                       absBaseDir,
                       filename,
                       lastModTime.time_since_epoch().count(),
-                      fileSize);
+                      fileSize,
+                      !input.requiresRemap());
   caprica::papyrus::PapyrusCompilationContext::pushNamespaceFullContents(
           namespaceName,
           caprica::caseless_unordered_identifier_ref_map<PapyrusCompilationNode *>{
@@ -415,6 +400,10 @@ int main(int argc, char *argv[]) {
   }
   if (conf::General::compileInParallel)
     jobManager.startup((uint32_t) std::thread::hardware_concurrency());
+
+  caprica::papyrus::PapyrusCompilationContext::RenameImports(&jobManager);
+  caprica::CapricaStats::outputImportedCount();
+
   auto endParse = std::chrono::high_resolution_clock::now();
   if (conf::Performance::dumpTiming) {
     std::cout << "Command Line Arg Parse: "

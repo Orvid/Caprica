@@ -34,15 +34,24 @@ struct PapyrusCompilationNode final {
                          std::string&& baseOutputDir,
                          std::string&& absolutePath,
                          time_t lastMod,
-                         size_t fileSize)
+                         size_t fileSize,
+                         bool strictNS)
       : reportedName(std::move(sourcePath)),
-        outputDirectory(std::move(baseOutputDir)),
+        baseOutputDirectory(std::move(baseOutputDir)),
         sourceFilePath(std::move(absolutePath)),
         lastModTime(lastMod),
         filesize(fileSize),
         reportingContext(reportedName),
         jobManager(mgr),
-        type(compileType) {
+        type(compileType),
+        strictNS(strictNS) {
+
+    // set the output directory
+    if (reportedName.find_last_of("\\/") != std::string::npos)
+      outputDirectory = baseOutputDirectory + FSUtils::SEP + std::string(FSUtils::parentPathAsRef(reportedName));
+    else
+      outputDirectory = baseOutputDirectory;
+
     baseName = FSUtils::basenameAsRef(sourceFilePath);
     // TODO: fix Imports hack
     if (type == NodeType::PapyrusImport)
@@ -90,6 +99,8 @@ private:
   std::string reportedName;
   std::string objectName;
   bool isPexFile = false;
+  bool strictNS = false;
+  std::string baseOutputDirectory;
   std::string outputDirectory;
   std::string sourceFilePath;
   std::string_view readFileData {};

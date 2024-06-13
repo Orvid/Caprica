@@ -26,7 +26,6 @@ std::string PapyrusCompilationNode::awaitPreParse() {
   return objectName;
 }
 
-
 PapyrusScript* PapyrusCompilationNode::awaitParse() {
   parseJob.await();
   return loadedScript;
@@ -119,17 +118,16 @@ void PapyrusCompilationNode::FileReadJob::run() {
   }
 }
 
-std::string_view findScriptName(const std::string_view& data, const std::string_view& startstring, bool stripWhitespace = false)
-{
+std::string_view findScriptName(const std::string_view& data, const std::string_view& startstring) {
   size_t last = 0;
   while (last < data.size()) {
     auto next = data.find('\n', last);
     if (next == std::string_view::npos)
       next = data.size() - 1;
     auto line = data.substr(last, next - last);
-    auto begin = stripWhitespace ? line.find_first_not_of(" \t") : 0;
+    auto begin = line.find_first_not_of(" \t");
     if (strnicmp(line.substr(begin, startstring.size()).data(), startstring.data(), startstring.size()) == 0) {
-      auto first = line.find_first_not_of(" \t", startstring.size());
+      auto first = line.find_first_not_of(" \t", startstring.size() + begin);
       return line.substr(first, line.find_first_of(" \t", first) - first);
     }
     last = next + 1;
@@ -152,44 +150,51 @@ void PapyrusCompilationNode::FilePreParseJob::run() {
       CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
     parent->objectName = parent->pexFile->getStringValue(parent->pexFile->objects.front()->name).to_string();
   } else if (pathEq(ext, ".pas")) {
-    parent->objectName = findScriptName(parent->readFileData, ".object", true);
+    parent->objectName = findScriptName(parent->readFileData, ".object");
   } else {
     CapricaReportingContext::logicalFatal("Unable to determine the type of file to load '{}' as.",
                                           parent->reportedName);
   }
   if (parent->objectName.empty())
     CapricaReportingContext::logicalFatal("Unable to find script name in '{}'.", parent->sourceFilePath);
+}
 
+void PapyrusCompilationNode::FileParseJob::run() {
+  parent->preParseJob.await();
   // Check if we have the correct namespace
+
   switch (parent->type) {
     case NodeType::PapyrusCompile: // only check for this on compile nodes
+    case NodeType::PexDissassembly:
     case NodeType::PasCompile: {
       // check the object name with the reportedname
-      auto nsName = std::string(FSUtils::parentPathAsRef(parent->reportedName));
-      if (nsName == parent->reportedName)
-        nsName = "";
-      // replace `\` with `:`
-      std::replace(nsName.begin(), nsName.end(), '\\', ':');
-      auto objectNS = parent->objectName.find(':') != std::string::npos
-                          ? parent->objectName.substr(0, parent->objectName.find_last_of(':'))
-                          : "";
-      if (_strnicmp(objectNS.c_str(), nsName.c_str(), objectNS.size()) != 0) {
-        CapricaReportingContext::logicalFatal(
-            "{}: The script namespace '{}' does not match the expected namespace '{}'.\n"
-            "Check your imports and your CWD.",
-            parent->reportedName,
-            objectNS,
-            nsName);
+      auto nsName = FSUtils::pathToObjectName(parent->reportedName);
+      if (_strnicmp(parent->objectName.c_str(), nsName.c_str(), parent->objectName.size()) != 0) {
+        if (parent->strictNS) {
+          CapricaReportingContext::logicalFatal(
+              "{}: The script namespace '{}' does not match the expected namespace '{}'.\n"
+              "Check your imports and your CWD.",
+              parent->reportedName,
+              parent->objectName,
+              nsName);
+        } else {
+          // change the outputDir
+          auto newPath = FSUtils::objectNameToPath(parent->objectName);
+          auto pardir = newPath.parent_path();
+          parent->outputDirectory = (parent->baseOutputDirectory / pardir).string();
+
+          // // change the reported name
+          // auto ext = FSUtils::extensionAsRef(parent->sourceFilePath);
+          // parent->reportedName = newPath.replace_extension(ext).string();
+          // TODO: emit warning?
+        }
       }
     } break;
     default: // We don't check for this on other jobs; imports will likely have different names than their reported
              // names
       break;
   }
-}
 
-void PapyrusCompilationNode::FileParseJob::run() {
-  parent->preParseJob.await();
   auto ext = FSUtils::extensionAsRef(parent->sourceFilePath);
   if (pathEq(ext, ".psc")) {
     auto parser = new parser::PapyrusParser(parent->reportingContext, parent->sourceFilePath, parent->readFileData);
@@ -270,7 +275,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
           auto containingDir = std::filesystem::path(parent->outputDirectory);
           if (!std::filesystem::exists(containingDir))
             std::filesystem::create_directories(containingDir);
-          std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas",
+          std::ofstream asmStrm(parent->outputDirectory + FSUtils::SEP + std::string(parent->baseName) + ".pas",
                                 std::ofstream::binary);
           asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
           pex::PexAsmWriter asmWtr(asmStrm);
@@ -287,7 +292,7 @@ void PapyrusCompilationNode::FileCompileJob::run() {
       auto containingDir = std::filesystem::path(parent->outputDirectory);
       if (!std::filesystem::exists(containingDir))
         std::filesystem::create_directories(containingDir);
-      std::ofstream asmStrm(parent->outputDirectory + "\\" + std::string(parent->baseName) + ".pas",
+      std::ofstream asmStrm(parent->outputDirectory + FSUtils::SEP + std::string(parent->baseName) + ".pas",
                             std::ofstream::binary);
       asmStrm.exceptions(std::ifstream::badbit | std::ifstream::failbit);
       caprica::pex::PexAsmWriter asmWtr(asmStrm);
@@ -329,7 +334,8 @@ void PapyrusCompilationNode::FileWriteJob::run() {
         auto containingDir = std::filesystem::path(parent->outputDirectory);
         if (!std::filesystem::exists(containingDir))
           std::filesystem::create_directories(containingDir);
-        std::ofstream destFile { parent->outputDirectory + "\\" + baseFileName + ".pex", std::ifstream::binary };
+        std::ofstream destFile { parent->outputDirectory + FSUtils::SEP + baseFileName + ".pex",
+                                 std::ifstream::binary };
         destFile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         parent->pexWriter->applyToBuffers([&](const char* data, size_t size) { destFile.write(data, size); });
       }
@@ -596,9 +602,8 @@ void PapyrusCompilationContext::RenameImports(CapricaJobManager* jobManager) {
       continue;
     rootNamespace.children.erase(it);
     it = rootNamespace.children.begin();
-    if (it == rootNamespace.children.end()){
+    if (it == rootNamespace.children.end())
       break;
-    }
   }
 }
 

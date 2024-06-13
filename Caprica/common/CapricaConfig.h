@@ -5,9 +5,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include <common/CapricaUserFlagsDefinition.h>
 #include "GameID.h"
-
+#include <common/CapricaUserFlagsDefinition.h>
+#include <common/parser/PapyrusProject.h>
+#include <common/FSUtils.h>
+#include <filesystem>
+#include <common/CapricaInputFile.h>
 namespace caprica { namespace conf {
 
 // Options that don't fit in any other category.
@@ -17,6 +20,14 @@ namespace General {
   extern bool compileInParallel;
   // If true, only report failures, not progress.
   extern bool quietCompile;
+  // If true, recurse into subdirectories when compiling.
+  extern bool recursive;
+  // self-explanatory
+  extern std::filesystem::path outputDirectory;
+  // If true, remove identifying information from the header.
+  extern bool anonymizeOutput;
+  // input files
+  extern std::vector<std::shared_ptr<IInputFile>> inputFiles;
 }
 
 // options related to compatibility with PCompiler's CLI parsing and name resolution
@@ -102,7 +113,7 @@ namespace Papyrus {
   extern bool allowImplicitNoneCastsToAnyType;
   // The directories to search in for imported types and
   // unknown types.
-  extern std::vector<std::string> importDirectories;
+  extern std::vector<ImportDir> importDirectories;
   // The user flags definition.
   extern CapricaUserFlagsDefinition userFlagsDefinition;
 }
