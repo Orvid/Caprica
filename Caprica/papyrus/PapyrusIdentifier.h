@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-#include <fmt/format.h>
+#include <format>
 
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
@@ -176,9 +176,8 @@ private:
 
 }}
 
-namespace fmt {
 template <>
-struct formatter<caprica::papyrus::PapyrusIdentifierType> {
+struct std::formatter<caprica::papyrus::PapyrusIdentifierType> {
   constexpr auto parse(format_parse_context& ctx) {
     if (ctx.begin() != ctx.end())
       throw format_error("invalid format");
@@ -187,7 +186,6 @@ struct formatter<caprica::papyrus::PapyrusIdentifierType> {
 
   template <class FormatContext>
   auto format(const caprica::papyrus::PapyrusIdentifierType& tp, FormatContext& ctx) const {
-    return fmt::format_to(ctx.out(), "{}", caprica::papyrus::PapyrusIdentifier::prettyTypeString(tp));
+    return std::format_to(ctx.out(), "{}", caprica::papyrus::PapyrusIdentifier::prettyTypeString(tp));
   }
 };
-}

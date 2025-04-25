@@ -1,6 +1,7 @@
 .vs/
 .vscode/
 .idea/
+.xmake/
 *.db
 *.vcxproj.user
 
@@ -46,3 +47,4 @@ Caprica/INSTALL.vcxproj.filters
 Caprica/cmake_install.cmake
 
 x64/
+vs*/

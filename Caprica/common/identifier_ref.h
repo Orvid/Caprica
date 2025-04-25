@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-#include <fmt/format.h>
+#include <format>
 
 #include <common/UtilMacros.h>
 
@@ -97,10 +97,11 @@ bool operator!=(const char* x, const identifier_ref& y);
 
 }
 
-namespace fmt {
 template <>
-struct formatter<caprica::identifier_ref> {
-  constexpr auto parse(format_parse_context& ctx) {
+struct std::formatter<caprica::identifier_ref>
+{
+  template <class ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
     if (ctx.begin() != ctx.end())
       throw format_error("invalid format");
     return ctx.end();
@@ -108,7 +109,6 @@ struct formatter<caprica::identifier_ref> {
 
   template <class FormatContext>
   auto format(const caprica::identifier_ref& str, FormatContext& ctx) const {
-    return fmt::format_to(ctx.out(), "{}", str.to_string_view());
+    return std::format_to(ctx.out(), "{}", str.to_string_view());
   }
 };
-}

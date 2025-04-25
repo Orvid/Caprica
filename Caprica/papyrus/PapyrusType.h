@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include <fmt/format.h>
+#include <format>
 
 #include <common/CapricaFileLocation.h>
 #include <common/CapricaReportingContext.h>
@@ -152,9 +152,8 @@ inline auto& operator|=(PapyrusType::PoisonKind& a, PapyrusType::PoisonKind b) {
 
 }}
 
-namespace fmt {
 template <>
-struct formatter<caprica::papyrus::PapyrusType> {
+struct std::formatter<caprica::papyrus::PapyrusType> {
   constexpr auto parse(format_parse_context& ctx) {
     if (ctx.begin() != ctx.end())
       throw format_error("invalid format");
@@ -163,7 +162,6 @@ struct formatter<caprica::papyrus::PapyrusType> {
 
   template <class FormatContext>
   auto format(const caprica::papyrus::PapyrusType& tp, FormatContext& ctx) const {
-    return fmt::format_to(ctx.out(), "{}", tp.prettyString());
+    return std::format_to(ctx.out(), "{}", tp.prettyString());
   }
 };
-}

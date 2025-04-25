@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-#include <fmt/format.h>
+#include <format>
 
 #include <common/allocators/FileOffsetPool.h>
 #include <common/CapricaFileLocation.h>
@@ -42,15 +42,22 @@ struct CapricaReportingContext final {
   void exitIfErrors();
 
   template <typename... Args>
-  NEVER_INLINE void error(CapricaFileLocation location, fmt::format_string<Args...> msg, Args&&... args) {
+  ALWAYS_INLINE void warning(CapricaFileLocation location, size_t warningNumber, std::string_view msg, Args&&... args) {
+    // TODO: fix Imports hack
+    if (!m_QuietWarnings)
+      maybePushMessage(this, &location, "", warningNumber, std::vformat(msg, std::make_format_args(args...)));
+  }
+
+  template <typename... Args>
+  NEVER_INLINE void error(CapricaFileLocation location, std::string_view msg, Args&&... args) {
     errorCount++;
-    maybePushMessage(this, &location, "Error", 0, fmt::format(msg, std::forward<Args>(args)...), true);
+    maybePushMessage(this, &location, "Error", 0, std::vformat(msg, std::make_format_args(args...)), true);
     breakIfDebugging();
   }
 
   template <typename... Args>
-  [[noreturn]] NEVER_INLINE void fatal(CapricaFileLocation location, fmt::format_string<Args...> msg, Args&&... args) {
-    maybePushMessage(this, &location, "Fatal Error", 0, fmt::format(msg, std::forward<Args>(args)...), true);
+  [[noreturn]] NEVER_INLINE void fatal(CapricaFileLocation location, std::string_view msg, Args&&... args) {
+    maybePushMessage(this, &location, "Fatal Error", 0, std::vformat(msg, std::make_format_args(args...)), true);
     throw std::runtime_error("");
   }
 
@@ -58,8 +65,8 @@ struct CapricaReportingContext final {
   // where the logic of Caprica itself has failed, and a location in a source
   // file is likely not available.
   template <typename... Args>
-  [[noreturn]] NEVER_INLINE static void logicalFatal(fmt::format_string<Args...> msg, Args&&... args) {
-    maybePushMessage(nullptr, nullptr, "Fatal Error", 0, fmt::format(msg, std::forward<Args>(args)...), true);
+  [[noreturn]] NEVER_INLINE static void logicalFatal(std::string_view msg, Args&&... args) {
+    maybePushMessage(nullptr, nullptr, "Fatal Error", 0, std::vformat(msg, std::make_format_args(args...)), true);
     throw std::runtime_error("");
   }
 
@@ -334,14 +341,6 @@ private:
                                size_t warnNum,
                                const std::string& msg,
                                bool forceAsError = false);
-
-  template <typename... Args>
-  ALWAYS_INLINE void
-  warning(CapricaFileLocation location, size_t warningNumber, fmt::format_string<Args...> msg, Args&&... args) {
-    // TODO: fix Imports hack
-    if (!m_QuietWarnings)
-      maybePushMessage(this, &location, "", warningNumber, fmt::format(msg, std::forward<Args>(args)...));
-  }
 };
 
 }
