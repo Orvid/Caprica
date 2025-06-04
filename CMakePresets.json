@@ -1,0 +1,106 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "cacheVariables": {
+        "CAPRICA_USE_STATIC_RUNTIME": {
+          "type": "BOOL",
+          "value": "TRUE"
+        },
+        "ENABLE_STATIC_RUNTIME": {
+          "type": "BOOL",
+          "value": "TRUE"
+        },
+        "CMAKE_CXX_FLAGS": "$env{CPP_COMPILER}"
+      }
+    },
+    {
+      "name": "vcpkg",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      }
+    },
+    {
+      "name": "x64",
+      "hidden": true,
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      }
+    },
+    {
+      "name": "msvc",
+      "hidden": true,
+      "environment": {
+        "CPP_COMPILER": "/permissive- /Zc:preprocessor /EHsc $penv{CXXFLAGS}"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "enableMicrosoftCodeAnalysis": true,
+          "enableClangTidyCodeAnalysis": true
+        }
+      }
+    },
+    {
+      "name": "build-release-msvc",
+      "inherits": [
+        "base",
+        "vcpkg",
+        "x64",
+        "msvc"
+      ],
+      "displayName": "Release",
+      "description": "Optimized release Build.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/extern",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "RelWithDebInfo"
+        }
+      }
+    },
+    {
+      "name": "build-debug-msvc",
+      "inherits": [
+        "base",
+        "vcpkg",
+        "x64",
+        "msvc"
+      ],
+      "displayName": "Debug",
+      "description": "Debug build for testing.",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release-msvc",
+      "displayName": "Release (MSVC)",
+      "configurePreset": "build-release-msvc",
+      "description": "Optimized release Build."
+    },
+    {
+      "name": "debug-msvc",
+      "displayName": "Debug (MSVC)",
+      "configurePreset": "build-debug-msvc",
+      "description": "Debug build for local testing."
+    }
+  ]
+}

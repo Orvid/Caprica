@@ -133,6 +133,13 @@ struct CapricaReportingContext final {
                     identifier_ref,
                     parentName)
 
+  // Not a base game warning, but some ubiquitous libraries fall prey to this.
+  DEFINE_WARNING_A1(1006, 
+                    Strict_Keyword_Identifiers, 
+                    "'{}' is a keyword (e.g. Int, Function) but is used as an identifier.",
+                    identifier_ref, 
+                    idName)
+
   // Warnings 2000-2199 are for engine imposed limitations.
 
   DEFINE_WARNING_A2(2001,

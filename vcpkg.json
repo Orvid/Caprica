@@ -10,27 +10,6 @@
   "dependencies": [
     "boost-container"
   ],
-  "vcpkg-configuration": {
-    "default-registry": {
-      "kind": "git",
-      "repository": "https://github.com/Microsoft/vcpkg",
-      "baseline": "4cb4a5c5ddcb9de0c83c85837ee6974c8333f032"
-    },
-    "registries": [
-      {
-        "kind": "git",
-        "repository": "https://github.com/microsoft/vcpkg",
-        "baseline": "7ef729383ab801504035a4445b6dbca18c8865c8",
-        "packages": [ "boost-modular-build-helper" ]
-      },
-      {
-        "kind": "git",
-        "repository": "https://github.com/microsoft/vcpkg",
-        "baseline": "caa7579a1c48e2ca770f6ccf98cb03db95642631",
-        "packages": [ "boost*", "boost-*" ]
-      }
-    ]
-  },
   "features": {
     "standalone": {
       "description": "Build as a standalone program",

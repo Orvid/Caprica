@@ -236,6 +236,25 @@ static const caseless_unordered_identifier_ref_map<TokenType> languageExtensions
   { "to",         TokenType::kTo        },
 };
 
+// keywords which can never pass as identifiers
+static const std::unordered_set<TokenType> nonIdentifiersSet {
+  TokenType::kAuto, 
+  TokenType::kAutoReadOnly, 
+  TokenType::kBool, 
+  TokenType::kConst,
+  TokenType::kFalse, 
+  TokenType::kFloat, 
+  TokenType::kInt, 
+  TokenType::kNone, 
+  TokenType::kString, 
+  TokenType::kStruct, 
+  TokenType::kVar,
+};
+
+const bool keywordCanBeIdentifier(TokenType tp) {
+  return keywordIsInGame(tp, conf::Papyrus::game, true) && nonIdentifiersSet.find(tp) == nonIdentifiersSet.end();
+}
+
 ALWAYS_INLINE
 static bool isAsciiAlphaNumeric(int c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');

@@ -46,3 +46,5 @@ Caprica/INSTALL.vcxproj.filters
 Caprica/cmake_install.cmake
 
 x64/
+/out/install/x64-Debug/bin
+/CMakeSettings.json

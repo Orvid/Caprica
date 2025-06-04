@@ -140,7 +140,7 @@ PCompInputFile::PCompInputFile(const std::filesystem::path& _path,
                                bool isFolder,
                                const std::filesystem::path& _cwd)
     : IInputFile(_path, noRecurse, _cwd) {
-  isFolder = isFolder;
+  this->isFolder = isFolder;
 }
 
 bool PCompInputFile::resolve() {

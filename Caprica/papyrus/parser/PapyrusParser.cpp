@@ -540,7 +540,7 @@ PapyrusFunction* PapyrusParser::parseFunction(
 
       auto param =
           alloc->make<PapyrusFunctionParameter>(cur.location, func->parameters.size(), expectConsumePapyrusType());
-      param->name = expectConsumeIdentRef();
+      param->name = expectConsumeKeywordOrIdentRef();
       if (maybeConsume(TokenType::Equal))
         param->defaultValue = expectConsumePapyrusValue();
       func->parameters.push_back(param);
@@ -1174,6 +1174,26 @@ expressions::PapyrusExpression* PapyrusParser::parseFuncOrIdExpression(PapyrusFu
     default:
       reportingContext.fatal(cur.location, "Unexpected token '{}'!", cur.prettyString());
   }
+}
+
+identifier_ref PapyrusParser::expectConsumeKeywordOrIdentRef() {
+  if (!keywordCanBeIdentifier(cur.type)) {
+    reportingContext.fatal(cur.location,
+                          "Syntax error! Expected valid identifier, got '{}'.",
+                          cur.prettyString());
+  }
+
+  identifier_ref finalId;
+
+  if (cur.type != TokenType::Identifier) {
+    const identifier_ref typeIdentifier = identifier_ref(PapyrusLexer::Token::prettyTokenType(cur.type));
+    reportingContext.warning_W1006_Strict_Keyword_Identifiers(cur.location, typeIdentifier);
+    finalId = typeIdentifier;
+  } else {
+    finalId = cur.val.s;
+  }
+  consume();
+  return finalId;
 }
 
 PapyrusType PapyrusParser::expectConsumePapyrusType() {

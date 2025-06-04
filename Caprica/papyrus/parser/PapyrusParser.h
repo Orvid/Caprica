@@ -48,6 +48,7 @@ private:
 
   PapyrusType expectConsumePapyrusType();
   PapyrusValue expectConsumePapyrusValue();
+  identifier_ref expectConsumeKeywordOrIdentRef();
   PapyrusUserFlags maybeConsumeUserFlags(CapricaUserFlagsDefinition::ValidLocations location);
 
   ALWAYS_INLINE

@@ -141,6 +141,7 @@ constexpr TokenType STARFIELD_MAX_KEYWORD = TokenType::kTryGuard;
 constexpr bool keywordIsLanguageExtension(TokenType tp) {
   return tp >= TokenType::kBreak && tp <= TokenType::kTo;
 }
+const bool keywordCanBeIdentifier(TokenType tp);
 constexpr bool keywordIsInGame(TokenType tp, GameID game, bool includeExtensions = false) {
   if (includeExtensions && keywordIsLanguageExtension(tp))
     return true;
