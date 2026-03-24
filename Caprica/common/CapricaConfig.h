@@ -120,8 +120,6 @@ namespace Papyrus {
 
 // Skyrim-specific settings to emulate the behavior of the Skyrim PCompiler
 namespace Skyrim {
-  // Allows non-inherited events to be declared on non-native classes
-  extern bool skyrimAllowUnknownEventsOnNonNativeClass;
   // Allows object variables to shadow parent class properties
   extern bool skyrimAllowObjectVariableShadowingParentProperty;
   // Allows local variables to shadow parent class properties

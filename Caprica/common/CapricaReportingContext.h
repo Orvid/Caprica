@@ -275,7 +275,7 @@ struct CapricaReportingContext final {
 
   DEFINE_WARNING_A3(7000,
                     Skyrim_Unknown_Event_On_Non_Native_Class,
-                    "Unknown Event ('{}') on non-native class '{}' that extends from '{}'.",
+                    "Unknown Event ('{}') on class '{}' that extends from '{}'.",
                     identifier_ref,
                     eventName,
                     identifier_ref,

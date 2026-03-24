@@ -205,14 +205,10 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
       ("ensure-betaonly-debugonly-dont-escape", po::bool_switch()->default_value(false),
         "Ensure values returned from BetaOnly and DebugOnly functions don't escape, as that will cause invalid code generation.")
       ("disable-implicit-conversion-from-none", po::bool_switch()->default_value(false),
-        "Disable implicit conversion from None in most situations where the use of None likely wasn't the author's intention.")
-      ("skyrim-allow-unknown-events-on-non-native-class", po::value<bool>(&conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass)->default_value(false),
-        "Allow unknown events to be defined on non-native classes. This is encountered with some scripts in the base game having Events that are not present on ObjectReference.");
+        "Disable implicit conversion from None in most situations where the use of None likely wasn't the author's intention.");
 
     po::options_description skyrimCompatibilityDesc("Skyrim compatibility (default true with '--game=skyrim')");
     skyrimCompatibilityDesc.add_options()
-      ("allow-unknown-events", po::value<bool>(&conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass)->default_value(true),
-        "Allow unknown events to be defined on non-native classes. This is encountered with some scripts in the base game having Events that are not present on ObjectReference.")
       ("allow-var-shadow-parent", po::value<bool>(&conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty)->default_value(true),
         "Allow Object variable names in derived classes to shadow properties in parent classes.")
       ("allow-local-shadow-parent", po::value<bool>(&conf::Skyrim::skyrimAllowLocalVariableShadowingParentProperty)->default_value(true),
@@ -508,7 +504,6 @@ bool parseCommandLineArguments(int argc, char* argv[], caprica::CapricaJobManage
 
     if (conf::Papyrus::game != GameID::Skyrim) {
       // turn off skyrim options
-      conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass = false;
       conf::Skyrim::skyrimAllowObjectVariableShadowingParentProperty = false;
       conf::Skyrim::skyrimAllowLocalVariableShadowingParentProperty = false;
       conf::Skyrim::skyrimAllowLocalUseBeforeDeclaration = false;

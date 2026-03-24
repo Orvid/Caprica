@@ -90,7 +90,7 @@ void PapyrusFunction::semantic(PapyrusResolutionContext* ctx) {
 void PapyrusFunction::semantic2(PapyrusResolutionContext* ctx) {
   if (isGlobal() && ctx->state && ctx->state->name != "")
     ctx->reportingContext.error(location, "Global functions are only allowed in the empty state.");
-  if (isNative() && !ctx->object->isNative())
+  if (conf::Papyrus::game != GameID::Skyrim && isNative() && !ctx->object->isNative())
     ctx->reportingContext.error(location, "You can only define Native functions in a script marked Native.");
 
   ctx->ensureNamesAreUnique(parameters, "parameter");

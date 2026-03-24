@@ -53,7 +53,7 @@ void PapyrusState::semantic2(PapyrusResolutionContext* ctx) {
     for (auto f : functions) {
       auto baseFunc = searchRootStateForFunction(f.second->name, parentClass);
       if (f.second->functionType == PapyrusFunctionType::Event && !baseFunc && !ctx->object->isNative()) {
-        if (conf::Papyrus::game == GameID::Skyrim && conf::Skyrim::skyrimAllowUnknownEventsOnNonNativeClass) {
+        if (conf::Papyrus::game == GameID::Skyrim) {
           ctx->reportingContext.warning_W7000_Skyrim_Unknown_Event_On_Non_Native_Class(
               f.second->location,
               f.second->name,

@@ -64,7 +64,6 @@ GameID game { GameID::UNKNOWN };
 }
 
 namespace Skyrim {
-  bool skyrimAllowUnknownEventsOnNonNativeClass{ true };
   bool skyrimAllowObjectVariableShadowingParentProperty{ true };
   bool skyrimAllowLocalVariableShadowingParentProperty{ true };
   bool skyrimAllowLocalUseBeforeDeclaration{ true };
