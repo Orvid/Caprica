@@ -26,6 +26,32 @@ enum class PapyrusAssignOperatorType {
 };
 
 struct PapyrusAssignStatement final : public PapyrusStatement {
+private:
+  struct CapturedExpression final : public expressions::PapyrusExpression {
+    expressions::PapyrusExpression* expression;
+    pex::PexLocalVariable* local { nullptr };
+
+    explicit CapturedExpression(expressions::PapyrusExpression* expr)
+        : PapyrusExpression(expr->location), expression(expr) { }
+    CapturedExpression(const CapturedExpression&) = delete;
+    virtual ~CapturedExpression() override = default;
+
+    void capture(pex::PexFile* file, pex::PexFunctionBuilder& bldr) {
+      auto value = expression->generateLoad(file, bldr);
+      local = bldr.allocLongLivedTemp(resultType());
+      bldr << location;
+      bldr << pex::op::assign { local, value };
+    }
+
+    virtual pex::PexValue generateLoad(pex::PexFile*, pex::PexFunctionBuilder&) const override { return local; }
+    virtual void semantic(PapyrusResolutionContext* ctx) override { expression->semantic(ctx); }
+    virtual PapyrusType resultType() const override { return expression->resultType(); }
+  };
+
+  CapturedExpression* capturedBase { nullptr };
+  CapturedExpression* capturedIndex { nullptr };
+
+public:
   expressions::PapyrusExpression* lValue { nullptr };
   PapyrusAssignOperatorType operation { PapyrusAssignOperatorType::None };
   expressions::PapyrusExpression* rValue { nullptr };
@@ -42,6 +68,10 @@ struct PapyrusAssignStatement final : public PapyrusStatement {
 
   virtual void buildPex(pex::PexFile* file, pex::PexFunctionBuilder& bldr) const override {
     namespace op = caprica::pex::op;
+    if (capturedBase)
+      capturedBase->capture(file, bldr);
+    if (capturedIndex)
+      capturedIndex->capture(file, bldr);
     pex::PexValue rVal;
     if (binOpExpression) {
       rVal = binOpExpression->generateLoad(file, bldr);
@@ -85,6 +115,10 @@ struct PapyrusAssignStatement final : public PapyrusStatement {
     } else {
       CapricaReportingContext::logicalFatal("Invalid Lefthand Side for PapyrusAssignStatement!");
     }
+    if (capturedIndex)
+      bldr.freeLongLivedTemp(capturedIndex->local);
+    if (capturedBase)
+      bldr.freeLongLivedTemp(capturedBase->local);
   }
 
   virtual void semantic(PapyrusResolutionContext* ctx) override {
@@ -127,6 +161,21 @@ struct PapyrusAssignStatement final : public PapyrusStatement {
             "You can't do anything except assign to an array element unless you have language extensions enabled!");
       }
       rValue = ctx->coerceExpression(binOpExpression, lValue->resultType());
+
+      // The read and write must use the same receiver and index, even if the RHS changes them.
+      if (auto ai = lValue->asArrayIndexExpression()) {
+        capturedBase = ctx->allocator->make<CapturedExpression>(ai->baseExpression);
+        ai->baseExpression = capturedBase;
+        if (!ai->indexExpression->asLiteralExpression()) {
+          capturedIndex = ctx->allocator->make<CapturedExpression>(ai->indexExpression);
+          ai->indexExpression = capturedIndex;
+        }
+      } else if (auto ma = lValue->asMemberAccessExpression()) {
+        if (!ma->baseExpression->asSelfExpression() && !ma->baseExpression->asParentExpression()) {
+          capturedBase = ctx->allocator->make<CapturedExpression>(ma->baseExpression);
+          ma->baseExpression = capturedBase;
+        }
+      }
     }
 
     if (auto id = lValue->asIdentifierExpression()) {
