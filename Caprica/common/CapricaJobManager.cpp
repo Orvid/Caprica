@@ -71,7 +71,7 @@ bool CapricaJobManager::tryDeque(CapricaJob** retJob) {
       queuedItemCount--;
     }
   }
-  if (!fron->hasRan.load(std::memory_order_consume)) {
+  if (next != nullptr || !fron->hasRan.load(std::memory_order_consume)) {
     *retJob = fron;
     return true;
   }
